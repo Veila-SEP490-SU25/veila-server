@@ -23,13 +23,21 @@
 
 ## Description
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+Veila - Wedding Dress Service Platform is the capstone project at FPT University. Started since 12/05/2025.
+
 
 ## Project setup
 
 ```bash
 $ yarn install
 ```
+
+## Environment variables
+Copy content of [Demo Env File](./.env.demo) into a env file in root folder with following name:
+- <strong>.env.development</strong> for a development run
+- <strong>.env.production</strong> for a production run
+
+
 
 ## Compile and run the project
 
