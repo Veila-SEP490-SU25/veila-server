@@ -1,5 +1,6 @@
 import { AppController } from '@/app/app.controller';
 import { AppService } from '@/app/app.service';
+import { MailModule } from '@/app/mail';
 import { LoggingMiddleware } from '@/common/middlewares';
 import { MiddlewareConsumer, Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
@@ -13,7 +14,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
     }),
     TypeOrmModule.forRootAsync({
       imports: [ConfigModule],
-      useFactory: (configService: ConfigService) => ({
+      useFactory: async (configService: ConfigService) => ({
         type: 'mysql',
         host: configService.get<string>('DB_HOST'),
         port: configService.get<number>('DB_PORT'),
@@ -26,6 +27,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
       }),
       inject: [ConfigService],
     }),
+    MailModule
   ],
   controllers: [AppController],
   providers: [AppService],
