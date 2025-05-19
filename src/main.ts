@@ -33,7 +33,10 @@ async function bootstrap() {
   // Global Interceptors, Filters, Pipes, and Prefix
   app.useGlobalInterceptors(new HttpStatusCodeInterceptor());
   app.useGlobalFilters(new HttpExceptionFilter());
-  app.useGlobalPipes(new ValidationPipe());
+  app.useGlobalPipes(new ValidationPipe({
+    transform: true,
+    whitelist: true
+  }));
   app.setGlobalPrefix('api');
 
   // Swagger API Documentation
@@ -53,7 +56,7 @@ async function bootstrap() {
   const port = process.env.LISTEN_PORT || 3000;
 
   await app.listen(port, host);
-  Logger.log(`Server running on http://${host}:${port}`, 'Bootstrap');
-  Logger.log(`Swagger running on http://${host}:${port}/swagger`, 'Bootstrap');
+  Logger.log(`Server running on http://${host}:${port}\n`, 'Bootstrap');
+  Logger.log(`Swagger running on http://${host}:${port}/swagger\n`, 'Bootstrap');
 }
 bootstrap();

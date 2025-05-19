@@ -28,4 +28,28 @@ export class MailService {
       );
     }
   }
+
+  async sendReactivateAccountEmail(
+    email: string,
+    username: string,
+    activationCode: string,
+  ): Promise<boolean> {
+    try {
+      await this.mailerService.sendMail({
+        to: email,
+        subject: 'Khôi phục tài khoản Veila',
+        template: 'reactivate',
+        context: {
+          username,
+          activationCode,
+        },
+      });
+      return true;
+    } catch (error) {
+      console.log(error);
+      throw new UnprocessableEntityException(
+        `Gặp lỗi khi gửi email khôi phục tài khoản đến ${email}`,
+      );
+    }
+  }
 }

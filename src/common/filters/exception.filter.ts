@@ -17,11 +17,13 @@ export class HttpExceptionFilter implements ExceptionFilter {
       ? exception.getStatus()
       : HttpStatus.INTERNAL_SERVER_ERROR;
     const message =
-      (exception.getResponse() as { message: string }).message ||
+      (exception.getResponse() as { message: string | string[]}).message ||
       'Internal server error';
     const errorResponse: ErrorResponse = {
       statusCode: status,
-      message,
+      message: Array.isArray(message)
+        ? message.join(', ')
+        : message,
     };
     response
       .status(

@@ -1,6 +1,12 @@
 import { AppController } from '@/app/app.controller';
 import { AppService } from '@/app/app.service';
+import { AuthModule } from '@/app/auth';
 import { MailModule } from '@/app/mail';
+import { PasswordModule } from '@/app/password';
+import { RedisModule } from '@/app/redis';
+import { SeedingModule } from '@/app/seeding';
+import { TokenModule } from '@/app/token';
+import { UserModule } from '@/app/user';
 import { LoggingMiddleware } from '@/common/middlewares';
 import { MiddlewareConsumer, Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
@@ -27,7 +33,13 @@ import { TypeOrmModule } from '@nestjs/typeorm';
       }),
       inject: [ConfigService],
     }),
-    MailModule
+    MailModule,
+    UserModule,
+    TokenModule,
+    PasswordModule,
+    RedisModule,
+    SeedingModule,
+    AuthModule,
   ],
   controllers: [AppController],
   providers: [AppService],
