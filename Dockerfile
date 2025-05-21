@@ -15,7 +15,6 @@ FROM base AS deps
 
 # Use cache and bind mounts to speed up installs
 RUN --mount=type=bind,source=package.json,target=package.json \
-    --mount=type=bind,source=package-lock.json,target=package-lock.json \
     --mount=type=cache,target=/root/.npm \
     npm ci --omit=dev
 
@@ -25,9 +24,8 @@ FROM base AS build
 
 # Install all dependencies (including dev) to build
 RUN --mount=type=bind,source=package.json,target=package.json \
-    --mount=type=bind,source=package-lock.json,target=package-lock.json \
     --mount=type=cache,target=/root/.npm \
-    npm ci
+    npm install
 
 # Copy source code
 COPY . .
