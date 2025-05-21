@@ -6,6 +6,9 @@ ARG NODE_VERSION=22.15.0
 # Base image with node for all stages
 FROM node:${NODE_VERSION} AS base
 
+# Install cross-env globally
+RUN npm install -g cross-env
+
 # Set working directory
 WORKDIR /usr/src/app
 

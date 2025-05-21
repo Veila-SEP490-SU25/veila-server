@@ -38,6 +38,11 @@ jobs:
             -p 1205:1205 \
             my-app:latest
 
+      - name: Cleanup unused images
+        run: |
+          docker image prune -f
+          docker system prune -f
+
   deploy-production:
     name: Deploy to Production
     needs: build
@@ -59,3 +64,8 @@ jobs:
             -e START_COMMAND=start:prod \
             -p 1206:1206 \
             my-app:latest
+
+      - name: Cleanup unused images
+        run: |
+          docker image prune -f
+          docker system prune -f
