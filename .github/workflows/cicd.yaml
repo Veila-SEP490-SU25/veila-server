@@ -17,7 +17,7 @@ jobs:
         run: docker build -t my-app:latest .
 
   deploy-demo:
-    name: Deploy to Demo
+    name: Deploy for Front-end Development
     needs: build
     runs-on: [veila]
     steps:
@@ -29,9 +29,9 @@ jobs:
 
       - name: Run demo container from prebuilt image
         run: |
-          docker stop my-demo-app || true
-          docker rm my-demo-app || true
-          docker run -d --name my-demo-app \
+          docker stop veila-dev-be || true
+          docker rm veila-dev-be || true
+          docker run -d --name veila-dev-be \
             --env-file .env.development \
             -e PORT=1205 \
             -e START_COMMAND=start:dev \
@@ -44,7 +44,7 @@ jobs:
           docker system prune -f
 
   deploy-production:
-    name: Deploy to Production
+    name: Deploy for Production
     needs: build
     runs-on: [veila]
     steps:
@@ -56,9 +56,9 @@ jobs:
 
       - name: Run production container from prebuilt image
         run: |
-          docker stop my-prod-app || true
-          docker rm my-prod-app || true
-          docker run -d --name my-prod-app \
+          docker stop veila-prod-be || true
+          docker rm veila-prod-be || true
+          docker run -d --name veila-prod-be \
             --env-file .env.production \
             -e PORT=1206 \
             -e START_COMMAND=start:prod \

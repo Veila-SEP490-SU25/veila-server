@@ -33,23 +33,29 @@ async function bootstrap() {
   // Global Interceptors, Filters, Pipes, and Prefix
   app.useGlobalInterceptors(new HttpStatusCodeInterceptor());
   app.useGlobalFilters(new HttpExceptionFilter());
-  app.useGlobalPipes(new ValidationPipe({
-    transform: true,
-    whitelist: true
-  }));
+  app.useGlobalPipes(
+    new ValidationPipe({
+      transform: true,
+      whitelist: true,
+    }),
+  );
   app.setGlobalPrefix('api');
 
+  const node_env = process.env.NODE_ENV;
+
   // Swagger API Documentation
-  const documentConfig = new DocumentBuilder()
-    .setTitle('Veila API Documentation')
-    .setDescription('API for Veila - Wedding Dress Services Platform')
-    .setVersion('1.0')
-    .addBearerAuth()
-    .build();
-  const document = SwaggerModule.createDocument(app, documentConfig);
-  SwaggerModule.setup('/swagger', app, document, {
-    swaggerOptions: { defaultModelsExpandDepth: -1 },
-  });
+  if (node_env !== 'production') {
+    const documentConfig = new DocumentBuilder()
+      .setTitle('Veila API Documentation')
+      .setDescription('API for Veila - Wedding Dress Services Platform')
+      .setVersion('1.0')
+      .addBearerAuth()
+      .build();
+    const document = SwaggerModule.createDocument(app, documentConfig);
+    SwaggerModule.setup('/swagger', app, document, {
+      swaggerOptions: { defaultModelsExpandDepth: -1 },
+    });
+  }
 
   // Server
   const host = process.env.LISTEN_HOST || '0.0.0.0';
@@ -57,6 +63,6 @@ async function bootstrap() {
 
   await app.listen(port, host);
   Logger.log(`Server running on http://${host}:${port}`, 'Bootstrap');
-  Logger.log(`Swagger running on http://${host}:${port}/swagger`, 'Bootstrap');
+  if (node_env !== 'production') Logger.log(`Swagger running on http://${host}:${port}/swagger`, 'Bootstrap');
 }
 bootstrap();
