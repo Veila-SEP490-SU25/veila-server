@@ -56,7 +56,7 @@ async function bootstrap() {
   const port = process.env.LISTEN_PORT || 3000;
 
   await app.listen(port, host);
-  Logger.log(`Server running on http://${host}:${port}\n`, 'Bootstrap');
-  Logger.log(`Swagger running on http://${host}:${port}/swagger\n`, 'Bootstrap');
+  Logger.log(`Server running on http://${host}:${port}`, 'Bootstrap');
+  Logger.log(`Swagger running on http://${host}:${port}/swagger`, 'Bootstrap');
 }
 bootstrap();

@@ -20,7 +20,6 @@ export class SeedingService implements OnModuleInit {
   async onModuleInit() {
     this.logger.log('Seeding module initialized. Starting seeding process...');
     await this.seedSystemAccounts();
-    this.logger.log('Seeding process completed.');
   }
 
   private async seedSystemAccounts() {
@@ -48,6 +47,8 @@ export class SeedingService implements OnModuleInit {
     ]).catch((error) => {
       this.logger.error('Seeding process failed.', error);
       throw new Error('Seeding process failed.');
+    }).then(() => {
+      this.logger.log('Sedding process completed!!!')
     });
   }
 
