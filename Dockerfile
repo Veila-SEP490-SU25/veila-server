@@ -4,10 +4,7 @@ ARG NODE_VERSION=22.15.0
 
 # ------------------------------------------------------------------------------
 # Base image with node for all stages
-FROM node:${NODE_VERSION}-alpine AS base
-
-# Install build dependencies
-RUN apk add --no-cache python3 make g++
+FROM node:${NODE_VERSION} AS base
 
 # Set working directory
 WORKDIR /usr/src/app
@@ -19,6 +16,9 @@ FROM base AS deps
 # Copy package files
 COPY package.json ./
 
+# Debug: Show npm and node versions
+RUN node --version && npm --version
+
 # Install production dependencies
 RUN npm install --omit=dev --verbose
 
@@ -28,6 +28,9 @@ FROM base AS build
 
 # Copy package files
 COPY package.json ./
+
+# Debug: Show npm and node versions
+RUN node --version && npm --version
 
 # Install all dependencies (including dev)
 RUN npm install --verbose
