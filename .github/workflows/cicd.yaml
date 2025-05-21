@@ -1,0 +1,61 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  build:
+    name: Build Docker Image
+    runs-on: [veila]
+    outputs:
+      image_tag: latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build Docker image
+        run: docker build -t my-app:latest .
+
+  deploy-demo:
+    name: Deploy to Demo
+    needs: build
+    runs-on: [veila]
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Create .env.development file
+        run: echo "${{ secrets.ENV_DEVELOPMENT }}" > .env.development
+
+      - name: Run demo container from prebuilt image
+        run: |
+          docker stop my-demo-app || true
+          docker rm my-demo-app || true
+          docker run -d --name my-demo-app \
+            --env-file .env.development \
+            -e PORT=1205 \
+            -e START_COMMAND=start:dev \
+            -p 1205:1205 \
+            my-app:latest
+
+  deploy-production:
+    name: Deploy to Production
+    needs: build
+    runs-on: [veila]
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Create .env.production file
+        run: echo "${{ secrets.ENV_PRODUCTION }}" > .env.production
+
+      - name: Run production container from prebuilt image
+        run: |
+          docker stop my-prod-app || true
+          docker rm my-prod-app || true
+          docker run -d --name my-prod-app \
+            --env-file .env.production \
+            -e PORT=1206 \
+            -e START_COMMAND=start:prod \
+            -p 1206:1206 \
+            my-app:latest

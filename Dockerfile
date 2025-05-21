@@ -41,6 +41,8 @@ FROM base AS final
 
 # Set production environment
 ENV NODE_ENV=production
+ENV PORT=1205
+ENV START_COMMAND=start:prod
 
 # Switch to non-root user
 USER node
@@ -51,7 +53,7 @@ COPY --from=deps /usr/src/app/node_modules ./node_modules
 COPY --from=build /usr/src/app/dist ./dist
 
 # Expose application port
-EXPOSE 1205
+EXPOSE ${PORT}
 
-# Run the application (fixed typo)
-CMD ["npm", "run", "start:prod"]
+# Run the application with configurable command
+CMD ["sh", "-c", "npm run ${START_COMMAND}"]
