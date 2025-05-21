@@ -40,12 +40,13 @@ export class AuthService {
     const refreshToken = await this.tokenService.createToken(user, {
       isRefresh: true,
     });
-    const hashedRefreshToken =
-      await this.passwordService.hashPassword(refreshToken);
-    await this.redisService.storeItem(
+    const hashedRefreshToken = await this.passwordService.hashPassword(
+      refreshToken,
+    );
+    await this.redisService.set(
       `user:refreshToken:${user.id}`,
       hashedRefreshToken,
-      60 * 60 * 24 * 7 * 10,
+      60 * 60 * 24 * 7 * 1000,
     );
     return {
       accessToken,
@@ -69,10 +70,10 @@ export class AuthService {
       id: uuidv4(),
     } as User);
     await Promise.all([
-      this.redisService.storeItem(
+      this.redisService.set(
         `user:otp:${newUser.id}`,
         hashedActivationCode,
-        5 * 60 * 10,
+        5 * 60 * 1000,
       ),
       this.mailService.sendWelcomEmail(
         newUser.email,
@@ -83,26 +84,30 @@ export class AuthService {
     return newUser.id;
   }
 
-  async refreshToken(
-    refreshToken: string,
-  ): Promise<TokenResponse> {
-    const decodedToken = await this.tokenService.validateToken(refreshToken, {
-      isRefresh: true
-    }).catch(() => {
-      throw new UnauthorizedException('Mã xác thực không hợp lệ hoặc đã hết hạn.');
-    })
+  async refreshToken(refreshToken: string): Promise<TokenResponse> {
+    const decodedToken = await this.tokenService
+      .validateToken(refreshToken, {
+        isRefresh: true,
+      })
+      .catch(() => {
+        throw new UnauthorizedException(
+          'Mã xác thực không hợp lệ hoặc đã hết hạn.',
+        );
+      });
     const userId = decodedToken.id;
-    const storedRefreshToken = await this.redisService.getItem<string>(
+    const storedRefreshToken = await this.redisService.get(
       `user:refreshToken:${userId}`,
     );
     if (!storedRefreshToken)
-      throw new UnauthorizedException('Mã xác thực không hợp lệ hoặc đã hết hạn.');
+      throw new UnauthorizedException(
+        'Mã xác thực không hợp lệ hoặc đã hết hạn.',
+      );
     const isValid = await this.passwordService.comparePassword(
       refreshToken,
       storedRefreshToken,
     );
     if (!isValid) {
-      await this.redisService.revokeItem(`user:refreshToken:${userId}`);
+      await this.redisService.del(`user:refreshToken:${userId}`);
       throw new UnauthorizedException('Mã xác thực không chính xác.');
     }
     const user = await this.userService.getUserById(userId);
@@ -125,10 +130,10 @@ export class AuthService {
     const otp = this.passwordService.generateOTP(6);
     const hashedOtp = await this.passwordService.hashPassword(otp);
     await Promise.all([
-      await this.redisService.storeItem(
+      await this.redisService.set(
         `user:otp:${user.id}`,
         hashedOtp,
-        5 * 60 * 10,
+        5 * 60 * 1000,
       ),
       await this.mailService.sendReactivateAccountEmail(
         user.email,
@@ -140,17 +145,15 @@ export class AuthService {
   }
 
   async verifyOTP(userId: string, otp: string): Promise<TokenResponse> {
-    const storedOtp = await this.redisService.getItem<string>(
-      `user:otp:${userId}`,
-    );
+    const storedOtp = await this.redisService.get(`user:otp:${userId}`);
     if (!storedOtp)
       throw new ForbiddenException('Mã xác thực không hợp lệ hoặc đã hết hạn.');
     const isValid = await this.passwordService.comparePassword(otp, storedOtp);
     if (!isValid) {
-      await this.redisService.revokeItem(`user:otp:${userId}`);
+      await this.redisService.del(`user:otp:${userId}`);
       throw new ForbiddenException('Mã xác thực không chính xác.');
     } else {
-      await this.redisService.revokeItem(`user:otp:${userId}`);
+      await this.redisService.del(`user:otp:${userId}`);
     }
     const user = await this.userService.getUserById(userId);
     if (!user)
@@ -166,12 +169,13 @@ export class AuthService {
     const refreshToken = await this.tokenService.createToken(user, {
       isRefresh: true,
     });
-    const hashedRefreshToken =
-      await this.passwordService.hashPassword(refreshToken);
-    await this.redisService.storeItem(
+    const hashedRefreshToken = await this.passwordService.hashPassword(
+      refreshToken,
+    );
+    await this.redisService.set(
       `user:refreshToken:${user.id}`,
       hashedRefreshToken,
-      60 * 60 * 24 * 7 * 10,
+      60 * 60 * 24 * 7 * 1000,
     );
     return {
       accessToken,
@@ -198,7 +202,7 @@ export class AuthService {
       const otp = this.passwordService.generateOTP(6);
       const hashedOtp = await this.passwordService.hashPassword(otp);
       await Promise.all([
-        this.redisService.storeItem(`user:otp:${user.id}`, hashedOtp, 5 * 60),
+        this.redisService.set(`user:otp:${user.id}`, hashedOtp, 5 * 60 * 1000),
         this.mailService.sendReactivateAccountEmail(
           user.email,
           user.username,
@@ -212,7 +216,7 @@ export class AuthService {
   }
 
   async logout(userId: string): Promise<void> {
-    await this.redisService.revokeItem(`user:refreshToken:${userId}`);
-    await this.redisService.revokeItem(`user:otp:${userId}`);
+    await this.redisService.del(`user:refreshToken:${userId}`);
+    await this.redisService.del(`user:otp:${userId}`);
   }
 }

@@ -9,7 +9,7 @@ export class RedisController {
   async setKey() {
     const key = 'redis_test';
     const value = "hello_redis";
-    await this.redisService.storeItem(key, value, 600);
+    await this.redisService.set(key, value, 600);
     return {
       message: 'Key set successfully',
       key,
@@ -20,7 +20,7 @@ export class RedisController {
   @Get()
   async getKey() {
     const key = 'redis_test';
-    const value = await this.redisService.getItem(key);
+    const value = await this.redisService.get(key);
     return {
       message: 'Key retrieved successfully',
       key,
