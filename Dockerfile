@@ -20,7 +20,7 @@ COPY package.json ./
 RUN node --version && npm --version
 
 # Install production dependencies
-RUN npm install --omit=dev --verbose
+RUN npm install --omit=dev --legacy-peer-deps
 
 # ------------------------------------------------------------------------------
 # Build the application
@@ -33,7 +33,7 @@ COPY package.json ./
 RUN node --version && npm --version
 
 # Install all dependencies (including dev)
-RUN npm install --verbose
+RUN npm install --legacy-peer-deps
 
 # Copy source code
 COPY . .
