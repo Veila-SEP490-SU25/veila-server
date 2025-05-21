@@ -13,19 +13,21 @@ WORKDIR /usr/src/app
 # Install production dependencies
 FROM base AS deps
 
-# Use cache and bind mounts to speed up installs
-RUN --mount=type=bind,source=package.json,target=package.json \
-    --mount=type=cache,target=/root/.npm \
-    npm install --omit=dev --prefer-offline --no-audit
+# Copy package files
+COPY package.json ./
+
+# Install production dependencies
+RUN npm install --omit=dev
 
 # ------------------------------------------------------------------------------
 # Build the application
 FROM base AS build
 
-# Install all dependencies (including dev) to build
-RUN --mount=type=bind,source=package.json,target=package.json \
-    --mount=type=cache,target=/root/.npm \
-    npm install --prefer-offline --no-audit
+# Copy package files
+COPY package.json ./
+
+# Install all dependencies (including dev)
+RUN npm install
 
 # Copy source code
 COPY . .
