@@ -16,7 +16,9 @@ export class CachingInterceptor implements NestInterceptor {
       return next.handle();
     } else {
       const authorization = request.headers['authorization'] || 'unauthorized';
-      const cacheKey = `${authorization}:${request.url}`;
+      const url = request.originalUrl || request.url;
+      const queryParams = request.query ? JSON.stringify(request.query) : '';
+      const cacheKey = `${authorization}:${url}:${queryParams}`;
       const cachedResponse = await this.redisService.get(cacheKey);
       if (cachedResponse) {
         response.setHeader('X-Cache', 'HIT');
