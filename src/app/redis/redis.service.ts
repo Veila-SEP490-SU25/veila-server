@@ -20,4 +20,11 @@ export class RedisService {
   async del(key: string) {
     return await this.redis.del(key);
   }
+
+  async delPattern(pattern: string) {
+    const keys = await this.redis.keys(pattern);
+    if (keys.length > 0) {
+      await this.redis.del(keys);
+    }
+  }
 }

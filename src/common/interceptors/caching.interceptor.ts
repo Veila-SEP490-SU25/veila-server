@@ -13,6 +13,9 @@ export class CachingInterceptor implements NestInterceptor {
 
     //Only cache GET requests
     if (request.method !== 'GET') {
+      response.setHeader('X-Cache', 'MISS');
+      const authorization = request.headers['authorization'] || 'unauthorized';
+      await this.redisService.delPattern(`${authorization}:*:*`);
       return next.handle();
     } else {
       const authorization = request.headers['authorization'] || 'unauthorized';
