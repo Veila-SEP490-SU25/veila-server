@@ -35,7 +35,7 @@ jobs:
             --env-file .env.development \
             -e PORT=1205 \
             -e START_COMMAND=deploy:development \
-            -p 1205:1205 \
+            -p 1205:3000 \
             veila-server:latest
 
   deploy-production:
@@ -57,7 +57,7 @@ jobs:
             --env-file .env.production \
             -e PORT=1206 \
             -e START_COMMAND=deploy:production \
-            -p 1206:1206 \
+            -p 1206:3000 \
             veila-server:latest
 
   cleanup:
