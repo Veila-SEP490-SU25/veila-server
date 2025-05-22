@@ -9,7 +9,16 @@ import { AuthService } from '@/app/auth/auth.service';
 import { ItemResponse } from '@/common/base';
 import { UserId } from '@/common/decorators';
 import { AuthGuard } from '@/common/guards';
-import { Body, Controller, HttpStatus, Post, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  ClassSerializerInterceptor,
+  Controller,
+  Get,
+  HttpStatus,
+  Post,
+  UseGuards,
+  UseInterceptors,
+} from '@nestjs/common';
 import {
   ApiBearerAuth,
   ApiBody,
@@ -20,10 +29,12 @@ import {
   getSchemaPath,
 } from '@nestjs/swagger';
 import { RefreshTokenDto } from './auth.dto';
+import { User } from '@/common/models';
 
 @Controller('auth')
 @ApiTags('Auth Controller')
-@ApiExtraModels(ItemResponse, TokenResponse)
+@ApiExtraModels(ItemResponse, TokenResponse, User)
+@UseInterceptors(ClassSerializerInterceptor)
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
@@ -195,6 +206,34 @@ export class AuthController {
       statusCode: HttpStatus.OK,
       message: 'Đăng xuất thành công.',
       item: null,
+    };
+  }
+
+  @Get('me')
+  @ApiOperation({
+    summary: 'Lấy thông tin người dùng',
+    description: 'Lấy thông tin người dùng hiện tại',
+  })
+  @UseGuards(AuthGuard)
+  @ApiBearerAuth()
+  @ApiOkResponse({
+    schema: {
+      allOf: [
+        { $ref: getSchemaPath(ItemResponse) },
+        {
+          properties: {
+            item: { $ref: getSchemaPath(User) },
+          },
+        },
+      ],
+    },
+  })
+  async getMe(@UserId() userId: string): Promise<ItemResponse<User>> {
+    const user = await this.authService.getMe(userId);
+    return {
+      statusCode: HttpStatus.OK,
+      message: 'Lấy thông tin người dùng thành công.',
+      item: user,
     };
   }
 }

@@ -176,4 +176,10 @@ export class AuthService {
     await this.redisService.del(`user:refreshToken:${userId}`);
     await this.redisService.del(`user:otp:${userId}`);
   }
+
+  async getMe(userId: string): Promise<User> {
+    const user = await this.userService.getUserById(userId);
+    if (!user) throw new NotFoundException('Tài khoản không tồn tại trong hệ thống.');
+    return user;
+  }
 }
