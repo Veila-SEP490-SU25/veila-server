@@ -61,8 +61,14 @@ async function bootstrap() {
   const host = process.env.LISTEN_HOST || '0.0.0.0';
   const port = process.env.LISTEN_PORT || 3000;
 
-  await app.listen(port, host);
-  Logger.log(`Server running on http://${host}:${port}`, 'Bootstrap');
-  if (node_env !== 'production') Logger.log(`Swagger running on http://${host}:${port}/swagger`, 'Bootstrap');
+  await app.listen(port, host).then(() => {
+    Logger.log(`Server running on http://${host}:${port}`, 'Bootstrap');
+    if (node_env !== 'production')
+      Logger.log(
+        `Swagger running on http://${host}:${port}/swagger`,
+        'Bootstrap',
+      );
+  });
 }
+
 bootstrap();
