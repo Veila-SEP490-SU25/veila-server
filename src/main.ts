@@ -1,3 +1,4 @@
+process.env.TZ = 'Asia/Ho_Chi_Minh';
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app/app.module';
 import { HttpStatusCodeInterceptor } from '@/common/interceptors';
