@@ -5,11 +5,7 @@ import { Injectable, UnprocessableEntityException } from '@nestjs/common';
 export class MailService {
   constructor(private readonly mailerService: MailerService) {}
 
-  async sendWelcomEmail(
-    email: string,
-    username: string,
-    activationCode: string,
-  ): Promise<boolean> {
+  async sendWelcomEmail(email: string, username: string, activationCode: string): Promise<boolean> {
     try {
       await this.mailerService.sendMail({
         to: email,
@@ -23,9 +19,7 @@ export class MailService {
       return true;
     } catch (error) {
       console.log(error);
-      throw new UnprocessableEntityException(
-        `Gặp lỗi khi gửi email chào mừng đến ${email}`,
-      );
+      throw new UnprocessableEntityException(`Gặp lỗi khi gửi email chào mừng đến ${email}`);
     }
   }
 

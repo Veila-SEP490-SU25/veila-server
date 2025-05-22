@@ -28,10 +28,7 @@ export class TokenService {
     return await this.jwtService.signAsync(payload, { secret, expiresIn });
   }
 
-  async validateToken(
-    token: string,
-    options?: TokenOptions,
-  ): Promise<TokenPayload> {
+  async validateToken(token: string, options?: TokenOptions): Promise<TokenPayload> {
     try {
       const secret = options?.isRefresh
         ? this.configService.get<string>('JWT_REFRESH_TOKEN_SECRET')

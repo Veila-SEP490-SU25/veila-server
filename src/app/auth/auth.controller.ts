@@ -100,7 +100,7 @@ export class AuthController {
             item: {
               type: 'string',
               description: 'ID của người dùng đã yêu cầu mã xác thực',
-              example: 'userId'
+              example: 'userId',
             },
           },
         },
@@ -134,9 +134,7 @@ export class AuthController {
       ],
     },
   })
-  async verifyOtp(
-    @Body() body: VerifyOtpDto,
-  ): Promise<ItemResponse<TokenResponse>> {
+  async verifyOtp(@Body() body: VerifyOtpDto): Promise<ItemResponse<TokenResponse>> {
     const token = await this.authService.verifyOTP(body.userId, body.otp);
     return {
       statusCode: HttpStatus.OK,
@@ -163,9 +161,7 @@ export class AuthController {
       ],
     },
   })
-  async refreshToken(
-    @Body() body: RefreshTokenDto,
-  ): Promise<ItemResponse<TokenResponse>> {
+  async refreshToken(@Body() body: RefreshTokenDto): Promise<ItemResponse<TokenResponse>> {
     const token = await this.authService.refreshToken(body.refreshToken);
     return {
       statusCode: HttpStatus.OK,
@@ -198,7 +194,7 @@ export class AuthController {
     return {
       statusCode: HttpStatus.OK,
       message: 'Đăng xuất thành công.',
-      item: null
+      item: null,
     };
   }
 }

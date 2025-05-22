@@ -1,8 +1,4 @@
-import {
-  Matches,
-  MinLength,
-  ValidatorOptions,
-} from 'class-validator';
+import { Matches, MinLength, ValidatorOptions } from 'class-validator';
 
 export function IsPassword(validatorOptions?: ValidatorOptions) {
   return function (object: Object, propertyName: string) {

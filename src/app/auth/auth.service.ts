@@ -25,24 +25,20 @@ export class AuthService {
 
   async login(body: LoginDto): Promise<TokenResponse> {
     const user = await this.userService.getByEmail(body.email);
-    if (!user)
-      throw new NotFoundException('Tài khoản không tồn tại trong hệ thống.');
+    if (!user) throw new NotFoundException('Tài khoản không tồn tại trong hệ thống.');
     await this.checkValidUser(user);
     const isPasswordValid = await this.passwordService.comparePassword(
       body.password,
       user.password,
     );
-    if (!isPasswordValid)
-      throw new ForbiddenException('Mật khẩu không chính xác.');
+    if (!isPasswordValid) throw new ForbiddenException('Mật khẩu không chính xác.');
     const accessToken = await this.tokenService.createToken(user, {
       isRefresh: false,
     });
     const refreshToken = await this.tokenService.createToken(user, {
       isRefresh: true,
     });
-    const hashedRefreshToken = await this.passwordService.hashPassword(
-      refreshToken,
-    );
+    const hashedRefreshToken = await this.passwordService.hashPassword(refreshToken);
     await this.redisService.set(
       `user:refreshToken:${user.id}`,
       hashedRefreshToken,
@@ -56,12 +52,9 @@ export class AuthService {
 
   async register(body: RegisterDto): Promise<string> {
     const user = await this.userService.getByEmail(body.email);
-    if (user)
-      throw new ForbiddenException('Tài khoản đã tồn tại trong hệ thống.');
+    if (user) throw new ForbiddenException('Tài khoản đã tồn tại trong hệ thống.');
     const activationCode = this.passwordService.generateOTP(6);
-    const hashedActivationCode = await this.passwordService.hashPassword(
-      activationCode,
-    );
+    const hashedActivationCode = await this.passwordService.hashPassword(activationCode);
     const newUser = await this.userService.createUser({
       ...body,
       username: new Date().getTime().toString(),
@@ -70,16 +63,8 @@ export class AuthService {
       id: uuidv4(),
     } as User);
     await Promise.all([
-      this.redisService.set(
-        `user:otp:${newUser.id}`,
-        hashedActivationCode,
-        5 * 60 * 1000,
-      ),
-      this.mailService.sendWelcomEmail(
-        newUser.email,
-        newUser.username,
-        activationCode,
-      ),
+      this.redisService.set(`user:otp:${newUser.id}`, hashedActivationCode, 5 * 60 * 1000),
+      this.mailService.sendWelcomEmail(newUser.email, newUser.username, activationCode),
     ]);
     return newUser.id;
   }
@@ -90,29 +75,19 @@ export class AuthService {
         isRefresh: true,
       })
       .catch(() => {
-        throw new UnauthorizedException(
-          'Mã xác thực không hợp lệ hoặc đã hết hạn.',
-        );
+        throw new UnauthorizedException('Mã xác thực không hợp lệ hoặc đã hết hạn.');
       });
     const userId = decodedToken.id;
-    const storedRefreshToken = await this.redisService.get(
-      `user:refreshToken:${userId}`,
-    );
+    const storedRefreshToken = await this.redisService.get(`user:refreshToken:${userId}`);
     if (!storedRefreshToken)
-      throw new UnauthorizedException(
-        'Mã xác thực không hợp lệ hoặc đã hết hạn.',
-      );
-    const isValid = await this.passwordService.comparePassword(
-      refreshToken,
-      storedRefreshToken,
-    );
+      throw new UnauthorizedException('Mã xác thực không hợp lệ hoặc đã hết hạn.');
+    const isValid = await this.passwordService.comparePassword(refreshToken, storedRefreshToken);
     if (!isValid) {
       await this.redisService.del(`user:refreshToken:${userId}`);
       throw new UnauthorizedException('Mã xác thực không chính xác.');
     }
     const user = await this.userService.getUserById(userId);
-    if (!user)
-      throw new NotFoundException('Tài khoản không tồn tại trong hệ thống.');
+    if (!user) throw new NotFoundException('Tài khoản không tồn tại trong hệ thống.');
     const accessToken = await this.tokenService.createToken(user, {
       isRefresh: false,
     });
@@ -124,30 +99,20 @@ export class AuthService {
 
   async requestOTP(email: string): Promise<string> {
     const user = await this.userService.getByEmail(email);
-    if (!user)
-      throw new NotFoundException('Tài khoản không tồn tại trong hệ thống.');
+    if (!user) throw new NotFoundException('Tài khoản không tồn tại trong hệ thống.');
     await this.checkValidUser(user);
     const otp = this.passwordService.generateOTP(6);
     const hashedOtp = await this.passwordService.hashPassword(otp);
     await Promise.all([
-      await this.redisService.set(
-        `user:otp:${user.id}`,
-        hashedOtp,
-        5 * 60 * 1000,
-      ),
-      await this.mailService.sendReactivateAccountEmail(
-        user.email,
-        user.username,
-        otp,
-      ),
+      await this.redisService.set(`user:otp:${user.id}`, hashedOtp, 5 * 60 * 1000),
+      await this.mailService.sendReactivateAccountEmail(user.email, user.username, otp),
     ]);
     return user.id;
   }
 
   async verifyOTP(userId: string, otp: string): Promise<TokenResponse> {
     const storedOtp = await this.redisService.get(`user:otp:${userId}`);
-    if (!storedOtp)
-      throw new ForbiddenException('Mã xác thực không hợp lệ hoặc đã hết hạn.');
+    if (!storedOtp) throw new ForbiddenException('Mã xác thực không hợp lệ hoặc đã hết hạn.');
     const isValid = await this.passwordService.comparePassword(otp, storedOtp);
     if (!isValid) {
       await this.redisService.del(`user:otp:${userId}`);
@@ -156,8 +121,7 @@ export class AuthService {
       await this.redisService.del(`user:otp:${userId}`);
     }
     const user = await this.userService.getUserById(userId);
-    if (!user)
-      throw new NotFoundException('Tài khoản không tồn tại trong hệ thống.');
+    if (!user) throw new NotFoundException('Tài khoản không tồn tại trong hệ thống.');
     this.userService.updateUser({
       ...user,
       isVerified: true,
@@ -169,9 +133,7 @@ export class AuthService {
     const refreshToken = await this.tokenService.createToken(user, {
       isRefresh: true,
     });
-    const hashedRefreshToken = await this.passwordService.hashPassword(
-      refreshToken,
-    );
+    const hashedRefreshToken = await this.passwordService.hashPassword(refreshToken);
     await this.redisService.set(
       `user:refreshToken:${user.id}`,
       hashedRefreshToken,
@@ -184,8 +146,7 @@ export class AuthService {
   }
 
   private async checkValidUser(user: User): Promise<void> {
-    if (!user.isVerified)
-      throw new ForbiddenException('Tài khoản chưa được xác thực.');
+    if (!user.isVerified) throw new ForbiddenException('Tài khoản chưa được xác thực.');
     if (user.status === UserStatus.Banned)
       throw new ForbiddenException(
         'Tài khoản đã bị cấm. Vui lòng liên hệ với quản trị viên để biết thêm thông tin.',
@@ -203,11 +164,7 @@ export class AuthService {
       const hashedOtp = await this.passwordService.hashPassword(otp);
       await Promise.all([
         this.redisService.set(`user:otp:${user.id}`, hashedOtp, 5 * 60 * 1000),
-        this.mailService.sendReactivateAccountEmail(
-          user.email,
-          user.username,
-          otp,
-        ),
+        this.mailService.sendReactivateAccountEmail(user.email, user.username, otp),
       ]);
       throw new ForbiddenException(
         'Tài khoản đã bị vô hiệu hoá. Vui lòng kiểm tra email để kích hoạt lại tài khoản.',

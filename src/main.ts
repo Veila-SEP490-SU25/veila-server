@@ -53,14 +53,14 @@ async function bootstrap() {
       .build();
     const document = SwaggerModule.createDocument(app, documentConfig);
     SwaggerModule.setup('/swagger', app, document, {
-      swaggerOptions: { 
+      swaggerOptions: {
         defaultModelsExpandDepth: -1,
         docExpansion: 'none',
         filter: true,
         showExtensions: true,
         showCommonExtensions: true,
         tagsSorter: 'alpha',
-        operationsSorter: 'alpha'
+        operationsSorter: 'alpha',
       },
     });
   }
@@ -72,10 +72,7 @@ async function bootstrap() {
   await app.listen(port, host).then(() => {
     Logger.log(`Server running on http://${host}:${port}`, 'Bootstrap');
     if (node_env !== 'production')
-      Logger.log(
-        `Swagger running on http://${host}:${port}/swagger`,
-        'Bootstrap',
-      );
+      Logger.log(`Swagger running on http://${host}:${port}/swagger`, 'Bootstrap');
   });
 }
 
