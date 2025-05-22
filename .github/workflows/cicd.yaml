@@ -14,7 +14,7 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Build Docker image
-        run: docker build -t my-app:latest .
+        run: docker build -t veila-server:latest .
 
   deploy-demo:
     name: Deploy for Front-end Development
@@ -36,12 +36,7 @@ jobs:
             -e PORT=1205 \
             -e START_COMMAND=start:dev \
             -p 1205:1205 \
-            my-app:latest
-
-      - name: Cleanup unused images
-        run: |
-          docker image prune -f
-          docker system prune -f
+            veila-server:latest
 
   deploy-production:
     name: Deploy for Production
@@ -63,8 +58,13 @@ jobs:
             -e PORT=1206 \
             -e START_COMMAND=start:prod \
             -p 1206:1206 \
-            my-app:latest
+            veila-server:latest
 
+  cleanup:
+    name: Cleanup
+    runs-on: [veila]
+    needs: [build, deploy-demo, deploy-production]
+    steps:
       - name: Cleanup unused images
         run: |
           docker image prune -f
