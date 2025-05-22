@@ -11,13 +11,11 @@ import { UserId } from '@/common/decorators';
 import { AuthGuard } from '@/common/guards';
 import {
   Body,
-  ClassSerializerInterceptor,
   Controller,
   Get,
   HttpStatus,
   Post,
   UseGuards,
-  UseInterceptors,
 } from '@nestjs/common';
 import {
   ApiBearerAuth,
@@ -34,7 +32,6 @@ import { User } from '@/common/models';
 @Controller('auth')
 @ApiTags('Auth Controller')
 @ApiExtraModels(ItemResponse, TokenResponse, User)
-@UseInterceptors(ClassSerializerInterceptor)
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
 

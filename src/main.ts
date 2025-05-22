@@ -1,10 +1,11 @@
 process.env.TZ = 'Asia/Ho_Chi_Minh';
-import { NestFactory } from '@nestjs/core';
+import { NestFactory, Reflector } from '@nestjs/core';
 import { AppModule } from './app/app.module';
-import { HttpStatusCodeInterceptor } from '@/common/interceptors';
+import { CachingInterceptor, HttpStatusCodeInterceptor } from '@/common/interceptors';
 import { HttpExceptionFilter } from '@/common/filters';
-import { Logger, ValidationPipe } from '@nestjs/common';
+import { ClassSerializerInterceptor, Logger, ValidationPipe } from '@nestjs/common';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
+import { RedisService } from '@/app/redis';
 
 async function bootstrap() {
   // Nest Factory
@@ -40,6 +41,8 @@ async function bootstrap() {
       whitelist: true,
     }),
   );
+  app.useGlobalInterceptors(new ClassSerializerInterceptor(app.get(Reflector)));
+  app.useGlobalInterceptors(new CachingInterceptor(app.get(RedisService)));
   app.setGlobalPrefix('api');
 
   const node_env = process.env.NODE_ENV;
