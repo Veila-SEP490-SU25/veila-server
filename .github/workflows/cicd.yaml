@@ -34,7 +34,7 @@ jobs:
           docker run -d --name veila-dev-be \
             --env-file .env.development \
             -e PORT=1205 \
-            -e START_COMMAND=start:dev \
+            -e START_COMMAND=deploy:development \
             -p 1205:1205 \
             veila-server:latest
 
@@ -56,7 +56,7 @@ jobs:
           docker run -d --name veila-prod-be \
             --env-file .env.production \
             -e PORT=1206 \
-            -e START_COMMAND=start:prod \
+            -e START_COMMAND=deploy:production \
             -p 1206:1206 \
             veila-server:latest
 
