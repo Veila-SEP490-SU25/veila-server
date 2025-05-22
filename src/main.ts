@@ -53,7 +53,15 @@ async function bootstrap() {
       .build();
     const document = SwaggerModule.createDocument(app, documentConfig);
     SwaggerModule.setup('/swagger', app, document, {
-      swaggerOptions: { defaultModelsExpandDepth: -1 },
+      swaggerOptions: { 
+        defaultModelsExpandDepth: -1,
+        docExpansion: 'none',
+        filter: true,
+        showExtensions: true,
+        showCommonExtensions: true,
+        tagsSorter: 'alpha',
+        operationsSorter: 'alpha'
+      },
     });
   }
 
