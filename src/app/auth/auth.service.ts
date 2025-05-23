@@ -26,7 +26,7 @@ export class AuthService {
   async login(body: LoginDto): Promise<TokenResponse> {
     const user = await this.userService.getByEmail(body.email);
     if (!user) throw new NotFoundException('Tài khoản không tồn tại trong hệ thống.');
-    await this.checkValidUser(user);
+    await this.checkValidUser(user, false);
     const isPasswordValid = await this.passwordService.comparePassword(
       body.password,
       user.password,
@@ -100,7 +100,7 @@ export class AuthService {
   async requestOTP(email: string): Promise<string> {
     const user = await this.userService.getByEmail(email);
     if (!user) throw new NotFoundException('Tài khoản không tồn tại trong hệ thống.');
-    await this.checkValidUser(user);
+    await this.checkValidUser(user, true);
     const otp = this.passwordService.generateOTP(6);
     const hashedOtp = await this.passwordService.hashPassword(otp);
     await Promise.all([
@@ -122,6 +122,7 @@ export class AuthService {
     }
     const user = await this.userService.getUserById(userId);
     if (!user) throw new NotFoundException('Tài khoản không tồn tại trong hệ thống.');
+    await this.checkValidUser(user, true);
     this.userService.updateUser({
       ...user,
       isVerified: true,
@@ -145,8 +146,7 @@ export class AuthService {
     };
   }
 
-  private async checkValidUser(user: User): Promise<void> {
-    if (!user.isVerified) throw new ForbiddenException('Tài khoản chưa được xác thực.');
+  private async checkValidUser(user: User, requestOTP: boolean): Promise<void> {
     if (user.status === UserStatus.Banned)
       throw new ForbiddenException(
         'Tài khoản đã bị cấm. Vui lòng liên hệ với quản trị viên để biết thêm thông tin.',
@@ -159,16 +159,13 @@ export class AuthService {
       throw new ForbiddenException(
         'Tài khoản đã đang bị hạn chế đăng nhập. Vui lòng liên hệ với quản trị viên để biết thêm thông tin.',
       );
-    if (user.status === UserStatus.Inactive) {
-      const otp = this.passwordService.generateOTP(6);
-      const hashedOtp = await this.passwordService.hashPassword(otp);
-      await Promise.all([
-        this.redisService.set(`user:otp:${user.id}`, hashedOtp, 5 * 60 * 1000),
-        this.mailService.sendReactivateAccountEmail(user.email, user.username, otp),
-      ]);
-      throw new ForbiddenException(
-        'Tài khoản đã bị vô hiệu hoá. Vui lòng kiểm tra email để kích hoạt lại tài khoản.',
-      );
+    if (requestOTP !== true) {
+      if (!user.isVerified) throw new UnauthorizedException('Tài khoản chưa được xác thực.');
+      if (user.status === UserStatus.Inactive) {
+        throw new UnauthorizedException(
+          'Tài khoản đã bị vô hiệu hoá. Vui lòng kiểm tra email để kích hoạt lại tài khoản.',
+        );
+      }
     }
   }
 
