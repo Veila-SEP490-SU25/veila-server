@@ -14,8 +14,7 @@ import { MailController } from '@/app/mail/mail.controller';
         transport: {
           host: config.get<string>('MAILER_HOST'),
           port: config.get<number>('MAILER_PORT'),
-          ignoreTLS: true,
-          secure: true,
+          secure: false,
           auth: {
             user: config.get<string>('MAILER_USER'),
             pass: config.get<string>('MAILER_PASS'),
