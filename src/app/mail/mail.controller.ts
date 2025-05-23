@@ -13,7 +13,7 @@ export class MailController {
     return {
       statusCode: HttpStatus.OK,
       message: 'Gửi email thành công',
-      item: await this.mailService.sendWelcomEmail('ngocngocthuc@gmail.com', 'thucnee', '123456'),
+      item: await this.mailService.sendOtpEmail('Hi','ngocngocthuc@gmail.com', 'thucnee', '123456'),
     };
   }
 }

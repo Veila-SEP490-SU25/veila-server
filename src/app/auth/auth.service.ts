@@ -64,7 +64,12 @@ export class AuthService {
     } as User);
     await Promise.all([
       this.redisService.set(`user:otp:${newUser.id}`, hashedActivationCode, 5 * 60 * 1000),
-      this.mailService.sendWelcomEmail(newUser.email, newUser.lastName, activationCode),
+      this.mailService.sendOtpEmail(
+        'Mã xác thực Veila',
+        newUser.email,
+        newUser.lastName,
+        activationCode,
+      ),
     ]);
     return newUser.id;
   }
@@ -105,7 +110,7 @@ export class AuthService {
     const hashedOtp = await this.passwordService.hashPassword(otp);
     await Promise.all([
       await this.redisService.set(`user:otp:${user.id}`, hashedOtp, 5 * 60 * 1000),
-      await this.mailService.sendReactivateAccountEmail(user.email, user.lastName, otp),
+      await this.mailService.sendOtpEmail('Mã xác thực Veila', user.email, user.lastName, otp),
     ]);
     return user.id;
   }
