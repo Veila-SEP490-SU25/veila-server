@@ -1,12 +1,7 @@
-import {
-  Column,
-  CreateDateColumn,
-  Entity,
-  PrimaryGeneratedColumn,
-  UpdateDateColumn,
-} from 'typeorm';
+import { Column, Entity } from 'typeorm';
 import { Exclude } from 'class-transformer';
 import { ApiProperty } from '@nestjs/swagger';
+import { Audit } from '@/common/models/audit.model';
 
 export enum UserRole {
   Customer = 'customer',
@@ -25,14 +20,7 @@ export enum UserStatus {
 }
 
 @Entity('user')
-export class User {
-  @PrimaryGeneratedColumn('uuid')
-  @ApiProperty({
-    description: 'ID của người dùng',
-    example: '123e4567-e89b-12d3-a456-426614174000',
-  })
-  id: string;
-
+export class User extends Audit {
   @Column({ type: 'varchar', length: 50, unique: true })
   @ApiProperty({
     description: 'Tên người dùng',
@@ -151,18 +139,4 @@ export class User {
     example: UserStatus.Active,
   })
   status: UserStatus;
-
-  @CreateDateColumn()
-  @ApiProperty({
-    description: 'Ngày tạo của người dùng',
-    example: '2021-01-01',
-  })
-  createdAt: Date;
-
-  @UpdateDateColumn()
-  @ApiProperty({
-    description: 'Ngày cập nhật của người dùng',
-    example: '2021-01-01',
-  })
-  updatedAt: Date;
 }
