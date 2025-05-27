@@ -7,16 +7,9 @@ import {
 } from '@/app/auth/auth.dto';
 import { AuthService } from '@/app/auth/auth.service';
 import { ItemResponse } from '@/common/base';
-import { UserId } from '@/common/decorators';
+import { Token, UserId } from '@/common/decorators';
 import { AuthGuard } from '@/common/guards';
-import {
-  Body,
-  Controller,
-  Get,
-  HttpStatus,
-  Post,
-  UseGuards,
-} from '@nestjs/common';
+import { Body, Controller, Get, HttpStatus, Post, UseGuards } from '@nestjs/common';
 import {
   ApiBearerAuth,
   ApiBody,
@@ -197,8 +190,8 @@ export class AuthController {
       ],
     },
   })
-  async logout(@UserId() userId: string): Promise<ItemResponse<null>> {
-    await this.authService.logout(userId);
+  async logout(@UserId() userId: string, @Token() token: string): Promise<ItemResponse<null>> {
+    await this.authService.logout(userId, token);
     return {
       statusCode: HttpStatus.OK,
       message: 'Đăng xuất thành công.',

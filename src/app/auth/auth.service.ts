@@ -174,7 +174,8 @@ export class AuthService {
     }
   }
 
-  async logout(userId: string): Promise<void> {
+  async logout(userId: string, token: string): Promise<void> {
+    await this.redisService.set(`token:blacklist:${token}`, 'true', 15 * 60 * 1000);
     await this.redisService.del(`user:refreshToken:${userId}`);
     await this.redisService.del(`user:otp:${userId}`);
   }
