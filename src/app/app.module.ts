@@ -29,6 +29,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
         database: configService.get<string>('DB_NAME'),
         entities: [__dirname + '/../**/*.model.{js,ts}'],
         charset: 'utf8mb4_unicode_ci',
+        collation: 'utf8mb4_unicode_ci',
         synchronize: true,
       }),
       inject: [ConfigService],
