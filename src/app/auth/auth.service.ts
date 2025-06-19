@@ -131,7 +131,7 @@ export class AuthService {
     this.userService.updateUser({
       ...user,
       isVerified: true,
-      status: UserStatus.Active,
+      status: UserStatus.ACTIVE,
     });
     const accessToken = await this.tokenService.createToken(user, {
       isRefresh: false,
@@ -152,21 +152,21 @@ export class AuthService {
   }
 
   private async checkValidUser(user: User, requestOTP: boolean): Promise<void> {
-    if (user.status === UserStatus.Banned)
+    if (user.status === UserStatus.BANNED)
       throw new ForbiddenException(
         'Tài khoản đã bị cấm. Vui lòng liên hệ với quản trị viên để biết thêm thông tin.',
       );
-    if (user.status === UserStatus.Deleted)
+    if (user.deletedAt !== null)
       throw new ForbiddenException(
         'Tài khoản đã bị xoá. Vui lòng liên hệ với quản trị viên để biết thêm thông tin.',
       );
-    if (user.status === UserStatus.Suspended)
+    if (user.status === UserStatus.SUSPENDED)
       throw new ForbiddenException(
         'Tài khoản đã đang bị hạn chế đăng nhập. Vui lòng liên hệ với quản trị viên để biết thêm thông tin.',
       );
     if (requestOTP !== true) {
       if (!user.isVerified) throw new UnauthorizedException('Tài khoản chưa được xác thực.');
-      if (user.status === UserStatus.Inactive) {
+      if (user.status === UserStatus.INACTIVE) {
         throw new UnauthorizedException(
           'Tài khoản đã bị vô hiệu hoá. Vui lòng kiểm tra email để kích hoạt lại tài khoản.',
         );
