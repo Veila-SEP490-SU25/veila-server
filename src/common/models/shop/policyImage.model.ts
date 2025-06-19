@@ -24,5 +24,5 @@ export class PolicyImage extends Base {
     type: BaseImage,
     required: true,
   })
-  image = BaseImage;
+  image: BaseImage;
 }

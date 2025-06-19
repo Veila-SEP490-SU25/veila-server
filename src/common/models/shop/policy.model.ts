@@ -68,10 +68,6 @@ export class Policy extends Base {
     nullable: true,
     onDelete: 'CASCADE',
   })
-  @JoinColumn({
-    name: 'policy_id',
-    foreignKeyConstraintName: 'fk_policy_image_policy',
-  })
   @ApiProperty({
     description: 'Danh sách hình ảnh liên quan đến chính sách',
     type: PolicyImage,

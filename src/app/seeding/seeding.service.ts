@@ -43,18 +43,17 @@ export class SeedingService implements OnModuleInit {
       );
     }
 
-    await Promise.all([
-      this.seedAccounts(superAdminEmail, UserRole.SUPER_ADMIN),
-      this.seedAccounts(adminEmail, UserRole.ADMIN),
-      this.seedAccounts(systemOperatorEmail, UserRole.STAFF),
-    ])
-      .catch((error) => {
-        this.logger.error('Seeding process failed.', error);
-        throw new Error('Seeding process failed.');
-      })
-      .then(() => {
-        this.logger.log('Seeding process completed successfully!');
-      });
+    try {
+      await Promise.all([
+        this.seedAccounts(superAdminEmail, UserRole.SUPER_ADMIN),
+        this.seedAccounts(adminEmail, UserRole.ADMIN),
+        this.seedAccounts(systemOperatorEmail, UserRole.STAFF),
+      ]);
+      this.logger.log('Seeding process completed successfully!');
+    } catch (error) {
+      this.logger.error('Seeding process failed.', error);
+      throw new Error('Seeding process failed.');
+    }
   }
 
   private generateVietnameseUsername(fullName: string, role: UserRole): string {
