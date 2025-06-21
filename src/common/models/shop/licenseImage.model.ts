@@ -1,4 +1,4 @@
-import { Column, Entity, Index, ManyToOne, JoinColumn } from 'typeorm';
+import { Column, Entity, ManyToOne, JoinColumn } from 'typeorm';
 import { ApiProperty } from '@nestjs/swagger';
 import { Base, BaseImage, License } from '@/common/models';
 

@@ -46,7 +46,7 @@ export class TokenService {
         username: payload.username,
         role: payload.role,
       };
-    } catch (error) {
+    } catch {
       throw new UnauthorizedException('Token không hợp lệ hoặc đã hết hạn.');
     }
   }

@@ -34,7 +34,6 @@ export class User extends Base {
     example: 'johndoe123',
     minLength: 6,
     maxLength: 32,
-    pattern: '^[a-zA-Z0-9_]+$',
     nullable: false,
   })
   username: string;
@@ -122,13 +121,12 @@ export class User extends Base {
     type: 'varchar',
     length: 15,
     nullable: true,
-    comment: 'Số điện thoại của người dùng (định dạng E.164)',
+    comment: 'Số điện thoại của người dùng',
   })
   @ApiProperty({
     type: 'string',
-    description: 'Số điện thoại của người dùng (định dạng E.164, tối đa 15 ký tự)',
-    example: '+84901234567',
-    pattern: '^\+[1-9]\d{1,14}$',
+    description: 'Số điện thoại của người dùng',
+    example: '0901234567',
     maxLength: 15,
     nullable: true,
   })

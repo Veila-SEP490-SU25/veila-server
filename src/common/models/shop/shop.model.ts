@@ -1,4 +1,4 @@
-import { Column, Entity, Index, ManyToOne, JoinColumn } from 'typeorm';
+import { Column, Entity, ManyToOne, JoinColumn } from 'typeorm';
 import { ApiProperty } from '@nestjs/swagger';
 import { Base, User } from '@/common/models';
 
@@ -69,7 +69,6 @@ export class Shop extends Base {
     type: 'string',
     description: 'Số điện thoại liên hệ của shop',
     example: '+84901234567',
-    pattern: '^\+[1-9]\d{1,14}$',
     maxLength: 15,
     nullable: false,
   })
