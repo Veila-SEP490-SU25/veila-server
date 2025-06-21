@@ -1,5 +1,5 @@
 import { Column, Entity, JoinColumn, ManyToOne, OneToMany } from 'typeorm';
-import { Base, Category, DressImage, Feedback, User } from '../';
+import { Base, Category, DressImage, Feedback, User } from '@/common/models';
 import { ApiProperty } from '@nestjs/swagger';
 
 export enum DressStatus {

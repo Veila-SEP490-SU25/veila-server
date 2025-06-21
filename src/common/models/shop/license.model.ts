@@ -1,6 +1,6 @@
 import { Column, Entity, Index, OneToMany, OneToOne, JoinColumn } from 'typeorm';
 import { ApiProperty } from '@nestjs/swagger';
-import { Base, LicenseImage, Shop } from '../';
+import { Base, LicenseImage, Shop } from '@/common/models';
 
 export enum LicenseStatus {
   PENDING = 'PENDING', // Đang chờ duyệt

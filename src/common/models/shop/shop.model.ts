@@ -1,6 +1,6 @@
 import { Column, Entity, Index, ManyToOne, JoinColumn } from 'typeorm';
 import { ApiProperty } from '@nestjs/swagger';
-import { Base, User } from '../';
+import { Base, User } from '@/common/models';
 
 export enum ShopStatus {
   PENDING = 'PENDING', // Đang chờ duyệt

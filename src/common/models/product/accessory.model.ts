@@ -1,5 +1,5 @@
 import { Column, Entity, JoinColumn, ManyToOne, OneToMany } from 'typeorm';
-import { AccessoryImage, Base, Category, User } from '../';
+import { AccessoryImage, Base, Category, User } from '@/common/models';
 import { ApiProperty } from '@nestjs/swagger';
 
 export enum AccessoryStatus {

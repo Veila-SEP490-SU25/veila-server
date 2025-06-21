@@ -1,7 +1,7 @@
-import { Column, Entity, Index, OneToMany } from 'typeorm';
+import { Column, Entity } from 'typeorm';
 import { Exclude } from 'class-transformer';
 import { ApiProperty, ApiHideProperty } from '@nestjs/swagger';
-import { Base } from '@/common/models/base.model';
+import { Base } from '@/common/models';
 
 export enum UserRole {
   SUPER_ADMIN = 'SUPER_ADMIN',

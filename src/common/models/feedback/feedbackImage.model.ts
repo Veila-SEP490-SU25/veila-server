@@ -1,5 +1,5 @@
 import { Column, Entity, JoinColumn, ManyToOne } from 'typeorm';
-import { Base, BaseImage, Feedback } from '../';
+import { Base, BaseImage, Feedback } from '@/common/models';
 import { ApiProperty } from '@nestjs/swagger';
 
 @Entity('feedback_images')

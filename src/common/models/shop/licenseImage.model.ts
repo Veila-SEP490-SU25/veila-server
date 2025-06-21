@@ -1,6 +1,6 @@
 import { Column, Entity, Index, ManyToOne, JoinColumn } from 'typeorm';
 import { ApiProperty } from '@nestjs/swagger';
-import { Base, BaseImage, License } from '../';
+import { Base, BaseImage, License } from '@/common/models';
 
 @Entity('license_images')
 export class LicenseImage extends Base {

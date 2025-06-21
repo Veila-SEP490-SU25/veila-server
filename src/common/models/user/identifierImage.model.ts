@@ -1,5 +1,5 @@
 import { Column, Entity, JoinColumn, ManyToOne } from 'typeorm';
-import { Base, BaseImage, Identifier } from '../';
+import { Base, BaseImage, Identifier } from '@/common/models';
 import { ApiProperty } from '@nestjs/swagger';
 
 @Entity('identifier_images')

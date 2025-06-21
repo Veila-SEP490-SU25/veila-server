@@ -1,5 +1,5 @@
 import { Column, Entity, JoinColumn, ManyToOne, OneToOne } from 'typeorm';
-import { Base, Order, Request, Service } from '../';
+import { Base, Order, Request, Service } from '@/common/models';
 import { ApiProperty } from '@nestjs/swagger';
 
 @Entity('order_service_details')

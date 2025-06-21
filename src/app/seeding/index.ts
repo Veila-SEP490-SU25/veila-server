@@ -1,2 +1,2 @@
-export * from './seeding.module';
-export * from './seeding.service';
+export * from '@/app/seeding/seeding.module';
+export * from '@/app/seeding/seeding.service';

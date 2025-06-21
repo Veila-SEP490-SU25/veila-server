@@ -1,5 +1,5 @@
 import { Column, Entity, JoinColumn, ManyToOne, OneToMany } from 'typeorm';
-import { Base, Category, Feedback, ServiceImage, User } from '../';
+import { Base, Category, Feedback, ServiceImage, User } from '@/common/models';
 import { ApiProperty } from '@nestjs/swagger';
 
 export enum ServiceStatus {

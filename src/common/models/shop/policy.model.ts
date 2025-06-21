@@ -1,5 +1,5 @@
 import { Column, Entity, JoinColumn, ManyToOne, OneToMany } from 'typeorm';
-import { Base, PolicyImage, Shop } from '../';
+import { Base, PolicyImage, Shop } from '@/common/models';
 import { ApiProperty } from '@nestjs/swagger';
 
 @Entity('policies')

@@ -1,5 +1,5 @@
 import { Column, Entity, JoinColumn, ManyToOne, OneToMany } from 'typeorm';
-import { Base, BlogImage, Category, User } from '../';
+import { Base, BlogImage, Category, User } from '@/common/models';
 import { ApiProperty } from '@nestjs/swagger';
 
 export enum BlogStatus {

@@ -6,7 +6,7 @@ import {
   UpdateDateColumn,
 } from 'typeorm';
 
-export class Base {
+export abstract class Base {
   @PrimaryGeneratedColumn('uuid')
   @ApiProperty({
     type: 'string',

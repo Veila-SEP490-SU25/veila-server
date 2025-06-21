@@ -1,6 +1,6 @@
-import { Column, Entity, Index, ManyToOne, JoinColumn, OneToMany } from 'typeorm';
+import { Column, Entity, ManyToOne, JoinColumn, OneToMany } from 'typeorm';
 import { ApiProperty } from '@nestjs/swagger';
-import { Base, IdentifierImage, User } from '../';
+import { Base, IdentifierImage, User } from '@/common/models';
 
 export enum IdentifierType {
   CCCD = 'CCCD',

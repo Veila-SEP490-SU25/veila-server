@@ -1,3 +1,3 @@
-export * from './user.module';
-export * from './user.service';
-export * from './user.controller';
+export * from '@/app/user/user.module';
+export * from '@/app/user/user.service';
+export * from '@/app/user/user.controller';
