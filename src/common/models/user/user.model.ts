@@ -61,7 +61,6 @@ export class User extends Base {
     type: 'varchar',
     length: 72,
     nullable: false,
-    select: false,
     comment: 'Mật khẩu đã được mã hóa bằng bcrypt (72 ký tự)',
   })
   @Exclude()
