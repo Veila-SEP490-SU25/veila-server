@@ -26,8 +26,8 @@ export abstract class Base {
     type: 'string',
     format: 'text',
     nullable: true,
-    description: 'Chuỗi hình ảnh, cách nhau bằng dấu \',\'',
-    example: 'https://veila.images/1,https://veila.images/2'
+    description: "Chuỗi hình ảnh, cách nhau bằng dấu ','",
+    example: 'https://veila.images/1,https://veila.images/2',
   })
   images: string | null;
 

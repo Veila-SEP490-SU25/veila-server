@@ -50,8 +50,8 @@ import { TypeOrmModule } from '@nestjs/typeorm';
     AppService,
     {
       provide: APP_GUARD,
-      useClass: RolesGuard
-    }
+      useClass: RolesGuard,
+    },
   ],
 })
 export class AppModule {
