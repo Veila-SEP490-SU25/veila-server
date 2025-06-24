@@ -1,5 +1,4 @@
 export * from '@/common/models/base.model';
-export * from '@/common/models/baseImage.model';
 export * from '@/common/models/user';
 export * from '@/common/models/shop';
 export * from '@/common/models/wallet';

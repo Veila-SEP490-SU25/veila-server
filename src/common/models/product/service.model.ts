@@ -1,5 +1,5 @@
 import { Column, Entity, JoinColumn, ManyToOne, OneToMany } from 'typeorm';
-import { Base, Category, Feedback, ServiceImage, User } from '@/common/models';
+import { Base, Category, Feedback, User } from '@/common/models';
 import { ApiProperty } from '@nestjs/swagger';
 
 export enum ServiceStatus {
@@ -127,14 +127,6 @@ export class Service extends Base {
     example: ServiceStatus.ACTIVE,
   })
   status: ServiceStatus;
-
-  @OneToMany(() => ServiceImage, (image) => image.service)
-  @ApiProperty({
-    description: 'Danh sách hình ảnh của dịch vụ',
-    type: [ServiceImage],
-    nullable: true,
-  })
-  images: ServiceImage[];
 
   @OneToMany(() => Feedback, (feedback) => feedback.service)
   @ApiProperty({

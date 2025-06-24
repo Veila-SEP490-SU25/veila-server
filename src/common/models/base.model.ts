@@ -1,5 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
 import {
+  Column,
   CreateDateColumn,
   DeleteDateColumn,
   PrimaryGeneratedColumn,
@@ -15,6 +16,20 @@ export abstract class Base {
     description: 'The unique identifier for the record.',
   })
   id: string;
+
+  @Column({
+    name: 'images',
+    type: 'text',
+    nullable: true,
+  })
+  @ApiProperty({
+    type: 'string',
+    format: 'text',
+    nullable: true,
+    description: 'Chuỗi hình ảnh, cách nhau bằng dấu \',\'',
+    example: 'https://veila.images/1,https://veila.images/2'
+  })
+  images: string | null;
 
   @CreateDateColumn({
     nullable: false,

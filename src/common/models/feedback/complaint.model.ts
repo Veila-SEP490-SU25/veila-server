@@ -1,5 +1,5 @@
-import { Column, Entity, JoinColumn, ManyToOne, OneToMany } from 'typeorm';
-import { Base, ComplaintImage, Order, User } from '@/common/models';
+import { Column, Entity, JoinColumn, ManyToOne } from 'typeorm';
+import { Base, Order, User } from '@/common/models';
 import { ApiProperty } from '@nestjs/swagger';
 
 export enum ComplaintStatus {
@@ -87,11 +87,4 @@ export class Complaint extends Base {
     required: true,
   })
   status: ComplaintStatus;
-
-  @OneToMany(() => ComplaintImage, (complaintImage) => complaintImage.complaint)
-  @ApiProperty({
-    description: 'Danh sách hình ảnh minh họa cho khiếu nại',
-    type: [ComplaintImage],
-  })
-  images: ComplaintImage[];
 }

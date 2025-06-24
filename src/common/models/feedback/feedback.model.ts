@@ -1,5 +1,5 @@
-import { Column, Entity, JoinColumn, ManyToOne, OneToMany } from 'typeorm';
-import { Base, Dress, FeedbackImage, Order, Service, User } from '@/common/models';
+import { Column, Entity, JoinColumn, ManyToOne } from 'typeorm';
+import { Base, Dress, Order, Service, User } from '@/common/models';
 import { ApiProperty } from '@nestjs/swagger';
 
 @Entity('feedbacks')
@@ -93,11 +93,4 @@ export class Feedback extends Base {
     required: true,
   })
   rating: number;
-
-  @OneToMany(() => FeedbackImage, (feedbackImage) => feedbackImage.feedback)
-  @ApiProperty({
-    description: 'Danh sách hình ảnh minh họa cho đánh giá',
-    type: [FeedbackImage],
-  })
-  images: FeedbackImage[];
 }

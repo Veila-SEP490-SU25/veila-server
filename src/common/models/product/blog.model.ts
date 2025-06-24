@@ -1,5 +1,5 @@
-import { Column, Entity, JoinColumn, ManyToOne, OneToMany } from 'typeorm';
-import { Base, BlogImage, Category, User } from '@/common/models';
+import { Column, Entity, JoinColumn, ManyToOne } from 'typeorm';
+import { Base, Category, User } from '@/common/models';
 import { ApiProperty } from '@nestjs/swagger';
 
 export enum BlogStatus {
@@ -101,12 +101,4 @@ export class Blog extends Base {
     nullable: false,
   })
   status: BlogStatus;
-
-  @OneToMany(() => BlogImage, (blogImage) => blogImage.blog)
-  @ApiProperty({
-    type: [BlogImage],
-    description: 'Danh sách hình ảnh liên kết với blog',
-    nullable: true,
-  })
-  images: BlogImage[];
 }

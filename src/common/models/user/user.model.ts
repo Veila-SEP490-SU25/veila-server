@@ -30,11 +30,11 @@ export class User extends Base {
   })
   @ApiProperty({
     type: 'string',
-    description: 'Tên người dùng (6-32 ký tự, chỉ cho phép chữ cái, số và dấu gạch dưới)',
-    example: 'johndoe123',
     minLength: 6,
     maxLength: 32,
     nullable: false,
+    description: 'Tên người dùng (6-32 ký tự, chỉ cho phép chữ cái, số và dấu gạch dưới)',
+    example: 'johndoe123',
   })
   username: string;
 
@@ -49,10 +49,10 @@ export class User extends Base {
   @ApiProperty({
     type: 'string',
     format: 'email',
-    description: 'Email của người dùng (tối đa 64 ký tự)',
-    example: 'john.doe@example.com',
     maxLength: 64,
     nullable: false,
+    description: 'Email của người dùng (tối đa 64 ký tự)',
+    example: 'john.doe@example.com',
   })
   email: string;
 
@@ -77,10 +77,10 @@ export class User extends Base {
   })
   @ApiProperty({
     type: 'string',
-    description: 'Tên của người dùng (tối đa 30 ký tự)',
-    example: 'John',
     maxLength: 30,
     nullable: false,
+    description: 'Tên của người dùng (tối đa 30 ký tự)',
+    example: 'John',
   })
   firstName: string;
 
@@ -93,10 +93,10 @@ export class User extends Base {
   })
   @ApiProperty({
     type: 'string',
-    description: 'Tên đệm của người dùng (tối đa 30 ký tự)',
-    example: 'William',
     maxLength: 30,
     nullable: true,
+    description: 'Tên đệm của người dùng (tối đa 30 ký tự)',
+    example: 'William',
   })
   middleName: string | null;
 
@@ -109,10 +109,10 @@ export class User extends Base {
   })
   @ApiProperty({
     type: 'string',
-    description: 'Họ của người dùng (tối đa 30 ký tự)',
-    example: 'Doe',
     maxLength: 30,
     nullable: false,
+    description: 'Họ của người dùng (tối đa 30 ký tự)',
+    example: 'Doe',
   })
   lastName: string;
 
@@ -125,10 +125,10 @@ export class User extends Base {
   })
   @ApiProperty({
     type: 'string',
-    description: 'Số điện thoại của người dùng',
-    example: '0901234567',
     maxLength: 15,
     nullable: true,
+    description: 'Số điện thoại của người dùng',
+    example: '0901234567',
   })
   phone: string | null;
 
@@ -141,10 +141,10 @@ export class User extends Base {
   })
   @ApiProperty({
     type: 'string',
-    description: 'Địa chỉ của người dùng (tối đa 255 ký tự)',
-    example: '123 Đường Nguyễn Huệ, Quận 1, TP.HCM',
     maxLength: 255,
     nullable: true,
+    description: 'Địa chỉ của người dùng (tối đa 255 ký tự)',
+    example: '123 Đường Nguyễn Huệ, Quận 1, TP.HCM',
   })
   address: string | null;
 
@@ -157,9 +157,9 @@ export class User extends Base {
   @ApiProperty({
     type: 'string',
     format: 'date',
+    nullable: true,
     description: 'Ngày sinh của người dùng (định dạng YYYY-MM-DD)',
     example: '1990-01-01',
-    nullable: true,
   })
   birthDate: Date | null;
 
@@ -173,10 +173,10 @@ export class User extends Base {
   @ApiProperty({
     type: 'string',
     format: 'uri',
-    description: 'URL ảnh đại diện của người dùng (tối đa 512 ký tự)',
-    example: 'https://example.com/avatars/user123.jpg',
     maxLength: 512,
     nullable: true,
+    description: 'URL ảnh đại diện của người dùng (tối đa 512 ký tự)',
+    example: 'https://example.com/avatars/user123.jpg',
   })
   avatarUrl: string | null;
 
@@ -190,10 +190,10 @@ export class User extends Base {
   @ApiProperty({
     type: 'string',
     format: 'uri',
-    description: 'URL ảnh bìa của người dùng (tối đa 512 ký tự)',
-    example: 'https://example.com/covers/user123.jpg',
     maxLength: 512,
     nullable: true,
+    description: 'URL ảnh bìa của người dùng (tối đa 512 ký tự)',
+    example: 'https://example.com/covers/user123.jpg',
   })
   coverUrl: string | null;
 
@@ -207,10 +207,10 @@ export class User extends Base {
   })
   @ApiProperty({
     enum: UserRole,
-    description: 'Vai trò của người dùng',
-    example: UserRole.CUSTOMER,
     enumName: 'UserRole',
     nullable: false,
+    description: 'Vai trò của người dùng',
+    example: UserRole.CUSTOMER,
   })
   role: UserRole;
 
@@ -224,10 +224,10 @@ export class User extends Base {
   })
   @ApiProperty({
     enum: UserStatus,
-    description: 'Trạng thái của người dùng',
-    example: UserStatus.ACTIVE,
     enumName: 'UserStatus',
     nullable: false,
+    description: 'Trạng thái của người dùng',
+    example: UserStatus.ACTIVE,
   })
   status: UserStatus;
 
@@ -240,9 +240,9 @@ export class User extends Base {
   })
   @ApiProperty({
     type: 'boolean',
+    nullable: false,
     description: 'Trạng thái xác thực email của người dùng',
     example: false,
-    nullable: false,
   })
   isVerified: boolean;
 
@@ -255,9 +255,9 @@ export class User extends Base {
   })
   @ApiProperty({
     type: 'boolean',
+    nullable: false,
     description: 'Trạng thái xác thực danh tính của người dùng (CCCD/CMND)',
     example: false,
-    nullable: false,
   })
   isIdentified: boolean;
 }
