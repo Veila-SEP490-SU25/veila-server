@@ -13,6 +13,7 @@ import { MiddlewareConsumer, Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { APP_GUARD } from '@nestjs/core';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { CategoryModule } from '@/app/category';
 
 @Module({
   imports: [
@@ -44,6 +45,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
     RedisModule,
     SeedingModule,
     AuthModule,
+    CategoryModule,
   ],
   controllers: [AppController],
   providers: [
