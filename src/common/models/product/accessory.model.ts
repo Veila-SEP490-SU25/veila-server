@@ -1,5 +1,5 @@
-import { Column, Entity, JoinColumn, ManyToOne, OneToMany } from 'typeorm';
-import { AccessoryImage, Base, Category, User } from '../';
+import { Column, Entity, JoinColumn, ManyToOne } from 'typeorm';
+import { Base, Category, User } from '@/common/models';
 import { ApiProperty } from '@nestjs/swagger';
 
 export enum AccessoryStatus {
@@ -176,12 +176,4 @@ export class Accessory extends Base {
     nullable: false,
   })
   status: AccessoryStatus;
-
-  @OneToMany(() => AccessoryImage, (accessoryImage) => accessoryImage.accessory)
-  @ApiProperty({
-    description: 'Danh sách hình ảnh của phụ kiện',
-    type: [AccessoryImage],
-    nullable: true,
-  })
-  images: AccessoryImage[];
 }

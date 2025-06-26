@@ -1,6 +1,6 @@
-import { Column, Entity, Index, ManyToOne, JoinColumn, OneToMany } from 'typeorm';
+import { Column, Entity, ManyToOne, JoinColumn } from 'typeorm';
 import { ApiProperty } from '@nestjs/swagger';
-import { Base, IdentifierImage, User } from '../';
+import { Base, User } from '@/common/models';
 
 export enum IdentifierType {
   CCCD = 'CCCD',
@@ -81,11 +81,4 @@ export class Identifier extends Base {
     nullable: true,
   })
   rejectReason: string | null;
-
-  @OneToMany(() => IdentifierImage, (identifierImage) => identifierImage.identifier)
-  @ApiProperty({
-    type: [IdentifierImage],
-    description: 'Danh sách hình ảnh giấy tờ tùy thân',
-  })
-  identifierImage: IdentifierImage[];
 }

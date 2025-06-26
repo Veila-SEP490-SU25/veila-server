@@ -1,5 +1,5 @@
-import { Column, Entity, JoinColumn, ManyToOne, OneToMany } from 'typeorm';
-import { Base, PolicyImage, Shop } from '../';
+import { Column, Entity, JoinColumn, ManyToOne } from 'typeorm';
+import { Base, Shop } from '@/common/models';
 import { ApiProperty } from '@nestjs/swagger';
 
 @Entity('policies')
@@ -63,14 +63,4 @@ export class Policy extends Base {
     nullable: false,
   })
   isSigned: boolean;
-
-  @OneToMany(() => PolicyImage, (policyImage) => policyImage.policy, {
-    nullable: true,
-    onDelete: 'CASCADE',
-  })
-  @ApiProperty({
-    description: 'Danh sách hình ảnh liên quan đến chính sách',
-    type: PolicyImage,
-  })
-  policyImages: PolicyImage[];
 }

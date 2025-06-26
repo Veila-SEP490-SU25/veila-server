@@ -1,5 +1,5 @@
 import { Column, Entity, JoinColumn, ManyToOne } from 'typeorm';
-import { Base, Milestone } from '../';
+import { Base, Milestone } from '@/common/models';
 import { ApiProperty } from '@nestjs/swagger';
 
 export enum TaskStatus {

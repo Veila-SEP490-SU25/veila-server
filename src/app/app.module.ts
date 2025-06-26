@@ -7,9 +7,11 @@ import { RedisModule } from '@/app/redis';
 import { SeedingModule } from '@/app/seeding';
 import { TokenModule } from '@/app/token';
 import { UserModule } from '@/app/user';
+import { RolesGuard } from '@/common/guards';
 import { LoggingMiddleware } from '@/common/middlewares';
 import { MiddlewareConsumer, Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
+import { APP_GUARD } from '@nestjs/core';
 import { TypeOrmModule } from '@nestjs/typeorm';
 
 @Module({
@@ -29,8 +31,9 @@ import { TypeOrmModule } from '@nestjs/typeorm';
         database: configService.get<string>('DB_NAME'),
         entities: [__dirname + '/../**/*.model.{js,ts}'],
         charset: 'utf8mb4_unicode_ci',
-        collation: 'utf8mb4_unicode_ci',
-        synchronize: true,
+        synchronize: false,
+        migrations: [__dirname + '/../migrations/*.{js,ts}'],
+        migrationsTableName: 'veila_migration_db',
       }),
       inject: [ConfigService],
     }),
@@ -43,7 +46,13 @@ import { TypeOrmModule } from '@nestjs/typeorm';
     AuthModule,
   ],
   controllers: [AppController],
-  providers: [AppService],
+  providers: [
+    AppService,
+    {
+      provide: APP_GUARD,
+      useClass: RolesGuard,
+    },
+  ],
 })
 export class AppModule {
   configure(consumer: MiddlewareConsumer) {

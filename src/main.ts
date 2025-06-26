@@ -1,6 +1,6 @@
 process.env.TZ = 'Asia/Ho_Chi_Minh';
 import { NestFactory, Reflector } from '@nestjs/core';
-import { AppModule } from './app/app.module';
+import { AppModule } from '@/app/app.module';
 import { CachingInterceptor, HttpStatusCodeInterceptor } from '@/common/interceptors';
 import { HttpExceptionFilter } from '@/common/filters';
 import { ClassSerializerInterceptor, Logger, ValidationPipe } from '@nestjs/common';

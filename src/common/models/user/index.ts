@@ -1,3 +1,2 @@
-export * from './user.model';
-export * from './identifier.model';
-export * from './identifierImage.model';
+export * from '@/common/models/user/user.model';
+export * from '@/common/models/user/identifier.model';

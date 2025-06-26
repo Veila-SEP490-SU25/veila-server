@@ -1,5 +1,5 @@
 import { Column, Entity, JoinColumn, ManyToOne } from 'typeorm';
-import { Base, Order, Wallet } from '../';
+import { Base, Order, Wallet } from '@/common/models';
 import { ApiProperty } from '@nestjs/swagger';
 
 export enum TransactionType {

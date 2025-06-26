@@ -7,7 +7,7 @@ import {
   Shop,
   Transaction,
   User,
-} from '../';
+} from '@/common/models';
 import { ApiProperty } from '@nestjs/swagger';
 
 export enum OrderStatus {

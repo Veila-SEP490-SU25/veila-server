@@ -1,5 +1,5 @@
 import { Column, Entity, JoinColumn, ManyToOne } from 'typeorm';
-import { Bank, Base, User } from '../';
+import { Bank, Base, User } from '@/common/models';
 import { ApiProperty } from '@nestjs/swagger';
 
 @Entity('payment_infos')

@@ -129,6 +129,7 @@ export class SeedingService implements OnModuleInit {
       status: UserStatus.ACTIVE,
       isVerified: true,
       isIdentified: role !== UserRole.CUSTOMER,
+      images: null,
     } as User;
 
     const createdUser = await this.userService.createUser(newUser);

@@ -1,6 +1,6 @@
-import { Column, Entity, Index, OneToMany, OneToOne, JoinColumn } from 'typeorm';
+import { Column, Entity, OneToOne, JoinColumn } from 'typeorm';
 import { ApiProperty } from '@nestjs/swagger';
-import { Base, LicenseImage, Shop } from '../';
+import { Base, Shop } from '@/common/models';
 
 export enum LicenseStatus {
   PENDING = 'PENDING', // Đang chờ duyệt
@@ -106,11 +106,4 @@ export class License extends Base {
     nullable: true,
   })
   rejectReason: string | null;
-
-  @OneToMany(() => LicenseImage, (image) => image.license)
-  @ApiProperty({
-    type: [LicenseImage],
-    description: 'Danh sách hình ảnh giấy phép',
-  })
-  images: LicenseImage[];
 }

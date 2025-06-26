@@ -1,5 +1,5 @@
 import { Column, Entity, JoinColumn, ManyToOne, OneToMany } from 'typeorm';
-import { Base, Category, DressImage, Feedback, User } from '../';
+import { Base, Category, Feedback, User } from '@/common/models';
 import { ApiProperty } from '@nestjs/swagger';
 
 export enum DressStatus {
@@ -215,14 +215,6 @@ export class Dress extends Base {
     enumName: 'DressStatus',
   })
   status: DressStatus;
-
-  @OneToMany(() => DressImage, (image) => image.dress)
-  @ApiProperty({
-    description: 'Danh sách hình ảnh của sản phẩm',
-    type: [DressImage],
-    nullable: true,
-  })
-  images: DressImage[];
 
   @OneToMany(() => Feedback, (feedback) => feedback.dress)
   @ApiProperty({
