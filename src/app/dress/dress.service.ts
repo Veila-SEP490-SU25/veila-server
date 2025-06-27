@@ -7,9 +7,7 @@ import { Repository } from 'typeorm';
 
 @Injectable()
 export class DressService {
-  constructor(
-    @InjectRepository(DressService) private readonly dressRepository: Repository<Dress>,
-  ) {}
+  constructor(@InjectRepository(Dress) private readonly dressRepository: Repository<Dress>) {}
 
   async getDressesForCustomer(
     { page, size, limit, offset }: Pagination,

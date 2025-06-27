@@ -1,21 +1,23 @@
 import { AppController } from '@/app/app.controller';
 import { AppService } from '@/app/app.service';
-import { AuthModule } from '@/app/auth';
-import { MailModule } from '@/app/mail';
-import { PasswordModule } from '@/app/password';
-import { RedisModule } from '@/app/redis';
-import { SeedingModule } from '@/app/seeding';
-import { TokenModule } from '@/app/token';
-import { UserModule } from '@/app/user';
+import {
+  AuthModule,
+  CategoryModule,
+  DressModule,
+  MailModule,
+  PasswordModule,
+  RedisModule,
+  SeedingModule,
+  ShopModule,
+  TokenModule,
+  UserModule,
+} from '@/app';
 import { RolesGuard } from '@/common/guards';
 import { LoggingMiddleware } from '@/common/middlewares';
 import { MiddlewareConsumer, Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { APP_GUARD } from '@nestjs/core';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { CategoryModule } from '@/app/category';
-import { DressModule } from '@/app/dress';
-import { ShopModule } from '@/app/shop';
 
 @Module({
   imports: [
