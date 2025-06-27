@@ -8,6 +8,7 @@ import {
   PasswordModule,
   RedisModule,
   SeedingModule,
+  ServiceModule,
   ShopModule,
   TokenModule,
   UserModule,
@@ -52,6 +53,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
     CategoryModule,
     DressModule,
     ShopModule,
+    ServiceModule,
   ],
   controllers: [AppController],
   providers: [

@@ -11,3 +11,4 @@ export * from '@/app/seeding';
 export * from '@/app/shop';
 export * from '@/app/token';
 export * from '@/app/user';
+export * from '@/app/service';
