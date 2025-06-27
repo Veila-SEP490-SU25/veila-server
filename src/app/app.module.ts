@@ -14,6 +14,7 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { APP_GUARD } from '@nestjs/core';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { CategoryModule } from '@/app/category';
+import { DressModule } from '@/app/dress';
 
 @Module({
   imports: [
@@ -46,6 +47,7 @@ import { CategoryModule } from '@/app/category';
     SeedingModule,
     AuthModule,
     CategoryModule,
+    DressModule,
   ],
   controllers: [AppController],
   providers: [
