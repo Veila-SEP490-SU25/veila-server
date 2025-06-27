@@ -15,6 +15,7 @@ import { APP_GUARD } from '@nestjs/core';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { CategoryModule } from '@/app/category';
 import { DressModule } from '@/app/dress';
+import { ShopModule } from '@/app/shop';
 
 @Module({
   imports: [
@@ -48,6 +49,7 @@ import { DressModule } from '@/app/dress';
     AuthModule,
     CategoryModule,
     DressModule,
+    ShopModule,
   ],
   controllers: [AppController],
   providers: [
