@@ -72,4 +72,25 @@ export class CategoryService {
     await this.findOne(userId, id);
     await this.categoryRepository.restore(id);
   }
+
+  async findAndCountOfShopForCustomer(
+    userId,
+    limit: number,
+    offset: number,
+    sort?: Sorting,
+    filter?: Filtering,
+  ): Promise<[Category[], number]> {
+    const dynamicFilter = getWhere(filter);
+    const where = {
+      ...dynamicFilter,
+      user: { id: userId },
+    };
+    const order = getOrder(sort);
+    return await this.categoryRepository.findAndCount({
+      where,
+      order,
+      take: limit,
+      skip: offset,
+    });
+  }
 }

@@ -1,6 +1,6 @@
 import { ListResponse } from '@/common/base';
 import { Filtering, getOrder, getWhere, Pagination, Sorting } from '@/common/decorators';
-import { Dress } from '@/common/models';
+import { Dress, DressStatus } from '@/common/models';
 import { HttpStatus, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
@@ -43,5 +43,27 @@ export class DressService {
     const dress = await this.dressRepository.findOne({ where: { id: id } });
     if (!dress) throw new NotFoundException('Không tìm thấy váy cưới nào phù hợp');
     return dress;
+  }
+
+  async findAndCountOfShopForCustomer(
+    userId,
+    limit: number,
+    offset: number,
+    sort?: Sorting,
+    filter?: Filtering,
+  ): Promise<[Dress[], number]> {
+    const dynamicFilter = getWhere(filter);
+    const where = {
+      ...dynamicFilter,
+      user: { id: userId },
+      status: DressStatus.AVAILABLE,
+    };
+    const order = getOrder(sort);
+    return await this.dressRepository.findAndCount({
+      where,
+      order,
+      take: limit,
+      skip: offset,
+    });
   }
 }
