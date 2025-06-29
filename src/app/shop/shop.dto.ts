@@ -19,16 +19,28 @@ export class ListShopDto {
   @ApiProperty({ description: 'Địa chỉ shop', example: '123 Đường ABC, Quận 1, TP.HCM' })
   address: string;
 
-  @ApiProperty({ description: 'URL ảnh đại diện shop', example: 'https://storage.veila.com/shops/logo123.jpg', nullable: true })
+  @ApiProperty({
+    description: 'URL ảnh đại diện shop',
+    example: 'https://storage.veila.com/shops/logo123.jpg',
+    nullable: true,
+  })
   logoUrl: string | null;
 
-  @ApiProperty({ description: 'URL ảnh bìa shop', example: 'https://storage.veila.com/shops/cover123.jpg', nullable: true })
+  @ApiProperty({
+    description: 'URL ảnh bìa shop',
+    example: 'https://storage.veila.com/shops/cover123.jpg',
+    nullable: true,
+  })
   coverUrl: string | null;
 
   @ApiProperty({ description: 'Ảnh tổng hợp của shop (nếu có)', example: null, nullable: true })
   images: string | null;
 
-  @ApiProperty({ enum: ShopStatus, description: 'Trạng thái hoạt động của shop', example: ShopStatus.ACTIVE })
+  @ApiProperty({
+    enum: ShopStatus,
+    description: 'Trạng thái hoạt động của shop',
+    example: ShopStatus.ACTIVE,
+  })
   status: ShopStatus;
 }
 
@@ -48,18 +60,34 @@ export class ItemShopDto {
   @ApiProperty({ description: 'Địa chỉ shop', example: '123 Đường ABC, Quận 1, TP.HCM' })
   address: string;
 
-  @ApiProperty({ description: 'Mô tả chi tiết về shop', example: 'Shop chuyên cung cấp các sản phẩm thời trang...', nullable: true })
+  @ApiProperty({
+    description: 'Mô tả chi tiết về shop',
+    example: 'Shop chuyên cung cấp các sản phẩm thời trang...',
+    nullable: true,
+  })
   description: string | null;
 
   @ApiProperty({ description: 'Ảnh tổng hợp của shop (nếu có)', example: null, nullable: true })
   images: string | null;
 
-  @ApiProperty({ description: 'URL ảnh đại diện shop', example: 'https://storage.veila.com/shops/logo123.jpg', nullable: true })
+  @ApiProperty({
+    description: 'URL ảnh đại diện shop',
+    example: 'https://storage.veila.com/shops/logo123.jpg',
+    nullable: true,
+  })
   logoUrl: string | null;
 
-  @ApiProperty({ description: 'URL ảnh bìa shop', example: 'https://storage.veila.com/shops/cover123.jpg', nullable: true })
+  @ApiProperty({
+    description: 'URL ảnh bìa shop',
+    example: 'https://storage.veila.com/shops/cover123.jpg',
+    nullable: true,
+  })
   coverUrl: string | null;
 
-  @ApiProperty({ enum: ShopStatus, description: 'Trạng thái hoạt động của shop', example: ShopStatus.ACTIVE })
+  @ApiProperty({
+    enum: ShopStatus,
+    description: 'Trạng thái hoạt động của shop',
+    example: ShopStatus.ACTIVE,
+  })
   status: ShopStatus;
 }

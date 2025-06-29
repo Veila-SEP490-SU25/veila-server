@@ -10,7 +10,11 @@ export class ListBlogDto {
   @ApiProperty({ description: 'Tiêu đề blog', example: 'Bí quyết chọn váy cưới đẹp' })
   title: string;
 
-  @ApiProperty({ description: 'Ảnh đại diện blog (URL)', example: 'https://storage.veila.com/blogs/img123.jpg', nullable: true })
+  @ApiProperty({
+    description: 'Ảnh đại diện blog (URL)',
+    example: 'https://storage.veila.com/blogs/img123.jpg',
+    nullable: true,
+  })
   images: string | null;
 
   @ApiProperty({ enum: BlogStatus, description: 'Trạng thái blog', example: BlogStatus.DRAFT })

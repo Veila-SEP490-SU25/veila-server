@@ -47,7 +47,7 @@ export class ShopController {
   - \`sort\`: Ví dụ: name:asc
   - \`filter\`: Ví dụ: name:like:veila
 - Chỉ trả về các shop có trạng thái ACTIVE.
-`
+`,
   })
   @ApiQuery({
     name: 'page',
@@ -103,7 +103,7 @@ export class ShopController {
 - Truyền \`id\` của shop trên URL.
 - Trả về thông tin chi tiết của shop nếu shop đang hoạt động (ACTIVE).
 - Nếu không tìm thấy sẽ trả về lỗi.
-`
+`,
   })
   @ApiOkResponse({
     schema: {
@@ -134,7 +134,7 @@ export class ShopController {
 - Truyền \`id\` của shop trên URL.
 - Trả về danh sách váy cưới khả dụng của shop (trạng thái AVAILABLE).
 - Hỗ trợ phân trang, sắp xếp, lọc.
-`
+`,
   })
   @ApiQuery({
     name: 'page',
@@ -191,7 +191,7 @@ export class ShopController {
 - Truyền \`id\` của shop trên URL.
 - Trả về danh sách dịch vụ khả dụng của shop (trạng thái ACTIVE).
 - Hỗ trợ phân trang, sắp xếp, lọc.
-`
+`,
   })
   @ApiQuery({
     name: 'page',
@@ -248,7 +248,7 @@ export class ShopController {
 - Truyền \`id\` của shop trên URL.
 - Trả về danh sách blog đã xuất bản (PUBLISHED) của shop.
 - Hỗ trợ phân trang, sắp xếp, lọc.
-`
+`,
   })
   @ApiQuery({
     name: 'page',
@@ -305,7 +305,7 @@ export class ShopController {
 - Truyền \`id\` của shop trên URL.
 - Trả về danh sách danh mục của shop.
 - Hỗ trợ phân trang, sắp xếp, lọc.
-`
+`,
   })
   @ApiQuery({
     name: 'page',
@@ -363,7 +363,7 @@ export class ShopController {
 **Hướng dẫn sử dụng:**
 - Trả về danh sách shop thuộc về tài khoản đang đăng nhập.
 - Hỗ trợ phân trang, sắp xếp, lọc.
-`
+`,
   })
   @ApiQuery({
     name: 'page',
@@ -422,7 +422,7 @@ export class ShopController {
 - Truyền \`id\` của shop trên URL.
 - Chỉ trả về shop thuộc về tài khoản đang đăng nhập.
 - Nếu không tìm thấy sẽ trả về lỗi.
-`
+`,
   })
   @ApiOkResponse({
     schema: {

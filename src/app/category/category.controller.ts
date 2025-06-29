@@ -11,7 +11,7 @@ import {
   Put,
 } from '@nestjs/common';
 import { CategoryService } from '@/app/category/category.service';
-import { CategoryDto } from '@/app/category/category.dto';
+import { CategoryDto, ItemCategoryDto } from '@/app/category/category.dto';
 import {
   ApiBearerAuth,
   ApiExtraModels,
@@ -34,17 +34,240 @@ import {
   SortingParams,
   UserId,
 } from '@/common/decorators';
+import { ListDressDto } from '@/app/dress';
+import { ListServiceDto } from '@/app/service';
+import { ListBlogDto } from '@/app/blog';
 
 @Controller('categories')
-@UseGuards(AuthGuard)
-@Roles(UserRole.SHOP)
 @ApiTags('Category Controller')
 @ApiBearerAuth()
-@ApiExtraModels(ItemResponse, ListResponse, Category)
+@ApiExtraModels(
+  ItemResponse,
+  ListResponse,
+  Category,
+  ItemCategoryDto,
+  ListDressDto,
+  ListServiceDto,
+  ListBlogDto,
+)
 export class CategoryController {
   constructor(private readonly categoryService: CategoryService) {}
 
-  @Post()
+  @Get(':id')
+  @ApiOperation({
+    summary: 'Lấy chi tiết danh mục',
+    description: `
+**Hướng dẫn sử dụng:**
+- Truyền \`id\` của danh mục trên URL.
+- Nếu không tìm thấy sẽ trả về lỗi.
+`,
+  })
+  @ApiOkResponse({
+    schema: {
+      allOf: [
+        { $ref: getSchemaPath(ItemResponse) },
+        {
+          properties: {
+            item: { $ref: getSchemaPath(ItemCategoryDto) },
+          },
+        },
+      ],
+    },
+  })
+  async findCategoryForCustomer(@Param('id') id: string): Promise<ItemResponse<ItemCategoryDto>> {
+    const category = await this.categoryService.findCategoryForCustomer(id);
+    return {
+      statusCode: HttpStatus.OK,
+      message: 'Đây thông tin chi tiết của Category',
+      item: category,
+    };
+  }
+
+  @Get(':id/dresses')
+  @ApiQuery({
+    name: 'page',
+    required: false,
+    type: Number,
+    default: 0,
+    description: 'Trang hiện tại (bắt đầu từ 0)',
+  })
+  @ApiQuery({
+    name: 'size',
+    required: false,
+    type: Number,
+    default: 10,
+    description: 'Số lượng mỗi trang',
+  })
+  @ApiQuery({
+    name: 'sort',
+    required: false,
+    type: String,
+    description: 'Sắp xếp theo trường, ví dụ: :asc',
+  })
+  @ApiQuery({
+    name: 'filter',
+    required: false,
+    type: String,
+    description: 'Lọc theo trường, ví dụ: :like:',
+  })
+  @ApiOperation({
+    summary: 'Lấy danh sách danh mục của người dùng hiện tại',
+    description: `
+**Hướng dẫn sử dụng:**
+- API trả về danh sách các danh mục thuộc về tài khoản đang đăng nhập.
+- Hỗ trợ phân trang, sắp xếp, lọc:
+  - \`page\`: Số trang (bắt đầu từ 0)
+  - \`size\`: Số lượng mỗi trang
+  - \`sort\`: Ví dụ: name:asc
+  - \`filter\`: Ví dụ: :like:
+- Chỉ trả về danh mục của user hiện tại.
+`,
+  })
+  @ApiOkResponse({
+    schema: {
+      allOf: [
+        { $ref: getSchemaPath(ListResponse) },
+        {
+          properties: {
+            item: { $ref: getSchemaPath(ListDressDto) },
+          },
+        },
+      ],
+    },
+  })
+  async findDressesForCustomer(
+    @Param('id') id: string,
+    @PaginationParams() pagination: Pagination,
+    @SortingParams(['name', 'ratingAverage', 'isSellable']) sort?: Sorting,
+    @FilteringParams(['name', 'ratingAverage', 'isRentable']) filter?: Filtering,
+  ): Promise<ListResponse<ListDressDto>> {
+    return await this.categoryService.findDressesForCustomer(id, pagination, sort, filter);
+  }
+
+  @Get(':id/services')
+  @ApiQuery({
+    name: 'page',
+    required: false,
+    type: Number,
+    default: 0,
+    description: 'Trang hiện tại (bắt đầu từ 0)',
+  })
+  @ApiQuery({
+    name: 'size',
+    required: false,
+    type: Number,
+    default: 10,
+    description: 'Số lượng mỗi trang',
+  })
+  @ApiQuery({
+    name: 'sort',
+    required: false,
+    type: String,
+    description: 'Sắp xếp theo trường, ví dụ: :asc',
+  })
+  @ApiQuery({
+    name: 'filter',
+    required: false,
+    type: String,
+    description: 'Lọc theo trường, ví dụ: :like:',
+  })
+  @ApiOperation({
+    summary: 'Lấy danh sách danh mục của người dùng hiện tại',
+    description: `
+**Hướng dẫn sử dụng:**
+- API trả về danh sách các danh mục thuộc về tài khoản đang đăng nhập.
+- Hỗ trợ phân trang, sắp xếp, lọc:
+  - \`page\`: Số trang (bắt đầu từ 0)
+  - \`size\`: Số lượng mỗi trang
+  - \`sort\`: Ví dụ: name:asc
+  - \`filter\`: Ví dụ: :like:
+`,
+  })
+  @ApiOkResponse({
+    schema: {
+      allOf: [
+        { $ref: getSchemaPath(ListResponse) },
+        {
+          properties: {
+            item: { $ref: getSchemaPath(ListServiceDto) },
+          },
+        },
+      ],
+    },
+  })
+  async findServicesForCustomer(
+    @Param('id') id: string,
+    @PaginationParams() pagination: Pagination,
+    @SortingParams(['name', 'ratingAverage']) sort?: Sorting,
+    @FilteringParams(['name', 'ratingAverage']) filter?: Filtering,
+  ): Promise<ListResponse<ListServiceDto>> {
+    return await this.categoryService.findServicesForCustomer(id, pagination, sort, filter);
+  }
+
+  @Get(':id/blogs')
+  @ApiQuery({
+    name: 'page',
+    required: false,
+    type: Number,
+    default: 0,
+    description: 'Trang hiện tại (bắt đầu từ 0)',
+  })
+  @ApiQuery({
+    name: 'size',
+    required: false,
+    type: Number,
+    default: 10,
+    description: 'Số lượng mỗi trang',
+  })
+  @ApiQuery({
+    name: 'sort',
+    required: false,
+    type: String,
+    description: 'Sắp xếp theo trường, ví dụ: :asc',
+  })
+  @ApiQuery({
+    name: 'filter',
+    required: false,
+    type: String,
+    description: 'Lọc theo trường, ví dụ: :like:',
+  })
+  @ApiOperation({
+    summary: 'Lấy danh sách danh mục của người dùng hiện tại',
+    description: `
+**Hướng dẫn sử dụng:**
+- API trả về danh sách các danh mục thuộc về tài khoản đang đăng nhập.
+- Hỗ trợ phân trang, sắp xếp, lọc:
+  - \`page\`: Số trang (bắt đầu từ 0)
+  - \`size\`: Số lượng mỗi trang
+  - \`sort\`: Ví dụ: name:asc
+  - \`filter\`: Ví dụ: :like:
+- Chỉ trả về danh mục của user hiện tại.
+`,
+  })
+  @ApiOkResponse({
+    schema: {
+      allOf: [
+        { $ref: getSchemaPath(ListResponse) },
+        {
+          properties: {
+            item: { $ref: getSchemaPath(ListBlogDto) },
+          },
+        },
+      ],
+    },
+  })
+  async findBlogsForCustomer(
+    @Param('id') id: string,
+    @PaginationParams() pagination: Pagination,
+    @SortingParams(['title']) sort?: Sorting,
+    @FilteringParams(['title']) filter?: Filtering,
+  ): Promise<ListResponse<ListBlogDto>> {
+    return await this.categoryService.findBlogsForCustomer(id, pagination, sort, filter);
+  }
+
+  @Post('me')
+  @UseGuards(AuthGuard)
+  @Roles(UserRole.SHOP)
   @ApiOperation({
     summary: 'Tạo mới danh mục sản phẩm',
     description: `
@@ -69,11 +292,11 @@ export class CategoryController {
       ],
     },
   })
-  async create(
+  async createCategoryForOwner(
     @UserId() userId: string,
     @Body() categoryDto: CategoryDto,
   ): Promise<ItemResponse<Category>> {
-    const category = await this.categoryService.create(userId, categoryDto);
+    const category = await this.categoryService.createCategoryForOwner(userId, categoryDto);
     return {
       statusCode: HttpStatus.CREATED,
       message: 'Thư mục phân loại đã được tạo',
@@ -81,7 +304,9 @@ export class CategoryController {
     };
   }
 
-  @Get()
+  @Get('me')
+  @UseGuards(AuthGuard)
+  @Roles(UserRole.SHOP)
   @ApiQuery({
     name: 'page',
     required: false,
@@ -133,16 +358,18 @@ export class CategoryController {
       ],
     },
   })
-  async findAll(
+  async findCategoriesForOwner(
     @UserId() userId: string,
     @PaginationParams() pagination: Pagination,
     @SortingParams(['name']) sort?: Sorting,
     @FilteringParams(['name']) filter?: Filtering,
   ): Promise<ListResponse<Category>> {
-    return await this.categoryService.findAll(userId, pagination, sort, filter);
+    return await this.categoryService.findCategoriesForOwner(userId, pagination, sort, filter);
   }
 
-  @Get(':id')
+  @Get(':id/me')
+  @UseGuards(AuthGuard)
+  @Roles(UserRole.SHOP)
   @ApiOperation({
     summary: 'Lấy chi tiết danh mục',
     description: `
@@ -164,11 +391,11 @@ export class CategoryController {
       ],
     },
   })
-  async findOne(
+  async findCategoryForOwner(
     @UserId() userId: string,
     @Param('id') id: string,
   ): Promise<ItemResponse<Category>> {
-    const category = await this.categoryService.findOne(userId, id);
+    const category = await this.categoryService.findCategoryForOwner(userId, id);
     return {
       statusCode: HttpStatus.OK,
       message: 'Đây thông tin chi tiết của Category',
@@ -176,7 +403,9 @@ export class CategoryController {
     };
   }
 
-  @Put(':id')
+  @Put(':id/me')
+  @UseGuards(AuthGuard)
+  @Roles(UserRole.SHOP)
   @ApiOperation({
     summary: 'Cập nhật danh mục',
     description: `
@@ -199,12 +428,12 @@ export class CategoryController {
       ],
     },
   })
-  async update(
+  async updateCategoryForOwner(
     @UserId() userId: string,
     @Param('id') id: string,
     @Body() body: CategoryDto,
   ): Promise<ItemResponse<null>> {
-    await this.categoryService.update(userId, id, body);
+    await this.categoryService.updateCategoryForOwner(userId, id, body);
     return {
       statusCode: HttpStatus.OK,
       message: 'Category đã được cập nhật',
@@ -212,7 +441,9 @@ export class CategoryController {
     };
   }
 
-  @Delete(':id')
+  @Delete(':id/me')
+  @UseGuards(AuthGuard)
+  @Roles(UserRole.SHOP)
   @ApiOperation({
     summary: 'Xóa mềm danh mục',
     description: `
@@ -234,8 +465,11 @@ export class CategoryController {
       ],
     },
   })
-  async remove(@UserId() userId: string, @Param('id') id: string): Promise<ItemResponse<null>> {
-    await this.categoryService.remove(userId, id);
+  async removeCategoryForOwner(
+    @UserId() userId: string,
+    @Param('id') id: string,
+  ): Promise<ItemResponse<null>> {
+    await this.categoryService.removeCategoryForOwner(userId, id);
     return {
       statusCode: HttpStatus.OK,
       message: 'Category đã được xóa',
@@ -243,7 +477,9 @@ export class CategoryController {
     };
   }
 
-  @Patch(':id')
+  @Patch(':id/me')
+  @UseGuards(AuthGuard)
+  @Roles(UserRole.SHOP)
   @ApiOperation({
     summary: 'Khôi phục danh mục đã xóa mềm',
     description: `
@@ -265,8 +501,11 @@ export class CategoryController {
       ],
     },
   })
-  async restore(@UserId() userId: string, @Param('id') id: string): Promise<ItemResponse<null>> {
-    await this.categoryService.restore(userId, id);
+  async restoreCategoryForOwner(
+    @UserId() userId: string,
+    @Param('id') id: string,
+  ): Promise<ItemResponse<null>> {
+    await this.categoryService.restoreCategoryForOwner(userId, id);
     return {
       statusCode: HttpStatus.OK,
       message: 'Category đã khôi phục',

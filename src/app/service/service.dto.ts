@@ -10,12 +10,20 @@ export class ListServiceDto {
   @ApiProperty({ description: 'Tên dịch vụ', example: 'Trang điểm cô dâu' })
   name: string;
 
-  @ApiProperty({ description: 'Ảnh đại diện dịch vụ (URL)', example: 'https://storage.veila.com/services/img123.jpg', nullable: true })
+  @ApiProperty({
+    description: 'Ảnh đại diện dịch vụ (URL)',
+    example: 'https://storage.veila.com/services/img123.jpg',
+    nullable: true,
+  })
   images: string | null;
 
   @ApiProperty({ description: 'Điểm đánh giá trung bình', example: 4.7 })
   ratingAverage: number;
 
-  @ApiProperty({ enum: ServiceStatus, description: 'Trạng thái dịch vụ', example: ServiceStatus.ACTIVE })
+  @ApiProperty({
+    enum: ServiceStatus,
+    description: 'Trạng thái dịch vụ',
+    example: ServiceStatus.ACTIVE,
+  })
   status: ServiceStatus;
 }

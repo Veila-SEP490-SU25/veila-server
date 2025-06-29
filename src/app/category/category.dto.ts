@@ -42,7 +42,11 @@ export class ListCategoryDto {
   @ApiProperty({ description: 'Tên danh mục', example: 'Đầm Dự Tiệc' })
   name: string;
 
-  @ApiProperty({ description: 'Ảnh đại diện danh mục (URL)', example: 'https://storage.veila.com/categories/img123.jpg', nullable: true })
+  @ApiProperty({
+    description: 'Ảnh đại diện danh mục (URL)',
+    example: 'https://storage.veila.com/categories/img123.jpg',
+    nullable: true,
+  })
   images: string | null;
 
   @ApiProperty({ enum: CategoryType, description: 'Loại danh mục', example: CategoryType.DRESS })
@@ -56,10 +60,18 @@ export class ItemCategoryDto {
   @ApiProperty({ description: 'Tên danh mục', example: 'Đầm Dự Tiệc' })
   name: string;
 
-  @ApiProperty({ description: 'Ảnh đại diện danh mục (URL)', example: 'https://storage.veila.com/categories/img123.jpg', nullable: true })
+  @ApiProperty({
+    description: 'Ảnh đại diện danh mục (URL)',
+    example: 'https://storage.veila.com/categories/img123.jpg',
+    nullable: true,
+  })
   images: string | null;
 
-  @ApiProperty({ description: 'Mô tả danh mục', example: 'Những mẫu đầm dự tiệc sang trọng và thanh lịch', nullable: true })
+  @ApiProperty({
+    description: 'Mô tả danh mục',
+    example: 'Những mẫu đầm dự tiệc sang trọng và thanh lịch',
+    nullable: true,
+  })
   description: string | null;
 
   @ApiProperty({ enum: CategoryType, description: 'Loại danh mục', example: CategoryType.DRESS })

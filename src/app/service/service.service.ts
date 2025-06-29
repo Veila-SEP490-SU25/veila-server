@@ -29,4 +29,26 @@ export class ServiceService {
       skip: offset,
     });
   }
+
+  async findAndCountOfCategoryForCustomer(
+    categoryId: string,
+    limit: number,
+    offset: number,
+    sort?: Sorting,
+    filter?: Filtering,
+  ): Promise<[Service[], number]> {
+    const dynamicFilter = getWhere(filter);
+    const where = {
+      ...dynamicFilter,
+      category: { id: categoryId },
+      status: ServiceStatus.ACTIVE,
+    };
+    const order = getOrder(sort);
+    return await this.serviceRepository.findAndCount({
+      where,
+      order,
+      take: limit,
+      skip: offset,
+    });
+  }
 }
