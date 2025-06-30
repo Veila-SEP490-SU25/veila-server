@@ -19,7 +19,7 @@ import {
   ApiTags,
   getSchemaPath,
 } from '@nestjs/swagger';
-import { RefreshTokenDto } from './auth.dto';
+import { RefreshTokenDto } from '@/app/auth/auth.dto';
 import { User } from '@/common/models';
 
 @Controller('auth')
