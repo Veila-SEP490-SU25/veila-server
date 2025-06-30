@@ -1,6 +1,7 @@
 import { AppController } from '@/app/app.controller';
 import { AppService } from '@/app/app.service';
 import {
+  AccessoryModule,
   AuthModule,
   BlogModule,
   CategoryModule,
@@ -56,6 +57,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
     ShopModule,
     ServiceModule,
     BlogModule,
+    AccessoryModule,
   ],
   controllers: [AppController],
   providers: [

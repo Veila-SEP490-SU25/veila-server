@@ -265,6 +265,9 @@ export class CategoryController {
     return await this.categoryService.findBlogsForCustomer(id, pagination, sort, filter);
   }
 
+  @Get(':id/accessories')
+  async getAccessoriesForCustomer() {}
+
   @Post('me')
   @UseGuards(AuthGuard)
   @Roles(UserRole.SHOP)

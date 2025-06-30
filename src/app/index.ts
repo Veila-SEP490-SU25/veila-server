@@ -13,3 +13,4 @@ export * from '@/app/token';
 export * from '@/app/user';
 export * from '@/app/service';
 export * from '@/app/blog';
+export * from '@/app/accessory';

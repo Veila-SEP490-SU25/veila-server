@@ -136,6 +136,9 @@ export class ShopController {
     };
   }
 
+  @Get(':id/accessories')
+  async getAccessoriesForCustomer() {}
+
   @Get(':id/dresses')
   @ApiOperation({
     summary: 'Lấy danh sách váy cưới của shop cho khách hàng',
