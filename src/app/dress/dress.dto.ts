@@ -106,7 +106,6 @@ export class ItemDressDto {
 
   @ApiProperty({
     description: 'Danh sách feedback của váy cưới',
-    type: [Feedback],
   })
   feedbacks: Feedback[];
 }
