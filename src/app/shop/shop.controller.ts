@@ -24,9 +24,9 @@ import {
 } from '@/common/decorators';
 import { ItemShopDto, ListShopDto } from '@/app/shop/shop.dto';
 import { ListDressDto } from '@/app/dress';
-import { ListServiceDto } from '../service';
-import { ListBlogDto } from '../blog';
-import { ListCategoryDto } from '../category';
+import { ListServiceDto } from '@/app/service';
+import { ListBlogDto } from '@/app/blog';
+import { ListCategoryDto } from '@/app/category';
 
 @Controller('shops')
 @ApiTags('Shop Controller')
