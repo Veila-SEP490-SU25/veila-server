@@ -1,6 +1,16 @@
 import { ItemResponse, ListResponse } from '@/common/base';
-import { Dress } from '@/common/models';
-import { Controller, Get, HttpStatus, Param } from '@nestjs/common';
+import { Dress, UserRole } from '@/common/models';
+import {
+  Controller,
+  Delete,
+  Get,
+  HttpStatus,
+  Param,
+  Patch,
+  Post,
+  Put,
+  UseGuards,
+} from '@nestjs/common';
 import {
   ApiBearerAuth,
   ApiExtraModels,
@@ -16,10 +26,12 @@ import {
   FilteringParams,
   Pagination,
   PaginationParams,
+  Roles,
   Sorting,
   SortingParams,
 } from '@/common/decorators';
 import { ItemDressDto, ListDressDto } from '@/app/dress/dress.dto';
+import { AuthGuard } from '@/common/guards';
 
 @Controller('dresses')
 @ApiTags('Dress Controller')
@@ -98,4 +110,34 @@ export class DressController {
       item: dress,
     };
   }
+
+  @Get('/me')
+  @UseGuards(AuthGuard)
+  @Roles(UserRole.SHOP)
+  async getDressesForOwner() {}
+
+  @Get(':id/me')
+  @UseGuards(AuthGuard)
+  @Roles(UserRole.SHOP)
+  async getDressForOwner() {}
+
+  @Post('/me')
+  @UseGuards(AuthGuard)
+  @Roles(UserRole.SHOP)
+  async createDressForOwner() {}
+
+  @Put(':id/me')
+  @UseGuards(AuthGuard)
+  @Roles(UserRole.SHOP)
+  async updateDressForOwner() {}
+
+  @Delete(':id/me')
+  @UseGuards(AuthGuard)
+  @Roles(UserRole.SHOP)
+  async removeDressForOwner() {}
+
+  @Patch(':id/me')
+  @UseGuards(AuthGuard)
+  @Roles(UserRole.SHOP)
+  async restoreDressForOwner() {}
 }
