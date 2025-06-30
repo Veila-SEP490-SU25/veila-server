@@ -4,6 +4,7 @@ import { Dress, DressStatus } from '@/common/models';
 import { HttpStatus, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
+import { ItemDressDto, ListDressDto } from '@/app/dress/dress.dto';
 
 @Injectable()
 export class DressService {
@@ -13,10 +14,11 @@ export class DressService {
     { page, size, limit, offset }: Pagination,
     sort?: Sorting,
     filter?: Filtering,
-  ): Promise<ListResponse<Dress>> {
+  ): Promise<ListResponse<ListDressDto>> {
     const dynamicFilter = getWhere(filter);
     const where = {
       ...dynamicFilter,
+      status: DressStatus.AVAILABLE,
     };
     const order = getOrder(sort);
     const [dresses, totalItems] = await this.dressRepository.findAndCount({
@@ -35,14 +37,22 @@ export class DressService {
       totalPages,
       hasNextPage: page + 1 < totalPages,
       hasPrevPage: 0 < page,
-      items: dresses,
+      items: { ...dresses },
     };
   }
 
-  async getDressForCustomer(id: string): Promise<Dress> {
-    const dress = await this.dressRepository.findOne({ where: { id: id } });
+  async getDressForCustomer(id: string): Promise<ItemDressDto> {
+    const dress = await this.dressRepository.findOne({
+      where: {
+        id,
+        status: DressStatus.AVAILABLE,
+      },
+      relations: {
+        feedbacks: true,
+      },
+    });
     if (!dress) throw new NotFoundException('Không tìm thấy váy cưới nào phù hợp');
-    return dress;
+    return { ...dress };
   }
 
   async findAndCountOfShopForCustomer(

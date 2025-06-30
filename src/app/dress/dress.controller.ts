@@ -1,5 +1,5 @@
 import { ItemResponse, ListResponse } from '@/common/base';
-import { Category, Dress } from '@/common/models';
+import { Dress } from '@/common/models';
 import { Controller, Get, HttpStatus, Param } from '@nestjs/common';
 import {
   ApiBearerAuth,
@@ -19,11 +19,12 @@ import {
   Sorting,
   SortingParams,
 } from '@/common/decorators';
+import { ItemDressDto, ListDressDto } from '@/app/dress/dress.dto';
 
 @Controller('dresses')
 @ApiTags('Dress Controller')
 @ApiBearerAuth()
-@ApiExtraModels(ItemResponse, ListResponse, Dress, Category)
+@ApiExtraModels(ItemResponse, ListResponse, Dress, ListDressDto, ItemDressDto)
 export class DressController {
   constructor(private readonly dressService: DressService) {}
 
@@ -61,7 +62,7 @@ export class DressController {
         { $ref: getSchemaPath(ListResponse) },
         {
           properties: {
-            item: { $ref: getSchemaPath(Dress) },
+            item: { $ref: getSchemaPath(ListDressDto) },
           },
         },
       ],
@@ -71,7 +72,7 @@ export class DressController {
     @PaginationParams() pagination: Pagination,
     @SortingParams(['name']) sort?: Sorting,
     @FilteringParams(['name']) filter?: Filtering,
-  ): Promise<ListResponse<Dress>> {
+  ): Promise<ListResponse<ListDressDto>> {
     return await this.dressService.getDressesForCustomer(pagination, sort, filter);
   }
 
@@ -83,13 +84,13 @@ export class DressController {
         { $ref: getSchemaPath(ItemResponse) },
         {
           properties: {
-            item: { $ref: getSchemaPath(Dress) },
+            item: { $ref: getSchemaPath(ItemDressDto) },
           },
         },
       ],
     },
   })
-  async getDressForCustomer(@Param('id') id: string): Promise<ItemResponse<Dress>> {
+  async getDressForCustomer(@Param('id') id: string): Promise<ItemResponse<ItemDressDto>> {
     const dress = await this.dressService.getDressForCustomer(id);
     return {
       message: 'Đây là thông tin chi tiết của Váy cưới',
