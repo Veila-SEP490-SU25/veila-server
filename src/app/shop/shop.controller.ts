@@ -31,7 +31,17 @@ import { ListCategoryDto } from '../category';
 @Controller('shops')
 @ApiTags('Shop Controller')
 @ApiBearerAuth()
-@ApiExtraModels(ItemResponse, ListResponse, Shop, ItemShopDto)
+@ApiExtraModels(
+  ItemResponse,
+  ListResponse,
+  Shop,
+  ItemShopDto,
+  ListShopDto,
+  ListDressDto,
+  ListServiceDto,
+  ListBlogDto,
+  ListCategoryDto,
+)
 export class ShopController {
   constructor(private readonly shopService: ShopService) {}
 
