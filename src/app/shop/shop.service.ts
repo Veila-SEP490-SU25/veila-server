@@ -48,7 +48,7 @@ export class ShopService {
       totalPages,
       hasNextPage: page + 1 < totalPages,
       hasPrevPage: 0 < page,
-      items: { ...shops },
+      items: shops,
     };
   }
 
@@ -86,7 +86,7 @@ export class ShopService {
       totalPages,
       hasNextPage: page + 1 < totalPages,
       hasPrevPage: 0 < page,
-      items: { ...dresses },
+      items: dresses,
     };
   }
 
