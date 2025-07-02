@@ -4,7 +4,7 @@ import { PasswordService } from '@/app/password';
 import { RedisService } from '@/app/redis';
 import { TokenService } from '@/app/token';
 import { UserService } from '@/app/user';
-import { User, UserStatus } from '@/common/models';
+import { User, UserRole, UserStatus } from '@/common/models';
 import {
   ForbiddenException,
   Injectable,
@@ -61,6 +61,9 @@ export class AuthService {
       isVerified: false,
       password: hashedActivationCode,
       id: uuidv4(),
+      role: UserRole.CUSTOMER,
+      isIdentified: false,
+      status: UserStatus.ACTIVE,
     } as User);
     await Promise.all([
       this.redisService.set(`user:otp:${newUser.id}`, hashedActivationCode, 5 * 60 * 1000),

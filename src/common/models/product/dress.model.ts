@@ -71,24 +71,6 @@ export class Dress extends Base {
   description: string | null;
 
   @Column({
-    name: 'quantity',
-    type: 'int',
-    unsigned: true,
-    nullable: false,
-    default: 0,
-    comment: 'Số lượng sản phẩm có sẵn',
-  })
-  @ApiProperty({
-    type: 'integer',
-    description: 'Số lượng sản phẩm có sẵn',
-    example: 10,
-    minimum: 0,
-    default: 0,
-    nullable: false,
-  })
-  quantity: number;
-
-  @Column({
     name: 'sell_price',
     type: 'decimal',
     precision: 10,

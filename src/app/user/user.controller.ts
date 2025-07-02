@@ -43,7 +43,7 @@ import { CreateUser, UpdateUser } from '@/app/user/user.dto';
 export class UserController {
   constructor(private readonly userService: UserService) {}
 
-  @Get()
+  @Get('super-admin')
   @Roles(UserRole.SUPER_ADMIN)
   @ApiOperation({
     summary: 'Lấy danh sách tài khoản người dùng (chỉ dành cho Super Admin)',
@@ -113,7 +113,7 @@ export class UserController {
     return await this.userService.getUsersForSuperAdmin(pagination, sort, filter);
   }
 
-  @Get(':id')
+  @Get(':id/super-admin')
   @Roles(UserRole.SUPER_ADMIN)
   @ApiOperation({
     summary: 'Lấy thông tin chi tiết tài khoản người dùng (chỉ dành cho Super Admin)',
@@ -147,7 +147,7 @@ export class UserController {
     };
   }
 
-  @Post()
+  @Post('super-admin')
   @Roles(UserRole.SUPER_ADMIN)
   @ApiOperation({
     summary: 'Tạo mới tài khoản người dùng (chỉ dành cho Super Admin)',
@@ -207,7 +207,7 @@ export class UserController {
     };
   }
 
-  @Put(':id')
+  @Put(':id/super-admin')
   @Roles(UserRole.SUPER_ADMIN)
   @ApiOperation({
     summary: 'Cập nhật tài khoản người dùng (chỉ dành cho Super Admin)',
@@ -271,7 +271,7 @@ export class UserController {
     };
   }
 
-  @Delete(':id')
+  @Delete(':id/super-admin')
   @Roles(UserRole.SUPER_ADMIN)
   @ApiOperation({
     summary: 'Xóa mềm tài khoản người dùng (chỉ dành cho Super Admin)',
@@ -304,7 +304,7 @@ export class UserController {
     };
   }
 
-  @Patch(':id')
+  @Patch(':id/super-admin')
   @Roles(UserRole.SUPER_ADMIN)
   @ApiOperation({
     summary: 'Khôi phục tài khoản người dùng đã bị xóa mềm (chỉ dành cho Super Admin)',
@@ -407,7 +407,7 @@ export class UserController {
     return await this.userService.getUsersForAdmin(pagination, sort, filter);
   }
 
-  @Get('admin/:id')
+  @Get(':id/admin')
   @Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN)
   @ApiOperation({
     summary: 'Lấy thông tin chi tiết tài khoản người dùng',
@@ -500,7 +500,7 @@ export class UserController {
     };
   }
 
-  @Put('admin/:id')
+  @Put(':id/admin')
   @Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN)
   @ApiOperation({
     summary: 'Cập nhật tài khoản người dùng (chỉ dành cho Admin hoặc Super Admin)',
@@ -564,7 +564,7 @@ export class UserController {
     };
   }
 
-  @Delete('admin/:id')
+  @Delete(':id/admin')
   @Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN)
   @ApiOperation({
     summary: 'Xóa mềm tài khoản người dùng',
@@ -597,7 +597,7 @@ export class UserController {
     };
   }
 
-  @Patch('admin/:id')
+  @Patch(':id/admin')
   @Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN)
   @ApiOperation({
     summary: 'Khôi phục tài khoản người dùng đã bị xóa mềm',
