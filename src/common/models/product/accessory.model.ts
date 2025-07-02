@@ -71,24 +71,6 @@ export class Accessory extends Base {
   description: string | null;
 
   @Column({
-    name: 'quantity',
-    type: 'int',
-    unsigned: true,
-    nullable: false,
-    default: 0,
-    comment: 'Số lượng phụ kiện có sẵn',
-  })
-  @ApiProperty({
-    type: 'integer',
-    description: 'Số lượng phụ kiện có sẵn',
-    example: 5,
-    minimum: 0,
-    default: 0,
-    nullable: false,
-  })
-  quantity: number;
-
-  @Column({
     name: 'sell_price',
     type: 'decimal',
     precision: 10,
@@ -110,25 +92,25 @@ export class Accessory extends Base {
   sellPrice: number;
 
   @Column({
-    name: 'retail_price',
+    name: 'rental_price',
     type: 'decimal',
     precision: 10,
     scale: 2,
     unsigned: true,
     nullable: false,
     default: 0.0,
-    comment: 'Giá bán lẻ của phụ kiện',
+    comment: 'Giá cho thuê của phụ kiện',
   })
   @ApiProperty({
     type: 'number',
     format: 'float',
-    description: 'Giá bán lẻ của phụ kiện (tối đa 10 chữ số, 2 chữ số thập phân)',
+    description: 'Giá cho thuê của phụ kiện (tối đa 10 chữ số, 2 chữ số thập phân)',
     example: 200.0,
     minimum: 0.0,
     default: 0.0,
     nullable: false,
   })
-  retailPrice: number;
+  rentalPrice: number;
 
   @Column({
     name: 'is_sellable',

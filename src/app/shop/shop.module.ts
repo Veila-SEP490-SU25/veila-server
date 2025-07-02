@@ -7,6 +7,7 @@ import { DressModule } from '@/app/dress';
 import { CategoryModule } from '@/app/category';
 import { BlogModule } from '@/app/blog';
 import { ServiceModule } from '@/app/service';
+import { AccessoryModule } from '@/app/accessory';
 
 @Module({
   imports: [
@@ -15,6 +16,7 @@ import { ServiceModule } from '@/app/service';
     CategoryModule,
     BlogModule,
     ServiceModule,
+    AccessoryModule,
   ],
   controllers: [ShopController],
   providers: [ShopService],
