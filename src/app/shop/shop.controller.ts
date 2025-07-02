@@ -27,6 +27,8 @@ import { ListDressDto } from '@/app/dress';
 import { ListServiceDto } from '@/app/service';
 import { ListBlogDto } from '@/app/blog';
 import { ListCategoryDto } from '@/app/category';
+import { ListAccessoryDto } from '@/app/accessory';
+import { plainToInstance } from 'class-transformer';
 
 @Controller('shops')
 @ApiTags('Shop Controller')
@@ -41,6 +43,7 @@ import { ListCategoryDto } from '@/app/category';
   ListServiceDto,
   ListBlogDto,
   ListCategoryDto,
+  ListAccessoryDto,
 )
 export class ShopController {
   constructor(private readonly shopService: ShopService) {}
@@ -137,7 +140,73 @@ export class ShopController {
   }
 
   @Get(':id/accessories')
-  async getAccessoriesForCustomer() {}
+  @ApiOperation({})
+  @ApiQuery({
+    name: 'page',
+    required: false,
+    type: Number,
+    default: 0,
+    description: 'Trang hiện tại (bắt đầu từ 0)',
+  })
+  @ApiQuery({
+    name: 'size',
+    required: false,
+    type: Number,
+    default: 10,
+    description: 'Số lượng mỗi trang',
+  })
+  @ApiQuery({
+    name: 'sort',
+    required: false,
+    type: String,
+    description: 'Sắp xếp theo trường, ví dụ: :asc',
+  })
+  @ApiQuery({
+    name: 'filter',
+    required: false,
+    type: String,
+    description: 'Lọc theo trường, ví dụ: :like:',
+  })
+  @ApiOkResponse({
+    schema: {
+      allOf: [
+        { $ref: getSchemaPath(ListResponse) },
+        {
+          properties: {
+            item: { $ref: getSchemaPath(ListAccessoryDto) },
+          },
+        },
+      ],
+    },
+  })
+  async getAccessoriesForCustomer(
+    @Param('id') id: string,
+    @PaginationParams() { page, size, limit, offset }: Pagination,
+    @SortingParams(['name', 'sellPrice', 'rentalPrice']) sort?: Sorting,
+    @FilteringParams(['name', 'sellPrice', 'rentalPrice', 'isSellable', 'isRentable', 'status'])
+    filter?: Filtering,
+  ): Promise<ListResponse<ListAccessoryDto>> {
+    const [accessories, totalItems] = await this.shopService.getAccessoriesForCustomer(
+      id,
+      limit,
+      offset,
+      sort,
+      filter,
+    );
+    const dto = plainToInstance(ListAccessoryDto, accessories, { excludeExtraneousValues: true });
+    const totalPages = Math.ceil(totalItems / size);
+    return {
+      message: 'Đây là danh sách phụ kiện của bạn',
+      statusCode: HttpStatus.OK,
+      pageIndex: page,
+      pageSize: size,
+      totalItems,
+      totalPages,
+      hasNextPage: page + 1 < totalPages,
+      hasPrevPage: 0 < page,
+      items: dto,
+    };
+  }
 
   @Get(':id/dresses')
   @ApiOperation({

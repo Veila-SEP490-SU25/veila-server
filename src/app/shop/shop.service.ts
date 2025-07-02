@@ -1,6 +1,6 @@
 import { ListResponse } from '@/common/base';
 import { Filtering, getOrder, getWhere, Pagination, Sorting } from '@/common/decorators';
-import { Shop, ShopStatus } from '@/common/models';
+import { Accessory, Shop, ShopStatus } from '@/common/models';
 import { HttpStatus, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
@@ -9,6 +9,7 @@ import { DressService, ListDressDto } from '@/app/dress';
 import { ListServiceDto, ServiceService } from '@/app/service';
 import { BlogService, ListBlogDto } from '@/app/blog';
 import { CategoryService, ListCategoryDto } from '@/app/category';
+import { AccessoryService } from '@/app/accessory';
 
 @Injectable()
 export class ShopService {
@@ -18,6 +19,7 @@ export class ShopService {
     private readonly serviceService: ServiceService,
     private readonly blogService: BlogService,
     private readonly categoryService: CategoryService,
+    private readonly accessoryService: AccessoryService,
   ) {}
 
   async getShopsForCustomer(
@@ -88,6 +90,23 @@ export class ShopService {
       hasPrevPage: 0 < page,
       items: dresses,
     };
+  }
+
+  async getAccessoriesForCustomer(
+    id: string,
+    take: number,
+    skip: number,
+    sort?: Sorting,
+    filter?: Filtering,
+  ): Promise<[Accessory[], number]> {
+    const existingShop = await this.getShopWithUserWithoutDeletedById(id);
+    return await this.accessoryService.findAndCountOfShopForCustomer(
+      existingShop.user.id,
+      take,
+      skip,
+      sort,
+      filter,
+    );
   }
 
   async getServicesForCustomer(

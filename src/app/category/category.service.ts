@@ -1,13 +1,14 @@
 import { HttpStatus, Injectable, NotFoundException } from '@nestjs/common';
 import { CategoryDto, ItemCategoryDto } from '@/app/category/category.dto';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Category } from '@/common/models';
+import { Accessory, Category } from '@/common/models';
 import { Repository } from 'typeorm';
 import { ListResponse } from '@/common/base';
 import { Filtering, getOrder, getWhere, Pagination, Sorting } from '@/common/decorators';
 import { DressService, ListDressDto } from '@/app/dress';
 import { ListServiceDto, ServiceService } from '@/app/service';
 import { BlogService, ListBlogDto } from '@/app/blog';
+import { AccessoryService } from '@/app/accessory';
 
 @Injectable()
 export class CategoryService {
@@ -16,6 +17,7 @@ export class CategoryService {
     private readonly dressService: DressService,
     private readonly serviceService: ServiceService,
     private readonly blogService: BlogService,
+    private readonly accessoryService: AccessoryService,
   ) {}
 
   async findCategoryForCustomer(id: string): Promise<ItemCategoryDto> {
@@ -103,6 +105,22 @@ export class CategoryService {
       hasPrevPage: 0 < page,
       items: { ...blogs },
     };
+  }
+
+  async getAccessoriesForCustomer(
+    id: string,
+    take: number,
+    skip: number,
+    sort?: Sorting,
+    filter?: Filtering,
+  ): Promise<[Accessory[], number]> {
+    return await this.accessoryService.findAndCountOfCategoryForCustomer(
+      id,
+      take,
+      skip,
+      sort,
+      filter,
+    );
   }
 
   async createCategoryForOwner(userId: string, categoryDto: CategoryDto): Promise<Category> {
