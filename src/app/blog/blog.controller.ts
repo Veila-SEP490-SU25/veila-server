@@ -70,7 +70,26 @@ export class BlogController {
     type: String,
     description: 'Lọc theo trường, ví dụ: :like:',
   })
-  @ApiOperation({})
+  @ApiOperation({
+    summary: 'Lấy danh sách blog cho khách hàng',
+    description: `
+**Hướng dẫn sử dụng:**
+
+- **Phân trang:**
+  - \`page\`: Số trang (bắt đầu từ 0)
+  - \`size\`: Số lượng bản ghi mỗi trang
+
+- **Sắp xếp:**
+  - \`sort\`: Định dạng \`[tên_field]:[asc|desc]\`
+  - Ví dụ: \`sort=title:asc\`
+
+- **Lọc dữ liệu:**
+  - \`filter\`: Định dạng \`[tên_field]:[rule]:[giá trị]\`
+  - Ví dụ: \`filter=title:like:veila\`
+
+- Chỉ trả về các blog đã xuất bản (PUBLISHED).
+`,
+  })
   @ApiOkResponse({
     schema: {
       allOf: [
@@ -110,7 +129,16 @@ export class BlogController {
   }
 
   @Get(':id')
-  @ApiOperation({})
+  @ApiOperation({
+    summary: 'Lấy thông tin chi tiết blog cho khách hàng',
+    description: `
+**Hướng dẫn sử dụng:**
+
+- Truyền \`id\` của blog trên URL.
+- Chỉ trả về blog ở trạng thái PUBLISHED.
+- Nếu không tìm thấy sẽ trả về lỗi.
+`,
+  })
   @ApiOkResponse({
     schema: {
       allOf: [
@@ -162,7 +190,15 @@ export class BlogController {
     type: String,
     description: 'Lọc theo trường, ví dụ: :like:',
   })
-  @ApiOperation({})
+  @ApiOperation({
+    summary: 'Lấy danh sách blog của chủ shop đang đăng nhập',
+    description: `
+**Hướng dẫn sử dụng:**
+
+- Trả về danh sách blog thuộc về tài khoản shop đang đăng nhập (bao gồm cả đã xóa mềm).
+- Hỗ trợ phân trang, sắp xếp, lọc.
+`,
+  })
   @ApiOkResponse({
     schema: {
       allOf: [
@@ -179,7 +215,7 @@ export class BlogController {
     @UserId() userId: string,
     @PaginationParams() { page, size, limit, offset }: Pagination,
     @SortingParams(['title']) sort?: Sorting,
-    @FilteringParams(['title']) filter?: Filtering,
+    @FilteringParams(['title', 'status']) filter?: Filtering,
   ): Promise<ListResponse<Blog>> {
     const [blogs, totalItems] = await this.blogService.getBlogsForOwner(
       userId,
@@ -206,7 +242,16 @@ export class BlogController {
   @Get(':id/me')
   @UseGuards(AuthGuard)
   @Roles(UserRole.SHOP)
-  @ApiOperation({})
+  @ApiOperation({
+    summary: 'Lấy chi tiết blog của chủ shop đang đăng nhập',
+    description: `
+**Hướng dẫn sử dụng:**
+
+- Truyền \`id\` của blog trên URL.
+- Chỉ trả về blog thuộc về tài khoản shop đang đăng nhập (bao gồm cả đã xóa mềm).
+- Nếu không tìm thấy sẽ trả về lỗi.
+`,
+  })
   @ApiOkResponse({
     schema: {
       allOf: [
@@ -234,7 +279,17 @@ export class BlogController {
   @Post('me')
   @UseGuards(AuthGuard)
   @Roles(UserRole.SHOP)
-  @ApiOperation({})
+  @ApiOperation({
+    summary: 'Tạo mới blog cho chủ shop đang đăng nhập',
+    description: `
+**Hướng dẫn sử dụng:**
+
+- Gửi thông tin blog cần tạo ở phần Body dưới dạng JSON.
+- Blog sẽ gắn với tài khoản shop đang đăng nhập.
+- Các trường bắt buộc: \`title\`, \`content\`, \`status\`, ...
+- Trả về thông tin blog vừa tạo.
+`,
+  })
   @ApiOkResponse({
     schema: {
       allOf: [
@@ -262,7 +317,17 @@ export class BlogController {
   @Put(':id/me')
   @UseGuards(AuthGuard)
   @Roles(UserRole.SHOP)
-  @ApiOperation({})
+  @ApiOperation({
+    summary: 'Cập nhật blog của chủ shop đang đăng nhập',
+    description: `
+**Hướng dẫn sử dụng:**
+
+- Truyền \`id\` của blog trên URL.
+- Gửi thông tin cập nhật ở phần Body.
+- Chỉ cập nhật blog thuộc về tài khoản shop đang đăng nhập.
+- Nếu không tìm thấy sẽ trả về lỗi.
+`,
+  })
   @ApiOkResponse({
     schema: {
       allOf: [
@@ -291,7 +356,16 @@ export class BlogController {
   @Delete(':id/me')
   @UseGuards(AuthGuard)
   @Roles(UserRole.SHOP)
-  @ApiOperation({})
+  @ApiOperation({
+    summary: 'Xóa mềm blog của chủ shop đang đăng nhập',
+    description: `
+**Hướng dẫn sử dụng:**
+
+- Truyền \`id\` của blog trên URL.
+- Chỉ xóa mềm blog thuộc về tài khoản shop đang đăng nhập.
+- Nếu không tìm thấy sẽ trả về lỗi.
+`,
+  })
   @ApiOkResponse({
     schema: {
       allOf: [
@@ -319,7 +393,16 @@ export class BlogController {
   @Patch(':id/me')
   @UseGuards(AuthGuard)
   @Roles(UserRole.SHOP)
-  @ApiOperation({})
+  @ApiOperation({
+    summary: 'Khôi phục blog đã xóa mềm của chủ shop đang đăng nhập',
+    description: `
+**Hướng dẫn sử dụng:**
+
+- Truyền \`id\` của blog trên URL.
+- Chỉ khôi phục blog thuộc về tài khoản shop đang đăng nhập.
+- Nếu không tìm thấy sẽ trả về lỗi.
+`,
+  })
   @ApiOkResponse({
     schema: {
       allOf: [

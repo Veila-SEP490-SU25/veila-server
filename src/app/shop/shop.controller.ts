@@ -102,8 +102,8 @@ export class ShopController {
   })
   async getShopsForCustomer(
     @PaginationParams() pagination: Pagination,
-    @SortingParams([]) sort?: Sorting,
-    @FilteringParams([]) filter?: Filtering,
+    @SortingParams(['name']) sort?: Sorting,
+    @FilteringParams(['name']) filter?: Filtering,
   ): Promise<ListResponse<ListShopDto>> {
     return await this.shopService.getShopsForCustomer(pagination, sort, filter);
   }
@@ -259,8 +259,17 @@ export class ShopController {
   async getDressesForCustomer(
     @Param('id') id: string,
     @PaginationParams() pagination: Pagination,
-    @SortingParams([]) sort?: Sorting,
-    @FilteringParams([]) filter?: Filtering,
+    @SortingParams(['name', 'sellPrice', 'rentalPrice', 'ratingAverage']) sort?: Sorting,
+    @FilteringParams([
+      'name',
+      'sellPrice',
+      'rentalPrice',
+      'isSellable',
+      'isRentable',
+      'ratingAverage',
+      'status',
+    ])
+    filter?: Filtering,
   ): Promise<ListResponse<ListDressDto>> {
     return await this.shopService.getDressesForCustomer(id, pagination, sort, filter);
   }
@@ -316,8 +325,8 @@ export class ShopController {
   async getServicesForCustomer(
     @Param('id') id: string,
     @PaginationParams() pagination: Pagination,
-    @SortingParams([]) sort?: Sorting,
-    @FilteringParams([]) filter?: Filtering,
+    @SortingParams(['name', 'ratingAverage']) sort?: Sorting,
+    @FilteringParams(['name', 'ratingAverage', 'status']) filter?: Filtering,
   ): Promise<ListResponse<ListServiceDto>> {
     return await this.shopService.getServicesForCustomer(id, pagination, sort, filter);
   }
@@ -373,8 +382,8 @@ export class ShopController {
   async getBlogsForCustomer(
     @Param('id') id: string,
     @PaginationParams() pagination: Pagination,
-    @SortingParams([]) sort?: Sorting,
-    @FilteringParams([]) filter?: Filtering,
+    @SortingParams(['title']) sort?: Sorting,
+    @FilteringParams(['title']) filter?: Filtering,
   ): Promise<ListResponse<ListBlogDto>> {
     return await this.shopService.getBlogsForCustomer(id, pagination, sort, filter);
   }
@@ -430,8 +439,8 @@ export class ShopController {
   async getCategoriesForCustomer(
     @Param('id') id: string,
     @PaginationParams() pagination: Pagination,
-    @SortingParams([]) sort?: Sorting,
-    @FilteringParams([]) filter?: Filtering,
+    @SortingParams(['name']) sort?: Sorting,
+    @FilteringParams(['name']) filter?: Filtering,
   ): Promise<ListResponse<ListCategoryDto>> {
     return await this.shopService.getCategoriesForCustomer(id, pagination, sort, filter);
   }
@@ -488,8 +497,8 @@ export class ShopController {
   async getShopsForOwner(
     @UserId() userId: string,
     @PaginationParams() pagination: Pagination,
-    @SortingParams([]) sort?: Sorting,
-    @FilteringParams([]) filter?: Filtering,
+    @SortingParams(['name']) sort?: Sorting,
+    @FilteringParams(['name', 'taxCode', 'status']) filter?: Filtering,
   ): Promise<ListResponse<Shop>> {
     return await this.shopService.getShopsForOwner(userId, pagination, sort, filter);
   }

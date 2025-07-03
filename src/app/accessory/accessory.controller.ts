@@ -44,7 +44,16 @@ export class AccessoryController {
   constructor(private readonly accessoryService: AccessoryService) {}
 
   @Get(':id')
-  @ApiOperation({})
+  @ApiOperation({
+    summary: 'Lấy thông tin chi tiết phụ kiện cho khách hàng',
+    description: `
+**Hướng dẫn sử dụng:**
+
+- Truyền \`id\` của phụ kiện trên URL.
+- Chỉ trả về phụ kiện ở trạng thái AVAILABLE.
+- Nếu không tìm thấy sẽ trả về lỗi.
+`,
+  })
   @ApiOkResponse({
     schema: {
       allOf: [
@@ -70,7 +79,15 @@ export class AccessoryController {
   @Get('me')
   @UseGuards(AuthGuard)
   @Roles(UserRole.SHOP)
-  @ApiOperation({})
+  @ApiOperation({
+    summary: 'Lấy danh sách phụ kiện của chủ shop đang đăng nhập',
+    description: `
+**Hướng dẫn sử dụng:**
+
+- Trả về danh sách phụ kiện thuộc về tài khoản shop đang đăng nhập (bao gồm cả đã xóa mềm).
+- Hỗ trợ phân trang, sắp xếp, lọc.
+`,
+  })
   @ApiQuery({
     name: 'page',
     required: false,
@@ -140,7 +157,16 @@ export class AccessoryController {
   @Get(':id/me')
   @UseGuards(AuthGuard)
   @Roles(UserRole.SHOP)
-  @ApiOperation({})
+  @ApiOperation({
+    summary: 'Lấy chi tiết phụ kiện của chủ shop đang đăng nhập',
+    description: `
+**Hướng dẫn sử dụng:**
+
+- Truyền \`id\` của phụ kiện trên URL.
+- Chỉ trả về phụ kiện thuộc về tài khoản shop đang đăng nhập (bao gồm cả đã xóa mềm).
+- Nếu không tìm thấy sẽ trả về lỗi.
+`,
+  })
   @ApiOkResponse({
     schema: {
       allOf: [
@@ -168,7 +194,17 @@ export class AccessoryController {
   @Post('me')
   @UseGuards(AuthGuard)
   @Roles(UserRole.SHOP)
-  @ApiOperation({})
+  @ApiOperation({
+    summary: 'Tạo mới phụ kiện cho chủ shop đang đăng nhập',
+    description: `
+**Hướng dẫn sử dụng:**
+
+- Gửi thông tin phụ kiện cần tạo ở phần Body dưới dạng JSON.
+- Phụ kiện sẽ gắn với tài khoản shop đang đăng nhập.
+- Các trường bắt buộc: \`name\`, \`sellPrice\`, \`status\`, ...
+- Trả về thông tin phụ kiện vừa tạo.
+`,
+  })
   @ApiOkResponse({
     schema: {
       allOf: [
@@ -196,7 +232,17 @@ export class AccessoryController {
   @Put(':id/me')
   @UseGuards(AuthGuard)
   @Roles(UserRole.SHOP)
-  @ApiOperation({})
+  @ApiOperation({
+    summary: 'Cập nhật phụ kiện của chủ shop đang đăng nhập',
+    description: `
+**Hướng dẫn sử dụng:**
+
+- Truyền \`id\` của phụ kiện trên URL.
+- Gửi thông tin cập nhật ở phần Body.
+- Chỉ cập nhật phụ kiện thuộc về tài khoản shop đang đăng nhập.
+- Nếu không tìm thấy sẽ trả về lỗi.
+`,
+  })
   @ApiOkResponse({
     schema: {
       allOf: [
@@ -231,7 +277,16 @@ export class AccessoryController {
   @Delete(':id/me')
   @UseGuards(AuthGuard)
   @Roles(UserRole.SHOP)
-  @ApiOperation({})
+  @ApiOperation({
+    summary: 'Xóa mềm phụ kiện của chủ shop đang đăng nhập',
+    description: `
+**Hướng dẫn sử dụng:**
+
+- Truyền \`id\` của phụ kiện trên URL.
+- Chỉ xóa mềm phụ kiện thuộc về tài khoản shop đang đăng nhập.
+- Nếu không tìm thấy sẽ trả về lỗi.
+`,
+  })
   @ApiOkResponse({
     schema: {
       allOf: [
@@ -262,7 +317,16 @@ export class AccessoryController {
   @Patch(':id/me')
   @UseGuards(AuthGuard)
   @Roles(UserRole.SHOP)
-  @ApiOperation({})
+  @ApiOperation({
+    summary: 'Khôi phục phụ kiện đã xóa mềm của chủ shop đang đăng nhập',
+    description: `
+**Hướng dẫn sử dụng:**
+
+- Truyền \`id\` của phụ kiện trên URL.
+- Chỉ khôi phục phụ kiện thuộc về tài khoản shop đang đăng nhập.
+- Nếu không tìm thấy sẽ trả về lỗi.
+`,
+  })
   @ApiOkResponse({
     schema: {
       allOf: [

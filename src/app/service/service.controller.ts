@@ -70,7 +70,20 @@ export class ServiceController {
     type: String,
     description: 'Lọc theo trường, ví dụ: :like:',
   })
-  @ApiOperation({})
+  @ApiOperation({
+    summary: 'Lấy danh sách dịch vụ cho khách hàng',
+    description: `
+**Hướng dẫn sử dụng:**
+
+- Trả về danh sách các dịch vụ đang ở trạng thái ACTIVE.
+- Hỗ trợ phân trang, sắp xếp, lọc:
+  - \`page\`: Số trang (bắt đầu từ 0)
+  - \`size\`: Số lượng mỗi trang
+  - \`sort\`: Ví dụ: name:asc
+  - \`filter\`: Ví dụ: name:like:trang điểm
+- Chỉ trả về dịch vụ khả dụng cho khách hàng.
+`,
+  })
   @ApiOkResponse({
     schema: {
       allOf: [
@@ -110,7 +123,16 @@ export class ServiceController {
   }
 
   @Get(':id')
-  @ApiOperation({})
+  @ApiOperation({
+    summary: 'Lấy thông tin chi tiết dịch vụ cho khách hàng',
+    description: `
+**Hướng dẫn sử dụng:**
+
+- Truyền \`id\` của dịch vụ trên URL.
+- Chỉ trả về dịch vụ ở trạng thái ACTIVE.
+- Nếu không tìm thấy sẽ trả về lỗi.
+`,
+  })
   @ApiOkResponse({
     schema: {
       allOf: [
@@ -146,7 +168,15 @@ export class ServiceController {
   @Get('me')
   @UseGuards(AuthGuard)
   @Roles(UserRole.SHOP)
-  @ApiOperation({})
+  @ApiOperation({
+    summary: 'Lấy danh sách dịch vụ của chủ shop đang đăng nhập',
+    description: `
+**Hướng dẫn sử dụng:**
+
+- Trả về danh sách dịch vụ thuộc về tài khoản shop đang đăng nhập (bao gồm cả đã xóa mềm).
+- Hỗ trợ phân trang, sắp xếp, lọc.
+`,
+  })
   @ApiQuery({
     name: 'page',
     required: false,
@@ -216,7 +246,16 @@ export class ServiceController {
   @Get(':id/me')
   @UseGuards(AuthGuard)
   @Roles(UserRole.SHOP)
-  @ApiOperation({})
+  @ApiOperation({
+    summary: 'Lấy chi tiết dịch vụ của chủ shop đang đăng nhập',
+    description: `
+**Hướng dẫn sử dụng:**
+
+- Truyền \`id\` của dịch vụ trên URL.
+- Chỉ trả về dịch vụ thuộc về tài khoản shop đang đăng nhập (bao gồm cả đã xóa mềm).
+- Nếu không tìm thấy sẽ trả về lỗi.
+`,
+  })
   @ApiOkResponse({
     schema: {
       allOf: [
@@ -244,7 +283,17 @@ export class ServiceController {
   @Post('me')
   @UseGuards(AuthGuard)
   @Roles(UserRole.SHOP)
-  @ApiOperation({})
+  @ApiOperation({
+    summary: 'Tạo mới dịch vụ cho chủ shop đang đăng nhập',
+    description: `
+**Hướng dẫn sử dụng:**
+
+- Gửi thông tin dịch vụ cần tạo ở phần Body dưới dạng JSON.
+- Dịch vụ sẽ gắn với tài khoản shop đang đăng nhập.
+- Các trường bắt buộc: \`name\`, \`status\`, ...
+- Trả về thông tin dịch vụ vừa tạo.
+`,
+  })
   @ApiOkResponse({
     schema: {
       allOf: [
@@ -272,7 +321,17 @@ export class ServiceController {
   @Put(':id/me')
   @UseGuards(AuthGuard)
   @Roles(UserRole.SHOP)
-  @ApiOperation({})
+  @ApiOperation({
+    summary: 'Cập nhật dịch vụ của chủ shop đang đăng nhập',
+    description: `
+**Hướng dẫn sử dụng:**
+
+- Truyền \`id\` của dịch vụ trên URL.
+- Gửi thông tin cập nhật ở phần Body.
+- Chỉ cập nhật dịch vụ thuộc về tài khoản shop đang đăng nhập.
+- Nếu không tìm thấy sẽ trả về lỗi.
+`,
+  })
   @ApiOkResponse({
     schema: {
       allOf: [
@@ -301,7 +360,16 @@ export class ServiceController {
   @Delete(':id/me')
   @UseGuards(AuthGuard)
   @Roles(UserRole.SHOP)
-  @ApiOperation({})
+  @ApiOperation({
+    summary: 'Xóa mềm dịch vụ của chủ shop đang đăng nhập',
+    description: `
+**Hướng dẫn sử dụng:**
+
+- Truyền \`id\` của dịch vụ trên URL.
+- Chỉ xóa mềm dịch vụ thuộc về tài khoản shop đang đăng nhập.
+- Nếu không tìm thấy sẽ trả về lỗi.
+`,
+  })
   @ApiOkResponse({
     schema: {
       allOf: [
@@ -329,7 +397,16 @@ export class ServiceController {
   @Patch(':id/me')
   @UseGuards(AuthGuard)
   @Roles(UserRole.SHOP)
-  @ApiOperation({})
+  @ApiOperation({
+    summary: 'Khôi phục dịch vụ đã xóa mềm của chủ shop đang đăng nhập',
+    description: `
+**Hướng dẫn sử dụng:**
+
+- Truyền \`id\` của dịch vụ trên URL.
+- Chỉ khôi phục dịch vụ thuộc về tài khoản shop đang đăng nhập.
+- Nếu không tìm thấy sẽ trả về lỗi.
+`,
+  })
   @ApiOkResponse({
     schema: {
       allOf: [
