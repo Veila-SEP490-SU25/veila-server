@@ -1,1 +1,1 @@
-export * from './exception.filter';
+export * from '@/common/filters/exception.filter';

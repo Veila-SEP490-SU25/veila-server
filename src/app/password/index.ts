@@ -1,2 +1,2 @@
-export * from './password.module';
-export * from './password.service';
+export * from '@/app/password/password.module';
+export * from '@/app/password/password.service';

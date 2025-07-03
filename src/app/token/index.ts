@@ -1,3 +1,3 @@
-export * from './token.module';
-export * from './token.service';
-export * from './token.dto';
+export * from '@/app/token/token.module';
+export * from '@/app/token/token.service';
+export * from '@/app/token/token.dto';
