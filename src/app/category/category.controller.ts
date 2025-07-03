@@ -61,6 +61,7 @@ export class CategoryController {
     summary: 'Lấy chi tiết danh mục',
     description: `
 **Hướng dẫn sử dụng:**
+
 - Truyền \`id\` của danh mục trên URL.
 - Nếu không tìm thấy sẽ trả về lỗi.
 `,
@@ -114,16 +115,16 @@ export class CategoryController {
     description: 'Lọc theo trường, ví dụ: :like:',
   })
   @ApiOperation({
-    summary: 'Lấy danh sách danh mục của người dùng hiện tại',
+    summary: 'Lấy danh sách váy cưới/dịch vụ/blog/phụ kiện của danh mục',
     description: `
 **Hướng dẫn sử dụng:**
-- API trả về danh sách các danh mục thuộc về tài khoản đang đăng nhập.
+
+- API trả về danh sách các mục thuộc về danh mục chỉ định.
 - Hỗ trợ phân trang, sắp xếp, lọc:
   - \`page\`: Số trang (bắt đầu từ 0)
   - \`size\`: Số lượng mỗi trang
   - \`sort\`: Ví dụ: name:asc
-  - \`filter\`: Ví dụ: :like:
-- Chỉ trả về danh mục của user hiện tại.
+  - \`filter\`: Ví dụ: name:like:áo
 `,
   })
   @ApiOkResponse({
@@ -141,8 +142,16 @@ export class CategoryController {
   async findDressesForCustomer(
     @Param('id') id: string,
     @PaginationParams() pagination: Pagination,
-    @SortingParams(['name', 'ratingAverage', 'isSellable']) sort?: Sorting,
-    @FilteringParams(['name', 'ratingAverage', 'isRentable']) filter?: Filtering,
+    @SortingParams(['name', 'sellPrice', 'rentalPrice', 'ratingAverage']) sort?: Sorting,
+    @FilteringParams([
+      'name',
+      'sellPrice',
+      'rentalPrice',
+      'ratingAverage',
+      'isSellable',
+      'isRentable',
+    ])
+    filter?: Filtering,
   ): Promise<ListResponse<ListDressDto>> {
     return await this.categoryService.findDressesForCustomer(id, pagination, sort, filter);
   }
@@ -175,15 +184,16 @@ export class CategoryController {
     description: 'Lọc theo trường, ví dụ: :like:',
   })
   @ApiOperation({
-    summary: 'Lấy danh sách danh mục của người dùng hiện tại',
+    summary: 'Lấy danh sách váy cưới/dịch vụ/blog/phụ kiện của danh mục',
     description: `
 **Hướng dẫn sử dụng:**
-- API trả về danh sách các danh mục thuộc về tài khoản đang đăng nhập.
+
+- API trả về danh sách các mục thuộc về danh mục chỉ định.
 - Hỗ trợ phân trang, sắp xếp, lọc:
   - \`page\`: Số trang (bắt đầu từ 0)
   - \`size\`: Số lượng mỗi trang
   - \`sort\`: Ví dụ: name:asc
-  - \`filter\`: Ví dụ: :like:
+  - \`filter\`: Ví dụ: name:like:áo
 `,
   })
   @ApiOkResponse({
@@ -235,16 +245,16 @@ export class CategoryController {
     description: 'Lọc theo trường, ví dụ: :like:',
   })
   @ApiOperation({
-    summary: 'Lấy danh sách danh mục của người dùng hiện tại',
+    summary: 'Lấy danh sách váy cưới/dịch vụ/blog/phụ kiện của danh mục',
     description: `
 **Hướng dẫn sử dụng:**
-- API trả về danh sách các danh mục thuộc về tài khoản đang đăng nhập.
+
+- API trả về danh sách các mục thuộc về danh mục chỉ định.
 - Hỗ trợ phân trang, sắp xếp, lọc:
   - \`page\`: Số trang (bắt đầu từ 0)
   - \`size\`: Số lượng mỗi trang
   - \`sort\`: Ví dụ: name:asc
-  - \`filter\`: Ví dụ: :like:
-- Chỉ trả về danh mục của user hiện tại.
+  - \`filter\`: Ví dụ: name:like:áo
 `,
   })
   @ApiOkResponse({
@@ -295,7 +305,19 @@ export class CategoryController {
     type: String,
     description: 'Lọc theo trường, ví dụ: :like:',
   })
-  @ApiOperation({})
+  @ApiOperation({
+    summary: 'Lấy danh sách váy cưới/dịch vụ/blog/phụ kiện của danh mục',
+    description: `
+**Hướng dẫn sử dụng:**
+
+- API trả về danh sách các mục thuộc về danh mục chỉ định.
+- Hỗ trợ phân trang, sắp xếp, lọc:
+  - \`page\`: Số trang (bắt đầu từ 0)
+  - \`size\`: Số lượng mỗi trang
+  - \`sort\`: Ví dụ: name:asc
+  - \`filter\`: Ví dụ: name:like:áo
+`,
+  })
   @ApiOkResponse({
     schema: {
       allOf: [
@@ -344,11 +366,10 @@ export class CategoryController {
     summary: 'Tạo mới danh mục sản phẩm',
     description: `
 **Hướng dẫn sử dụng:**
+
 - Gửi thông tin danh mục cần tạo ở phần Body dưới dạng JSON.
 - Danh mục sẽ gắn với tài khoản đang đăng nhập (lấy từ token).
-- Các trường bắt buộc:
-  - \`name\`: Tên danh mục
-  - \`type\`: Loại danh mục (BLOG, DRESS, ACCESSORY, SERVICE)
+- Các trường bắt buộc: \`name\`, \`type\`
 - Trả về thông tin danh mục vừa tạo.
 `,
   })
@@ -409,13 +430,9 @@ export class CategoryController {
     summary: 'Lấy danh sách danh mục của người dùng hiện tại',
     description: `
 **Hướng dẫn sử dụng:**
+
 - API trả về danh sách các danh mục thuộc về tài khoản đang đăng nhập.
-- Hỗ trợ phân trang, sắp xếp, lọc:
-  - \`page\`: Số trang (bắt đầu từ 0)
-  - \`size\`: Số lượng mỗi trang
-  - \`sort\`: Ví dụ: name:asc
-  - \`filter\`: Ví dụ: name:like:áo
-- Chỉ trả về danh mục của user hiện tại.
+- Hỗ trợ phân trang, sắp xếp, lọc.
 `,
   })
   @ApiOkResponse({
@@ -434,7 +451,7 @@ export class CategoryController {
     @UserId() userId: string,
     @PaginationParams() pagination: Pagination,
     @SortingParams(['name']) sort?: Sorting,
-    @FilteringParams(['name']) filter?: Filtering,
+    @FilteringParams(['name', 'status']) filter?: Filtering,
   ): Promise<ListResponse<Category>> {
     return await this.categoryService.findCategoriesForOwner(userId, pagination, sort, filter);
   }
@@ -443,9 +460,10 @@ export class CategoryController {
   @UseGuards(AuthGuard)
   @Roles(UserRole.SHOP)
   @ApiOperation({
-    summary: 'Lấy chi tiết danh mục',
+    summary: 'Lấy chi tiết danh mục của người dùng hiện tại',
     description: `
 **Hướng dẫn sử dụng:**
+
 - Truyền \`id\` của danh mục trên URL.
 - Chỉ trả về danh mục thuộc về user hiện tại.
 - Nếu không tìm thấy sẽ trả về lỗi.
@@ -482,6 +500,7 @@ export class CategoryController {
     summary: 'Cập nhật danh mục',
     description: `
 **Hướng dẫn sử dụng:**
+
 - Truyền \`id\` của danh mục trên URL.
 - Gửi thông tin cập nhật ở phần Body.
 - Chỉ cập nhật danh mục thuộc về user hiện tại.
@@ -520,6 +539,7 @@ export class CategoryController {
     summary: 'Xóa mềm danh mục',
     description: `
 **Hướng dẫn sử dụng:**
+
 - Truyền \`id\` của danh mục trên URL.
 - Chỉ xóa mềm danh mục thuộc về user hiện tại.
 - Nếu không tìm thấy sẽ trả về lỗi.
@@ -556,6 +576,7 @@ export class CategoryController {
     summary: 'Khôi phục danh mục đã xóa mềm',
     description: `
 **Hướng dẫn sử dụng:**
+
 - Truyền \`id\` của danh mục trên URL.
 - Chỉ khôi phục danh mục thuộc về user hiện tại.
 - Nếu không tìm thấy sẽ trả về lỗi.

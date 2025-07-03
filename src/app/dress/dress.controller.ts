@@ -73,6 +73,7 @@ export class DressController {
     summary: 'Lấy danh sách váy cưới khả dụng cho khách hàng',
     description: `
 **Hướng dẫn sử dụng:**
+
 - Trả về danh sách các váy cưới đang ở trạng thái AVAILABLE.
 - Hỗ trợ phân trang, sắp xếp, lọc:
   - \`page\`: Số trang (bắt đầu từ 0)
@@ -96,8 +97,16 @@ export class DressController {
   })
   async getDressesForCustomer(
     @PaginationParams() pagination: Pagination,
-    @SortingParams(['name']) sort?: Sorting,
-    @FilteringParams(['name']) filter?: Filtering,
+    @SortingParams(['name', 'sellPrice', 'rentalPrice', 'ratingAverage']) sort?: Sorting,
+    @FilteringParams([
+      'name',
+      'sellPrice',
+      'rentalPrice',
+      'ratingAverage',
+      'isSellable',
+      'isRentable',
+    ])
+    filter?: Filtering,
   ): Promise<ListResponse<ListDressDto>> {
     return await this.dressService.getDressesForCustomer(pagination, sort, filter);
   }
@@ -107,6 +116,7 @@ export class DressController {
     summary: 'Lấy thông tin chi tiết váy cưới cho khách hàng',
     description: `
 **Hướng dẫn sử dụng:**
+
 - Truyền \`id\` của váy cưới trên URL.
 - Chỉ trả về váy cưới ở trạng thái AVAILABLE.
 - Nếu không tìm thấy sẽ trả về lỗi.
@@ -166,6 +176,7 @@ export class DressController {
     summary: 'Lấy danh sách váy cưới của chủ shop đang đăng nhập',
     description: `
 **Hướng dẫn sử dụng:**
+
 - Trả về danh sách váy cưới thuộc về tài khoản shop đang đăng nhập (bao gồm cả đã xóa mềm).
 - Hỗ trợ phân trang, sắp xếp, lọc.
 `,
@@ -185,8 +196,17 @@ export class DressController {
   async getDressesForOwner(
     @UserId() userId: string,
     @PaginationParams() { page, size, limit, offset }: Pagination,
-    @SortingParams(['name']) sort?: Sorting,
-    @FilteringParams(['name']) filter?: Filtering,
+    @SortingParams(['name', 'sellPrice', 'rentalPrice', 'ratingAverage']) sort?: Sorting,
+    @FilteringParams([
+      'name',
+      'sellPrice',
+      'rentalPrice',
+      'ratingAverage',
+      'isSellable',
+      'isRentable',
+      'status',
+    ])
+    filter?: Filtering,
   ): Promise<ListResponse<Dress>> {
     const [dresses, totalItems] = await this.dressService.getDressesForOwner(
       userId,
@@ -216,6 +236,7 @@ export class DressController {
     summary: 'Lấy chi tiết váy cưới của chủ shop đang đăng nhập',
     description: `
 **Hướng dẫn sử dụng:**
+
 - Truyền \`id\` của váy cưới trên URL.
 - Chỉ trả về váy cưới thuộc về tài khoản shop đang đăng nhập (bao gồm cả đã xóa mềm).
 - Nếu không tìm thấy sẽ trả về lỗi.
@@ -252,6 +273,7 @@ export class DressController {
     summary: 'Tạo mới váy cưới cho chủ shop đang đăng nhập',
     description: `
 **Hướng dẫn sử dụng:**
+
 - Gửi thông tin váy cưới cần tạo ở phần Body dưới dạng JSON.
 - Váy cưới sẽ gắn với tài khoản shop đang đăng nhập.
 - Các trường bắt buộc: \`name\`, \`sellPrice\`, \`status\`, ...
@@ -289,6 +311,7 @@ export class DressController {
     summary: 'Cập nhật váy cưới của chủ shop đang đăng nhập',
     description: `
 **Hướng dẫn sử dụng:**
+
 - Truyền \`id\` của váy cưới trên URL.
 - Gửi thông tin cập nhật ở phần Body.
 - Chỉ cập nhật váy cưới thuộc về tài khoản shop đang đăng nhập.
@@ -333,6 +356,7 @@ export class DressController {
     summary: 'Xóa mềm váy cưới của chủ shop đang đăng nhập',
     description: `
 **Hướng dẫn sử dụng:**
+
 - Truyền \`id\` của váy cưới trên URL.
 - Chỉ xóa mềm váy cưới thuộc về tài khoản shop đang đăng nhập.
 - Nếu không tìm thấy sẽ trả về lỗi.
@@ -375,6 +399,7 @@ export class DressController {
     summary: 'Khôi phục váy cưới đã xóa mềm của chủ shop đang đăng nhập',
     description: `
 **Hướng dẫn sử dụng:**
+
 - Truyền \`id\` của váy cưới trên URL.
 - Chỉ khôi phục váy cưới thuộc về tài khoản shop đang đăng nhập.
 - Nếu không tìm thấy sẽ trả về lỗi.
