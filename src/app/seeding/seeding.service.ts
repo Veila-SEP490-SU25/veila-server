@@ -11,11 +11,18 @@ export class SeedingService implements OnModuleInit {
     timestamp: true,
   });
 
+  private readonly customFaker: Faker;
+
   constructor(
     private readonly configService: ConfigService,
     private readonly userService: UserService,
     private readonly passwordService: PasswordService,
-  ) {}
+  ) {
+    // Khởi tạo faker với locale tiếng Việt
+    this.customFaker = new Faker({
+      locale: vi,
+    });
+  }
 
   async onModuleInit() {
     this.logger.log('Seeding module initialized. Starting seeding process...');
@@ -36,47 +43,98 @@ export class SeedingService implements OnModuleInit {
       );
     }
 
-    Promise.all([
-      this.seedAccounts(superAdminEmail, UserRole.SuperAdmin),
-      this.seedAccounts(adminEmail, UserRole.Admin),
-      this.seedAccounts(systemOperatorEmail, UserRole.SystemOperator),
-    ])
-      .catch((error) => {
-        this.logger.error('Seeding process failed.', error);
-        throw new Error('Seeding process failed.');
-      })
-      .then(() => {
-        this.logger.log('Sedding process completed!!!');
-      });
+    try {
+      await Promise.all([
+        this.seedAccounts(superAdminEmail, UserRole.SUPER_ADMIN),
+        this.seedAccounts(adminEmail, UserRole.ADMIN),
+        this.seedAccounts(systemOperatorEmail, UserRole.STAFF),
+      ]);
+      this.logger.log('Seeding process completed successfully!');
+    } catch (error) {
+      this.logger.error('Seeding process failed.', error);
+      throw new Error('Seeding process failed.');
+    }
+  }
+
+  private generateVietnameseUsername(fullName: string, role: UserRole): string {
+    // Chuyển đổi tên tiếng Việt thành username không dấu
+    const normalizedName = fullName
+      .toLowerCase()
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .replace(/đ/g, 'd')
+      .replace(/[^a-z0-9]/g, '');
+
+    // Tạo username theo format: tên_không_dấu + role + số ngẫu nhiên 3 chữ số
+    const randomSuffix = this.customFaker.number.int({ min: 100, max: 999 });
+    // Đảm bảo username có độ dài tối đa 32 ký tự
+    let username = `${normalizedName}_${role.toLowerCase()}_${randomSuffix}`;
+    if (username.length > 32) {
+      username = username.slice(0, 32);
+    }
+    // Đảm bảo tối thiểu 6 ký tự
+    if (username.length < 6) {
+      username = username.padEnd(6, '0');
+    }
+    return username;
   }
 
   private async seedAccounts(email: string, role: UserRole) {
     this.logger.log(`Seeding account with email: ${email}`);
+
     const existingUser = await this.userService.getByEmail(email);
     if (existingUser) {
-      this.logger.warn(`Account with email ${email} already exists. Stopping seeding.`);
+      this.logger.warn(`Account with email ${email} already exists. Skipping seeding.`);
       return;
-    } else {
-      const defaultPassword = this.configService.get<string>('SEED_ACCOUNT_PASSWORD');
-      if (!defaultPassword) {
-        this.logger.error('SEED_ACCOUNT_PASSWORD is not set in the environment variables.');
-        throw new Error('SEED_ACCOUNT_PASSWORD is not set in the environment variables.');
-      }
-      const customFaker = new Faker({ locale: vi });
-      const fullName = customFaker.person.fullName({ sex: 'male' });
-      const newUser = {
-        email: email,
-        password: await this.passwordService.hashPassword(defaultPassword),
-        role: role,
-        username: role.toString(),
-        firstName: fullName.split(' ')[0],
-        middleName: fullName.split(' ')[1],
-        lastName: fullName.split(' ')[2],
-        isVerified: true,
-        status: UserStatus.Active,
-      } as User;
-      await this.userService.createUser(newUser);
-      this.logger.log(`Account with email ${email} has been created.`);
     }
+
+    const defaultPassword = this.configService.get<string>('SEED_ACCOUNT_PASSWORD');
+    if (!defaultPassword) {
+      this.logger.error('SEED_ACCOUNT_PASSWORD is not set in the environment variables.');
+      throw new Error('SEED_ACCOUNT_PASSWORD is not set in the environment variables.');
+    }
+
+    // Tạo thông tin cá nhân giả
+    const sex = Math.random() < 0.5 ? 'male' : 'female';
+    const fullName = this.customFaker.person.fullName({ sex });
+    const nameParts = fullName.split(' ');
+    const firstName = nameParts.pop() || '';
+    const lastName = nameParts.shift() || '';
+    const middleName = nameParts.length > 0 ? nameParts.join(' ') : null;
+
+    // Tạo user mới với thông tin đầy đủ
+    const newUser = {
+      email,
+      username: this.generateVietnameseUsername(fullName, role),
+      password: await this.passwordService.hashPassword(defaultPassword),
+      role,
+      firstName,
+      middleName,
+      lastName,
+      phone: this.customFaker.datatype.boolean()
+        ? `+84${this.customFaker.string.numeric({ length: 9 })}`
+        : null,
+      address: this.customFaker.datatype.boolean()
+        ? `${faker.location.streetAddress()}, ${faker.location.city()}`
+        : null,
+      birthDate: this.customFaker.datatype.boolean()
+        ? this.customFaker.date.between({ from: '1980-01-01', to: '2000-12-31' })
+        : null,
+      avatarUrl: this.customFaker.datatype.boolean()
+        ? this.customFaker.image.url({ width: 200, height: 200 })
+        : null,
+      coverUrl: this.customFaker.datatype.boolean()
+        ? this.customFaker.image.url({ width: 1200, height: 400 })
+        : null,
+      status: UserStatus.ACTIVE,
+      isVerified: true,
+      isIdentified: role !== UserRole.CUSTOMER,
+      images: null,
+    } as User;
+
+    const createdUser = await this.userService.createUser(newUser);
+    this.logger.log(
+      `Account created successfully! Email: ${email}, Username: ${createdUser.username}, Role: ${role}`,
+    );
   }
 }

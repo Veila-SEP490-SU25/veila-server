@@ -7,7 +7,7 @@ import { map, Observable } from 'rxjs';
 export class CachingInterceptor implements NestInterceptor {
   constructor(private readonly redisService: RedisService) {}
 
-  async intercept(context: ExecutionContext, next: CallHandler): Promise<Observable<any>> {
+  async intercept(context: ExecutionContext, next: CallHandler): Promise<Observable<unknown>> {
     const request = context.switchToHttp().getRequest();
     const response = context.switchToHttp().getResponse();
 

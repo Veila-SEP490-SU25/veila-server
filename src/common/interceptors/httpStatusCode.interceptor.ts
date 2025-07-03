@@ -10,7 +10,7 @@ import { map } from 'rxjs/operators';
 
 @Injectable()
 export class HttpStatusCodeInterceptor implements NestInterceptor {
-  intercept(context: ExecutionContext, next: CallHandler): Observable<any> {
+  intercept(context: ExecutionContext, next: CallHandler): Observable<unknown> {
     return next.handle().pipe(
       map((data) => {
         const response = context.switchToHttp().getResponse();

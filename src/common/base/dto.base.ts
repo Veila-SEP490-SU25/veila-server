@@ -35,6 +35,7 @@ export class ListResponse<T> {
 
   @ApiProperty()
   hasPrevPage: boolean;
+
   items: T[];
 }
 
