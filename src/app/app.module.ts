@@ -1,20 +1,19 @@
+import { AccessoryModule } from '@/app/accessory';
 import { AppController } from '@/app/app.controller';
 import { AppService } from '@/app/app.service';
-import {
-  AccessoryModule,
-  AuthModule,
-  BlogModule,
-  CategoryModule,
-  DressModule,
-  MailModule,
-  PasswordModule,
-  RedisModule,
-  SeedingModule,
-  ServiceModule,
-  ShopModule,
-  TokenModule,
-  UserModule,
-} from '@/app';
+import { AuthModule } from '@/app/auth';
+import { BlogModule } from '@/app/blog';
+import { CategoryModule } from '@/app/category';
+import { DressModule } from '@/app/dress';
+import { FeedbackModule } from '@/app/feedback';
+import { MailModule } from '@/app/mail';
+import { PasswordModule } from '@/app/password';
+import { RedisModule } from '@/app/redis';
+import { SeedingModule } from '@/app/seeding';
+import { ServiceModule } from '@/app/service';
+import { ShopModule } from '@/app/shop';
+import { TokenModule } from '@/app/token';
+import { UserModule } from '@/app/user';
 import { RolesGuard } from '@/common/guards';
 import { LoggingMiddleware } from '@/common/middlewares';
 import { MiddlewareConsumer, Module } from '@nestjs/common';
@@ -58,6 +57,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
     ServiceModule,
     BlogModule,
     AccessoryModule,
+    FeedbackModule,
   ],
   controllers: [AppController],
   providers: [
