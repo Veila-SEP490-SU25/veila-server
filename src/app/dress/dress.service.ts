@@ -203,4 +203,12 @@ export class DressService {
       skip: offset,
     });
   }
+
+  async getAll(): Promise<Dress[]> {
+    return await this.dressRepository.find({ withDeleted: true });
+  }
+
+  async create(dress: Dress): Promise<Dress> {
+    return await this.dressRepository.save(dress);
+  }
 }

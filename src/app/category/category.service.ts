@@ -1,7 +1,7 @@
 import { HttpStatus, Injectable, NotFoundException } from '@nestjs/common';
 import { CategoryDto, ItemCategoryDto } from '@/app/category/category.dto';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Accessory, Category } from '@/common/models';
+import { Accessory, Category, CategoryType } from '@/common/models';
 import { Repository } from 'typeorm';
 import { ListResponse } from '@/common/base';
 import { Filtering, getOrder, getWhere, Pagination, Sorting } from '@/common/decorators';
@@ -203,5 +203,15 @@ export class CategoryService {
       take: limit,
       skip: offset,
     });
+  }
+
+  async getAll(): Promise<Category[]> {
+    return this.categoryRepository.find({ withDeleted: true });
+  }
+  async create(category: Category): Promise<Category> {
+    return this.categoryRepository.save(category);
+  }
+  async getOneByUserAndType(userId: string, type: CategoryType): Promise<Category | null> {
+    return this.categoryRepository.findOneBy({ user: { id: userId }, type });
   }
 }
