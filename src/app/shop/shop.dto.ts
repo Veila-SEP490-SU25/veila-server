@@ -1,4 +1,3 @@
-import { ShopStatus } from '@/common/models';
 import { ApiProperty } from '@nestjs/swagger';
 
 export class RegisterShopDto {}
@@ -35,13 +34,6 @@ export class ListShopDto {
 
   @ApiProperty({ description: 'Ảnh tổng hợp của shop (nếu có)', example: null, nullable: true })
   images: string | null;
-
-  @ApiProperty({
-    enum: ShopStatus,
-    description: 'Trạng thái hoạt động của shop',
-    example: ShopStatus.ACTIVE,
-  })
-  status: ShopStatus;
 }
 
 export class ItemShopDto {
@@ -83,11 +75,4 @@ export class ItemShopDto {
     nullable: true,
   })
   coverUrl: string | null;
-
-  @ApiProperty({
-    enum: ShopStatus,
-    description: 'Trạng thái hoạt động của shop',
-    example: ShopStatus.ACTIVE,
-  })
-  status: ShopStatus;
 }

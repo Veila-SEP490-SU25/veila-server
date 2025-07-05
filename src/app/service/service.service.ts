@@ -147,28 +147,6 @@ export class ServiceService {
       throw new BadRequestException('Khôi phục không thành công, kiểm tra lỗi');
   }
 
-  async findAndCountOfShopForCustomer(
-    userId,
-    limit: number,
-    offset: number,
-    sort?: Sorting,
-    filter?: Filtering,
-  ): Promise<[Service[], number]> {
-    const dynamicFilter = getWhere(filter);
-    const where = {
-      ...dynamicFilter,
-      user: { id: userId },
-      status: ServiceStatus.ACTIVE,
-    };
-    const order = getOrder(sort);
-    return await this.serviceRepository.findAndCount({
-      where,
-      order,
-      take: limit,
-      skip: offset,
-    });
-  }
-
   async findAndCountOfCategoryForCustomer(
     categoryId: string,
     limit: number,

@@ -1,4 +1,4 @@
-import { Shop } from '@/common/models';
+import { Accessory, Blog, Category, Dress, Service, Shop } from '@/common/models';
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ShopController } from '@/app/shop/shop.controller';
@@ -11,7 +11,7 @@ import { AccessoryModule } from '@/app/accessory';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([Shop]),
+    TypeOrmModule.forFeature([Shop, Accessory, Blog, Service, Dress, Category]),
     DressModule,
     CategoryModule,
     BlogModule,

@@ -160,28 +160,6 @@ export class DressService {
     return existingDress;
   }
 
-  async findAndCountOfShopForCustomer(
-    userId,
-    limit: number,
-    offset: number,
-    sort?: Sorting,
-    filter?: Filtering,
-  ): Promise<[Dress[], number]> {
-    const dynamicFilter = getWhere(filter);
-    const where = {
-      ...dynamicFilter,
-      user: { id: userId },
-      status: DressStatus.AVAILABLE,
-    };
-    const order = getOrder(sort);
-    return await this.dressRepository.findAndCount({
-      where,
-      order,
-      take: limit,
-      skip: offset,
-    });
-  }
-
   async findAndCountOfCategoryForCustomer(
     categoryId: string,
     limit: number,

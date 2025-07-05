@@ -1,7 +1,7 @@
 import { AccessoryStatus } from '@/common/models';
 import { ApiProperty } from '@nestjs/swagger';
 import { Expose } from 'class-transformer';
-import { IsBoolean, IsNotEmpty, IsNumber, IsString } from 'class-validator';
+import { IsBoolean, IsNotEmpty, IsNumber, IsOptional, IsString } from 'class-validator';
 
 export class ItemAccessoryDto {
   @Expose()
@@ -40,18 +40,21 @@ export class ItemAccessoryDto {
 export class CUAccessoryDto {
   @ApiProperty({ example: '123e4567-e89b-12d3-a456-426614174000' })
   @IsString()
+  @IsOptional()
   categoryId: string | null;
-
+  
   @ApiProperty({ example: 'https://veila.images/1,https://veila.images/2' })
   @IsString()
+  @IsOptional()
   images: string | null;
-
+  
   @ApiProperty({ example: 'Vòng cổ ngọc trai' })
   @IsString()
   name: string;
-
+  
   @ApiProperty({ example: 'Vòng cổ ngọc trai sang trọng, phù hợp với nhiều trang phục.' })
   @IsString()
+  @IsOptional()
   description: string | null;
 
   @ApiProperty({ example: 150.0 })
@@ -103,8 +106,4 @@ export class ListAccessoryDto {
   @Expose()
   @ApiProperty()
   isRentable: boolean;
-
-  @Expose()
-  @ApiProperty()
-  status: AccessoryStatus;
 }

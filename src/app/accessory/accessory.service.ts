@@ -124,28 +124,6 @@ export class AccessoryService {
     });
   }
 
-  async findAndCountOfShopForCustomer(
-    userId: string,
-    take: number,
-    skip: number,
-    sort?: Sorting,
-    filter?: Filtering,
-  ): Promise<[Accessory[], number]> {
-    const dynamicFilter = getWhere(filter);
-    const where = {
-      ...dynamicFilter,
-      user: { id: userId },
-      status: AccessoryStatus.AVAILABLE,
-    };
-    const order = getOrder(sort);
-    return await this.accessoryRepository.findAndCount({
-      where,
-      order,
-      take,
-      skip,
-    });
-  }
-
   async getAll(): Promise<Accessory[]> {
     return this.accessoryRepository.find({ withDeleted: true });
   }
