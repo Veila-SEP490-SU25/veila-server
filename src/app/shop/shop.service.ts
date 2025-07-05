@@ -248,4 +248,12 @@ export class ShopService {
     if (!existingShop) throw new NotFoundException('Không tìm thấy cửa hàng phù hợp');
     return existingShop;
   }
+
+  async create(shop: Shop): Promise<Shop> {
+    return await this.shopRepository.save(shop);
+  }
+
+  async getAll(): Promise<Shop[]> {
+    return await this.shopRepository.find({ withDeleted: true });
+  }
 }

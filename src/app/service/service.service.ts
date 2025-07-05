@@ -190,4 +190,12 @@ export class ServiceService {
       skip: offset,
     });
   }
+
+  async getAll(): Promise<Service[]> {
+    return await this.serviceRepository.find({ withDeleted: true });
+  }
+
+  async create(service: Service): Promise<Service> {
+    return await this.serviceRepository.save(service);
+  }
 }
