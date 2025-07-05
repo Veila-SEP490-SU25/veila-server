@@ -1,5 +1,5 @@
 import { Filtering, getOrder, getWhere, Sorting } from '@/common/decorators';
-import { Accessory, AccessoryStatus } from '@/common/models';
+import { Accessory, AccessoryStatus, Category } from '@/common/models';
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
@@ -9,6 +9,7 @@ import { CUAccessoryDto } from '@/app/accessory/accessory.dto';
 export class AccessoryService {
   constructor(
     @InjectRepository(Accessory) private readonly accessoryRepository: Repository<Accessory>,
+    @InjectRepository(Category) private readonly categoryRepository: Repository<Category>,
   ) {}
 
   async getAccessoryForCustomer(id: string): Promise<Accessory> {
@@ -66,63 +67,39 @@ export class AccessoryService {
     userId: string,
     { categoryId, ...newAccessory }: CUAccessoryDto,
   ): Promise<Accessory> {
+    let accessory;
     if (categoryId) {
-      const accessory = {
-        user: { id: userId },
-        category: { id: categoryId },
-        ...newAccessory,
-      };
-      return await this.accessoryRepository.save(accessory);
+      if (!(await this.isCategoryExistForOwner(categoryId, userId)))
+        throw new NotFoundException('Không tìm thấy phân loại phù hợp');
+      accessory = { user: { id: userId }, category: { id: categoryId }, ...newAccessory };
     } else {
-      const accessory = {
-        user: { id: userId },
-        ...newAccessory,
-      };
-      return await this.accessoryRepository.save(accessory);
+      accessory = { user: { id: userId }, ...newAccessory };
     }
+    return await this.accessoryRepository.save(accessory);
   }
 
   async updateAccessoryForOwner(
     userId: string,
     id: string,
     { categoryId, ...body }: CUAccessoryDto,
-  ): Promise<number | undefined> {
+  ): Promise<void> {
+    let accessory;
     if (categoryId) {
-      const accessory = {
-        category: { id: categoryId },
-        ...body,
-      };
-      return (
-        await this.accessoryRepository.update(
-          {
-            id,
-            user: { id: userId },
-          },
-          accessory,
-        )
-      ).affected;
+      if (!(await this.isCategoryExistForOwner(categoryId, userId)))
+        throw new NotFoundException('Không tìm thấy phân loại phù hợp');
+      accessory = { category: { id: categoryId }, ...body };
     } else {
-      const accessory = {
-        ...body,
-      };
-      return (
-        await this.accessoryRepository.update(
-          {
-            id,
-            user: { id: userId },
-          },
-          accessory,
-        )
-      ).affected;
+      accessory = { ...body };
     }
+    await this.accessoryRepository.update({ id, user: { id: userId } }, accessory);
   }
 
-  async removeAccessoryForOwner(userId: string, id: string): Promise<number | undefined> {
-    return (await this.accessoryRepository.softDelete({ id, user: { id: userId } })).affected;
+  async removeAccessoryForOwner(userId: string, id: string): Promise<void> {
+    await this.accessoryRepository.softDelete({ id, user: { id: userId } });
   }
 
-  async restoreAccessoryForOwner(userId: string, id: string): Promise<number | undefined> {
-    return (await this.accessoryRepository.restore({ id, user: { id: userId } })).affected;
+  async restoreAccessoryForOwner(userId: string, id: string): Promise<void> {
+    await this.accessoryRepository.restore({ id, user: { id: userId } });
   }
 
   async findAndCountOfCategoryForCustomer(
@@ -175,5 +152,12 @@ export class AccessoryService {
 
   async create(accessory: Accessory): Promise<Accessory> {
     return this.accessoryRepository.save(accessory);
+  }
+
+  async isCategoryExistForOwner(id: string, userId: string): Promise<boolean> {
+    return await this.categoryRepository.exists({
+      where: { id, user: { id: userId } },
+      withDeleted: true,
+    });
   }
 }
