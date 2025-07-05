@@ -1,13 +1,16 @@
 import { Filtering, getOrder, getWhere, Sorting } from '@/common/decorators';
-import { Blog, BlogStatus } from '@/common/models';
-import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
+import { Blog, BlogStatus, Category } from '@/common/models';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { CUBlogDto } from './blog.dto';
 
 @Injectable()
 export class BlogService {
-  constructor(@InjectRepository(Blog) private readonly blogRepository: Repository<Blog>) {}
+  constructor(
+    @InjectRepository(Blog) private readonly blogRepository: Repository<Blog>,
+    @InjectRepository(Category) private readonly categoryRepository: Repository<Category>,
+  ) {}
 
   async getBlogsForCustomer(
     take: number,
@@ -86,17 +89,11 @@ export class BlogService {
 
   async createBlogForOwner(userId: string, { categoryId, ...body }: CUBlogDto): Promise<Blog> {
     let blog;
-    if (categoryId)
-      blog = {
-        user: { id: userId },
-        category: { id: categoryId },
-        ...body,
-      };
-    else
-      blog = {
-        user: { id: userId },
-        ...body,
-      };
+    if (categoryId) {
+      if (!(await this.isCategoryExistForOwner(categoryId, userId)))
+        throw new NotFoundException('Không tìm thấy phân loại phù hợp');
+      blog = { user: { id: userId }, category: { id: categoryId }, ...body };
+    } else blog = { user: { id: userId }, ...body };
     return await this.blogRepository.save(blog);
   }
 
@@ -106,41 +103,20 @@ export class BlogService {
     { categoryId, ...body }: CUBlogDto,
   ): Promise<void> {
     let blog;
-    if (categoryId)
-      blog = {
-        category: { id: categoryId },
-        ...body,
-      };
-    else
-      blog = {
-        ...body,
-      };
-    const result = await this.blogRepository.update(
-      {
-        user: { id: userId },
-        id,
-      },
-      blog,
-    );
-    if (result.affected !== 1)
-      throw new BadRequestException('Cập nhật không thành công, kiểm tra lỗi');
+    if (categoryId) {
+      if (!(await this.isCategoryExistForOwner(categoryId, userId)))
+        throw new NotFoundException('Không tìm thấy phân loại phù hợp');
+      blog = { category: { id: categoryId }, ...body };
+    } else blog = { ...body };
+    await this.blogRepository.update({ user: { id: userId }, id }, blog);
   }
 
   async removeBlogForOwner(userId: string, id: string): Promise<void> {
-    const result = await this.blogRepository.softDelete({
-      user: { id: userId },
-      id,
-    });
-    if (result.affected !== 1) throw new BadRequestException('Xóa không thành công,kiểm tra lỗi');
+    await this.blogRepository.softDelete({ user: { id: userId }, id });
   }
 
   async restoreBlogForOwner(userId: string, id: string): Promise<void> {
-    const result = await this.blogRepository.restore({
-      user: { id: userId },
-      id,
-    });
-    if (result.affected !== 1)
-      throw new BadRequestException('Khôi phục không thành công,kiểm tra lỗi');
+    await this.blogRepository.restore({ user: { id: userId }, id });
   }
 
   async findAndCountOfShopForCustomer(
@@ -194,5 +170,12 @@ export class BlogService {
 
   async getAll(): Promise<Blog[]> {
     return await this.blogRepository.find({ withDeleted: true });
+  }
+
+  async isCategoryExistForOwner(id: string, userId: string): Promise<boolean> {
+    return await this.categoryRepository.exists({
+      where: { id, user: { id: userId } },
+      withDeleted: true,
+    });
   }
 }
