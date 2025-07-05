@@ -217,4 +217,8 @@ export class UserService {
     if (existingUser.deletedAt === null) throw new BadRequestException('User đang hoạt động');
     await this.userRepository.restore(id);
   }
+
+  async getAll(): Promise<User[]> {
+    return this.userRepository.find({ withDeleted: true });
+  }
 }

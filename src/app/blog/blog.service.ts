@@ -187,4 +187,12 @@ export class BlogService {
       skip: offset,
     });
   }
+
+  async create(blog: Blog): Promise<Blog> {
+    return await this.blogRepository.save(blog);
+  }
+
+  async getAll(): Promise<Blog[]> {
+    return await this.blogRepository.find({ withDeleted: true });
+  }
 }

@@ -168,4 +168,12 @@ export class AccessoryService {
       skip,
     });
   }
+
+  async getAll(): Promise<Accessory[]> {
+    return this.accessoryRepository.find({ withDeleted: true });
+  }
+
+  async create(accessory: Accessory): Promise<Accessory> {
+    return this.accessoryRepository.save(accessory);
+  }
 }
