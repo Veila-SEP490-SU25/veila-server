@@ -2,7 +2,7 @@ import { Filtering, getOrder, getWhere, Sorting } from '@/common/decorators';
 import { Accessory, AccessoryStatus, Category } from '@/common/models';
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { In, Repository } from 'typeorm';
 import { CUAccessoryDto } from '@/app/accessory/accessory.dto';
 
 @Injectable()
@@ -15,7 +15,7 @@ export class AccessoryService {
   async getAccessoryForCustomer(id: string): Promise<Accessory> {
     const where = {
       id,
-      status: AccessoryStatus.AVAILABLE,
+      status: In([AccessoryStatus.AVAILABLE, AccessoryStatus.OUT_OF_STOCK]),
     };
     const existingAccessory = await this.accessoryRepository.findOne({ where });
     if (!existingAccessory) throw new NotFoundException('Không tìm thấy phụ kiện phù hợp');
