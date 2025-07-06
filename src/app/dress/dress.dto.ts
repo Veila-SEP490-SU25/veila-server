@@ -2,6 +2,7 @@ import { DressStatus } from '@/common/models';
 import { ApiProperty } from '@nestjs/swagger';
 import { ProductFeedbacksDto } from '@/app/feedback';
 import { Expose } from 'class-transformer';
+import { IsBoolean, IsEnum, IsNumber, IsOptional, IsString } from 'class-validator';
 
 export class CUDressDto {
   @ApiProperty({
@@ -9,9 +10,12 @@ export class CUDressDto {
     example: 'category-uuid-123',
     nullable: true,
   })
+  @IsOptional()
+  @IsString()
   categoryId: string | null;
 
   @ApiProperty({ description: 'Tên váy cưới', example: 'Đầm cưới công chúa' })
+  @IsString()
   name: string;
 
   @ApiProperty({
@@ -20,18 +24,24 @@ export class CUDressDto {
     maxLength: 500,
     nullable: true,
   })
+  @IsOptional()
+  @IsString()
   description: string | null;
 
   @ApiProperty({ description: 'Giá bán (VNĐ)', example: 5000000 })
+  @IsNumber()
   sellPrice: number;
 
   @ApiProperty({ description: 'Giá thuê (VNĐ)', example: 1500000 })
+  @IsNumber()
   rentalPrice: number;
 
   @ApiProperty({ description: 'Có thể bán không', example: true })
+  @IsBoolean()
   isSellable: boolean;
 
   @ApiProperty({ description: 'Có thể cho thuê không', example: true })
+  @IsBoolean()
   isRentable: boolean;
 
   @ApiProperty({
@@ -39,6 +49,7 @@ export class CUDressDto {
     description: 'Trạng thái váy cưới',
     example: DressStatus.AVAILABLE,
   })
+  @IsEnum(DressStatus)
   status: DressStatus;
 
   @ApiProperty({
@@ -46,6 +57,8 @@ export class CUDressDto {
     example: 'https://storage.veila.com/dresses/img123.jpg',
     nullable: true,
   })
+  @IsOptional()
+  @IsString()
   images: string | null;
 }
 
