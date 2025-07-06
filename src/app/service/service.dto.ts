@@ -2,18 +2,25 @@ import { ServiceStatus } from '@/common/models';
 import { ApiProperty } from '@nestjs/swagger';
 import { Expose } from 'class-transformer';
 import { ProductFeedbacksDto } from '@/app/feedback';
+import { IsEnum, IsOptional, IsString } from 'class-validator';
 
 export class CUServiceDto {
   @ApiProperty()
+  @IsOptional()
+  @IsString()
   categoryId: string | null;
 
   @ApiProperty()
+  @IsString()
   name: string;
 
   @ApiProperty()
+  @IsOptional()
+  @IsString()
   description: string | null;
 
   @ApiProperty()
+  @IsEnum(ServiceStatus)
   status: ServiceStatus;
 }
 

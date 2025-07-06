@@ -1,95 +1,86 @@
-import { ListResponse } from '@/common/base';
-import { Filtering, getOrder, getWhere, Pagination, Sorting } from '@/common/decorators';
-import { Accessory, Shop, ShopStatus } from '@/common/models';
-import { HttpStatus, Injectable, NotFoundException } from '@nestjs/common';
+import { Filtering, getOrder, getWhere, Sorting } from '@/common/decorators';
+import {
+  Accessory,
+  AccessoryStatus,
+  Blog,
+  BlogStatus,
+  Category,
+  Dress,
+  DressStatus,
+  Service,
+  ServiceStatus,
+  Shop,
+  ShopStatus,
+} from '@/common/models';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
-import { ItemShopDto, ListShopDto } from '@/app/shop/shop.dto';
-import { DressService, ListDressDto } from '@/app/dress';
-import { ListServiceDto, ServiceService } from '@/app/service';
-import { BlogService, ListBlogDto } from '@/app/blog';
-import { CategoryService, ListCategoryDto } from '@/app/category';
-import { AccessoryService } from '@/app/accessory';
+import { In, Repository } from 'typeorm';
 
 @Injectable()
 export class ShopService {
   constructor(
     @InjectRepository(Shop) private readonly shopRepository: Repository<Shop>,
-    private readonly dressService: DressService,
-    private readonly serviceService: ServiceService,
-    private readonly blogService: BlogService,
-    private readonly categoryService: CategoryService,
-    private readonly accessoryService: AccessoryService,
+    @InjectRepository(Accessory) private readonly accessoryRepository: Repository<Accessory>,
+    @InjectRepository(Blog) private readonly blogRepository: Repository<Blog>,
+    @InjectRepository(Category) private readonly categoryRepository: Repository<Category>,
+    @InjectRepository(Dress) private readonly dressRepository: Repository<Dress>,
+    @InjectRepository(Service) private readonly serviceRepository: Repository<Service>,
   ) {}
 
   async getShopsForCustomer(
-    { page, size, limit, offset }: Pagination,
+    take: number,
+    skip: number,
     sort?: Sorting,
     filter?: Filtering,
-  ): Promise<ListResponse<ListShopDto>> {
+  ): Promise<[Shop[], number]> {
     const dynamicFilter = getWhere(filter);
     const where = {
       ...dynamicFilter,
       status: ShopStatus.ACTIVE,
+      isVerified: true,
     };
     const order = getOrder(sort);
 
-    const [shops, totalItems] = await this.shopRepository.findAndCount({
+    return await this.shopRepository.findAndCount({
       where,
       order,
-      take: limit,
-      skip: offset,
+      take,
+      skip,
     });
-    const totalPages = Math.ceil(totalItems / size);
-    return {
-      message: 'Đây là danh sách các shop khả dụng',
-      statusCode: HttpStatus.OK,
-      pageIndex: page,
-      pageSize: size,
-      totalItems,
-      totalPages,
-      hasNextPage: page + 1 < totalPages,
-      hasPrevPage: 0 < page,
-      items: shops,
-    };
   }
 
-  async getShopForCustomer(id: string): Promise<ItemShopDto> {
+  async getShopForCustomer(id: string): Promise<Shop> {
     const where = {
       id,
       status: ShopStatus.ACTIVE,
+      isVerified: true,
     };
     const existingShop = await this.shopRepository.findOneBy(where);
     if (!existingShop) throw new NotFoundException('Không tìm thấy cửa hàng phù hợp');
-    return { ...existingShop };
+    return existingShop;
   }
 
   async getDressesForCustomer(
     id: string,
-    { page, size, limit, offset }: Pagination,
+    take: number,
+    skip: number,
     sort?: Sorting,
     filter?: Filtering,
-  ): Promise<ListResponse<ListDressDto>> {
+  ): Promise<[Dress[], number]> {
     const existingShop = await this.getShopWithUserWithoutDeletedById(id);
-    const [dresses, totalItems] = await this.dressService.findAndCountOfShopForCustomer(
-      existingShop.user.id,
-      limit,
-      offset,
-      sort,
-      filter,
-    );
-    const totalPages = Math.ceil(totalItems / size);
-    return {
-      message: 'Đây là danh sách váy cưới khả dụng của cửa hàng',
-      statusCode: HttpStatus.OK,
-      pageIndex: page,
-      pageSize: size,
-      totalItems,
-      totalPages,
-      hasNextPage: page + 1 < totalPages,
-      hasPrevPage: 0 < page,
-      items: dresses,
+    const dynamicFilter = getWhere(filter);
+    const where = {
+      ...dynamicFilter,
+      user: { id: existingShop.user.id },
+      status: In([DressStatus.AVAILABLE, DressStatus.OUT_OF_STOCK]),
     };
+    const order = getOrder(sort);
+    return await this.dressRepository.findAndCount({
+      where,
+      order,
+      take,
+      skip,
+    });
   }
 
   async getAccessoriesForCustomer(
@@ -100,134 +91,113 @@ export class ShopService {
     filter?: Filtering,
   ): Promise<[Accessory[], number]> {
     const existingShop = await this.getShopWithUserWithoutDeletedById(id);
-    return await this.accessoryService.findAndCountOfShopForCustomer(
-      existingShop.user.id,
+    const dynamicFilter = getWhere(filter);
+    const where = {
+      ...dynamicFilter,
+      user: { id: existingShop.user.id },
+      status: In([AccessoryStatus.OUT_OF_STOCK, AccessoryStatus.AVAILABLE]),
+    };
+    const order = getOrder(sort);
+    return await this.accessoryRepository.findAndCount({
+      where,
+      order,
       take,
       skip,
-      sort,
-      filter,
-    );
+    });
   }
 
   async getServicesForCustomer(
     id: string,
-    { page, size, limit, offset }: Pagination,
+    take: number,
+    skip: number,
     sort?: Sorting,
     filter?: Filtering,
-  ): Promise<ListResponse<ListServiceDto>> {
+  ): Promise<[Service[], number]> {
     const existingShop = await this.getShopWithUserWithoutDeletedById(id);
-    const [services, totalItems] = await this.serviceService.findAndCountOfShopForCustomer(
-      existingShop.user.id,
-      limit,
-      offset,
-      sort,
-      filter,
-    );
-    const totalPages = Math.ceil(totalItems / size);
-    return {
-      message: 'Đây là danh sách dịch vụ khả dụng của cửa hàng',
-      statusCode: HttpStatus.OK,
-      pageIndex: page,
-      pageSize: size,
-      totalItems,
-      totalPages,
-      hasNextPage: page + 1 < totalPages,
-      hasPrevPage: 0 < page,
-      items: { ...services },
+    const dynamicFilter = getWhere(filter);
+    const where = {
+      ...dynamicFilter,
+      user: { id: existingShop.user.id },
+      status: ServiceStatus.ACTIVE,
     };
+    const order = getOrder(sort);
+    return await this.serviceRepository.findAndCount({
+      where,
+      order,
+      take,
+      skip,
+    });
   }
 
   async getBlogsForCustomer(
     id: string,
-    { page, size, limit, offset }: Pagination,
+    take: number,
+    skip: number,
     sort?: Sorting,
     filter?: Filtering,
-  ): Promise<ListResponse<ListBlogDto>> {
+  ): Promise<[Blog[], number]> {
     const existingShop = await this.getShopWithUserWithoutDeletedById(id);
-    const [blogs, totalItems] = await this.blogService.findAndCountOfShopForCustomer(
-      existingShop.user.id,
-      limit,
-      offset,
-      sort,
-      filter,
-    );
-    const totalPages = Math.ceil(totalItems / size);
-    return {
-      message: 'Đây là danh sách bài blog khả dụng của cửa hàng',
-      statusCode: HttpStatus.OK,
-      pageIndex: page,
-      pageSize: size,
-      totalItems,
-      totalPages,
-      hasNextPage: page + 1 < totalPages,
-      hasPrevPage: 0 < page,
-      items: { ...blogs },
+    const dynamicFilter = getWhere(filter);
+    const where = {
+      ...dynamicFilter,
+      user: { id: existingShop.user.id },
+      isVerified: true,
+      status: BlogStatus.PUBLISHED,
     };
+    const order = getOrder(sort);
+    return await this.blogRepository.findAndCount({
+      where,
+      order,
+      take,
+      skip,
+    });
   }
 
   async getCategoriesForCustomer(
     id: string,
-    { page, size, limit, offset }: Pagination,
+    take: number,
+    skip: number,
     sort?: Sorting,
     filter?: Filtering,
-  ): Promise<ListResponse<ListCategoryDto>> {
+  ): Promise<[Category[], number]> {
     const existingShop = await this.getShopWithUserWithoutDeletedById(id);
-    const [categories, totalItems] = await this.categoryService.findAndCountOfShopForCustomer(
-      existingShop.user.id,
-      limit,
-      offset,
-      sort,
-      filter,
-    );
-    const totalPages = Math.ceil(totalItems / size);
-    return {
-      message: 'Đây là danh sách mục phân loại category khả dụng của cửa hàng',
-      statusCode: HttpStatus.OK,
-      pageIndex: page,
-      pageSize: size,
-      totalItems,
-      totalPages,
-      hasNextPage: page + 1 < totalPages,
-      hasPrevPage: 0 < page,
-      items: { ...categories },
+    const dynamicFilter = getWhere(filter);
+    const where = {
+      ...dynamicFilter,
+      user: { id: existingShop.user.id },
     };
+    const order = getOrder(sort);
+    return await this.categoryRepository.findAndCount({
+      where,
+      order,
+      take,
+      skip,
+    });
   }
 
   async getShopsForOwner(
     userId: string,
-    { page, size, limit, offset }: Pagination,
+    take: number,
+    skip: number,
     sort?: Sorting,
     filter?: Filtering,
-  ): Promise<ListResponse<Shop>> {
+  ): Promise<[Shop[], number]> {
     const dynamicFilter = getWhere(filter);
     const where = {
       ...dynamicFilter,
       user: { id: userId },
     };
     const order = getOrder(sort);
-
-    const [shops, totalItems] = await this.shopRepository.findAndCount({
+    return await this.shopRepository.findAndCount({
       where,
       order,
-      take: limit,
-      skip: offset,
+      take,
+      skip,
       withDeleted: true,
     });
-    const totalPages = Math.ceil(totalItems / size);
-    return {
-      message: 'Đây là danh sách các shop của bạn',
-      statusCode: HttpStatus.OK,
-      pageIndex: page,
-      pageSize: size,
-      totalItems,
-      totalPages,
-      hasNextPage: page + 1 < totalPages,
-      hasPrevPage: 0 < page,
-      items: shops,
-    };
   }
 
-  async getShopForOwner(userId: string, id: string): Promise<ItemShopDto> {
+  async getShopForOwner(userId: string, id: string): Promise<Shop> {
     const where = {
       id,
       user: { id: userId },
@@ -237,7 +207,7 @@ export class ShopService {
       withDeleted: true,
     });
     if (!existingShop) throw new NotFoundException('Không tìm thấy cửa hàng phù hợp');
-    return { ...existingShop };
+    return existingShop;
   }
 
   async getShopWithUserWithoutDeletedById(id: string): Promise<Shop> {

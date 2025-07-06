@@ -1,13 +1,16 @@
 import { Filtering, getOrder, getWhere, Sorting } from '@/common/decorators';
-import { Blog, BlogStatus } from '@/common/models';
-import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
+import { Blog, BlogStatus, Category } from '@/common/models';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { CUBlogDto } from './blog.dto';
 
 @Injectable()
 export class BlogService {
-  constructor(@InjectRepository(Blog) private readonly blogRepository: Repository<Blog>) {}
+  constructor(
+    @InjectRepository(Blog) private readonly blogRepository: Repository<Blog>,
+    @InjectRepository(Category) private readonly categoryRepository: Repository<Category>,
+  ) {}
 
   async getBlogsForCustomer(
     take: number,
@@ -86,17 +89,11 @@ export class BlogService {
 
   async createBlogForOwner(userId: string, { categoryId, ...body }: CUBlogDto): Promise<Blog> {
     let blog;
-    if (categoryId)
-      blog = {
-        user: { id: userId },
-        category: { id: categoryId },
-        ...body,
-      };
-    else
-      blog = {
-        user: { id: userId },
-        ...body,
-      };
+    if (categoryId) {
+      if (!(await this.isCategoryExistForOwner(categoryId, userId)))
+        throw new NotFoundException('Không tìm thấy phân loại phù hợp');
+      blog = { user: { id: userId }, category: { id: categoryId }, ...body };
+    } else blog = { user: { id: userId }, ...body };
     return await this.blogRepository.save(blog);
   }
 
@@ -105,87 +102,27 @@ export class BlogService {
     id: string,
     { categoryId, ...body }: CUBlogDto,
   ): Promise<void> {
+    if (!(await this.isBlogExistForOwner(id, userId)))
+      throw new NotFoundException('Không tìm thấy bài blog phù hợp');
     let blog;
-    if (categoryId)
-      blog = {
-        category: { id: categoryId },
-        ...body,
-      };
-    else
-      blog = {
-        ...body,
-      };
-    const result = await this.blogRepository.update(
-      {
-        user: { id: userId },
-        id,
-      },
-      blog,
-    );
-    if (result.affected !== 1)
-      throw new BadRequestException('Cập nhật không thành công, kiểm tra lỗi');
+    if (categoryId) {
+      if (!(await this.isCategoryExistForOwner(categoryId, userId)))
+        throw new NotFoundException('Không tìm thấy phân loại phù hợp');
+      blog = { category: { id: categoryId }, ...body };
+    } else blog = { ...body };
+    await this.blogRepository.update({ user: { id: userId }, id }, blog);
   }
 
   async removeBlogForOwner(userId: string, id: string): Promise<void> {
-    const result = await this.blogRepository.softDelete({
-      user: { id: userId },
-      id,
-    });
-    if (result.affected !== 1) throw new BadRequestException('Xóa không thành công,kiểm tra lỗi');
+    if (!(await this.isBlogExistForOwner(id, userId)))
+      throw new NotFoundException('Không tìm thấy bài blog phù hợp');
+    await this.blogRepository.softDelete({ user: { id: userId }, id });
   }
 
   async restoreBlogForOwner(userId: string, id: string): Promise<void> {
-    const result = await this.blogRepository.restore({
-      user: { id: userId },
-      id,
-    });
-    if (result.affected !== 1)
-      throw new BadRequestException('Khôi phục không thành công,kiểm tra lỗi');
-  }
-
-  async findAndCountOfShopForCustomer(
-    userId,
-    limit: number,
-    offset: number,
-    sort?: Sorting,
-    filter?: Filtering,
-  ): Promise<[Blog[], number]> {
-    const dynamicFilter = getWhere(filter);
-    const where = {
-      ...dynamicFilter,
-      user: { id: userId },
-      status: BlogStatus.PUBLISHED,
-    };
-    const order = getOrder(sort);
-    return await this.blogRepository.findAndCount({
-      where,
-      order,
-      take: limit,
-      skip: offset,
-    });
-  }
-
-  async findAndCountOfCategoryForCustomer(
-    categoryId: string,
-    limit: number,
-    offset: number,
-    sort?: Sorting,
-    filter?: Filtering,
-  ): Promise<[Blog[], number]> {
-    const dynamicFilter = getWhere(filter);
-    const where = {
-      ...dynamicFilter,
-      category: { id: categoryId },
-      status: BlogStatus.PUBLISHED,
-      isVerified: true,
-    };
-    const order = getOrder(sort);
-    return await this.blogRepository.findAndCount({
-      where,
-      order,
-      take: limit,
-      skip: offset,
-    });
+    if (!(await this.isBlogExistForOwner(id, userId)))
+      throw new NotFoundException('Không tìm thấy bài blog phù hợp');
+    await this.blogRepository.restore({ user: { id: userId }, id });
   }
 
   async create(blog: Blog): Promise<Blog> {
@@ -194,5 +131,19 @@ export class BlogService {
 
   async getAll(): Promise<Blog[]> {
     return await this.blogRepository.find({ withDeleted: true });
+  }
+
+  async isCategoryExistForOwner(id: string, userId: string): Promise<boolean> {
+    return await this.categoryRepository.exists({
+      where: { id, user: { id: userId } },
+      withDeleted: true,
+    });
+  }
+
+  async isBlogExistForOwner(id: string, userId: string): Promise<boolean> {
+    return await this.blogRepository.exists({
+      where: { id, user: { id: userId } },
+      withDeleted: true,
+    });
   }
 }

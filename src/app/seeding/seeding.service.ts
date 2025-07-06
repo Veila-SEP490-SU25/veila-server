@@ -114,10 +114,7 @@ export class SeedingService implements OnModuleInit {
       this.logger.warn(`User role Shop ${shopNumber} not exists. Skipping seeding dress.`);
       return;
     }
-    const category = await this.categoryService.getOneByUserAndType(
-      user.id,
-      CategoryType.ACCESSORY,
-    );
+    const category = await this.categoryService.getOneByUserAndType(user.id, CategoryType.DRESS);
     if (!category) {
       this.logger.warn(`User category ${shopNumber} not exists`);
     }
@@ -191,10 +188,7 @@ export class SeedingService implements OnModuleInit {
       this.logger.warn(`User role Shop ${shopNumber} not exists. Skipping seeding service.`);
       return;
     }
-    const category = await this.categoryService.getOneByUserAndType(
-      user.id,
-      CategoryType.ACCESSORY,
-    );
+    const category = await this.categoryService.getOneByUserAndType(user.id, CategoryType.SERVICE);
     if (!category) {
       this.logger.warn(`User category ${shopNumber} not exists`);
     }
@@ -264,10 +258,7 @@ export class SeedingService implements OnModuleInit {
       this.logger.warn(`User role Shop ${shopNumber} not exists. Skipping seeding blog.`);
       return;
     }
-    const category = await this.categoryService.getOneByUserAndType(
-      user.id,
-      CategoryType.ACCESSORY,
-    );
+    const category = await this.categoryService.getOneByUserAndType(user.id, CategoryType.BLOG);
     if (!category) {
       this.logger.warn(`User category ${shopNumber} not exists`);
     }
