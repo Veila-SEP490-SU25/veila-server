@@ -1,7 +1,7 @@
 import { BlogStatus } from '@/common/models';
 import { ApiProperty } from '@nestjs/swagger';
 import { Expose } from 'class-transformer';
-import { IsNotEmpty, IsOptional, IsString } from 'class-validator';
+import { IsEnum, IsOptional, IsString } from 'class-validator';
 
 export class CUBlogDto {
   @ApiProperty({ example: '123e4567-e89b-12d3-a456-426614174000' })
@@ -26,7 +26,7 @@ export class CUBlogDto {
   images: string | null;
 
   @ApiProperty({ example: BlogStatus.DRAFT })
-  @IsNotEmpty()
+  @IsEnum(BlogStatus)
   status: BlogStatus;
 }
 

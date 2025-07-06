@@ -1,7 +1,7 @@
 import { AccessoryStatus } from '@/common/models';
 import { ApiProperty } from '@nestjs/swagger';
 import { Expose } from 'class-transformer';
-import { IsBoolean, IsNotEmpty, IsNumber, IsOptional, IsString } from 'class-validator';
+import { IsBoolean, IsEnum, IsNumber, IsOptional, IsString } from 'class-validator';
 
 export class ItemAccessoryDto {
   @Expose()
@@ -74,7 +74,7 @@ export class CUAccessoryDto {
   isRentable: boolean;
 
   @ApiProperty({ example: AccessoryStatus.AVAILABLE })
-  @IsNotEmpty()
+  @IsEnum(AccessoryStatus)
   status: AccessoryStatus;
 }
 

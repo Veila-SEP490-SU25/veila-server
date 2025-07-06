@@ -119,29 +119,6 @@ export class BlogService {
     await this.blogRepository.restore({ user: { id: userId }, id });
   }
 
-  async findAndCountOfCategoryForCustomer(
-    categoryId: string,
-    limit: number,
-    offset: number,
-    sort?: Sorting,
-    filter?: Filtering,
-  ): Promise<[Blog[], number]> {
-    const dynamicFilter = getWhere(filter);
-    const where = {
-      ...dynamicFilter,
-      category: { id: categoryId },
-      status: BlogStatus.PUBLISHED,
-      isVerified: true,
-    };
-    const order = getOrder(sort);
-    return await this.blogRepository.findAndCount({
-      where,
-      order,
-      take: limit,
-      skip: offset,
-    });
-  }
-
   async create(blog: Blog): Promise<Blog> {
     return await this.blogRepository.save(blog);
   }

@@ -3,7 +3,7 @@ import { ApiProperty } from '@nestjs/swagger';
 import { Expose } from 'class-transformer';
 import { IsEnum, IsOptional, IsString, MaxLength } from 'class-validator';
 
-export class CategoryDto {
+export class CUCategoryDto {
   @ApiProperty({
     description: 'Tên danh mục sản phẩm (tối đa 50 ký tự)',
     example: 'Đầm Dự Tiệc',
@@ -59,12 +59,15 @@ export class ListCategoryDto {
 }
 
 export class ItemCategoryDto {
+  @Expose()
   @ApiProperty({ description: 'ID danh mục', example: 'category-uuid-123' })
   id: string;
 
+  @Expose()
   @ApiProperty({ description: 'Tên danh mục', example: 'Đầm Dự Tiệc' })
   name: string;
 
+  @Expose()
   @ApiProperty({
     description: 'Ảnh đại diện danh mục (URL)',
     example: 'https://storage.veila.com/categories/img123.jpg',
@@ -72,6 +75,7 @@ export class ItemCategoryDto {
   })
   images: string | null;
 
+  @Expose()
   @ApiProperty({
     description: 'Mô tả danh mục',
     example: 'Những mẫu đầm dự tiệc sang trọng và thanh lịch',
@@ -79,6 +83,7 @@ export class ItemCategoryDto {
   })
   description: string | null;
 
+  @Expose()
   @ApiProperty({ enum: CategoryType, description: 'Loại danh mục', example: CategoryType.DRESS })
   type: CategoryType;
 }
