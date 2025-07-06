@@ -8,18 +8,18 @@ export class CUBlogDto {
   @IsString()
   @IsOptional()
   categoryId: string | null;
-  
+
   @ApiProperty({ example: 'Hướng dẫn chọn váy dạ hội hoàn hảo' })
   @IsString()
   title: string;
-  
+
   @ApiProperty({
     example:
-    'Trong bài viết này, chúng ta sẽ khám phá cách chọn váy dạ hội hoàn hảo cho từng dịp...',
+      'Trong bài viết này, chúng ta sẽ khám phá cách chọn váy dạ hội hoàn hảo cho từng dịp...',
   })
   @IsString()
   content: string;
-  
+
   @ApiProperty({ example: 'https://veila.images/1,https://veila.images/2' })
   @IsString()
   @IsOptional()

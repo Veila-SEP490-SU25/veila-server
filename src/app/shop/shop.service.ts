@@ -20,11 +20,11 @@ import { In, Repository } from 'typeorm';
 export class ShopService {
   constructor(
     @InjectRepository(Shop) private readonly shopRepository: Repository<Shop>,
-    @InjectRepository(Shop) private readonly accessoryRepository: Repository<Accessory>,
-    @InjectRepository(Shop) private readonly blogRepository: Repository<Blog>,
-    @InjectRepository(Shop) private readonly categoryRepository: Repository<Category>,
-    @InjectRepository(Shop) private readonly dressRepository: Repository<Dress>,
-    @InjectRepository(Shop) private readonly serviceRepository: Repository<Service>,
+    @InjectRepository(Accessory) private readonly accessoryRepository: Repository<Accessory>,
+    @InjectRepository(Blog) private readonly blogRepository: Repository<Blog>,
+    @InjectRepository(Category) private readonly categoryRepository: Repository<Category>,
+    @InjectRepository(Dress) private readonly dressRepository: Repository<Dress>,
+    @InjectRepository(Service) private readonly serviceRepository: Repository<Service>,
   ) {}
 
   async getShopsForCustomer(

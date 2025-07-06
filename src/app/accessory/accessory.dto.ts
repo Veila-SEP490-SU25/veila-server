@@ -42,16 +42,16 @@ export class CUAccessoryDto {
   @IsString()
   @IsOptional()
   categoryId: string | null;
-  
+
   @ApiProperty({ example: 'https://veila.images/1,https://veila.images/2' })
   @IsString()
   @IsOptional()
   images: string | null;
-  
+
   @ApiProperty({ example: 'Vòng cổ ngọc trai' })
   @IsString()
   name: string;
-  
+
   @ApiProperty({ example: 'Vòng cổ ngọc trai sang trọng, phù hợp với nhiều trang phục.' })
   @IsString()
   @IsOptional()
