@@ -102,6 +102,8 @@ export class BlogService {
     id: string,
     { categoryId, ...body }: CUBlogDto,
   ): Promise<void> {
+    if (!(await this.isBlogExistForOwner(id, userId)))
+      throw new NotFoundException('Không tìm thấy bài blog phù hợp');
     let blog;
     if (categoryId) {
       if (!(await this.isCategoryExistForOwner(categoryId, userId)))
@@ -112,10 +114,14 @@ export class BlogService {
   }
 
   async removeBlogForOwner(userId: string, id: string): Promise<void> {
+    if (!(await this.isBlogExistForOwner(id, userId)))
+      throw new NotFoundException('Không tìm thấy bài blog phù hợp');
     await this.blogRepository.softDelete({ user: { id: userId }, id });
   }
 
   async restoreBlogForOwner(userId: string, id: string): Promise<void> {
+    if (!(await this.isBlogExistForOwner(id, userId)))
+      throw new NotFoundException('Không tìm thấy bài blog phù hợp');
     await this.blogRepository.restore({ user: { id: userId }, id });
   }
 
@@ -129,6 +135,13 @@ export class BlogService {
 
   async isCategoryExistForOwner(id: string, userId: string): Promise<boolean> {
     return await this.categoryRepository.exists({
+      where: { id, user: { id: userId } },
+      withDeleted: true,
+    });
+  }
+
+  async isBlogExistForOwner(id: string, userId: string): Promise<boolean> {
+    return await this.blogRepository.exists({
       where: { id, user: { id: userId } },
       withDeleted: true,
     });
