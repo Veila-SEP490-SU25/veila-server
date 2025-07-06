@@ -83,6 +83,8 @@ export class AccessoryService {
     id: string,
     { categoryId, ...body }: CUAccessoryDto,
   ): Promise<void> {
+    if (!(await this.isAccessoryExistForOwner(id, userId)))
+      throw new NotFoundException('Không tìm thấy phụ kiện phù hợp');
     let accessory;
     if (categoryId) {
       if (!(await this.isCategoryExistForOwner(categoryId, userId)))
@@ -95,10 +97,14 @@ export class AccessoryService {
   }
 
   async removeAccessoryForOwner(userId: string, id: string): Promise<void> {
+    if (!(await this.isAccessoryExistForOwner(id, userId)))
+      throw new NotFoundException('Không tìm thấy phụ kiện phù hợp');
     await this.accessoryRepository.softDelete({ id, user: { id: userId } });
   }
 
   async restoreAccessoryForOwner(userId: string, id: string): Promise<void> {
+    if (!(await this.isAccessoryExistForOwner(id, userId)))
+      throw new NotFoundException('Không tìm thấy phụ kiện phù hợp');
     await this.accessoryRepository.restore({ id, user: { id: userId } });
   }
 
@@ -112,6 +118,13 @@ export class AccessoryService {
 
   async isCategoryExistForOwner(id: string, userId: string): Promise<boolean> {
     return await this.categoryRepository.exists({
+      where: { id, user: { id: userId } },
+      withDeleted: true,
+    });
+  }
+
+  async isAccessoryExistForOwner(id: string, userId: string): Promise<boolean> {
+    return await this.accessoryRepository.exists({
       where: { id, user: { id: userId } },
       withDeleted: true,
     });
