@@ -43,39 +43,6 @@ import {
 export class AccessoryController {
   constructor(private readonly accessoryService: AccessoryService) {}
 
-  @Get(':id')
-  @ApiOperation({
-    summary: 'Lấy thông tin chi tiết phụ kiện cho khách hàng',
-    description: `
-**Hướng dẫn sử dụng:**
-
-- Truyền \`id\` của phụ kiện trên URL.
-- Chỉ trả về phụ kiện ở trạng thái AVAILABLE.
-- Nếu không tìm thấy sẽ trả về lỗi.
-`,
-  })
-  @ApiOkResponse({
-    schema: {
-      allOf: [
-        { $ref: getSchemaPath(ItemResponse) },
-        {
-          properties: {
-            item: { $ref: getSchemaPath(ItemAccessoryDto) },
-          },
-        },
-      ],
-    },
-  })
-  async getAccessoryForCustomer(@Param('id') id: string): Promise<ItemResponse<ItemAccessoryDto>> {
-    const accessory = await this.accessoryService.getAccessoryForCustomer(id);
-    const dto = plainToInstance(ItemAccessoryDto, accessory);
-    return {
-      message: 'Đây là thông tin chi tiết của phụ kiện',
-      statusCode: HttpStatus.OK,
-      item: dto,
-    };
-  }
-
   @Get('me')
   @UseGuards(AuthGuard)
   @Roles(UserRole.SHOP)
@@ -86,6 +53,11 @@ export class AccessoryController {
 
 - Trả về danh sách phụ kiện thuộc về tài khoản shop đang đăng nhập (bao gồm cả đã xóa mềm).
 - Hỗ trợ phân trang, sắp xếp, lọc.
+- Page bắt đầu từ 0
+- Sort theo format: [tên_field]:[asc/desc]
+- Các trường đang có thể sort: name, sellPrice, rentalPrice
+- Filter theo format: [tên_field]:[eq|neq|gt|gte|lt|lte|like|nlike|in|nin]:[keyword]; hoặc [tên_field]:[isnull|isnotnull]
+- Các trường đang có thể filter: name, sellPrice, rentalPrice, isSellable, isRentable, status
 `,
   })
   @ApiQuery({
@@ -106,7 +78,7 @@ export class AccessoryController {
     name: 'sort',
     required: false,
     type: String,
-    description: 'Sắp xếp theo trường, ví dụ: :asc',
+    description: 'Sắp xếp theo trường, ví dụ: name:asc',
   })
   @ApiQuery({
     name: 'filter',
@@ -203,6 +175,7 @@ export class AccessoryController {
 - Phụ kiện sẽ gắn với tài khoản shop đang đăng nhập.
 - Các trường bắt buộc: \`name\`, \`sellPrice\`, \`status\`, ...
 - Trả về thông tin phụ kiện vừa tạo.
+- Accessory status: AVAILABLE, UNAVAILABLE, OUT_OF_STOCK
 `,
   })
   @ApiOkResponse({
@@ -241,6 +214,7 @@ export class AccessoryController {
 - Gửi thông tin cập nhật ở phần Body.
 - Chỉ cập nhật phụ kiện thuộc về tài khoản shop đang đăng nhập.
 - Nếu không tìm thấy sẽ trả về lỗi.
+- Accessory status: AVAILABLE, UNAVAILABLE, OUT_OF_STOCK
 `,
   })
   @ApiOkResponse({
@@ -260,18 +234,12 @@ export class AccessoryController {
     @Param('id') id: string,
     @Body() body: CUAccessoryDto,
   ): Promise<ItemResponse<null>> {
-    const result = await this.accessoryService.updateAccessoryForOwner(userId, id, body);
-    return result === 1
-      ? {
-          message: 'Phụ kiện đã được cập nhật',
-          statusCode: HttpStatus.NO_CONTENT,
-          item: null,
-        }
-      : {
-          message: 'Phụ kiện cập nhật không thành công, kiểm tra log lỗi',
-          statusCode: HttpStatus.BAD_REQUEST,
-          item: null,
-        };
+    await this.accessoryService.updateAccessoryForOwner(userId, id, body);
+    return {
+      message: 'Phụ kiện đã được cập nhật',
+      statusCode: HttpStatus.NO_CONTENT,
+      item: null,
+    };
   }
 
   @Delete(':id/me')
@@ -299,19 +267,16 @@ export class AccessoryController {
       ],
     },
   })
-  async removeAccessoryForOwner(@UserId() userId: string, @Param('id') id: string) {
-    const result = await this.accessoryService.removeAccessoryForOwner(userId, id);
-    return result === 1
-      ? {
-          message: 'Phụ kiện đã được xóa',
-          statusCode: HttpStatus.NO_CONTENT,
-          item: null,
-        }
-      : {
-          message: 'Phụ kiện xóa không thành công, kiểm tra log lỗi',
-          statusCode: HttpStatus.BAD_REQUEST,
-          item: null,
-        };
+  async removeAccessoryForOwner(
+    @UserId() userId: string,
+    @Param('id') id: string,
+  ): Promise<ItemResponse<null>> {
+    await this.accessoryService.removeAccessoryForOwner(userId, id);
+    return {
+      message: 'Phụ kiện đã được xóa',
+      statusCode: HttpStatus.NO_CONTENT,
+      item: null,
+    };
   }
 
   @Patch(':id/me')
@@ -339,18 +304,48 @@ export class AccessoryController {
       ],
     },
   })
-  async restoreAccessoryForOwner(@UserId() userId: string, @Param('id') id: string) {
-    const result = await this.accessoryService.restoreAccessoryForOwner(userId, id);
-    return result === 1
-      ? {
-          message: 'Phụ kiện đã được khôi phục',
-          statusCode: HttpStatus.NO_CONTENT,
-          item: null,
-        }
-      : {
-          message: 'Phụ kiện khôi phục không thành công, kiểm tra log lỗi',
-          statusCode: HttpStatus.BAD_REQUEST,
-          item: null,
-        };
+  async restoreAccessoryForOwner(
+    @UserId() userId: string,
+    @Param('id') id: string,
+  ): Promise<ItemResponse<null>> {
+    await this.accessoryService.restoreAccessoryForOwner(userId, id);
+    return {
+      message: 'Phụ kiện đã được khôi phục',
+      statusCode: HttpStatus.NO_CONTENT,
+      item: null,
+    };
+  }
+
+  @Get(':id')
+  @ApiOperation({
+    summary: 'Lấy thông tin chi tiết phụ kiện cho khách hàng',
+    description: `
+**Hướng dẫn sử dụng:**
+
+- Truyền \`id\` của phụ kiện trên URL.
+- Chỉ trả về phụ kiện ở trạng thái AVAILABLE.
+- Nếu không tìm thấy sẽ trả về lỗi.
+`,
+  })
+  @ApiOkResponse({
+    schema: {
+      allOf: [
+        { $ref: getSchemaPath(ItemResponse) },
+        {
+          properties: {
+            item: { $ref: getSchemaPath(ItemAccessoryDto) },
+          },
+        },
+      ],
+    },
+  })
+  async getAccessoryForCustomer(@Param('id') id: string): Promise<ItemResponse<ItemAccessoryDto>> {
+    const accessory = await this.accessoryService.getAccessoryForCustomer(id);
+    const dto = plainToInstance(ItemAccessoryDto, accessory, { excludeExtraneousValues: true });
+    return {
+      message: 'Đây là thông tin chi tiết của phụ kiện',
+      statusCode: HttpStatus.OK,
+      item: dto,
+    };
   }
 }

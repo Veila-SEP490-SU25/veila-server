@@ -1,47 +1,38 @@
-import { ListResponse } from '@/common/base';
-import { Filtering, getOrder, getWhere, Pagination, Sorting } from '@/common/decorators';
-import { Dress, DressStatus } from '@/common/models';
-import { HttpStatus, Injectable, NotFoundException } from '@nestjs/common';
+import { Filtering, getOrder, getWhere, Sorting } from '@/common/decorators';
+import { Category, Dress, DressStatus } from '@/common/models';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
-import { CUDressDto, ItemDressDto, ListDressDto } from '@/app/dress/dress.dto';
+import { In, Repository } from 'typeorm';
+import { CUDressDto } from '@/app/dress/dress.dto';
 
 @Injectable()
 export class DressService {
-  constructor(@InjectRepository(Dress) private readonly dressRepository: Repository<Dress>) {}
+  constructor(
+    @InjectRepository(Dress) private readonly dressRepository: Repository<Dress>,
+    @InjectRepository(Category) private readonly categoryRepository: Repository<Category>,
+  ) {}
 
   async getDressesForCustomer(
-    { page, size, limit, offset }: Pagination,
+    take: number,
+    skip: number,
     sort?: Sorting,
     filter?: Filtering,
-  ): Promise<ListResponse<ListDressDto>> {
+  ): Promise<[Dress[], number]> {
     const dynamicFilter = getWhere(filter);
     const where = {
       ...dynamicFilter,
-      status: DressStatus.AVAILABLE,
+      status: In([DressStatus.AVAILABLE, DressStatus.OUT_OF_STOCK]),
     };
     const order = getOrder(sort);
-    const [dresses, totalItems] = await this.dressRepository.findAndCount({
+    return await this.dressRepository.findAndCount({
       where,
       order,
-      take: limit,
-      skip: offset,
+      take,
+      skip,
     });
-    const totalPages = Math.ceil(totalItems / size);
-    return {
-      message: 'Đây là danh sách các váy cưới khả dụng',
-      statusCode: HttpStatus.OK,
-      pageIndex: page,
-      pageSize: size,
-      totalItems,
-      totalPages,
-      hasNextPage: page + 1 < totalPages,
-      hasPrevPage: 0 < page,
-      items: { ...dresses },
-    };
   }
 
-  async getDressForCustomer(id: string): Promise<ItemDressDto> {
+  async getDressForCustomer(id: string): Promise<Dress> {
     const dress = await this.dressRepository.findOne({
       where: {
         id,
@@ -52,20 +43,7 @@ export class DressService {
       },
     });
     if (!dress) throw new NotFoundException('Không tìm thấy váy cưới nào phù hợp');
-
-    // Ánh xạ feedbacks sang ProductFeedbacksDto
-    const feedbacks = (dress.feedbacks || []).map((fb) => ({
-      username: fb.customer.username,
-      content: fb.content,
-      rating: fb.rating,
-      images: fb.images,
-    }));
-
-    // Trả về ItemDressDto, chú ý gán feedbacks đã ánh xạ
-    return {
-      ...dress,
-      feedbacks,
-    };
+    return dress;
   }
 
   async getDressesForOwner(
@@ -113,95 +91,45 @@ export class DressService {
     userId: string,
     { categoryId, ...newDress }: CUDressDto,
   ): Promise<Dress> {
+    let dress;
     if (categoryId) {
-      const dress = { userId, categoryId, ...newDress };
-      return await this.dressRepository.save(dress);
+      if (!(await this.isCategoryExistForOwner(categoryId, userId)))
+        throw new NotFoundException('Không tìm thấy phân loại phù hợp');
+      dress = { userId, categoryId, ...newDress };
     } else {
-      const dress = { userId, ...newDress };
-      return await this.dressRepository.save(dress);
+      dress = { userId, ...newDress };
     }
+    return await this.dressRepository.save(dress);
   }
 
   async updateDressForOwner(
     userId: string,
     id: string,
     { categoryId, ...newDress }: CUDressDto,
-  ): Promise<number | undefined> {
-    await this.findDressWithDeleted(userId, id);
+  ): Promise<void> {
+    if (!(await this.isDressExistForOwner(id, userId)))
+      throw new NotFoundException('Không tìm thấy cáy cưới phù hợp');
+    let dress;
     if (categoryId) {
-      const dress = { categoryId, ...newDress };
-      return (await this.dressRepository.update(id, dress)).affected;
+      if (!(await this.isCategoryExistForOwner(categoryId, userId)))
+        throw new NotFoundException('Không tìm thấy phân loại phù hợp');
+      dress = { categoryId, ...newDress };
     } else {
-      const dress = { ...newDress };
-      return (await this.dressRepository.update(id, dress)).affected;
+      dress = { ...newDress };
     }
+    await this.dressRepository.update({ id, user: { id: userId } }, dress);
   }
 
-  async removeDressForOwner(userId: string, id: string): Promise<number | undefined> {
-    await this.findDressWithDeleted(userId, id);
-    return (await this.dressRepository.softDelete(id)).affected;
+  async removeDressForOwner(userId: string, id: string): Promise<void> {
+    if (!(await this.isDressExistForOwner(id, userId)))
+      throw new NotFoundException('Không tìm thấy cáy cưới phù hợp');
+    await this.dressRepository.softDelete({ id, user: { id: userId } });
   }
 
-  async restoreDressForOwner(userId: string, id: string): Promise<number | undefined> {
-    await this.findDressWithDeleted(userId, id);
-    return (await this.dressRepository.restore(id)).affected;
-  }
-
-  async findDressWithDeleted(userId: string, id: string): Promise<Dress> {
-    const where = {
-      user: { id: userId },
-      id,
-    };
-    const existingDress = await this.dressRepository.findOne({
-      where,
-      withDeleted: true,
-    });
-    if (!existingDress) throw new NotFoundException('Không tìm thấy váy cưới phù hợp');
-    return existingDress;
-  }
-
-  async findAndCountOfShopForCustomer(
-    userId,
-    limit: number,
-    offset: number,
-    sort?: Sorting,
-    filter?: Filtering,
-  ): Promise<[Dress[], number]> {
-    const dynamicFilter = getWhere(filter);
-    const where = {
-      ...dynamicFilter,
-      user: { id: userId },
-      status: DressStatus.AVAILABLE,
-    };
-    const order = getOrder(sort);
-    return await this.dressRepository.findAndCount({
-      where,
-      order,
-      take: limit,
-      skip: offset,
-    });
-  }
-
-  async findAndCountOfCategoryForCustomer(
-    categoryId: string,
-    limit: number,
-    offset: number,
-    sort?: Sorting,
-    filter?: Filtering,
-  ): Promise<[Dress[], number]> {
-    const dynamicFilter = getWhere(filter);
-    const where = {
-      ...dynamicFilter,
-      category: { id: categoryId },
-      status: DressStatus.AVAILABLE,
-    };
-    const order = getOrder(sort);
-    return await this.dressRepository.findAndCount({
-      where,
-      order,
-      take: limit,
-      skip: offset,
-    });
+  async restoreDressForOwner(userId: string, id: string): Promise<void> {
+    if (!(await this.isDressExistForOwner(id, userId)))
+      throw new NotFoundException('Không tìm thấy cáy cưới phù hợp');
+    await this.dressRepository.restore({ id, user: { id: userId } });
   }
 
   async getAll(): Promise<Dress[]> {
@@ -210,5 +138,19 @@ export class DressService {
 
   async create(dress: Dress): Promise<Dress> {
     return await this.dressRepository.save(dress);
+  }
+
+  async isCategoryExistForOwner(id: string, userId: string): Promise<boolean> {
+    return await this.categoryRepository.exists({
+      where: { id, user: { id: userId } },
+      withDeleted: true,
+    });
+  }
+
+  async isDressExistForOwner(id: string, userId: string): Promise<boolean> {
+    return await this.dressRepository.exists({
+      where: { user: { id: userId }, id },
+      withDeleted: true,
+    });
   }
 }

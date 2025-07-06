@@ -1,6 +1,7 @@
 import { AccessoryStatus } from '@/common/models';
 import { ApiProperty } from '@nestjs/swagger';
 import { Expose } from 'class-transformer';
+import { IsBoolean, IsEnum, IsNumber, IsOptional, IsString } from 'class-validator';
 
 export class ItemAccessoryDto {
   @Expose()
@@ -34,38 +35,46 @@ export class ItemAccessoryDto {
   @Expose()
   @ApiProperty()
   isRentable: boolean;
-
-  @Expose()
-  @ApiProperty()
-  status: AccessoryStatus;
 }
 
 export class CUAccessoryDto {
-  @ApiProperty()
+  @ApiProperty({ example: '123e4567-e89b-12d3-a456-426614174000' })
+  @IsString()
+  @IsOptional()
   categoryId: string | null;
 
-  @ApiProperty()
+  @ApiProperty({ example: 'https://veila.images/1,https://veila.images/2' })
+  @IsString()
+  @IsOptional()
   images: string | null;
 
-  @ApiProperty()
+  @ApiProperty({ example: 'Vòng cổ ngọc trai' })
+  @IsString()
   name: string;
 
-  @ApiProperty()
+  @ApiProperty({ example: 'Vòng cổ ngọc trai sang trọng, phù hợp với nhiều trang phục.' })
+  @IsString()
+  @IsOptional()
   description: string | null;
 
-  @ApiProperty()
+  @ApiProperty({ example: 150.0 })
+  @IsNumber()
   sellPrice: number;
 
-  @ApiProperty()
+  @ApiProperty({ example: 200.0 })
+  @IsNumber()
   rentalPrice: number;
 
-  @ApiProperty()
+  @ApiProperty({ example: true })
+  @IsBoolean()
   isSellable: boolean;
 
-  @ApiProperty()
+  @ApiProperty({ example: true })
+  @IsBoolean()
   isRentable: boolean;
 
-  @ApiProperty()
+  @ApiProperty({ example: AccessoryStatus.AVAILABLE })
+  @IsEnum(AccessoryStatus)
   status: AccessoryStatus;
 }
 
@@ -97,8 +106,4 @@ export class ListAccessoryDto {
   @Expose()
   @ApiProperty()
   isRentable: boolean;
-
-  @Expose()
-  @ApiProperty()
-  status: AccessoryStatus;
 }

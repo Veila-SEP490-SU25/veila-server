@@ -52,8 +52,8 @@ export enum FilterRule {
 
 export const PaginationParams = createParamDecorator((_, ctx: ExecutionContext): Pagination => {
   const req: Request = ctx.switchToHttp().getRequest();
-  const page = parseInt(req.query.page as string) | 0;
-  const size = parseInt(req.query.size as string) | 10;
+  const page = parseInt(req.query.page as string) || 0;
+  const size = parseInt(req.query.size as string) || 10;
 
   //Kiểm tra trang và kích thước hợp lệ
   if (isNaN(page) || page < 0 || isNaN(size) || size < 0)
