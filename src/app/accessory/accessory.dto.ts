@@ -46,6 +46,10 @@ export class ItemAccessoryDto {
   ratingCount: number;
 
   @Expose()
+  @ApiProperty()
+  status: AccessoryStatus;
+
+  @Expose()
   @Type(() => ProductFeedbacksDto)
   @ApiProperty({ type: [ProductFeedbacksDto] })
   feedbacks: ProductFeedbacksDto[];
@@ -124,4 +128,8 @@ export class ListAccessoryDto {
   @Expose()
   @ApiProperty()
   ratingAverage: number;
+
+  @Expose()
+  @ApiProperty()
+  status: AccessoryStatus;
 }

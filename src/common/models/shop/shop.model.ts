@@ -41,6 +41,7 @@ export class Shop extends Base {
     nullable: false,
   })
   name: string;
+
   @Column({
     name: 'phone',
     type: 'varchar',
