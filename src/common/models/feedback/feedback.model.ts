@@ -1,5 +1,5 @@
 import { Column, Entity, JoinColumn, ManyToOne } from 'typeorm';
-import { Base, Dress, Order, Service, User } from '@/common/models';
+import { Accessory, Base, Dress, Order, Service, User } from '@/common/models';
 import { ApiProperty } from '@nestjs/swagger';
 
 @Entity('feedbacks')
@@ -59,6 +59,20 @@ export class Feedback extends Base {
     nullable: true,
   })
   service: Service | null;
+
+  @ManyToOne(() => Accessory, (accessory) => accessory.feedbacks, {
+    nullable: true,
+  })
+  @JoinColumn({
+    name: 'accessory_id',
+    foreignKeyConstraintName: 'fk_accessory_feedback',
+  })
+  @ApiProperty({
+    description: 'Phụ kiện được đánh giá (nếu có)',
+    type: Accessory,
+    nullable: true,
+  })
+  accessory: Accessory | null;
 
   @Column({
     name: 'content',

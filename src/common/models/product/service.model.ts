@@ -5,8 +5,6 @@ import { ApiProperty } from '@nestjs/swagger';
 export enum ServiceStatus {
   ACTIVE = 'ACTIVE',
   INACTIVE = 'INACTIVE',
-  PENDING = 'PENDING',
-  SUSPENDED = 'SUSPENDED',
 }
 
 @Entity('services')

@@ -2,18 +2,18 @@ import { Column, Entity, JoinColumn, ManyToOne } from 'typeorm';
 import { Base, Shop } from '@/common/models';
 import { ApiProperty } from '@nestjs/swagger';
 
-@Entity('policies')
-export class Policy extends Base {
+@Entity('contracts')
+export class Contract extends Base {
   @ManyToOne(() => Shop, {
     nullable: false,
     onDelete: 'CASCADE',
   })
   @JoinColumn({
     name: 'shop_id',
-    foreignKeyConstraintName: 'fk_policy_shop',
+    foreignKeyConstraintName: 'fk_contract_shop',
   })
   @ApiProperty({
-    description: 'Cửa hàng liên quan đến chính sách',
+    description: 'Cửa hàng liên quan đến điều khoản ký',
     type: Shop,
   })
   shop: Shop;
@@ -23,12 +23,12 @@ export class Policy extends Base {
     type: 'varchar',
     length: 255,
     nullable: false,
-    comment: 'Tiêu đề của chính sách',
+    comment: 'Tiêu đề của điều khoản',
   })
   @ApiProperty({
     type: 'string',
-    description: 'Tiêu đề của chính sách',
-    example: 'Chính sách bảo hành sản phẩm',
+    description: 'Tiêu đề của điều khoản',
+    example: 'Điều khoản chấp nhận các hình phạt từ nền tảng',
     maxLength: 255,
     nullable: false,
   })
@@ -38,13 +38,14 @@ export class Policy extends Base {
     name: 'content',
     type: 'text',
     nullable: false,
-    comment: 'Nội dung chi tiết của chính sách',
+    comment: 'Nội dung chi tiết của điều khoản',
   })
   @ApiProperty({
     type: 'string',
     format: 'text',
-    description: 'Nội dung chi tiết của chính sách',
-    example: 'Chúng tôi cam kết bảo hành sản phẩm trong vòng 12 tháng kể từ ngày mua.',
+    description: 'Nội dung chi tiết của điều khoản',
+    example:
+      'Chúng tôi cam kết nếu có các hành vi sai phạm ảnh hưởng đến khách hàng sẽ chịu số tiền phạt theo điều khoản.',
     nullable: false,
   })
   content: string;
@@ -54,11 +55,11 @@ export class Policy extends Base {
     type: 'boolean',
     default: false,
     nullable: false,
-    comment: 'Xác định xem chính sách người dùng ký xác nhận hay chưa',
+    comment: 'Xác định xem điều khoản người dùng ký xác nhận hay chưa',
   })
   @ApiProperty({
     type: 'boolean',
-    description: 'Xác định xem chính sách người dùng đã ký xác nhận hay chưa',
+    description: 'Xác định xem điều khoản người dùng đã ký xác nhận hay chưa',
     example: true,
     nullable: false,
   })

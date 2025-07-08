@@ -1,6 +1,6 @@
-import { Column, Entity, ManyToOne, JoinColumn } from 'typeorm';
+import { Column, Entity, JoinColumn, OneToMany, OneToOne } from 'typeorm';
 import { ApiProperty } from '@nestjs/swagger';
-import { Base, User } from '@/common/models';
+import { Base, Membership, User } from '@/common/models';
 
 export enum ShopStatus {
   PENDING = 'PENDING', // Đang chờ duyệt
@@ -12,7 +12,7 @@ export enum ShopStatus {
 
 @Entity('shops')
 export class Shop extends Base {
-  @ManyToOne(() => User, {
+  @OneToOne(() => User, {
     nullable: false,
     onDelete: 'CASCADE',
   })
@@ -41,23 +41,6 @@ export class Shop extends Base {
     nullable: false,
   })
   name: string;
-
-  @Column({
-    name: 'tax_code',
-    type: 'varchar',
-    length: 20,
-    nullable: true,
-    comment: 'Mã số thuế',
-  })
-  @ApiProperty({
-    type: 'string',
-    description: 'Mã số thuế',
-    example: '0123456789',
-    maxLength: 20,
-    nullable: true,
-  })
-  taxCode: string | null;
-
   @Column({
     name: 'phone',
     type: 'varchar',
@@ -89,7 +72,7 @@ export class Shop extends Base {
     maxLength: 64,
     nullable: true,
   })
-  email: string | null;
+  email: string;
 
   @Column({
     name: 'address',
@@ -97,6 +80,8 @@ export class Shop extends Base {
     length: 255,
     nullable: false,
     comment: 'Địa chỉ shop',
+    charset: 'utf8mb4',
+    collation: 'utf8mb4_unicode_ci',
   })
   @ApiProperty({
     type: 'string',
@@ -178,7 +163,7 @@ export class Shop extends Base {
     type: 'boolean',
     default: false,
     nullable: false,
-    comment: 'Trạng thái xác thực shop (đã xác minh giấy phép kinh doanh)',
+    comment: 'Trạng thái xác thực shop (đã xác minh giấy phép kinh doanh và ký kết điều khoản)',
   })
   @ApiProperty({
     type: 'boolean',
@@ -188,4 +173,10 @@ export class Shop extends Base {
     nullable: false,
   })
   isVerified: boolean;
+
+  @OneToMany(() => Membership, (membership) => membership.shop)
+  @ApiProperty({
+    type: [Membership],
+  })
+  memberships: [Membership];
 }
