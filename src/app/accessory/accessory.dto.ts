@@ -120,4 +120,8 @@ export class ListAccessoryDto {
   @Expose()
   @ApiProperty()
   isRentable: boolean;
+  
+  @Expose()
+  @ApiProperty()
+  ratingAverage: number;
 }
