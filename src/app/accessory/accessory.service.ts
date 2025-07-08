@@ -17,7 +17,10 @@ export class AccessoryService {
       id,
       status: In([AccessoryStatus.AVAILABLE, AccessoryStatus.OUT_OF_STOCK]),
     };
-    const existingAccessory = await this.accessoryRepository.findOne({ where });
+    const existingAccessory = await this.accessoryRepository.findOne({
+      where,
+      relations: { feedbacks: { customer: true } },
+    });
     if (!existingAccessory) throw new NotFoundException('Không tìm thấy phụ kiện phù hợp');
     return existingAccessory;
   }
@@ -43,6 +46,7 @@ export class AccessoryService {
       withDeleted: true,
       relations: {
         category: true,
+        feedbacks: true,
       },
     });
   }
@@ -57,6 +61,7 @@ export class AccessoryService {
       withDeleted: true,
       relations: {
         category: true,
+        feedbacks: true,
       },
     });
     if (!existingAccessory) throw new NotFoundException('Không tìm thấy phụ kiện phù hợp');
