@@ -175,33 +175,8 @@ export class ShopService {
     });
   }
 
-  async getShopsForOwner(
-    userId: string,
-    take: number,
-    skip: number,
-    sort?: Sorting,
-    filter?: Filtering,
-  ): Promise<[Shop[], number]> {
-    const dynamicFilter = getWhere(filter);
-    const where = {
-      ...dynamicFilter,
-      user: { id: userId },
-    };
-    const order = getOrder(sort);
-    return await this.shopRepository.findAndCount({
-      where,
-      order,
-      take,
-      skip,
-      withDeleted: true,
-    });
-  }
-
-  async getShopForOwner(userId: string, id: string): Promise<Shop> {
-    const where = {
-      id,
-      user: { id: userId },
-    };
+  async getShopForOwner(userId: string): Promise<Shop> {
+    const where = { user: { id: userId } };
     const existingShop = await this.shopRepository.findOne({
       where,
       withDeleted: true,

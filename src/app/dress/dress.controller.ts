@@ -438,17 +438,7 @@ export class DressController {
   })
   async getDressForCustomer(@Param('id') id: string): Promise<ItemResponse<ItemDressDto>> {
     const dress = await this.dressService.getDressForCustomer(id);
-    const feedbacks = (dress.feedbacks || []).map((fb) => ({
-      username: fb.customer.username,
-      content: fb.content,
-      rating: fb.rating,
-      images: fb.images,
-    }));
-    const dto = plainToInstance(
-      ItemDressDto,
-      { ...dress, feedbacks },
-      { excludeExtraneousValues: true },
-    );
+    const dto = plainToInstance(ItemDressDto, dress, { excludeExtraneousValues: true });
     return {
       message: 'Đây là thông tin chi tiết của Váy cưới',
       statusCode: HttpStatus.OK,

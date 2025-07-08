@@ -3,8 +3,8 @@ import { Base, Category, User } from '@/common/models';
 import { ApiProperty } from '@nestjs/swagger';
 
 export enum BlogStatus {
-  DRAFT = 'draft',
-  PUBLISHED = 'published',
+  DRAFT = 'DRAFT',
+  PUBLISHED = 'PUBLISHED',
 }
 
 @Entity('blogs')

@@ -6,8 +6,6 @@ export enum LicenseStatus {
   PENDING = 'PENDING', // Đang chờ duyệt
   APPROVED = 'APPROVED', // Đã duyệt
   REJECTED = 'REJECTED', // Bị từ chối
-  EXPIRED = 'EXPIRED', // Hết hạn
-  SUSPENDED = 'SUSPENDED', // Tạm ngưng
   RESUBMIT = 'RESUBMIT', // Yêu cầu gửi lại
 }
 

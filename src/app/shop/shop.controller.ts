@@ -52,87 +52,6 @@ export class ShopController {
   @UseGuards(AuthGuard)
   @Roles(UserRole.SHOP)
   @ApiOperation({
-    summary: 'Lấy danh sách shop của chủ shop đang đăng nhập',
-    description: `
-**Hướng dẫn sử dụng:**
-- Trả về danh sách shop thuộc về tài khoản đang đăng nhập.
-- Hỗ trợ phân trang, sắp xếp, lọc.
-- Page bắt đầu từ 0
-- Sort theo format: [tên_field]:[asc/desc]
-- Các trường đang có thể sort: name
-- Filter theo format: [tên_field]:[eq|neq|gt|gte|lt|lte|like|nlike|in|nin]:[keyword]; hoặc [tên_field]:[isnull|isnotnull]
-- Các trường đang có thể filter: name, status
-`,
-  })
-  @ApiQuery({
-    name: 'page',
-    required: false,
-    type: Number,
-    default: 0,
-    description: 'Trang hiện tại (bắt đầu từ 0)',
-  })
-  @ApiQuery({
-    name: 'size',
-    required: false,
-    type: Number,
-    default: 10,
-    description: 'Số lượng mỗi trang',
-  })
-  @ApiQuery({
-    name: 'sort',
-    required: false,
-    type: String,
-    description: 'Sắp xếp theo trường, ví dụ: :asc',
-  })
-  @ApiQuery({
-    name: 'filter',
-    required: false,
-    type: String,
-    description: 'Lọc theo trường, ví dụ: :like:',
-  })
-  @ApiOkResponse({
-    schema: {
-      allOf: [
-        { $ref: getSchemaPath(ListResponse) },
-        {
-          properties: {
-            item: { $ref: getSchemaPath(Shop) },
-          },
-        },
-      ],
-    },
-  })
-  async getShopsForOwner(
-    @UserId() userId: string,
-    @PaginationParams() { page, size, limit, offset }: Pagination,
-    @SortingParams(['name']) sort?: Sorting,
-    @FilteringParams(['name', 'status']) filter?: Filtering,
-  ): Promise<ListResponse<Shop>> {
-    const [shops, totalItems] = await this.shopService.getShopsForOwner(
-      userId,
-      limit,
-      offset,
-      sort,
-      filter,
-    );
-    const totalPages = Math.ceil(totalItems / size);
-    return {
-      message: 'Đây là danh sách các shop của bạn',
-      statusCode: HttpStatus.OK,
-      pageIndex: page,
-      pageSize: size,
-      totalItems,
-      totalPages,
-      hasNextPage: page + 1 < totalPages,
-      hasPrevPage: 0 < page,
-      items: shops,
-    };
-  }
-
-  @Get(':id/me')
-  @UseGuards(AuthGuard)
-  @Roles(UserRole.SHOP)
-  @ApiOperation({
     summary: 'Lấy thông tin chi tiết shop của chủ shop đang đăng nhập',
     description: `
 **Hướng dẫn sử dụng:**
@@ -153,11 +72,8 @@ export class ShopController {
       ],
     },
   })
-  async getShopForOwner(
-    @UserId() userId: string,
-    @Param('id') id: string,
-  ): Promise<ItemResponse<Shop>> {
-    const shop = await this.shopService.getShopForOwner(userId, id);
+  async getShopForOwner(@UserId() userId: string): Promise<ItemResponse<Shop>> {
+    const shop = await this.shopService.getShopForOwner(userId);
     return {
       message: 'Đây là thông tin chi tiết của shop',
       statusCode: HttpStatus.OK,

@@ -4,3 +4,4 @@ export * from '@/common/models/order/orderDressDetail.model';
 export * from '@/common/models/order/orderServiceDetail.model';
 export * from '@/common/models/order/request.model';
 export * from '@/common/models/order/task.model';
+export * from '@/common/models/order/orderAccessoryDetail.model';

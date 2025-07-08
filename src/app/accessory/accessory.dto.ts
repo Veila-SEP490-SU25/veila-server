@@ -1,6 +1,7 @@
+import { ProductFeedbacksDto } from '@/app/feedback';
 import { AccessoryStatus } from '@/common/models';
 import { ApiProperty } from '@nestjs/swagger';
-import { Expose } from 'class-transformer';
+import { Expose, Type } from 'class-transformer';
 import { IsBoolean, IsEnum, IsNumber, IsOptional, IsString } from 'class-validator';
 
 export class ItemAccessoryDto {
@@ -35,6 +36,23 @@ export class ItemAccessoryDto {
   @Expose()
   @ApiProperty()
   isRentable: boolean;
+
+  @Expose()
+  @ApiProperty()
+  ratingAverage: number;
+
+  @Expose()
+  @ApiProperty()
+  ratingCount: number;
+
+  @Expose()
+  @ApiProperty()
+  status: AccessoryStatus;
+
+  @Expose()
+  @Type(() => ProductFeedbacksDto)
+  @ApiProperty({ type: [ProductFeedbacksDto] })
+  feedbacks: ProductFeedbacksDto[];
 }
 
 export class CUAccessoryDto {
@@ -106,4 +124,12 @@ export class ListAccessoryDto {
   @Expose()
   @ApiProperty()
   isRentable: boolean;
+
+  @Expose()
+  @ApiProperty()
+  ratingAverage: number;
+
+  @Expose()
+  @ApiProperty()
+  status: AccessoryStatus;
 }

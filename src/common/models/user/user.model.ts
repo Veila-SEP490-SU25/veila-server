@@ -1,7 +1,7 @@
-import { Column, Entity } from 'typeorm';
+import { Column, Entity, OneToOne } from 'typeorm';
 import { Exclude } from 'class-transformer';
 import { ApiProperty, ApiHideProperty } from '@nestjs/swagger';
-import { Base } from '@/common/models';
+import { Base, Shop } from '@/common/models';
 
 export enum UserRole {
   SUPER_ADMIN = 'SUPER_ADMIN',
@@ -250,13 +250,22 @@ export class User extends Base {
     type: 'boolean',
     default: false,
     nullable: false,
-    comment: 'Đánh dấu người dùng đã xác thực danh tính (CCCD/CMND) hay chưa',
+    comment: 'Đánh dấu người dùng đã xác thực danh tính (SDT) hay chưa',
   })
   @ApiProperty({
     type: 'boolean',
     nullable: false,
-    description: 'Trạng thái xác thực danh tính của người dùng (CCCD/CMND)',
+    description: 'Trạng thái xác thực danh tính của người dùng (SDT)',
     example: false,
   })
   isIdentified: boolean;
+
+  @OneToOne(() => Shop, (shop) => shop.user, {
+    nullable: true,
+  })
+  @ApiProperty({
+    type: Shop,
+    nullable: true,
+  })
+  shop: Shop | null;
 }

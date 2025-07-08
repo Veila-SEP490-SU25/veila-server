@@ -67,6 +67,7 @@ export class DressService {
       withDeleted: true,
       relations: {
         category: true,
+        feedbacks: true,
       },
     });
   }
@@ -81,6 +82,7 @@ export class DressService {
       withDeleted: true,
       relations: {
         category: true,
+        feedbacks: true,
       },
     });
     if (!existingDress) throw new NotFoundException('Không tìm thấy váy cưới phù hợp');

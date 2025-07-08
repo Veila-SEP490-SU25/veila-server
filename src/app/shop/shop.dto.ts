@@ -17,8 +17,8 @@ export class ListShopDto {
   phone: string;
 
   @Expose()
-  @ApiProperty({ description: 'Email liên hệ', example: 'shop@example.com', nullable: true })
-  email: string | null;
+  @ApiProperty({ description: 'Email liên hệ', example: 'shop@example.com' })
+  email: string;
 
   @Expose()
   @ApiProperty({ description: 'Địa chỉ shop', example: '123 Đường ABC, Quận 1, TP.HCM' })
@@ -60,7 +60,7 @@ export class ItemShopDto {
 
   @Expose()
   @ApiProperty({ description: 'Email liên hệ', example: 'shop@example.com', nullable: true })
-  email: string | null;
+  email: string;
 
   @Expose()
   @ApiProperty({ description: 'Địa chỉ shop', example: '123 Đường ABC, Quận 1, TP.HCM' })

@@ -18,6 +18,7 @@ import {
   Service,
   ServiceStatus,
   Shop,
+  ShopStatus,
   User,
   UserRole,
   UserStatus,
@@ -282,36 +283,16 @@ export class SeedingService implements OnModuleInit {
 
   private async seedShops() {
     const shops = await this.shopService.getAll();
-    if (shops.length >= 25) {
+    if (shops.length >= 5) {
       this.logger.log(`Enough data available for shop. Skipping seeding`);
       return;
     }
     try {
       Promise.all([
         await this.seedShop(1),
-        await this.seedShop(1),
-        await this.seedShop(1),
-        await this.seedShop(1),
-        await this.seedShop(1),
-        await this.seedShop(2),
-        await this.seedShop(2),
-        await this.seedShop(2),
-        await this.seedShop(2),
         await this.seedShop(2),
         await this.seedShop(3),
-        await this.seedShop(3),
-        await this.seedShop(3),
-        await this.seedShop(3),
-        await this.seedShop(3),
         await this.seedShop(4),
-        await this.seedShop(4),
-        await this.seedShop(4),
-        await this.seedShop(4),
-        await this.seedShop(4),
-        await this.seedShop(5),
-        await this.seedShop(5),
-        await this.seedShop(5),
-        await this.seedShop(5),
         await this.seedShop(5),
       ]);
       this.logger.log('Seeding process completed successfully!');
@@ -332,14 +313,13 @@ export class SeedingService implements OnModuleInit {
     const newShop = {
       user,
       name: faker.company.name(),
-      taxCode: this.customFaker.string.numeric({ length: 10 }),
       phone: `+84${this.customFaker.string.numeric({ length: 9 })}`,
       email: faker.internet.email(),
       address: `${faker.location.streetAddress()}, ${faker.location.city()}`,
       description: faker.company.name(),
       logoUrl: this.customFaker.image.avatar(),
       coverUrl: this.customFaker.image.url(),
-      status: 'ACTIVE',
+      status: ShopStatus.ACTIVE,
       isVerified: true,
     } as Shop;
 
