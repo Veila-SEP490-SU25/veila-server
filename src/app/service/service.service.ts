@@ -68,6 +68,7 @@ export class ServiceService {
       withDeleted: true,
       relations: {
         category: true,
+        feedbacks: true,
       },
     });
   }

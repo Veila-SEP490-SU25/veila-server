@@ -10,7 +10,7 @@ export class DressService {
   constructor(
     @InjectRepository(Dress) private readonly dressRepository: Repository<Dress>,
     @InjectRepository(Category) private readonly categoryRepository: Repository<Category>,
-  ) { }
+  ) {}
 
   async getDressesForCustomer(
     take: number,

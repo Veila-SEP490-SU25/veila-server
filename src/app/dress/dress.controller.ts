@@ -41,7 +41,7 @@ import { plainToInstance } from 'class-transformer';
 @ApiBearerAuth()
 @ApiExtraModels(ItemResponse, ListResponse, Dress, ListDressDto, ItemDressDto)
 export class DressController {
-  constructor(private readonly dressService: DressService) { }
+  constructor(private readonly dressService: DressService) {}
 
   @Get('/me')
   @UseGuards(AuthGuard)
@@ -438,7 +438,7 @@ export class DressController {
   })
   async getDressForCustomer(@Param('id') id: string): Promise<ItemResponse<ItemDressDto>> {
     const dress = await this.dressService.getDressForCustomer(id);
-    const dto = plainToInstance(ItemDressDto, dress, { excludeExtraneousValues: true },);
+    const dto = plainToInstance(ItemDressDto, dress, { excludeExtraneousValues: true });
     return {
       message: 'Đây là thông tin chi tiết của Váy cưới',
       statusCode: HttpStatus.OK,
