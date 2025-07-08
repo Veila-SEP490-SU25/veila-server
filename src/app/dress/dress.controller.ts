@@ -41,7 +41,7 @@ import { plainToInstance } from 'class-transformer';
 @ApiBearerAuth()
 @ApiExtraModels(ItemResponse, ListResponse, Dress, ListDressDto, ItemDressDto)
 export class DressController {
-  constructor(private readonly dressService: DressService) {}
+  constructor(private readonly dressService: DressService) { }
 
   @Get('/me')
   @UseGuards(AuthGuard)
@@ -438,17 +438,7 @@ export class DressController {
   })
   async getDressForCustomer(@Param('id') id: string): Promise<ItemResponse<ItemDressDto>> {
     const dress = await this.dressService.getDressForCustomer(id);
-    const feedbacks = (dress.feedbacks || []).map((fb) => ({
-      username: fb.customer.username,
-      content: fb.content,
-      rating: fb.rating,
-      images: fb.images,
-    }));
-    const dto = plainToInstance(
-      ItemDressDto,
-      { ...dress, feedbacks },
-      { excludeExtraneousValues: true },
-    );
+    const dto = plainToInstance(ItemDressDto, dress, { excludeExtraneousValues: true },);
     return {
       message: 'Đây là thông tin chi tiết của Váy cưới',
       statusCode: HttpStatus.OK,

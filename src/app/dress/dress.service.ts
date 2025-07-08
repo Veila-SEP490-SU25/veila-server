@@ -10,7 +10,7 @@ export class DressService {
   constructor(
     @InjectRepository(Dress) private readonly dressRepository: Repository<Dress>,
     @InjectRepository(Category) private readonly categoryRepository: Repository<Category>,
-  ) {}
+  ) { }
 
   async getDressesForCustomer(
     take: number,
@@ -67,6 +67,7 @@ export class DressService {
       withDeleted: true,
       relations: {
         category: true,
+        feedbacks: true,
       },
     });
   }
@@ -81,6 +82,7 @@ export class DressService {
       withDeleted: true,
       relations: {
         category: true,
+        feedbacks: true,
       },
     });
     if (!existingDress) throw new NotFoundException('Không tìm thấy váy cưới phù hợp');
