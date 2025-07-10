@@ -6,10 +6,14 @@ import { Column, Entity, JoinColumn, ManyToOne, OneToOne } from 'typeorm';
 
 @Entity('update_order_service_details')
 export class UpdateOrderServiceDetail extends Base {
-  @ManyToOne(() => OrderServiceDetail, (orderServiceDetail) => orderServiceDetail.updateOrderServiceDetails, {
-    nullable: false,
-    onDelete: 'CASCADE',
-  })
+  @ManyToOne(
+    () => OrderServiceDetail,
+    (orderServiceDetail) => orderServiceDetail.updateOrderServiceDetails,
+    {
+      nullable: false,
+      onDelete: 'CASCADE',
+    },
+  )
   @JoinColumn({
     name: 'order_service_detail_id',
     foreignKeyConstraintName: 'fk_order_service_detail_update_order_service_detail',
