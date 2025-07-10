@@ -1,5 +1,5 @@
-import { Column, Entity, JoinColumn, ManyToOne } from 'typeorm';
-import { Base, User } from '@/common/models';
+import { Column, Entity, JoinColumn, ManyToOne, OneToMany } from 'typeorm';
+import { Base, UpdateRequest, User } from '@/common/models';
 import { ApiProperty } from '@nestjs/swagger';
 
 export enum RequestStatus {
@@ -85,19 +85,13 @@ export class Request extends Base {
   })
   isPrivate: boolean;
 
-  @Column({
-    type: 'int',
-    unsigned: true,
-    nullable: false,
-    default: 1,
-    comment: 'Phiên bản yêu cầu',
+  @OneToMany(() => UpdateRequest, (updateRequest) => updateRequest.request, {
+    nullable: true,
   })
   @ApiProperty({
-    type: 'integer',
-    minimum: 1,
-    nullable: false,
-    description: 'Phiên bản yêu cầu',
-    example: 1,
+    type: [UpdateRequest],
+    nullable: true,
+    description: 'Danh sách các yêu cầu cập nhật liên quan',
   })
-  version: number;
+  updateRequests: UpdateRequest[] | null;
 }

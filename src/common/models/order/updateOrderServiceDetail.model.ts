@@ -1,46 +1,38 @@
-import { Column, Entity, JoinColumn, ManyToOne, OneToMany, OneToOne } from 'typeorm';
-import { Base, Order, Request, Service, UpdateOrderServiceDetail } from '@/common/models';
+import { Base } from '@/common/models/base.model';
+import { OrderServiceDetail } from '@/common/models/order/orderServiceDetail.model';
+import { UpdateRequest } from '@/common/models/order/updateRequest.model';
 import { ApiProperty } from '@nestjs/swagger';
+import { Column, Entity, JoinColumn, ManyToOne, OneToOne } from 'typeorm';
 
-@Entity('order_service_details')
-export class OrderServiceDetail extends Base {
-  @OneToOne(() => Order, (order) => order.orderServiceDetail, {
+@Entity('update_order_service_details')
+export class UpdateOrderServiceDetail extends Base {
+  @ManyToOne(() => OrderServiceDetail, (orderServiceDetail) => orderServiceDetail.updateOrderServiceDetails, {
     nullable: false,
     onDelete: 'CASCADE',
   })
   @JoinColumn({
-    name: 'order_id',
-    foreignKeyConstraintName: 'fk_order_order_service_detail',
+    name: 'order_service_detail_id',
+    foreignKeyConstraintName: 'fk_order_service_detail_update_order_service_detail',
   })
   @ApiProperty({
-    description: 'Đơn hàng liên quan',
-    type: Order,
+    description: 'Chi tiết dịch vụ đơn hàng liên quan',
+    type: OrderServiceDetail,
   })
-  order: Order;
+  orderServiceDetail: OrderServiceDetail;
 
-  @OneToOne(() => Request)
-  @JoinColumn({
-    name: 'request_id',
-    foreignKeyConstraintName: 'fk_request_order_service_detail',
-  })
-  @ApiProperty({
-    description: 'Yêu cầu dịch vụ liên quan',
-    type: Request,
-  })
-  request: Request;
-
-  @ManyToOne(() => Service, {
+  @OneToOne(() => UpdateRequest, {
     nullable: false,
+    onDelete: 'CASCADE',
   })
   @JoinColumn({
-    name: 'service_id',
-    foreignKeyConstraintName: 'fk_service_order_service_detail',
+    name: 'update_request_id',
+    foreignKeyConstraintName: 'fk_update_request_update_order_service_detail',
   })
   @ApiProperty({
-    description: 'Dịch vụ được đặt',
-    type: Service,
+    description: 'Yêu cầu cập nhật liên quan',
+    type: UpdateRequest,
   })
-  service: Service;
+  updateRequest: UpdateRequest;
 
   @Column({
     type: 'integer',
@@ -367,44 +359,15 @@ export class OrderServiceDetail extends Base {
     unsigned: true,
     nullable: false,
     default: 0,
-    comment: 'Giá dịch vụ tại thời điểm đặt',
+    comment: 'Phí phụ thu cho yêu cầu cập nhật',
   })
   @ApiProperty({
     type: 'number',
     format: 'decimal',
     minimum: 0,
     nullable: false,
-    description: 'Giá dịch vụ tại thời điểm đặt (VNĐ)',
+    description: 'Phí phụ thu cho yêu cầu cập nhật (VNĐ)',
     example: 1500000,
   })
   price: number;
-
-  @Column({
-    type: 'boolean',
-    nullable: false,
-    default: false,
-    comment: 'Dịch vụ đã được đánh giá hay chưa',
-  })
-  @ApiProperty({
-    type: 'boolean',
-    default: false,
-    nullable: false,
-    description: 'Dịch vụ đã được đánh giá hay chưa',
-    example: false,
-  })
-  isRated: boolean;
-
-  @OneToMany(
-    () => UpdateOrderServiceDetail,
-    (updateOrderServiceDetail) => updateOrderServiceDetail.orderServiceDetail,
-    {
-      nullable: true,
-    },
-  )
-  @ApiProperty({
-    type: [UpdateOrderServiceDetail],
-    nullable: true,
-    description: 'Danh sách các yêu cầu cập nhật liên quan',
-  })
-  updateOrderServiceDetails: UpdateOrderServiceDetail[] | null;
 }

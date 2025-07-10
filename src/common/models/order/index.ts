@@ -5,3 +5,5 @@ export * from '@/common/models/order/orderServiceDetail.model';
 export * from '@/common/models/order/request.model';
 export * from '@/common/models/order/task.model';
 export * from '@/common/models/order/orderAccessoryDetail.model';
+export * from '@/common/models/order/updateRequest.model';
+export * from '@/common/models/order/updateOrderServiceDetail.model';
