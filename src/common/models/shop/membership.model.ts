@@ -40,14 +40,7 @@ export class Membership extends Base {
   })
   subscription: Subscription;
 
-  @OneToOne(() => Transaction, {
-    nullable: true,
-    onDelete: 'CASCADE',
-  })
-  @JoinColumn({
-    name: 'transaction_id',
-    foreignKeyConstraintName: 'fk_membership_transaction',
-  })
+  @OneToOne(() => Transaction, (transaction) => transaction.membership)
   @ApiProperty({
     description: 'Giao dịch của gói',
     type: () => Transaction,
