@@ -34,6 +34,7 @@ import {
 } from '@/common/decorators';
 import { CUDressDto, ItemDressDto, ListDressDto } from '@/app/dress/dress.dto';
 import { AuthGuard } from '@/common/guards';
+import { plainToInstance } from 'class-transformer';
 
 @Controller('dresses')
 @ApiTags('Dress Controller')
@@ -42,136 +43,9 @@ import { AuthGuard } from '@/common/guards';
 export class DressController {
   constructor(private readonly dressService: DressService) {}
 
-  @Get()
-  @ApiQuery({
-    name: 'page',
-    required: false,
-    type: Number,
-    default: 0,
-    description: 'Trang hiện tại (bắt đầu từ 0)',
-  })
-  @ApiQuery({
-    name: 'size',
-    required: false,
-    type: Number,
-    default: 10,
-    description: 'Số lượng mỗi trang',
-  })
-  @ApiQuery({
-    name: 'sort',
-    required: false,
-    type: String,
-    description: 'Sắp xếp theo trường, ví dụ: name:asc',
-  })
-  @ApiQuery({
-    name: 'filter',
-    required: false,
-    type: String,
-    description: 'Lọc theo trường, ví dụ: name:like:áo',
-  })
-  @ApiOperation({
-    summary: 'Lấy danh sách váy cưới khả dụng cho khách hàng',
-    description: `
-**Hướng dẫn sử dụng:**
-
-- Trả về danh sách các váy cưới đang ở trạng thái AVAILABLE.
-- Hỗ trợ phân trang, sắp xếp, lọc:
-  - \`page\`: Số trang (bắt đầu từ 0)
-  - \`size\`: Số lượng mỗi trang
-  - \`sort\`: Ví dụ: name:asc
-  - \`filter\`: Ví dụ: name:like:áo
-- Chỉ trả về váy cưới khả dụng cho khách hàng.
-`,
-  })
-  @ApiOkResponse({
-    schema: {
-      allOf: [
-        { $ref: getSchemaPath(ListResponse) },
-        {
-          properties: {
-            item: { $ref: getSchemaPath(ListDressDto) },
-          },
-        },
-      ],
-    },
-  })
-  async getDressesForCustomer(
-    @PaginationParams() pagination: Pagination,
-    @SortingParams(['name', 'sellPrice', 'rentalPrice', 'ratingAverage']) sort?: Sorting,
-    @FilteringParams([
-      'name',
-      'sellPrice',
-      'rentalPrice',
-      'ratingAverage',
-      'isSellable',
-      'isRentable',
-    ])
-    filter?: Filtering,
-  ): Promise<ListResponse<ListDressDto>> {
-    return await this.dressService.getDressesForCustomer(pagination, sort, filter);
-  }
-
-  @Get(':id')
-  @ApiOperation({
-    summary: 'Lấy thông tin chi tiết váy cưới cho khách hàng',
-    description: `
-**Hướng dẫn sử dụng:**
-
-- Truyền \`id\` của váy cưới trên URL.
-- Chỉ trả về váy cưới ở trạng thái AVAILABLE.
-- Nếu không tìm thấy sẽ trả về lỗi.
-`,
-  })
-  @ApiOkResponse({
-    schema: {
-      allOf: [
-        { $ref: getSchemaPath(ItemResponse) },
-        {
-          properties: {
-            item: { $ref: getSchemaPath(ItemDressDto) },
-          },
-        },
-      ],
-    },
-  })
-  async getDressForCustomer(@Param('id') id: string): Promise<ItemResponse<ItemDressDto>> {
-    const dress = await this.dressService.getDressForCustomer(id);
-    return {
-      message: 'Đây là thông tin chi tiết của Váy cưới',
-      statusCode: HttpStatus.OK,
-      item: dress,
-    };
-  }
-
   @Get('/me')
   @UseGuards(AuthGuard)
   @Roles(UserRole.SHOP)
-  @ApiQuery({
-    name: 'page',
-    required: false,
-    type: Number,
-    default: 0,
-    description: 'Trang hiện tại (bắt đầu từ 0)',
-  })
-  @ApiQuery({
-    name: 'size',
-    required: false,
-    type: Number,
-    default: 10,
-    description: 'Số lượng mỗi trang',
-  })
-  @ApiQuery({
-    name: 'sort',
-    required: false,
-    type: String,
-    description: 'Sắp xếp theo trường, ví dụ: name:asc',
-  })
-  @ApiQuery({
-    name: 'filter',
-    required: false,
-    type: String,
-    description: 'Lọc theo trường, ví dụ: name:like:áo',
-  })
   @ApiOperation({
     summary: 'Lấy danh sách váy cưới của chủ shop đang đăng nhập',
     description: `
@@ -179,7 +53,38 @@ export class DressController {
 
 - Trả về danh sách váy cưới thuộc về tài khoản shop đang đăng nhập (bao gồm cả đã xóa mềm).
 - Hỗ trợ phân trang, sắp xếp, lọc.
+- Page bắt đầu từ 0
+- Sort theo format: [tên_field]:[asc/desc]
+- Các trường đang có thể sort: name, sellPrice, rentalPrice, ratingAverage
+- Filter theo format: [tên_field]:[eq|neq|gt|gte|lt|lte|like|nlike|in|nin]:[keyword]; hoặc [tên_field]:[isnull|isnotnull]
+- Các trường đang có thể filter: name, sellPrice, rentalPrice, isSellable, isRentable, ratingAverage, status
 `,
+  })
+  @ApiQuery({
+    name: 'page',
+    required: false,
+    type: Number,
+    default: 0,
+    description: 'Trang hiện tại (bắt đầu từ 0)',
+  })
+  @ApiQuery({
+    name: 'size',
+    required: false,
+    type: Number,
+    default: 10,
+    description: 'Số lượng mỗi trang',
+  })
+  @ApiQuery({
+    name: 'sort',
+    required: false,
+    type: String,
+    description: 'Sắp xếp theo trường, ví dụ: name:asc',
+  })
+  @ApiQuery({
+    name: 'filter',
+    required: false,
+    type: String,
+    description: 'Lọc theo trường, ví dụ: name:like:áo',
   })
   @ApiOkResponse({
     schema: {
@@ -278,6 +183,7 @@ export class DressController {
 - Váy cưới sẽ gắn với tài khoản shop đang đăng nhập.
 - Các trường bắt buộc: \`name\`, \`sellPrice\`, \`status\`, ...
 - Trả về thông tin váy cưới vừa tạo.
+- DressStatus: AVAILABLE, UNAVAILABLE, OUT_OF_STOCK
 `,
   })
   @ApiOkResponse({
@@ -316,6 +222,7 @@ export class DressController {
 - Gửi thông tin cập nhật ở phần Body.
 - Chỉ cập nhật váy cưới thuộc về tài khoản shop đang đăng nhập.
 - Nếu không tìm thấy sẽ trả về lỗi.
+- DressStatus: AVAILABLE, UNAVAILABLE, OUT_OF_STOCK
 `,
   })
   @ApiOkResponse({
@@ -335,18 +242,12 @@ export class DressController {
     @Param('id') id: string,
     @Body() body: CUDressDto,
   ): Promise<ItemResponse<null>> {
-    const result = await this.dressService.updateDressForOwner(userId, id, body);
-    return result === 1
-      ? {
-          message: 'Váy cưới đã được cập nhật',
-          statusCode: HttpStatus.NO_CONTENT,
-          item: null,
-        }
-      : {
-          message: 'Váy cưới cập nhật không thành công, kiểm tra lỗi',
-          statusCode: HttpStatus.BAD_REQUEST,
-          item: null,
-        };
+    await this.dressService.updateDressForOwner(userId, id, body);
+    return {
+      message: 'Váy cưới đã được cập nhật',
+      statusCode: HttpStatus.NO_CONTENT,
+      item: null,
+    };
   }
 
   @Delete(':id/me')
@@ -378,18 +279,12 @@ export class DressController {
     @UserId() userId: string,
     @Param('id') id: string,
   ): Promise<ItemResponse<null>> {
-    const result = await this.dressService.removeDressForOwner(userId, id);
-    return result === 1
-      ? {
-          message: 'Váy cưới đã được xóa',
-          statusCode: HttpStatus.NO_CONTENT,
-          item: null,
-        }
-      : {
-          message: 'Váy cưới xóa không thành công, kiểm tra log lỗi',
-          statusCode: HttpStatus.BAD_REQUEST,
-          item: null,
-        };
+    await this.dressService.removeDressForOwner(userId, id);
+    return {
+      message: 'Váy cưới đã được xóa',
+      statusCode: HttpStatus.NO_CONTENT,
+      item: null,
+    };
   }
 
   @Patch(':id/me')
@@ -418,17 +313,136 @@ export class DressController {
     },
   })
   async restoreDressForOwner(@UserId() userId: string, @Param('id') id: string) {
-    const result = await this.dressService.restoreDressForOwner(userId, id);
-    return result === 1
-      ? {
-          message: 'Váy cưới đã được khôi phục',
-          statusCode: HttpStatus.NO_CONTENT,
-          item: null,
-        }
-      : {
-          message: 'Váy cưới khôi phục không thành công, kiểm tra log lỗi',
-          statusCode: HttpStatus.BAD_REQUEST,
-          item: null,
-        };
+    await this.dressService.restoreDressForOwner(userId, id);
+    return {
+      message: 'Váy cưới đã được khôi phục',
+      statusCode: HttpStatus.NO_CONTENT,
+      item: null,
+    };
+  }
+
+  @Get()
+  @ApiOperation({
+    summary: 'Lấy danh sách váy cưới khả dụng cho khách hàng',
+    description: `
+**Hướng dẫn sử dụng:**
+
+- Trả về danh sách các váy cưới đang ở trạng thái AVAILABLE.
+- Hỗ trợ phân trang, sắp xếp, lọc:
+  - \`page\`: Số trang (bắt đầu từ 0)
+  - \`size\`: Số lượng mỗi trang
+  - \`sort\`: Ví dụ: name:asc
+  - \`filter\`: Ví dụ: name:like:áo
+- Chỉ trả về váy cưới khả dụng cho khách hàng.
+- Page bắt đầu từ 0
+- Sort theo format: [tên_field]:[asc/desc]
+- Các trường đang có thể sort: name, sellPrice, rentalPrice, ratingAverage
+- Filter theo format: [tên_field]:[eq|neq|gt|gte|lt|lte|like|nlike|in|nin]:[keyword]; hoặc [tên_field]:[isnull|isnotnull]
+- Các trường đang có thể filter: name, sellPrice, rentalPrice, isSellable, isRentable, ratingAverage
+`,
+  })
+  @ApiQuery({
+    name: 'page',
+    required: false,
+    type: Number,
+    default: 0,
+    description: 'Trang hiện tại (bắt đầu từ 0)',
+  })
+  @ApiQuery({
+    name: 'size',
+    required: false,
+    type: Number,
+    default: 10,
+    description: 'Số lượng mỗi trang',
+  })
+  @ApiQuery({
+    name: 'sort',
+    required: false,
+    type: String,
+    description: 'Sắp xếp theo trường, ví dụ: name:asc',
+  })
+  @ApiQuery({
+    name: 'filter',
+    required: false,
+    type: String,
+    description: 'Lọc theo trường, ví dụ: name:like:áo',
+  })
+  @ApiOkResponse({
+    schema: {
+      allOf: [
+        { $ref: getSchemaPath(ListResponse) },
+        {
+          properties: {
+            item: { $ref: getSchemaPath(ListDressDto) },
+          },
+        },
+      ],
+    },
+  })
+  async getDressesForCustomer(
+    @PaginationParams() { page, size, limit, offset }: Pagination,
+    @SortingParams(['name', 'sellPrice', 'rentalPrice', 'ratingAverage']) sort?: Sorting,
+    @FilteringParams([
+      'name',
+      'sellPrice',
+      'rentalPrice',
+      'ratingAverage',
+      'isSellable',
+      'isRentable',
+    ])
+    filter?: Filtering,
+  ): Promise<ListResponse<ListDressDto>> {
+    const [dresses, totalItems] = await this.dressService.getDressesForCustomer(
+      limit,
+      offset,
+      sort,
+      filter,
+    );
+    const totalPages = Math.ceil(totalItems / size);
+    const dtos = plainToInstance(ListDressDto, dresses, { excludeExtraneousValues: true });
+    return {
+      message: 'Đây là danh sách váy cưới khả dụng của cửa hàng',
+      statusCode: HttpStatus.OK,
+      pageIndex: page,
+      pageSize: size,
+      totalItems,
+      totalPages,
+      hasNextPage: page + 1 < totalPages,
+      hasPrevPage: 0 < page,
+      items: dtos,
+    };
+  }
+
+  @Get(':id')
+  @ApiOperation({
+    summary: 'Lấy thông tin chi tiết váy cưới cho khách hàng',
+    description: `
+**Hướng dẫn sử dụng:**
+
+- Truyền \`id\` của váy cưới trên URL.
+- Chỉ trả về váy cưới ở trạng thái AVAILABLE.
+- Nếu không tìm thấy sẽ trả về lỗi.
+`,
+  })
+  @ApiOkResponse({
+    schema: {
+      allOf: [
+        { $ref: getSchemaPath(ItemResponse) },
+        {
+          properties: {
+            item: { $ref: getSchemaPath(ItemDressDto) },
+          },
+        },
+      ],
+    },
+  })
+  async getDressForCustomer(@Param('id') id: string): Promise<ItemResponse<ItemDressDto>> {
+    const dress = await this.dressService.getDressForCustomer(id);
+    const dto = plainToInstance(ItemDressDto, dress, { excludeExtraneousValues: true });
+    return {
+      message: 'Đây là thông tin chi tiết của Váy cưới',
+      statusCode: HttpStatus.OK,
+      item: dto,
+    };
   }
 }

@@ -1,22 +1,26 @@
 import { Filtering, getOrder, getWhere, Sorting } from '@/common/decorators';
-import { Accessory, AccessoryStatus } from '@/common/models';
+import { Accessory, AccessoryStatus, Category } from '@/common/models';
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { In, Repository } from 'typeorm';
 import { CUAccessoryDto } from '@/app/accessory/accessory.dto';
 
 @Injectable()
 export class AccessoryService {
   constructor(
     @InjectRepository(Accessory) private readonly accessoryRepository: Repository<Accessory>,
+    @InjectRepository(Category) private readonly categoryRepository: Repository<Category>,
   ) {}
 
   async getAccessoryForCustomer(id: string): Promise<Accessory> {
     const where = {
       id,
-      status: AccessoryStatus.AVAILABLE,
+      status: In([AccessoryStatus.AVAILABLE, AccessoryStatus.OUT_OF_STOCK]),
     };
-    const existingAccessory = await this.accessoryRepository.findOne({ where });
+    const existingAccessory = await this.accessoryRepository.findOne({
+      where,
+      relations: { feedbacks: { customer: true } },
+    });
     if (!existingAccessory) throw new NotFoundException('Không tìm thấy phụ kiện phù hợp');
     return existingAccessory;
   }
@@ -42,6 +46,7 @@ export class AccessoryService {
       withDeleted: true,
       relations: {
         category: true,
+        feedbacks: true,
       },
     });
   }
@@ -56,6 +61,7 @@ export class AccessoryService {
       withDeleted: true,
       relations: {
         category: true,
+        feedbacks: true,
       },
     });
     if (!existingAccessory) throw new NotFoundException('Không tìm thấy phụ kiện phù hợp');
@@ -66,107 +72,45 @@ export class AccessoryService {
     userId: string,
     { categoryId, ...newAccessory }: CUAccessoryDto,
   ): Promise<Accessory> {
+    let accessory;
     if (categoryId) {
-      const accessory = {
-        user: { id: userId },
-        category: { id: categoryId },
-        ...newAccessory,
-      };
-      return await this.accessoryRepository.save(accessory);
+      if (!(await this.isCategoryExistForOwner(categoryId, userId)))
+        throw new NotFoundException('Không tìm thấy phân loại phù hợp');
+      accessory = { user: { id: userId }, category: { id: categoryId }, ...newAccessory };
     } else {
-      const accessory = {
-        user: { id: userId },
-        ...newAccessory,
-      };
-      return await this.accessoryRepository.save(accessory);
+      accessory = { user: { id: userId }, ...newAccessory };
     }
+    return await this.accessoryRepository.save(accessory);
   }
 
   async updateAccessoryForOwner(
     userId: string,
     id: string,
     { categoryId, ...body }: CUAccessoryDto,
-  ): Promise<number | undefined> {
+  ): Promise<void> {
+    if (!(await this.isAccessoryExistForOwner(id, userId)))
+      throw new NotFoundException('Không tìm thấy phụ kiện phù hợp');
+    let accessory;
     if (categoryId) {
-      const accessory = {
-        category: { id: categoryId },
-        ...body,
-      };
-      return (
-        await this.accessoryRepository.update(
-          {
-            id,
-            user: { id: userId },
-          },
-          accessory,
-        )
-      ).affected;
+      if (!(await this.isCategoryExistForOwner(categoryId, userId)))
+        throw new NotFoundException('Không tìm thấy phân loại phù hợp');
+      accessory = { category: { id: categoryId }, ...body };
     } else {
-      const accessory = {
-        ...body,
-      };
-      return (
-        await this.accessoryRepository.update(
-          {
-            id,
-            user: { id: userId },
-          },
-          accessory,
-        )
-      ).affected;
+      accessory = { ...body };
     }
+    await this.accessoryRepository.update({ id, user: { id: userId } }, accessory);
   }
 
-  async removeAccessoryForOwner(userId: string, id: string): Promise<number | undefined> {
-    return (await this.accessoryRepository.softDelete({ id, user: { id: userId } })).affected;
+  async removeAccessoryForOwner(userId: string, id: string): Promise<void> {
+    if (!(await this.isAccessoryExistForOwner(id, userId)))
+      throw new NotFoundException('Không tìm thấy phụ kiện phù hợp');
+    await this.accessoryRepository.softDelete({ id, user: { id: userId } });
   }
 
-  async restoreAccessoryForOwner(userId: string, id: string): Promise<number | undefined> {
-    return (await this.accessoryRepository.restore({ id, user: { id: userId } })).affected;
-  }
-
-  async findAndCountOfCategoryForCustomer(
-    categoryId: string,
-    take: number,
-    skip: number,
-    sort?: Sorting,
-    filter?: Filtering,
-  ): Promise<[Accessory[], number]> {
-    const dynamicFilter = getWhere(filter);
-    const where = {
-      ...dynamicFilter,
-      category: { id: categoryId },
-      status: AccessoryStatus.AVAILABLE,
-    };
-    const order = getOrder(sort);
-    return await this.accessoryRepository.findAndCount({
-      where,
-      order,
-      take,
-      skip,
-    });
-  }
-
-  async findAndCountOfShopForCustomer(
-    userId: string,
-    take: number,
-    skip: number,
-    sort?: Sorting,
-    filter?: Filtering,
-  ): Promise<[Accessory[], number]> {
-    const dynamicFilter = getWhere(filter);
-    const where = {
-      ...dynamicFilter,
-      user: { id: userId },
-      status: AccessoryStatus.AVAILABLE,
-    };
-    const order = getOrder(sort);
-    return await this.accessoryRepository.findAndCount({
-      where,
-      order,
-      take,
-      skip,
-    });
+  async restoreAccessoryForOwner(userId: string, id: string): Promise<void> {
+    if (!(await this.isAccessoryExistForOwner(id, userId)))
+      throw new NotFoundException('Không tìm thấy phụ kiện phù hợp');
+    await this.accessoryRepository.restore({ id, user: { id: userId } });
   }
 
   async getAll(): Promise<Accessory[]> {
@@ -175,5 +119,19 @@ export class AccessoryService {
 
   async create(accessory: Accessory): Promise<Accessory> {
     return this.accessoryRepository.save(accessory);
+  }
+
+  async isCategoryExistForOwner(id: string, userId: string): Promise<boolean> {
+    return await this.categoryRepository.exists({
+      where: { id, user: { id: userId } },
+      withDeleted: true,
+    });
+  }
+
+  async isAccessoryExistForOwner(id: string, userId: string): Promise<boolean> {
+    return await this.accessoryRepository.exists({
+      where: { id, user: { id: userId } },
+      withDeleted: true,
+    });
   }
 }

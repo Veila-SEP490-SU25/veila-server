@@ -1,21 +1,32 @@
 import { BlogStatus } from '@/common/models';
 import { ApiProperty } from '@nestjs/swagger';
 import { Expose } from 'class-transformer';
+import { IsEnum, IsOptional, IsString } from 'class-validator';
 
 export class CUBlogDto {
-  @ApiProperty()
+  @ApiProperty({ example: '123e4567-e89b-12d3-a456-426614174000' })
+  @IsString()
+  @IsOptional()
   categoryId: string | null;
 
-  @ApiProperty()
+  @ApiProperty({ example: 'Hướng dẫn chọn váy dạ hội hoàn hảo' })
+  @IsString()
   title: string;
 
-  @ApiProperty()
+  @ApiProperty({
+    example:
+      'Trong bài viết này, chúng ta sẽ khám phá cách chọn váy dạ hội hoàn hảo cho từng dịp...',
+  })
+  @IsString()
   content: string;
 
-  @ApiProperty()
+  @ApiProperty({ example: 'https://veila.images/1,https://veila.images/2' })
+  @IsString()
+  @IsOptional()
   images: string | null;
 
-  @ApiProperty()
+  @ApiProperty({ example: BlogStatus.DRAFT })
+  @IsEnum(BlogStatus)
   status: BlogStatus;
 }
 

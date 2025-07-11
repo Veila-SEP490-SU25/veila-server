@@ -43,128 +43,6 @@ import { plainToInstance } from 'class-transformer';
 export class ServiceController {
   constructor(private readonly serviceService: ServiceService) {}
 
-  @Get()
-  @ApiQuery({
-    name: 'page',
-    required: false,
-    type: Number,
-    default: 0,
-    description: 'Trang hiện tại (bắt đầu từ 0)',
-  })
-  @ApiQuery({
-    name: 'size',
-    required: false,
-    type: Number,
-    default: 10,
-    description: 'Số lượng mỗi trang',
-  })
-  @ApiQuery({
-    name: 'sort',
-    required: false,
-    type: String,
-    description: 'Sắp xếp theo trường, ví dụ: :asc',
-  })
-  @ApiQuery({
-    name: 'filter',
-    required: false,
-    type: String,
-    description: 'Lọc theo trường, ví dụ: :like:',
-  })
-  @ApiOperation({
-    summary: 'Lấy danh sách dịch vụ cho khách hàng',
-    description: `
-**Hướng dẫn sử dụng:**
-
-- Trả về danh sách các dịch vụ đang ở trạng thái ACTIVE.
-- Hỗ trợ phân trang, sắp xếp, lọc:
-  - \`page\`: Số trang (bắt đầu từ 0)
-  - \`size\`: Số lượng mỗi trang
-  - \`sort\`: Ví dụ: name:asc
-  - \`filter\`: Ví dụ: name:like:trang điểm
-- Chỉ trả về dịch vụ khả dụng cho khách hàng.
-`,
-  })
-  @ApiOkResponse({
-    schema: {
-      allOf: [
-        { $ref: getSchemaPath(ListResponse) },
-        {
-          properties: {
-            item: { $ref: getSchemaPath(ListServiceDto) },
-          },
-        },
-      ],
-    },
-  })
-  async getServicesForCustomer(
-    @PaginationParams() { page, size, limit, offset }: Pagination,
-    @SortingParams(['name']) sort?: Sorting,
-    @FilteringParams(['name', 'status']) filter?: Filtering,
-  ): Promise<ListResponse<ListServiceDto>> {
-    const [services, totalItems] = await this.serviceService.getServicesForCustomer(
-      limit,
-      offset,
-      sort,
-      filter,
-    );
-    const totalPages = Math.ceil(totalItems / size);
-    const dtos = plainToInstance(ListServiceDto, services, { excludeExtraneousValues: true });
-    return {
-      message: 'Đây là danh sách các dịch vụ khả dụng',
-      statusCode: HttpStatus.OK,
-      pageIndex: page,
-      pageSize: size,
-      totalItems,
-      totalPages,
-      hasNextPage: page + 1 < totalPages,
-      hasPrevPage: 0 < page,
-      items: dtos,
-    };
-  }
-
-  @Get(':id')
-  @ApiOperation({
-    summary: 'Lấy thông tin chi tiết dịch vụ cho khách hàng',
-    description: `
-**Hướng dẫn sử dụng:**
-
-- Truyền \`id\` của dịch vụ trên URL.
-- Chỉ trả về dịch vụ ở trạng thái ACTIVE.
-- Nếu không tìm thấy sẽ trả về lỗi.
-`,
-  })
-  @ApiOkResponse({
-    schema: {
-      allOf: [
-        { $ref: getSchemaPath(ItemResponse) },
-        {
-          properties: {
-            item: { $ref: getSchemaPath(ItemServiceDto) },
-          },
-        },
-      ],
-    },
-  })
-  async getServiceForCustomer(@Param('id') id: string): Promise<ItemResponse<ItemServiceDto>> {
-    const service = await this.serviceService.getServiceForCustomer(id);
-    const feedbacks = (service.feedbacks || []).map((fb) => ({
-      username: fb.customer.username,
-      content: fb.content,
-      rating: fb.rating,
-      images: fb.images,
-    }));
-    const dto = plainToInstance(
-      ItemServiceDto,
-      { ...service, feedbacks },
-      { excludeExtraneousValues: true },
-    );
-    return {
-      message: 'Đây là thông tin chi tiết của dịch vụ',
-      statusCode: HttpStatus.OK,
-      item: dto,
-    };
-  }
-
   @Get('me')
   @UseGuards(AuthGuard)
   @Roles(UserRole.SHOP)
@@ -175,6 +53,11 @@ export class ServiceController {
 
 - Trả về danh sách dịch vụ thuộc về tài khoản shop đang đăng nhập (bao gồm cả đã xóa mềm).
 - Hỗ trợ phân trang, sắp xếp, lọc.
+- Page bắt đầu từ 0
+- Sort theo format: [tên_field]:[asc/desc]
+- Các trường đang có thể sort: name
+- Filter theo format: [tên_field]:[eq|neq|gt|gte|lt|lte|like|nlike|in|nin]:[keyword]; hoặc [tên_field]:[isnull|isnotnull]
+- Các trường đang có thể filter: name, status
 `,
   })
   @ApiQuery({
@@ -428,6 +311,123 @@ export class ServiceController {
       message: 'Khôi phục dịch vụ thành công',
       statusCode: HttpStatus.NO_CONTENT,
       item: null,
+    };
+  }
+
+  @Get()
+  @ApiOperation({
+    summary: 'Lấy danh sách dịch vụ cho khách hàng',
+    description: `
+**Hướng dẫn sử dụng:**
+
+- Trả về danh sách các dịch vụ đang ở trạng thái ACTIVE.
+- Hỗ trợ phân trang, sắp xếp, lọc:
+  - \`page\`: Số trang (bắt đầu từ 0)
+  - \`size\`: Số lượng mỗi trang
+  - \`sort\`: Ví dụ: name:asc
+  - \`filter\`: Ví dụ: name:like:trang điểm
+- Chỉ trả về dịch vụ khả dụng cho khách hàng.
+- Page bắt đầu từ 0
+- Sort theo format: [tên_field]:[asc/desc]
+- Các trường đang có thể sort: name, ratingAverage
+- Filter theo format: [tên_field]:[eq|neq|gt|gte|lt|lte|like|nlike|in|nin]:[keyword]; hoặc [tên_field]:[isnull|isnotnull]
+- Các trường đang có thể filter: name, ratingAverage
+`,
+  })
+  @ApiQuery({
+    name: 'page',
+    required: false,
+    type: Number,
+    default: 0,
+    description: 'Trang hiện tại (bắt đầu từ 0)',
+  })
+  @ApiQuery({
+    name: 'size',
+    required: false,
+    type: Number,
+    default: 10,
+    description: 'Số lượng mỗi trang',
+  })
+  @ApiQuery({
+    name: 'sort',
+    required: false,
+    type: String,
+    description: 'Sắp xếp theo trường, ví dụ: :asc',
+  })
+  @ApiQuery({
+    name: 'filter',
+    required: false,
+    type: String,
+    description: 'Lọc theo trường, ví dụ: :like:',
+  })
+  @ApiOkResponse({
+    schema: {
+      allOf: [
+        { $ref: getSchemaPath(ListResponse) },
+        {
+          properties: {
+            item: { $ref: getSchemaPath(ListServiceDto) },
+          },
+        },
+      ],
+    },
+  })
+  async getServicesForCustomer(
+    @PaginationParams() { page, size, limit, offset }: Pagination,
+    @SortingParams(['name', 'ratingAverage']) sort?: Sorting,
+    @FilteringParams(['name', 'ratingAverage']) filter?: Filtering,
+  ): Promise<ListResponse<ListServiceDto>> {
+    const [services, totalItems] = await this.serviceService.getServicesForCustomer(
+      limit,
+      offset,
+      sort,
+      filter,
+    );
+    const totalPages = Math.ceil(totalItems / size);
+    const dtos = plainToInstance(ListServiceDto, services, { excludeExtraneousValues: true });
+    return {
+      message: 'Đây là danh sách các dịch vụ khả dụng',
+      statusCode: HttpStatus.OK,
+      pageIndex: page,
+      pageSize: size,
+      totalItems,
+      totalPages,
+      hasNextPage: page + 1 < totalPages,
+      hasPrevPage: 0 < page,
+      items: dtos,
+    };
+  }
+
+  @Get(':id')
+  @ApiOperation({
+    summary: 'Lấy thông tin chi tiết dịch vụ cho khách hàng',
+    description: `
+**Hướng dẫn sử dụng:**
+
+- Truyền \`id\` của dịch vụ trên URL.
+- Chỉ trả về dịch vụ ở trạng thái ACTIVE.
+- Nếu không tìm thấy sẽ trả về lỗi.
+`,
+  })
+  @ApiOkResponse({
+    schema: {
+      allOf: [
+        { $ref: getSchemaPath(ItemResponse) },
+        {
+          properties: {
+            item: { $ref: getSchemaPath(ItemServiceDto) },
+          },
+        },
+      ],
+    },
+  })
+  async getServiceForCustomer(@Param('id') id: string): Promise<ItemResponse<ItemServiceDto>> {
+    const service = await this.serviceService.getServiceForCustomer(id);
+    const dto = plainToInstance(ItemServiceDto, service, { excludeExtraneousValues: true });
+    return {
+      message: 'Đây là thông tin chi tiết của dịch vụ',
+      statusCode: HttpStatus.OK,
+      item: dto,
     };
   }
 }

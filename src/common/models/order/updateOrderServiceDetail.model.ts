@@ -1,35 +1,42 @@
-import { Column, Entity, JoinColumn, ManyToOne, OneToOne } from 'typeorm';
-import { Base, Dress, Order } from '@/common/models';
+import { Base } from '@/common/models/base.model';
+import { OrderServiceDetail } from '@/common/models/order/orderServiceDetail.model';
+import { UpdateRequest } from '@/common/models/order/updateRequest.model';
 import { ApiProperty } from '@nestjs/swagger';
+import { Column, Entity, JoinColumn, ManyToOne, OneToOne } from 'typeorm';
 
-@Entity('order_dress_details')
-export class OrderDressDetail extends Base {
-  @OneToOne(() => Order, (order) => order.orderDressDetail, {
+@Entity('update_order_service_details')
+export class UpdateOrderServiceDetail extends Base {
+  @ManyToOne(
+    () => OrderServiceDetail,
+    (orderServiceDetail) => orderServiceDetail.updateOrderServiceDetails,
+    {
+      nullable: false,
+      onDelete: 'CASCADE',
+    },
+  )
+  @JoinColumn({
+    name: 'order_service_detail_id',
+    foreignKeyConstraintName: 'fk_order_service_detail_update_order_service_detail',
+  })
+  @ApiProperty({
+    description: 'Chi tiết dịch vụ đơn hàng liên quan',
+    type: OrderServiceDetail,
+  })
+  orderServiceDetail: OrderServiceDetail;
+
+  @OneToOne(() => UpdateRequest, {
     nullable: false,
     onDelete: 'CASCADE',
   })
   @JoinColumn({
-    name: 'order_id',
-    foreignKeyConstraintName: 'fk_order_order_dress_detail',
+    name: 'update_request_id',
+    foreignKeyConstraintName: 'fk_update_request_update_order_service_detail',
   })
   @ApiProperty({
-    description: 'Đơn hàng liên quan',
-    type: Order,
+    description: 'Yêu cầu cập nhật liên quan',
+    type: UpdateRequest,
   })
-  order: Order;
-
-  @ManyToOne(() => Dress, {
-    nullable: true,
-  })
-  @JoinColumn({
-    name: 'dress_id',
-    foreignKeyConstraintName: 'fk_dress_order_dress_detail',
-  })
-  @ApiProperty({
-    description: 'Váy được đặt',
-    type: Dress,
-  })
-  dress: Dress;
+  updateRequest: UpdateRequest;
 
   @Column({
     type: 'integer',
@@ -217,6 +224,125 @@ export class OrderDressDetail extends Base {
     type: 'varchar',
     length: 200,
     nullable: true,
+    comment: 'Kiểu dáng váy',
+    charset: 'utf8mb4',
+    collation: 'utf8mb4_unicode_ci',
+  })
+  @ApiProperty({
+    type: 'string',
+    maxLength: 200,
+    nullable: true,
+    description: 'Kiểu dáng váy',
+    example: 'Váy ngắn hoặc vạt trước ngắn vạt sau dài.',
+  })
+  dressStyle: string | null;
+
+  @Column({
+    type: 'varchar',
+    length: 200,
+    nullable: true,
+    comment: 'Dạng cổ váy',
+    charset: 'utf8mb4',
+    collation: 'utf8mb4_unicode_ci',
+  })
+  @ApiProperty({
+    type: 'string',
+    maxLength: 200,
+    nullable: true,
+    description: 'Dạng cổ váy',
+    example: 'Cổ tim, cổ tròn, cổ thuyền, cổ yếm, cúp ngực',
+  })
+  curtainNeckline: string | null;
+
+  @Column({
+    type: 'varchar',
+    length: 200,
+    nullable: true,
+    comment: 'Dạng tay váy',
+    charset: 'utf8mb4',
+    collation: 'utf8mb4_unicode_ci',
+  })
+  @ApiProperty({
+    type: 'string',
+    maxLength: 200,
+    nullable: true,
+    description: 'Dạng tay váy',
+    example: 'Không tay, hai dây, tay trần, tay ngắn',
+  })
+  sleeveStyle: string | null;
+
+  @Column({
+    type: 'varchar',
+    length: 200,
+    nullable: true,
+    comment: 'Chất liệu',
+    charset: 'utf8mb4',
+    collation: 'utf8mb4_unicode_ci',
+  })
+  @ApiProperty({
+    type: 'string',
+    maxLength: 200,
+    nullable: true,
+    description: 'Chất liệu',
+    example: 'Kim sa, Đính kết pha lê/ngọc trai',
+  })
+  material: string | null;
+
+  @Column({
+    type: 'varchar',
+    length: 200,
+    nullable: true,
+    comment: 'Màu sắc',
+    charset: 'utf8mb4',
+    collation: 'utf8mb4_unicode_ci',
+  })
+  @ApiProperty({
+    type: 'string',
+    maxLength: 200,
+    nullable: true,
+    description: 'Màu sắc',
+    example: 'Trắng tinh, trắng ngà (ivory), kem',
+  })
+  color: string | null;
+
+  @Column({
+    type: 'varchar',
+    length: 200,
+    nullable: true,
+    comment: 'Yếu tố đặc biệt',
+    charset: 'utf8mb4',
+    collation: 'utf8mb4_unicode_ci',
+  })
+  @ApiProperty({
+    type: 'string',
+    maxLength: 200,
+    nullable: true,
+    description: 'Yếu tố đặc biệt',
+    example: 'Đuôi váy dài hay ngắn, có chi tiết xẻ tà',
+  })
+  specialElement: string | null;
+
+  @Column({
+    type: 'varchar',
+    length: 200,
+    nullable: true,
+    comment: 'Độ che phủ',
+    charset: 'utf8mb4',
+    collation: 'utf8mb4_unicode_ci',
+  })
+  @ApiProperty({
+    type: 'string',
+    maxLength: 200,
+    nullable: true,
+    description: 'Độ che phủ',
+    example: 'Mức độ hở lưng, xẻ ngực',
+  })
+  coverage: string | null;
+
+  @Column({
+    type: 'varchar',
+    length: 200,
+    nullable: true,
     comment: 'Mô tả thêm',
     charset: 'utf8mb4',
     collation: 'utf8mb4_unicode_ci',
@@ -237,30 +363,15 @@ export class OrderDressDetail extends Base {
     unsigned: true,
     nullable: false,
     default: 0,
-    comment: 'Giá váy/phụ kiện tại thời điểm đặt',
+    comment: 'Phí phụ thu cho yêu cầu cập nhật',
   })
   @ApiProperty({
     type: 'number',
     format: 'decimal',
     minimum: 0,
     nullable: false,
-    description: 'Giá váy/phụ kiện tại thời điểm đặt (VNĐ)',
-    example: 2000000,
+    description: 'Phí phụ thu cho yêu cầu cập nhật (VNĐ)',
+    example: 1500000,
   })
   price: number;
-
-  @Column({
-    type: 'boolean',
-    nullable: false,
-    default: false,
-    comment: 'Váy cưới/phụ kiện đã được đánh giá hay chưa',
-  })
-  @ApiProperty({
-    type: 'boolean',
-    default: false,
-    nullable: false,
-    description: 'Váy cưới/phụ kiện đã được đánh giá hay chưa',
-    example: false,
-  })
-  isRated: boolean;
 }

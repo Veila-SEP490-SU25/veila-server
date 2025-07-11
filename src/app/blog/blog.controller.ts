@@ -43,153 +43,9 @@ import { plainToInstance } from 'class-transformer';
 export class BlogController {
   constructor(private readonly blogService: BlogService) {}
 
-  @Get()
-  @ApiQuery({
-    name: 'page',
-    required: false,
-    type: Number,
-    default: 0,
-    description: 'Trang hiện tại (bắt đầu từ 0)',
-  })
-  @ApiQuery({
-    name: 'size',
-    required: false,
-    type: Number,
-    default: 10,
-    description: 'Số lượng mỗi trang',
-  })
-  @ApiQuery({
-    name: 'sort',
-    required: false,
-    type: String,
-    description: 'Sắp xếp theo trường, ví dụ: :asc',
-  })
-  @ApiQuery({
-    name: 'filter',
-    required: false,
-    type: String,
-    description: 'Lọc theo trường, ví dụ: :like:',
-  })
-  @ApiOperation({
-    summary: 'Lấy danh sách blog cho khách hàng',
-    description: `
-**Hướng dẫn sử dụng:**
-
-- **Phân trang:**
-  - \`page\`: Số trang (bắt đầu từ 0)
-  - \`size\`: Số lượng bản ghi mỗi trang
-
-- **Sắp xếp:**
-  - \`sort\`: Định dạng \`[tên_field]:[asc|desc]\`
-  - Ví dụ: \`sort=title:asc\`
-
-- **Lọc dữ liệu:**
-  - \`filter\`: Định dạng \`[tên_field]:[rule]:[giá trị]\`
-  - Ví dụ: \`filter=title:like:veila\`
-
-- Chỉ trả về các blog đã xuất bản (PUBLISHED).
-`,
-  })
-  @ApiOkResponse({
-    schema: {
-      allOf: [
-        { $ref: getSchemaPath(ListResponse) },
-        {
-          properties: {
-            item: { $ref: getSchemaPath(ListBlogDto) },
-          },
-        },
-      ],
-    },
-  })
-  async getBlogsForCustomer(
-    @PaginationParams() { page, size, limit, offset }: Pagination,
-    @SortingParams(['title']) sort?: Sorting,
-    @FilteringParams(['title']) filter?: Filtering,
-  ): Promise<ListResponse<ListBlogDto>> {
-    const [blogs, totalItems] = await this.blogService.getBlogsForCustomer(
-      limit,
-      offset,
-      sort,
-      filter,
-    );
-    const totalPages = Math.ceil(totalItems / size);
-    const dtos = plainToInstance(ListBlogDto, blogs, { excludeExtraneousValues: true });
-    return {
-      message: 'Đây là danh sách các bài blog khả dụng',
-      statusCode: HttpStatus.OK,
-      pageIndex: page,
-      pageSize: size,
-      totalItems,
-      totalPages,
-      hasNextPage: page + 1 < totalPages,
-      hasPrevPage: 0 < page,
-      items: dtos,
-    };
-  }
-
-  @Get(':id')
-  @ApiOperation({
-    summary: 'Lấy thông tin chi tiết blog cho khách hàng',
-    description: `
-**Hướng dẫn sử dụng:**
-
-- Truyền \`id\` của blog trên URL.
-- Chỉ trả về blog ở trạng thái PUBLISHED.
-- Nếu không tìm thấy sẽ trả về lỗi.
-`,
-  })
-  @ApiOkResponse({
-    schema: {
-      allOf: [
-        { $ref: getSchemaPath(ItemResponse) },
-        {
-          properties: {
-            item: { $ref: getSchemaPath(ItemBlogDto) },
-          },
-        },
-      ],
-    },
-  })
-  async getBlogForCustomer(@Param('id') id: string): Promise<ItemResponse<ItemBlogDto>> {
-    const blog = await this.blogService.getBlogForCustomer(id);
-    const dto = plainToInstance(ItemBlogDto, blog, { excludeExtraneousValues: true });
-    return {
-      message: 'Đây là thông tin chi tiết của bài blog',
-      statusCode: HttpStatus.OK,
-      item: dto,
-    };
-  }
-
   @Get('me')
   @UseGuards(AuthGuard)
   @Roles(UserRole.SHOP)
-  @ApiQuery({
-    name: 'page',
-    required: false,
-    type: Number,
-    default: 0,
-    description: 'Trang hiện tại (bắt đầu từ 0)',
-  })
-  @ApiQuery({
-    name: 'size',
-    required: false,
-    type: Number,
-    default: 10,
-    description: 'Số lượng mỗi trang',
-  })
-  @ApiQuery({
-    name: 'sort',
-    required: false,
-    type: String,
-    description: 'Sắp xếp theo trường, ví dụ: :asc',
-  })
-  @ApiQuery({
-    name: 'filter',
-    required: false,
-    type: String,
-    description: 'Lọc theo trường, ví dụ: :like:',
-  })
   @ApiOperation({
     summary: 'Lấy danh sách blog của chủ shop đang đăng nhập',
     description: `
@@ -197,7 +53,38 @@ export class BlogController {
 
 - Trả về danh sách blog thuộc về tài khoản shop đang đăng nhập (bao gồm cả đã xóa mềm).
 - Hỗ trợ phân trang, sắp xếp, lọc.
+- Page bắt đầu từ 0
+- Sort theo format: [tên_field]:[asc/desc]
+- Các trường đang có thể sort: title
+- Filter theo format: [tên_field]:[eq|neq|gt|gte|lt|lte|like|nlike|in|nin]:[keyword]; hoặc [tên_field]:[isnull|isnotnull]
+- Các trường đang có thể filter: title, status
 `,
+  })
+  @ApiQuery({
+    name: 'page',
+    required: false,
+    type: Number,
+    default: 0,
+    description: 'Trang hiện tại (bắt đầu từ 0)',
+  })
+  @ApiQuery({
+    name: 'size',
+    required: false,
+    type: Number,
+    default: 10,
+    description: 'Số lượng mỗi trang',
+  })
+  @ApiQuery({
+    name: 'sort',
+    required: false,
+    type: String,
+    description: 'Sắp xếp theo trường, ví dụ: :asc',
+  })
+  @ApiQuery({
+    name: 'filter',
+    required: false,
+    type: String,
+    description: 'Lọc theo trường, ví dụ: :like:',
   })
   @ApiOkResponse({
     schema: {
@@ -227,7 +114,7 @@ export class BlogController {
     const totalPages = Math.ceil(totalItems / size);
 
     return {
-      message: 'Đây là danh sách các bài blog khả dụng',
+      message: 'Đây là danh sách các bài blog của bạn',
       statusCode: HttpStatus.OK,
       pageIndex: page,
       pageSize: size,
@@ -288,6 +175,7 @@ export class BlogController {
 - Blog sẽ gắn với tài khoản shop đang đăng nhập.
 - Các trường bắt buộc: \`title\`, \`content\`, \`status\`, ...
 - Trả về thông tin blog vừa tạo.
+- Blog status: DRAFT, PUBLISHED
 `,
   })
   @ApiOkResponse({
@@ -326,6 +214,7 @@ export class BlogController {
 - Gửi thông tin cập nhật ở phần Body.
 - Chỉ cập nhật blog thuộc về tài khoản shop đang đăng nhập.
 - Nếu không tìm thấy sẽ trả về lỗi.
+- Blog status: DRAFT, PUBLISHED
 `,
   })
   @ApiOkResponse({
@@ -424,6 +313,129 @@ export class BlogController {
       message: 'Khôi phục thành công',
       statusCode: HttpStatus.NO_CONTENT,
       item: null,
+    };
+  }
+
+  @Get()
+  @ApiOperation({
+    summary: 'Lấy danh sách blog cho khách hàng',
+    description: `
+**Hướng dẫn sử dụng:**
+
+- **Phân trang:**
+  - \`page\`: Số trang (bắt đầu từ 0)
+  - \`size\`: Số lượng bản ghi mỗi trang
+
+- **Sắp xếp:**
+  - \`sort\`: Định dạng \`[tên_field]:[asc|desc]\`
+  - Ví dụ: \`sort=title:asc\`
+
+- **Lọc dữ liệu:**
+  - \`filter\`: Định dạng \`[tên_field]:[rule]:[giá trị]\`
+  - Ví dụ: \`filter=title:like:veila\`
+
+- Chỉ trả về các blog đã xuất bản (PUBLISHED).
+- Page bắt đầu từ 0
+- Sort theo format: [tên_field]:[asc/desc]
+- Các trường đang có thể sort: title
+- Filter theo format: [tên_field]:[eq|neq|gt|gte|lt|lte|like|nlike|in|nin]:[keyword]; hoặc [tên_field]:[isnull|isnotnull]
+- Các trường đang có thể filter: title
+`,
+  })
+  @ApiQuery({
+    name: 'page',
+    required: false,
+    type: Number,
+    default: 0,
+    description: 'Trang hiện tại (bắt đầu từ 0)',
+  })
+  @ApiQuery({
+    name: 'size',
+    required: false,
+    type: Number,
+    default: 10,
+    description: 'Số lượng mỗi trang',
+  })
+  @ApiQuery({
+    name: 'sort',
+    required: false,
+    type: String,
+    description: 'Sắp xếp theo trường, ví dụ: :asc',
+  })
+  @ApiQuery({
+    name: 'filter',
+    required: false,
+    type: String,
+    description: 'Lọc theo trường, ví dụ: :like:',
+  })
+  @ApiOkResponse({
+    schema: {
+      allOf: [
+        { $ref: getSchemaPath(ListResponse) },
+        {
+          properties: {
+            item: { $ref: getSchemaPath(ListBlogDto) },
+          },
+        },
+      ],
+    },
+  })
+  async getBlogsForCustomer(
+    @PaginationParams() { page, size, limit, offset }: Pagination,
+    @SortingParams(['title']) sort?: Sorting,
+    @FilteringParams(['title']) filter?: Filtering,
+  ): Promise<ListResponse<ListBlogDto>> {
+    const [blogs, totalItems] = await this.blogService.getBlogsForCustomer(
+      limit,
+      offset,
+      sort,
+      filter,
+    );
+    const totalPages = Math.ceil(totalItems / size);
+    const dtos = plainToInstance(ListBlogDto, blogs, { excludeExtraneousValues: true });
+    return {
+      message: 'Đây là danh sách các bài blog khả dụng',
+      statusCode: HttpStatus.OK,
+      pageIndex: page,
+      pageSize: size,
+      totalItems,
+      totalPages,
+      hasNextPage: page + 1 < totalPages,
+      hasPrevPage: 0 < page,
+      items: dtos,
+    };
+  }
+
+  @Get(':id')
+  @ApiOperation({
+    summary: 'Lấy thông tin chi tiết blog cho khách hàng',
+    description: `
+**Hướng dẫn sử dụng:**
+
+- Truyền \`id\` của blog trên URL.
+- Chỉ trả về blog ở trạng thái PUBLISHED.
+- Nếu không tìm thấy sẽ trả về lỗi.
+`,
+  })
+  @ApiOkResponse({
+    schema: {
+      allOf: [
+        { $ref: getSchemaPath(ItemResponse) },
+        {
+          properties: {
+            item: { $ref: getSchemaPath(ItemBlogDto) },
+          },
+        },
+      ],
+    },
+  })
+  async getBlogForCustomer(@Param('id') id: string): Promise<ItemResponse<ItemBlogDto>> {
+    const blog = await this.blogService.getBlogForCustomer(id);
+    const dto = plainToInstance(ItemBlogDto, blog, { excludeExtraneousValues: true });
+    return {
+      message: 'Đây là thông tin chi tiết của bài blog',
+      statusCode: HttpStatus.OK,
+      item: dto,
     };
   }
 }

@@ -3,12 +3,10 @@ import { Base, Order, User } from '@/common/models';
 import { ApiProperty } from '@nestjs/swagger';
 
 export enum ComplaintStatus {
-  OPEN = 'OPEN',
+  DRAFT = 'DRAFT',
   IN_PROGRESS = 'IN_PROGRESS',
-  RESOLVED = 'RESOLVED',
-  CLOSED = 'CLOSED',
+  APPROVED = 'APPROVED',
   REJECTED = 'REJECTED',
-  CANCELLED = 'CANCELLED',
 }
 
 @Entity('complaints')
@@ -75,15 +73,15 @@ export class Complaint extends Base {
     name: 'status',
     type: 'enum',
     enum: ComplaintStatus,
-    default: ComplaintStatus.OPEN,
+    default: ComplaintStatus.DRAFT,
     nullable: false,
     comment: 'Trạng thái khiếu nại',
   })
   @ApiProperty({
     enum: ComplaintStatus,
     description: 'Trạng thái khiếu nại',
-    example: ComplaintStatus.OPEN,
-    default: ComplaintStatus.OPEN,
+    example: ComplaintStatus.DRAFT,
+    default: ComplaintStatus.DRAFT,
     required: true,
   })
   status: ComplaintStatus;

@@ -1,5 +1,5 @@
-import { Column, Entity, JoinColumn, ManyToOne } from 'typeorm';
-import { Base, Order, Wallet } from '@/common/models';
+import { Column, Entity, JoinColumn, ManyToOne, OneToOne } from 'typeorm';
+import { Base, Membership, Order, Wallet } from '@/common/models';
 import { ApiProperty } from '@nestjs/swagger';
 
 export enum TransactionType {
@@ -53,6 +53,21 @@ export class Transaction extends Base {
     nullable: true,
   })
   order: Order | null;
+
+  @OneToOne(() => Membership, (membership) => membership.transaction, {
+    nullable: true,
+    onDelete: 'SET NULL',
+  })
+  @JoinColumn({
+    name: 'membership_id',
+    foreignKeyConstraintName: 'fk_membership_transaction',
+  })
+  @ApiProperty({
+    description: 'Gói thành viên liên quan (nếu có)',
+    type: Membership,
+    nullable: true,
+  })
+  membership: Membership | null;
 
   @Column({
     name: 'from',

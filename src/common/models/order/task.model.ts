@@ -57,6 +57,21 @@ export class Task extends Base {
   description: string | null;
 
   @Column({
+    name: 'index',
+    type: 'integer',
+    nullable: false,
+    comment: 'Số thứ tự các task',
+  })
+  @ApiProperty({
+    type: 'number',
+    format: 'number',
+    nullable: false,
+    description: 'Số thứ tự các task',
+    example: '0',
+  })
+  index: number;
+
+  @Column({
     name: 'status',
     type: 'enum',
     enum: TaskStatus,
