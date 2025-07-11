@@ -14,6 +14,7 @@ import { ServiceModule } from '@/app/service';
 import { ShopModule } from '@/app/shop';
 import { TokenModule } from '@/app/token';
 import { UserModule } from '@/app/user';
+import { PayosModule } from '@/app/payos/payos.module';
 import { RolesGuard } from '@/common/guards';
 import { LoggingMiddleware } from '@/common/middlewares';
 import { MiddlewareConsumer, Module } from '@nestjs/common';
@@ -58,6 +59,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
     BlogModule,
     AccessoryModule,
     FeedbackModule,
+    PayosModule,
   ],
   controllers: [AppController],
   providers: [
