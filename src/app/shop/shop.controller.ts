@@ -256,6 +256,39 @@ export class ShopController {
     };
   }
 
+  @Get(':id/staff')
+  @UseGuards(AuthGuard)
+  @Roles(UserRole.STAFF, UserRole.ADMIN, UserRole.SUPER_ADMIN)
+  @ApiOperation({
+    summary: 'Lấy thông tin chi tiết shop cho nhân viên',
+    description: `**Hướng dẫn sử dụng:**
+    - Truyền \`id\` của shop trên URL.
+    - Trả về thông tin chi tiết của shop.
+    - Nếu không tìm thấy sẽ trả về lỗi.
+    - Chỉ dành cho nhân viên, admin và super admin.
+    - Nếu shop không tồn tại, sẽ trả về mã trạng thái NOT_FOUND (404).`
+  })
+  @ApiOkResponse({
+    schema: {
+      allOf: [
+        { $ref: getSchemaPath(ItemResponse) },
+        {
+          properties: {
+            item: { $ref: getSchemaPath(Shop) },
+          },
+        },
+      ],
+    },
+  })
+  async getShopForStaff(@Param('id') id: string): Promise<ItemResponse<Shop>> {
+    const shop = await this.shopService.getShopForStaff(id);
+    return {
+      message: 'Đây là thông tin chi tiết của shop',
+      statusCode: HttpStatus.OK,
+      item: shop,
+    };
+  }
+
   @Patch(':id/staff')
   @UseGuards(AuthGuard)
   @Roles(UserRole.STAFF, UserRole.ADMIN, UserRole.SUPER_ADMIN)

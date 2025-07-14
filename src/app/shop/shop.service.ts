@@ -262,6 +262,20 @@ export class ShopService {
     });
   }
 
+  async getShopForStaff(id: string): Promise<Shop> {
+    const existingShop = await this.shopRepository.findOne({
+      where: { id },
+      withDeleted: true,
+      relations: {
+        user: true,
+        license: true,
+        memberships: true,
+      },
+    });
+    if (!existingShop) throw new NotFoundException('Không tìm thấy cửa hàng phù hợp');
+    return existingShop;
+  }
+
   async reviewShopRegister(id: string, { isApproved, rejectReason }: ReviewShopDto): Promise<void> {
     const existingShop = await this.shopRepository.findOne({
       where: { id },
