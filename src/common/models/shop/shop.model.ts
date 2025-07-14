@@ -62,7 +62,7 @@ export class Shop extends Base {
     name: 'email',
     type: 'varchar',
     length: 64,
-    nullable: true,
+    nullable: false,
     comment: 'Email liên hệ',
   })
   @ApiProperty({
@@ -71,7 +71,7 @@ export class Shop extends Base {
     description: 'Email liên hệ của shop',
     example: 'shop@example.com',
     maxLength: 64,
-    nullable: true,
+    nullable: false,
   })
   email: string;
 
