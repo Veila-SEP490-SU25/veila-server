@@ -160,6 +160,23 @@ export class Shop extends Base {
   status: ShopStatus;
 
   @Column({
+    name: 'reputation',
+    type: 'int',
+    default: 100,
+    nullable: false,
+    comment: 'Điểm uy tín của shop (0-100)',
+  })
+  @ApiProperty({
+    type: 'integer',
+    description: 'Điểm uy tín của shop (0-100)',
+    example: 85,
+    minimum: 0,
+    maximum: 100,
+    nullable: false,
+  })
+  reputation: number;
+
+  @Column({
     name: 'is_verified',
     type: 'boolean',
     default: false,

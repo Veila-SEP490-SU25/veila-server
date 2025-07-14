@@ -201,7 +201,7 @@ export class SeedingService implements OnModuleInit {
       category,
       name: faker.commerce.productName(),
       description: faker.commerce.productDescription(),
-      status: ServiceStatus.ACTIVE,
+      status: ServiceStatus.AVAILABLE,
       ratingAverage: this.customFaker.number.float({ min: 3, max: 5, fractionDigits: 2 }),
       ratingCount: this.customFaker.number.int({ min: 0, max: 100 }),
     } as Service;

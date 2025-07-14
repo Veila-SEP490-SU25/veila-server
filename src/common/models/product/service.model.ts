@@ -3,8 +3,9 @@ import { Base, Category, Feedback, User } from '@/common/models';
 import { ApiProperty } from '@nestjs/swagger';
 
 export enum ServiceStatus {
-  ACTIVE = 'ACTIVE',
-  INACTIVE = 'INACTIVE',
+  AVAILABLE = 'AVAILABLE',
+  UNAVAILABLE = 'UNAVAILABLE',
+  DRAFT = 'DRAFT',
 }
 
 @Entity('services')
@@ -115,14 +116,14 @@ export class Service extends Base {
     name: 'status',
     type: 'enum',
     enum: ServiceStatus,
-    default: ServiceStatus.INACTIVE,
+    default: ServiceStatus.UNAVAILABLE,
     comment: 'Trạng thái dịch vụ',
   })
   @ApiProperty({
     enumName: 'ServiceStatus',
     enum: ServiceStatus,
     description: 'Trạng thái dịch vụ',
-    example: ServiceStatus.ACTIVE,
+    example: ServiceStatus.AVAILABLE,
   })
   status: ServiceStatus;
 

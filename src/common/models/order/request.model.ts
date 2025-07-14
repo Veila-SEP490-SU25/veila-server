@@ -3,10 +3,9 @@ import { Base, UpdateRequest, User } from '@/common/models';
 import { ApiProperty } from '@nestjs/swagger';
 
 export enum RequestStatus {
-  PENDING = 'PENDING',
+  DRAFT = 'DRAFT',
+  SUBMIT = 'SUBMIT',
   ACCEPTED = 'ACCEPTED',
-  REJECTED = 'REJECTED',
-  COMPLETED = 'COMPLETED',
   CANCELLED = 'CANCELLED',
 }
 
@@ -57,16 +56,16 @@ export class Request extends Base {
   @Column({
     type: 'enum',
     enum: RequestStatus,
-    default: RequestStatus.PENDING,
+    default: RequestStatus.DRAFT,
     nullable: false,
     comment: 'Trạng thái yêu cầu',
   })
   @ApiProperty({
     enum: RequestStatus,
-    default: RequestStatus.PENDING,
+    default: RequestStatus.DRAFT,
     nullable: false,
     description: 'Trạng thái yêu cầu',
-    example: RequestStatus.PENDING,
+    example: RequestStatus.DRAFT,
   })
   status: RequestStatus;
 

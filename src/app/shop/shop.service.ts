@@ -124,7 +124,7 @@ export class ShopService {
     const where = {
       ...dynamicFilter,
       user: { id: existingShop.user.id },
-      status: ServiceStatus.ACTIVE,
+      status: ServiceStatus.AVAILABLE,
     };
     const order = getOrder(sort);
     return await this.serviceRepository.findAndCount({

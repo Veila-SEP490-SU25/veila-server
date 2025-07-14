@@ -232,6 +232,23 @@ export class User extends Base {
   status: UserStatus;
 
   @Column({
+    name: 'reputation',
+    type: 'int',
+    default: 100,
+    nullable: false,
+    comment: 'Điểm uy tín của user (0-100)',
+  })
+  @ApiProperty({
+    type: 'integer',
+    description: 'Điểm uy tín của user (0-100)',
+    example: 85,
+    minimum: 0,
+    maximum: 100,
+    nullable: false,
+  })
+  reputation: number;
+
+  @Column({
     name: 'is_verified',
     type: 'boolean',
     default: false,

@@ -5,6 +5,7 @@ import { ApiProperty } from '@nestjs/swagger';
 export enum BlogStatus {
   DRAFT = 'DRAFT',
   PUBLISHED = 'PUBLISHED',
+  UNPUBLISHED = 'UNPUBLISHED',
 }
 
 @Entity('blogs')
