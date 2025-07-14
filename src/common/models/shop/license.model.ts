@@ -26,53 +26,6 @@ export class License extends Base {
   shop: Shop;
 
   @Column({
-    name: 'license_number',
-    type: 'varchar',
-    length: 50,
-    nullable: false,
-    comment: 'Số giấy phép kinh doanh',
-  })
-  @ApiProperty({
-    type: 'string',
-    description: 'Số giấy phép kinh doanh',
-    example: 'GP-KD-123456789',
-    maxLength: 50,
-    nullable: false,
-  })
-  licenseNumber: string;
-
-  @Column({
-    name: 'title',
-    type: 'varchar',
-    length: 200,
-    nullable: false,
-    comment: 'Tên giấy phép',
-  })
-  @ApiProperty({
-    type: 'string',
-    description: 'Tên giấy phép',
-    example: 'Giấy phép đăng ký kinh doanh',
-    maxLength: 200,
-    nullable: false,
-  })
-  title: string;
-
-  @Column({
-    name: 'description',
-    type: 'text',
-    nullable: true,
-    comment: 'Mô tả giấy phép',
-  })
-  @ApiProperty({
-    type: 'string',
-    format: 'text',
-    description: 'Mô tả giấy phép',
-    example: 'Giấy phép kinh doanh cho cửa hàng thời trang',
-    nullable: true,
-  })
-  description: string | null;
-
-  @Column({
     name: 'status',
     type: 'enum',
     enum: LicenseStatus,
