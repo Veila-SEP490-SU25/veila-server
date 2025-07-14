@@ -1,3 +1,5 @@
+import { ContractService } from '@/app/contract';
+import { RegisterShopDto } from '@/app/shop/shop.dto';
 import { Filtering, getOrder, getWhere, Sorting } from '@/common/decorators';
 import {
   Accessory,
@@ -7,12 +9,18 @@ import {
   Category,
   Dress,
   DressStatus,
+  License,
+  LicenseStatus,
   Service,
   ServiceStatus,
   Shop,
   ShopStatus,
 } from '@/common/models';
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { In, Repository } from 'typeorm';
 
@@ -25,6 +33,8 @@ export class ShopService {
     @InjectRepository(Category) private readonly categoryRepository: Repository<Category>,
     @InjectRepository(Dress) private readonly dressRepository: Repository<Dress>,
     @InjectRepository(Service) private readonly serviceRepository: Repository<Service>,
+    @InjectRepository(License) private readonly licenseRepository: Repository<License>,
+    private readonly contractService: ContractService,
   ) {}
 
   async getShopsForCustomer(
@@ -183,6 +193,30 @@ export class ShopService {
     });
     if (!existingShop) throw new NotFoundException('Không tìm thấy cửa hàng phù hợp');
     return existingShop;
+  }
+
+  async registerShop(
+    userId: string,
+    { contractId, isAccepted, name, phone, email, address, licenseImages }: RegisterShopDto,
+  ): Promise<void> {
+    if (!isAccepted)
+      throw new BadRequestException('Bạn cần đồng ý với điều khoản để đăng ký cửa hàng');
+
+    await this.contractService.acceptContract(userId, contractId);
+    const newShop = await this.shopRepository.save({
+      user: { id: userId },
+      name,
+      phone,
+      email,
+      address,
+      status: ShopStatus.PENDING,
+      isVerified: false,
+    });
+    await this.licenseRepository.save({
+      images: licenseImages,
+      shop: newShop,
+      status: LicenseStatus.PENDING,
+    });
   }
 
   async getShopWithUserWithoutDeletedById(id: string): Promise<Shop> {

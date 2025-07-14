@@ -1,6 +1,6 @@
 import { ItemResponse, ListResponse } from '@/common/base';
 import { Shop, UserRole } from '@/common/models';
-import { Controller, Get, HttpStatus, Param, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, HttpStatus, Param, Post, UseGuards } from '@nestjs/common';
 import {
   ApiBearerAuth,
   ApiExtraModels,
@@ -22,7 +22,7 @@ import {
   SortingParams,
   UserId,
 } from '@/common/decorators';
-import { ItemShopDto, ListShopDto } from '@/app/shop/shop.dto';
+import { ItemShopDto, ListShopDto, RegisterShopDto } from '@/app/shop/shop.dto';
 import { ListDressDto } from '@/app/dress';
 import { ListServiceDto } from '@/app/service';
 import { ListBlogDto } from '@/app/blog';
@@ -47,6 +47,43 @@ import { plainToInstance } from 'class-transformer';
 )
 export class ShopController {
   constructor(private readonly shopService: ShopService) {}
+
+  @Post('me')
+  @UseGuards(AuthGuard)
+  @Roles(UserRole.CUSTOMER)
+  @ApiOperation({
+    summary: 'Đăng ký mở shop',
+    description: `**Hướng dẫn sử dụng:**
+    - Truyền thông tin shop trong body.
+    - Chỉ dành cho người dùng có vai trò CUSTOMER.
+    - Nếu đăng ký thành công, sẽ trả về thông báo và mã trạng thái CREATED (201).
+    - Nếu có lỗi, sẽ trả về mã trạng thái BAD_REQUEST (400) hoặc CONFLICT (409).
+    - Sau khi đăng ký, shop sẽ được xét duyệt bởi admin.`,
+  })
+  @ApiOkResponse({
+    description: 'Đăng ký shop mới',
+    schema: {
+      allOf: [
+        { $ref: getSchemaPath(ItemResponse) },
+        {
+          properties: {
+            item: { type: 'null' },
+          },
+        },
+      ],
+    },
+  })
+  async registerShop(
+    @UserId() userId: string,
+    @Body() body: RegisterShopDto,
+  ): Promise<ItemResponse<null>> {
+    await this.shopService.registerShop(userId, body);
+    return {
+      message: 'Đơn đăng ký đã được gửi đi thành công, vui lòng chờ xét duyệt',
+      statusCode: HttpStatus.CREATED,
+      item: null,
+    };
+  }
 
   @Get('me')
   @UseGuards(AuthGuard)
