@@ -2,6 +2,23 @@ import { ShopStatus } from '@/common/models';
 import { ApiProperty } from '@nestjs/swagger';
 import { Expose } from 'class-transformer';
 
+export class ReviewShopDto {
+  @ApiProperty({
+    description: 'Có duyệt shop hay không',
+    example: true,
+    nullable: false,
+  })
+  isApproved: boolean;
+
+  @ApiProperty({
+    description: 'Lý do từ chối (nếu có)',
+    example: 'Giấy phép kinh doanh không rõ ràng, cần chụp lại',
+    maxLength: 500,
+    nullable: true,
+  })
+  rejectReason?: string | null;
+}
+
 export class ListShopForStaffDto {
   @Expose()
   @ApiProperty({ description: 'ID của shop', example: 'shop-uuid-123' })

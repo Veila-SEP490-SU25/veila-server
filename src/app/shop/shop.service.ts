@@ -1,5 +1,5 @@
 import { ContractService } from '@/app/contract';
-import { RegisterShopDto, ResubmitShopDto } from '@/app/shop/shop.dto';
+import { RegisterShopDto, ResubmitShopDto, ReviewShopDto } from '@/app/shop/shop.dto';
 import { Filtering, getOrder, getWhere, Sorting } from '@/common/decorators';
 import {
   Accessory,
@@ -260,6 +260,37 @@ export class ShopService {
       skip,
       withDeleted: true,
     });
+  }
+
+  async reviewShopRegister(id: string, { isApproved, rejectReason }: ReviewShopDto): Promise<void> {
+    const existingShop = await this.shopRepository.findOne({
+      where: { id },
+      withDeleted: true,
+      relations: { license: true },
+    });
+    if (!existingShop) throw new NotFoundException('Không tìm thấy cửa hàng phù hợp');
+    if (!existingShop.license)
+      throw new NotFoundException('Không tìm thấy giấy phép kinh doanh của cửa hàng');
+    if (existingShop.status !== ShopStatus.PENDING)
+      throw new BadRequestException('Cửa hàng không ở trạng thái chờ duyệt');
+
+    if (isApproved) {
+      await this.shopRepository.update(existingShop.id, {
+        status: ShopStatus.ACTIVE,
+        isVerified: true,
+      });
+      await this.licenseRepository.update(existingShop.license.id, {
+        status: LicenseStatus.APPROVED,
+      });
+    } else {
+      await this.shopRepository.update(existingShop.id, {
+        status: ShopStatus.INACTIVE,
+      });
+      await this.licenseRepository.update(existingShop.license.id, {
+        status: LicenseStatus.REJECTED,
+        rejectReason,
+      });
+    }
   }
 
   async getShopWithUserWithoutDeletedById(id: string): Promise<Shop> {

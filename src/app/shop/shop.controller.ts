@@ -1,6 +1,16 @@
 import { ItemResponse, ListResponse } from '@/common/base';
 import { Shop, UserRole } from '@/common/models';
-import { Body, Controller, Get, HttpStatus, Param, Post, Put, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  HttpStatus,
+  Param,
+  Patch,
+  Post,
+  Put,
+  UseGuards,
+} from '@nestjs/common';
 import {
   ApiBearerAuth,
   ApiExtraModels,
@@ -28,6 +38,7 @@ import {
   ListShopForStaffDto,
   RegisterShopDto,
   ResubmitShopDto,
+  ReviewShopDto,
 } from '@/app/shop/shop.dto';
 import { ListDressDto } from '@/app/dress';
 import { ListServiceDto } from '@/app/service';
@@ -242,6 +253,42 @@ export class ShopController {
       hasNextPage: page + 1 < totalPages,
       hasPrevPage: 0 < page,
       items: dtos,
+    };
+  }
+
+  @Patch(':id/staff')
+  @UseGuards(AuthGuard)
+  @Roles(UserRole.STAFF, UserRole.ADMIN, UserRole.SUPER_ADMIN)
+  @ApiOperation({
+    summary: 'Xử lý yêu cầu đăng ký shop của khách hàng',
+    description: `**Hướng dẫn sử dụng:**
+    - Truyền \`id\` của shop trên URL.
+    - Truyền thông tin xử lý trong body.
+    - Nếu duyệt thành công, sẽ trả về thông báo và mã trạng thái OK (200).
+    - Nếu có lỗi, sẽ trả về mã trạng thái BAD_REQUEST (400) hoặc NOT_FOUND (404).
+    - Nếu từ chối, cần cung cấp lý do từ chối trong body.`,
+  })
+  @ApiOkResponse({
+    schema: {
+      allOf: [
+        { $ref: getSchemaPath(ItemResponse) },
+        {
+          properties: {
+            item: { type: 'null' },
+          },
+        },
+      ],
+    },
+  })
+  async reviewShopRegister(
+    @Param('id') id: string,
+    @Body() body: ReviewShopDto,
+  ): Promise<ItemResponse<null>> {
+    await this.shopService.reviewShopRegister(id, body);
+    return {
+      message: 'Đã xử lý yêu cầu đăng ký shop',
+      statusCode: HttpStatus.OK,
+      item: null,
     };
   }
 
