@@ -266,7 +266,7 @@ export class ShopController {
     - Trả về thông tin chi tiết của shop.
     - Nếu không tìm thấy sẽ trả về lỗi.
     - Chỉ dành cho nhân viên, admin và super admin.
-    - Nếu shop không tồn tại, sẽ trả về mã trạng thái NOT_FOUND (404).`
+    - Nếu shop không tồn tại, sẽ trả về mã trạng thái NOT_FOUND (404).`,
   })
   @ApiOkResponse({
     schema: {
