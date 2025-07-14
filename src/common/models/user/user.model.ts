@@ -120,6 +120,7 @@ export class User extends Base {
     type: 'varchar',
     length: 15,
     nullable: true,
+    unique: true,
     comment: 'Số điện thoại của người dùng',
   })
   @ApiProperty({
