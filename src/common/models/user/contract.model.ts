@@ -7,6 +7,12 @@ export enum ContractType {
   CUSTOMER = 'CUSTOMER',
 }
 
+export enum ContractStatus {
+  ACTIVE = 'ACTIVE',
+  INACTIVE = 'INACTIVE',
+  DRAFT = 'DRAFT',
+}
+
 @Entity('contracts')
 export class Contract extends Base {
   @Column({
@@ -88,4 +94,22 @@ export class Contract extends Base {
     nullable: false,
   })
   effectiveFrom: Date;
+
+  @Column({
+    name: 'status',
+    type: 'enum',
+    enum: ContractStatus,
+    default: ContractStatus.DRAFT,
+    nullable: false,
+    comment: 'Trạng thái của điều khoản (ACTIVE, INACTIVE, DRAFT)',
+  })
+  @ApiProperty({
+    type: 'string',
+    enum: ContractStatus,
+    description: 'Trạng thái của điều khoản (ACTIVE, INACTIVE, DRAFT)',
+    example: ContractStatus.ACTIVE,
+    enumName: 'ContractStatus',
+    nullable: false,
+  })
+  status: ContractStatus;
 }
