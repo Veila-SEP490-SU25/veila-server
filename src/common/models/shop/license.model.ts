@@ -11,7 +11,7 @@ export enum LicenseStatus {
 
 @Entity('licenses')
 export class License extends Base {
-  @OneToOne(() => Shop, {
+  @OneToOne(() => Shop, (shop) => shop.license, {
     nullable: false,
     onDelete: 'CASCADE',
   })

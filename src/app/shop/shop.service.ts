@@ -1,5 +1,5 @@
 import { ContractService } from '@/app/contract';
-import { RegisterShopDto } from '@/app/shop/shop.dto';
+import { RegisterShopDto, ResubmitShopDto } from '@/app/shop/shop.dto';
 import { Filtering, getOrder, getWhere, Sorting } from '@/common/decorators';
 import {
   Accessory,
@@ -16,11 +16,7 @@ import {
   Shop,
   ShopStatus,
 } from '@/common/models';
-import {
-  BadRequestException,
-  Injectable,
-  NotFoundException,
-} from '@nestjs/common';
+import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { In, Repository } from 'typeorm';
 
@@ -216,6 +212,33 @@ export class ShopService {
       images: licenseImages,
       shop: newShop,
       status: LicenseStatus.PENDING,
+    });
+  }
+
+  async resubmitShop(
+    userId: string,
+    { name, phone, email, address, licenseImages }: ResubmitShopDto,
+  ) {
+    const existingShop = await this.shopRepository.findOne({
+      where: { user: { id: userId } },
+      relations: {
+        license: true,
+      },
+    });
+    if (!existingShop) throw new NotFoundException('Không tìm thấy cửa hàng phù hợp');
+    if (!existingShop.license)
+      throw new NotFoundException('Không tìm thấy giấy phép kinh doanh của cửa hàng');
+
+    await this.shopRepository.update(existingShop.id, {
+      name,
+      phone,
+      email,
+      address,
+      status: ShopStatus.PENDING,
+    });
+    await this.licenseRepository.update(existingShop.license.id, {
+      images: licenseImages,
+      status: LicenseStatus.RESUBMIT,
     });
   }
 

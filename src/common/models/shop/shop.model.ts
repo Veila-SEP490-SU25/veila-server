@@ -1,6 +1,6 @@
 import { Column, Entity, JoinColumn, OneToMany, OneToOne } from 'typeorm';
 import { ApiProperty } from '@nestjs/swagger';
-import { Base, Membership, User } from '@/common/models';
+import { Base, License, Membership, User } from '@/common/models';
 
 export enum ShopStatus {
   PENDING = 'PENDING', // Đang chờ duyệt
@@ -180,4 +180,13 @@ export class Shop extends Base {
     type: [Membership],
   })
   memberships: [Membership];
+
+  @OneToOne(() => License, (license) => license.shop, {
+    nullable: true,
+  })
+  @ApiProperty({
+    type: () => License,
+    description: 'Giấy phép kinh doanh của shop',
+  })
+  license: License | null;
 }

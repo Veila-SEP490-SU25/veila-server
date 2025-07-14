@@ -1,6 +1,6 @@
 import { ItemResponse, ListResponse } from '@/common/base';
 import { Shop, UserRole } from '@/common/models';
-import { Body, Controller, Get, HttpStatus, Param, Post, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, HttpStatus, Param, Post, Put, UseGuards } from '@nestjs/common';
 import {
   ApiBearerAuth,
   ApiExtraModels,
@@ -22,7 +22,7 @@ import {
   SortingParams,
   UserId,
 } from '@/common/decorators';
-import { ItemShopDto, ListShopDto, RegisterShopDto } from '@/app/shop/shop.dto';
+import { ItemShopDto, ListShopDto, RegisterShopDto, ResubmitShopDto } from '@/app/shop/shop.dto';
 import { ListDressDto } from '@/app/dress';
 import { ListServiceDto } from '@/app/service';
 import { ListBlogDto } from '@/app/blog';
@@ -81,6 +81,43 @@ export class ShopController {
     return {
       message: 'Đơn đăng ký đã được gửi đi thành công, vui lòng chờ xét duyệt',
       statusCode: HttpStatus.CREATED,
+      item: null,
+    };
+  }
+
+  @Put('me')
+  @UseGuards(AuthGuard)
+  @Roles(UserRole.CUSTOMER)
+  @ApiOperation({
+    summary: 'Gửi lại đơn đăng ký shop',
+    description: `**Hướng dẫn sử dụng:**
+    - Truyền thông tin shop trong body.
+    - Chỉ dành cho người dùng có vai trò CUSTOMER.
+    - Nếu gửi lại thành công, sẽ trả về thông báo và mã trạng thái ACCEPTED (202).
+    - Nếu có lỗi, sẽ trả về mã trạng thái BAD_REQUEST (400) hoặc CONFLICT (409).
+    - Sau khi gửi lại, shop sẽ được xét duyệt bởi admin.`,
+  })
+  @ApiOkResponse({
+    description: 'Đăng ký shop mới',
+    schema: {
+      allOf: [
+        { $ref: getSchemaPath(ItemResponse) },
+        {
+          properties: {
+            item: { type: 'null' },
+          },
+        },
+      ],
+    },
+  })
+  async resubmitShop(
+    @UserId() userId: string,
+    @Body() body: ResubmitShopDto,
+  ): Promise<ItemResponse<null>> {
+    await this.shopService.resubmitShop(userId, body);
+    return {
+      message: 'Đơn đăng ký đã được gửi đi thành công, vui lòng chờ xét duyệt',
+      statusCode: HttpStatus.ACCEPTED,
       item: null,
     };
   }

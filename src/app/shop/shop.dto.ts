@@ -1,6 +1,47 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { Expose } from 'class-transformer';
 
+export class ResubmitShopDto {
+  @ApiProperty({
+    description: 'Tên của shop',
+    example: 'Cửa hàng thời trang ABC',
+    maxLength: 100,
+    nullable: false,
+  })
+  name: string;
+
+  @ApiProperty({
+    description: 'Số điện thoại liên hệ của shop',
+    example: '+84901234567',
+    maxLength: 15,
+    nullable: false,
+  })
+  phone: string;
+
+  @ApiProperty({
+    description: 'Email liên hệ của shop',
+    example: 'shopABC@gmail.com',
+    maxLength: 64,
+    nullable: false,
+  })
+  email: string;
+
+  @ApiProperty({
+    description: 'Địa chỉ của shop',
+    example: '123 Đường ABC, Quận 1, TP.HCM',
+    maxLength: 255,
+    nullable: false,
+  })
+  address: string;
+
+  @ApiProperty({
+    description: 'Ảnh giấy phép kinh doanh của shop',
+    example: 'https://storage.veila.com/shops/license123.jpg',
+    nullable: false,
+  })
+  licenseImages: string;
+}
+
 export class RegisterShopDto {
   @ApiProperty({
     description: 'ID của điều khoản đồng ý',
