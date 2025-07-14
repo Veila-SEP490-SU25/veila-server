@@ -242,6 +242,26 @@ export class ShopService {
     });
   }
 
+  async getShopsForStaff(
+    take: number,
+    skip: number,
+    sort?: Sorting,
+    filter?: Filtering,
+  ): Promise<[Shop[], number]> {
+    const dynamicFilter = getWhere(filter);
+    const where = {
+      ...dynamicFilter,
+    };
+    const order = getOrder(sort);
+    return await this.shopRepository.findAndCount({
+      where,
+      order,
+      take,
+      skip,
+      withDeleted: true,
+    });
+  }
+
   async getShopWithUserWithoutDeletedById(id: string): Promise<Shop> {
     const existingShop = await this.shopRepository.findOne({
       where: { id },

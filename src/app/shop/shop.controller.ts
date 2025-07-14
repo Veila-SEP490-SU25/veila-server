@@ -22,7 +22,13 @@ import {
   SortingParams,
   UserId,
 } from '@/common/decorators';
-import { ItemShopDto, ListShopDto, RegisterShopDto, ResubmitShopDto } from '@/app/shop/shop.dto';
+import {
+  ItemShopDto,
+  ListShopDto,
+  ListShopForStaffDto,
+  RegisterShopDto,
+  ResubmitShopDto,
+} from '@/app/shop/shop.dto';
 import { ListDressDto } from '@/app/dress';
 import { ListServiceDto } from '@/app/service';
 import { ListBlogDto } from '@/app/blog';
@@ -152,6 +158,90 @@ export class ShopController {
       message: 'Đây là thông tin chi tiết của shop',
       statusCode: HttpStatus.OK,
       item: shop,
+    };
+  }
+
+  @Get('staff')
+  @UseGuards(AuthGuard)
+  @Roles(UserRole.STAFF, UserRole.ADMIN, UserRole.SUPER_ADMIN)
+  @ApiOperation({
+    summary: 'Lấy danh sách shop cho nhân viên',
+    description: `**Hướng dẫn sử dụng:**
+    - Trả về danh sách các shop.
+    - Hỗ trợ phân trang, sắp xếp, lọc:
+      - \`page\`: Số trang (bắt đầu từ 0)
+      - \`size\`: Số lượng mỗi trang
+      - \`sort\`: Ví dụ: name:asc
+      - \`filter\`: Ví dụ: name:like:veila
+    - Chỉ trả về các shop có trạng thái ACTIVE.
+    - Page bắt đầu từ 0
+    - Sort theo format: [tên_field]:[asc/desc]
+    - Các trường đang có thể sort: name
+    - Filter theo format: [tên_field]:[eq|neq|gt|gte|lt|lte|like|nlike|in|nin]:[keyword]; hoặc [tên_field]:[isnull|isnotnull]
+    - Các trường đang có thể filter: name, status, isVerified
+`,
+  })
+  @ApiQuery({
+    name: 'page',
+    required: false,
+    type: Number,
+    default: 0,
+    description: 'Trang hiện tại (bắt đầu từ 0)',
+  })
+  @ApiQuery({
+    name: 'size',
+    required: false,
+    type: Number,
+    default: 10,
+    description: 'Số lượng mỗi trang',
+  })
+  @ApiQuery({
+    name: 'sort',
+    required: false,
+    type: String,
+    description: 'Sắp xếp theo trường, ví dụ: name:asc',
+  })
+  @ApiQuery({
+    name: 'filter',
+    required: false,
+    type: String,
+    description: 'Lọc theo trường, ví dụ: name:like:veila',
+  })
+  @ApiOkResponse({
+    schema: {
+      allOf: [
+        { $ref: getSchemaPath(ListResponse) },
+        {
+          properties: {
+            item: { $ref: getSchemaPath(ListShopForStaffDto) },
+          },
+        },
+      ],
+    },
+  })
+  async getShopsForStaff(
+    @PaginationParams() { page, size, limit, offset }: Pagination,
+    @SortingParams(['name']) sort?: Sorting,
+    @FilteringParams(['name', 'status', 'isVerified']) filter?: Filtering,
+  ): Promise<ListResponse<ListShopForStaffDto>> {
+    const [shops, totalItems] = await this.shopService.getShopsForStaff(
+      limit,
+      offset,
+      sort,
+      filter,
+    );
+    const totalPages = Math.ceil(totalItems / size);
+    const dtos = plainToInstance(ListShopForStaffDto, shops, { excludeExtraneousValues: true });
+    return {
+      message: 'Đây là danh sách các shop',
+      statusCode: HttpStatus.OK,
+      pageIndex: page,
+      pageSize: size,
+      totalItems,
+      totalPages,
+      hasNextPage: page + 1 < totalPages,
+      hasPrevPage: 0 < page,
+      items: dtos,
     };
   }
 

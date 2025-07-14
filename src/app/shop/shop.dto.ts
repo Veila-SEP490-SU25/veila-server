@@ -1,5 +1,24 @@
+import { ShopStatus } from '@/common/models';
 import { ApiProperty } from '@nestjs/swagger';
 import { Expose } from 'class-transformer';
+
+export class ListShopForStaffDto {
+  @Expose()
+  @ApiProperty({ description: 'ID của shop', example: 'shop-uuid-123' })
+  id: string;
+
+  @Expose()
+  @ApiProperty({ description: 'Tên shop', example: 'Cửa hàng thời trang ABC' })
+  name: string;
+
+  @Expose()
+  @ApiProperty({ description: 'Trạng thái của shop', example: ShopStatus.PENDING })
+  status: ShopStatus;
+
+  @Expose()
+  @ApiProperty({ description: 'Trạng thái xác thực của shop', example: false })
+  isVerified: boolean;
+}
 
 export class ResubmitShopDto {
   @ApiProperty({
