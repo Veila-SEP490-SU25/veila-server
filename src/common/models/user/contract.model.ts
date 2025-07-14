@@ -82,7 +82,7 @@ export class Contract extends Base {
 
   @Column({
     name: 'effective_from',
-    type: 'timestamp',
+    type: 'datetime',
     nullable: false,
     comment: 'Ngày bắt đầu hiệu lực của điều khoản',
   })
