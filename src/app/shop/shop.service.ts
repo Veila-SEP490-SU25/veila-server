@@ -201,9 +201,9 @@ export class ShopService {
     if (!isAccepted)
       throw new BadRequestException('Bạn cần đồng ý với điều khoản để đăng ký cửa hàng');
 
-    await this.contractService.acceptContract(userId, contractId);
     const newShop = await this.shopRepository.save({
       user: { id: userId },
+      contract: { id: contractId },
       name,
       phone,
       email,

@@ -1,7 +1,7 @@
-import { Column, Entity, OneToOne } from 'typeorm';
+import { Column, Entity, JoinColumn, OneToOne } from 'typeorm';
 import { Exclude } from 'class-transformer';
 import { ApiProperty, ApiHideProperty } from '@nestjs/swagger';
-import { Base, Shop } from '@/common/models';
+import { Base, Contract, Shop } from '@/common/models';
 
 export enum UserRole {
   SUPER_ADMIN = 'SUPER_ADMIN',
@@ -286,4 +286,18 @@ export class User extends Base {
     nullable: true,
   })
   shop: Shop | null;
+
+  @OneToOne(() => Contract, {
+    nullable: false,
+    onDelete: 'CASCADE',
+  })
+  @JoinColumn({
+    name: 'contract_id',
+    foreignKeyConstraintName: 'fk_user_contract',
+  })
+  @ApiProperty({
+    type: Contract,
+    description: 'Hợp đồng liên quan đến người dùng',
+  })
+  contract: Contract;
 }

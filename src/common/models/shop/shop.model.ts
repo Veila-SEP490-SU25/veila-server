@@ -1,6 +1,6 @@
 import { Column, Entity, JoinColumn, OneToMany, OneToOne } from 'typeorm';
 import { ApiProperty } from '@nestjs/swagger';
-import { Base, License, Membership, User } from '@/common/models';
+import { Base, Contract, License, Membership, User } from '@/common/models';
 
 export enum ShopStatus {
   PENDING = 'PENDING', // Đang chờ duyệt
@@ -206,4 +206,18 @@ export class Shop extends Base {
     description: 'Giấy phép kinh doanh của shop',
   })
   license: License | null;
+
+  @OneToOne(() => Contract, {
+    nullable: false,
+    onDelete: 'CASCADE',
+  })
+  @JoinColumn({
+    name: 'contract_id',
+    foreignKeyConstraintName: 'fk_shop_contract',
+  })
+  @ApiProperty({
+    type: Contract,
+    description: 'Hợp đồng liên quan đến shop',
+  })
+  contract: Contract;
 }

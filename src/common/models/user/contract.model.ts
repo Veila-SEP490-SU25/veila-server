@@ -64,23 +64,6 @@ export class Contract extends Base {
   contractType: ContractType;
 
   @Column({
-    name: 'version',
-    type: 'int',
-    nullable: false,
-    unique: true,
-    default: 1,
-    comment: 'Phiên bản của điều khoản',
-  })
-  @ApiProperty({
-    type: 'integer',
-    description: 'Phiên bản của điều khoản',
-    example: 1,
-    minimum: 1,
-    nullable: false,
-  })
-  version: number;
-
-  @Column({
     name: 'effective_from',
     type: 'datetime',
     nullable: false,
