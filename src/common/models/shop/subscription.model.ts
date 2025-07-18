@@ -10,6 +10,8 @@ export class Subscription extends Base {
     length: 100,
     nullable: false,
     comment: 'Tiêu đề của gói thành viên',
+    charset: 'utf8mb4',
+    collation: 'utf8mb4_unicode_ci',
   })
   @ApiProperty({
     type: 'string',

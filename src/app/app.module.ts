@@ -22,6 +22,9 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { APP_GUARD } from '@nestjs/core';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ContractModule } from '@/app/contract';
+import { SubscriptionModule } from '@/app/subscription';
+import { WalletModule } from '@/app/wallet';
+import { MembershipModule } from '@/app/membership';
 
 @Module({
   imports: [
@@ -62,6 +65,9 @@ import { ContractModule } from '@/app/contract';
     FeedbackModule,
     PayosModule,
     ContractModule,
+    SubscriptionModule,
+    WalletModule,
+    MembershipModule,
   ],
   controllers: [AppController],
   providers: [

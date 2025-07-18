@@ -325,4 +325,28 @@ export class ShopService {
   async getAll(): Promise<Shop[]> {
     return await this.shopRepository.find({ withDeleted: true });
   }
+
+  async getByUserEmail(email: string): Promise<Shop | null> {
+    return await this.shopRepository.findOne({
+      where: { user: { email } },
+      withDeleted: true,
+    });
+  }
+
+  async getAllLicenses(): Promise<License[]> {
+    return await this.licenseRepository.find({
+      withDeleted: true,
+    });
+  }
+
+  async getLicenseByShopId(shopId: string): Promise<License | null> {
+    return await this.licenseRepository.findOne({
+      where: { shop: { id: shopId } },
+      withDeleted: true,
+    });
+  }
+
+  async createLicense(license: License): Promise<void> {
+    await this.licenseRepository.save(license);
+  }
 }

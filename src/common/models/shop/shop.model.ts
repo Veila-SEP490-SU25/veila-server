@@ -1,4 +1,4 @@
-import { Column, Entity, JoinColumn, OneToMany, OneToOne } from 'typeorm';
+import { Column, Entity, JoinColumn, ManyToOne, OneToMany, OneToOne } from 'typeorm';
 import { ApiProperty } from '@nestjs/swagger';
 import { Base, Contract, License, Membership, User } from '@/common/models';
 
@@ -207,7 +207,7 @@ export class Shop extends Base {
   })
   license: License | null;
 
-  @OneToOne(() => Contract, {
+  @ManyToOne(() => Contract, {
     nullable: false,
     onDelete: 'CASCADE',
   })
@@ -216,7 +216,7 @@ export class Shop extends Base {
     foreignKeyConstraintName: 'fk_shop_contract',
   })
   @ApiProperty({
-    type: Contract,
+    type: () => Contract,
     description: 'Hợp đồng liên quan đến shop',
   })
   contract: Contract;
