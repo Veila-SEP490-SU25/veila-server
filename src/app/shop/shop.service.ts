@@ -15,6 +15,8 @@ import {
   ServiceStatus,
   Shop,
   ShopStatus,
+  User,
+  UserRole,
 } from '@/common/models';
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -30,6 +32,7 @@ export class ShopService {
     @InjectRepository(Dress) private readonly dressRepository: Repository<Dress>,
     @InjectRepository(Service) private readonly serviceRepository: Repository<Service>,
     @InjectRepository(License) private readonly licenseRepository: Repository<License>,
+    @InjectRepository(User) private readonly userRepository: Repository<User>,
     private readonly contractService: ContractService,
   ) {}
 
@@ -296,6 +299,7 @@ export class ShopService {
       await this.licenseRepository.update(existingShop.license.id, {
         status: LicenseStatus.APPROVED,
       });
+      await this.userRepository.update({ shop: existingShop }, { role: UserRole.SHOP });
     } else {
       await this.shopRepository.update(existingShop.id, {
         status: ShopStatus.INACTIVE,
