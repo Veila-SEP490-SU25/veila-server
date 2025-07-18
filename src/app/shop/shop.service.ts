@@ -1,4 +1,3 @@
-import { ContractService } from '@/app/contract';
 import { RegisterShopDto, ResubmitShopDto, ReviewShopDto } from '@/app/shop/shop.dto';
 import { Filtering, getOrder, getWhere, Sorting } from '@/common/decorators';
 import {
@@ -33,7 +32,6 @@ export class ShopService {
     @InjectRepository(Service) private readonly serviceRepository: Repository<Service>,
     @InjectRepository(License) private readonly licenseRepository: Repository<License>,
     @InjectRepository(User) private readonly userRepository: Repository<User>,
-    private readonly contractService: ContractService,
   ) {}
 
   async getShopsForCustomer(
