@@ -46,6 +46,8 @@ export class Service extends Base {
     length: 100,
     nullable: false,
     comment: 'Tên của dịch vụ',
+    charset: 'utf8mb4',
+    collation: 'utf8mb4_unicode_ci',
   })
   @ApiProperty({
     type: 'string',
@@ -61,6 +63,8 @@ export class Service extends Base {
     type: 'text',
     nullable: true,
     comment: 'Mô tả dịch vụ',
+    charset: 'utf8mb4',
+    collation: 'utf8mb4_unicode_ci',
   })
   @ApiProperty({
     type: 'string',

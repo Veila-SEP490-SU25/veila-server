@@ -48,6 +48,8 @@ export class License extends Base {
     length: 500,
     nullable: true,
     comment: 'Lý do từ chối (nếu có)',
+    charset: 'utf8mb4',
+    collation: 'utf8mb4_unicode_ci',
   })
   @ApiProperty({
     type: 'string',

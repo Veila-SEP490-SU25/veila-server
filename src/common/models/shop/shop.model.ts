@@ -32,6 +32,8 @@ export class Shop extends Base {
     length: 100,
     nullable: false,
     comment: 'Tên shop',
+    charset: 'utf8mb4',
+    collation: 'utf8mb4_unicode_ci',
   })
   @ApiProperty({
     type: 'string',
@@ -98,6 +100,8 @@ export class Shop extends Base {
     type: 'text',
     nullable: true,
     comment: 'Mô tả về shop',
+    charset: 'utf8mb4',
+    collation: 'utf8mb4_unicode_ci',
   })
   @ApiProperty({
     type: 'string',

@@ -73,6 +73,8 @@ export class User extends Base {
     length: 30,
     nullable: false,
     comment: 'Tên của người dùng',
+    charset: 'utf8mb4',
+    collation: 'utf8mb4_unicode_ci',
   })
   @ApiProperty({
     type: 'string',
@@ -89,6 +91,8 @@ export class User extends Base {
     length: 30,
     nullable: true,
     comment: 'Tên đệm của người dùng',
+    charset: 'utf8mb4',
+    collation: 'utf8mb4_unicode_ci',
   })
   @ApiProperty({
     type: 'string',
@@ -105,6 +109,8 @@ export class User extends Base {
     length: 30,
     nullable: false,
     comment: 'Họ của người dùng',
+    charset: 'utf8mb4',
+    collation: 'utf8mb4_unicode_ci',
   })
   @ApiProperty({
     type: 'string',
@@ -138,6 +144,8 @@ export class User extends Base {
     length: 255,
     nullable: true,
     comment: 'Địa chỉ của người dùng',
+    charset: 'utf8mb4',
+    collation: 'utf8mb4_unicode_ci',
   })
   @ApiProperty({
     type: 'string',

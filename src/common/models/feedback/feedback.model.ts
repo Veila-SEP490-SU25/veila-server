@@ -79,6 +79,8 @@ export class Feedback extends Base {
     type: 'text',
     nullable: false,
     comment: 'Nội dung đánh giá',
+    charset: 'utf8mb4',
+    collation: 'utf8mb4_unicode_ci',
   })
   @ApiProperty({
     type: 'string',
