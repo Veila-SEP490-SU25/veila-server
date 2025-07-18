@@ -31,6 +31,8 @@ export class Category extends Base {
     length: 50,
     nullable: false,
     comment: 'Tên danh mục sản phẩm',
+    charset: 'utf8mb4',
+    collation: 'utf8mb4_unicode_ci',
   })
   @ApiProperty({
     type: 'string',
@@ -47,6 +49,8 @@ export class Category extends Base {
     length: 255,
     nullable: false,
     comment: 'Mô tả ngắn gọn về danh mục sản phẩm',
+    charset: 'utf8mb4',
+    collation: 'utf8mb4_unicode_ci',
   })
   @ApiProperty({
     type: 'string',

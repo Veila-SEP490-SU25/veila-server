@@ -1,11 +1,13 @@
-import { Accessory, Blog, Category, Dress, Service, Shop } from '@/common/models';
+import { Accessory, Blog, Category, Dress, License, Service, Shop, User } from '@/common/models';
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ShopController } from '@/app/shop/shop.controller';
 import { ShopService } from '@/app/shop/shop.service';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Shop, Accessory, Blog, Service, Dress, Category])],
+  imports: [
+    TypeOrmModule.forFeature([Shop, Accessory, Blog, Service, Dress, Category, License, User]),
+  ],
   controllers: [ShopController],
   providers: [ShopService],
   exports: [ShopService],

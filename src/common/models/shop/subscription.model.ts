@@ -10,6 +10,8 @@ export class Subscription extends Base {
     length: 100,
     nullable: false,
     comment: 'Tiêu đề của gói thành viên',
+    charset: 'utf8mb4',
+    collation: 'utf8mb4_unicode_ci',
   })
   @ApiProperty({
     type: 'string',
@@ -22,8 +24,7 @@ export class Subscription extends Base {
 
   @Column({
     name: 'description',
-    type: 'varchar',
-    length: 100,
+    type: 'text',
     nullable: false,
     comment: 'Mô tả chi tiết gói',
     charset: 'utf8mb4',
@@ -33,26 +34,25 @@ export class Subscription extends Base {
     type: 'string',
     description: 'Mô tả chi tiết của gói',
     example: 'Gói cung cấp dịch vụ 1 năm, tiết kiệm 20% chi phí theo tháng',
-    maxLength: 100,
     nullable: false,
   })
   description: string;
 
   @Column({
     name: 'duration',
-    type: 'varchar',
+    type: 'int',
+    unsigned: true,
+    default: 30,
     nullable: false,
-    comment: 'Thời gian hiệu lực của gói',
-    charset: 'utf8mb4',
-    collation: 'utf8mb4_unicode_ci',
+    comment: 'Thời gian hiệu lực của gói tính bằng ngày',
   })
   @ApiProperty({
     type: 'string',
     description: 'Thời gian hiệu lực của gói',
-    example: '1 năm',
+    example: '365 ngày',
     nullable: false,
   })
-  duration: string;
+  duration: number;
 
   @Column({
     name: 'amount',

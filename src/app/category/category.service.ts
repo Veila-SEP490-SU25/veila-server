@@ -65,7 +65,7 @@ export class CategoryService {
     const where = {
       ...dynamicFilter,
       category: { id },
-      status: ServiceStatus.ACTIVE,
+      status: ServiceStatus.AVAILABLE,
     };
     const order = getOrder(sort);
     return await this.serviceRepository.findAndCount({

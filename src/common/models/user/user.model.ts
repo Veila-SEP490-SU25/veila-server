@@ -1,7 +1,7 @@
-import { Column, Entity, OneToOne } from 'typeorm';
+import { Column, Entity, JoinColumn, ManyToOne, OneToOne } from 'typeorm';
 import { Exclude } from 'class-transformer';
 import { ApiProperty, ApiHideProperty } from '@nestjs/swagger';
-import { Base, Shop } from '@/common/models';
+import { Base, Contract, Shop } from '@/common/models';
 
 export enum UserRole {
   SUPER_ADMIN = 'SUPER_ADMIN',
@@ -73,6 +73,8 @@ export class User extends Base {
     length: 30,
     nullable: false,
     comment: 'Tên của người dùng',
+    charset: 'utf8mb4',
+    collation: 'utf8mb4_unicode_ci',
   })
   @ApiProperty({
     type: 'string',
@@ -89,6 +91,8 @@ export class User extends Base {
     length: 30,
     nullable: true,
     comment: 'Tên đệm của người dùng',
+    charset: 'utf8mb4',
+    collation: 'utf8mb4_unicode_ci',
   })
   @ApiProperty({
     type: 'string',
@@ -105,6 +109,8 @@ export class User extends Base {
     length: 30,
     nullable: false,
     comment: 'Họ của người dùng',
+    charset: 'utf8mb4',
+    collation: 'utf8mb4_unicode_ci',
   })
   @ApiProperty({
     type: 'string',
@@ -120,6 +126,7 @@ export class User extends Base {
     type: 'varchar',
     length: 15,
     nullable: true,
+    unique: true,
     comment: 'Số điện thoại của người dùng',
   })
   @ApiProperty({
@@ -137,6 +144,8 @@ export class User extends Base {
     length: 255,
     nullable: true,
     comment: 'Địa chỉ của người dùng',
+    charset: 'utf8mb4',
+    collation: 'utf8mb4_unicode_ci',
   })
   @ApiProperty({
     type: 'string',
@@ -231,6 +240,23 @@ export class User extends Base {
   status: UserStatus;
 
   @Column({
+    name: 'reputation',
+    type: 'int',
+    default: 100,
+    nullable: false,
+    comment: 'Điểm uy tín của user (0-100)',
+  })
+  @ApiProperty({
+    type: 'integer',
+    description: 'Điểm uy tín của user (0-100)',
+    example: 85,
+    minimum: 0,
+    maximum: 100,
+    nullable: false,
+  })
+  reputation: number;
+
+  @Column({
     name: 'is_verified',
     type: 'boolean',
     default: false,
@@ -268,4 +294,18 @@ export class User extends Base {
     nullable: true,
   })
   shop: Shop | null;
+
+  @ManyToOne(() => Contract, {
+    nullable: false,
+    onDelete: 'CASCADE',
+  })
+  @JoinColumn({
+    name: 'contract_id',
+    foreignKeyConstraintName: 'fk_user_contract',
+  })
+  @ApiProperty({
+    type: () => Contract,
+    description: 'Hợp đồng liên quan đến người dùng',
+  })
+  contract: Contract;
 }
