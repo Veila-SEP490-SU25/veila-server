@@ -21,6 +21,8 @@ export class Contract extends Base {
     length: 255,
     nullable: false,
     comment: 'Tiêu đề của điều khoản',
+    charset: 'utf8mb4',
+    collation: 'utf8mb4_unicode_ci',
   })
   @ApiProperty({
     type: 'string',
@@ -36,6 +38,8 @@ export class Contract extends Base {
     type: 'text',
     nullable: false,
     comment: 'Nội dung chi tiết của điều khoản',
+    charset: 'utf8mb4',
+    collation: 'utf8mb4_unicode_ci',
   })
   @ApiProperty({
     type: 'string',
