@@ -1,6 +1,6 @@
 import { MigrationInterface, QueryRunner } from 'typeorm';
 
-export class DeleteTableUnused1752812933589 implements MigrationInterface {
+export class DeleteTableUnused1752833194406 implements MigrationInterface {
   public async up(queryRunner: QueryRunner): Promise<void> {
     await queryRunner.dropTable('payment_infos', true, true, true);
     await queryRunner.dropTable('banks', true, true, true);
