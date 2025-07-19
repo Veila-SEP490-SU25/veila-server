@@ -1,10 +1,10 @@
 import { MembershipService } from '@/app/membership/membership.service';
-import { Membership } from '@/common/models';
+import { Membership, Subscription } from '@/common/models';
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Membership])],
+  imports: [TypeOrmModule.forFeature([Membership,Subscription])],
   controllers: [],
   providers: [MembershipService],
   exports: [MembershipService],

@@ -1,3 +1,4 @@
+import { MembershipService } from '@/app/membership';
 import { RegisterShopDto, ResubmitShopDto, ReviewShopDto } from '@/app/shop/shop.dto';
 import { Filtering, getOrder, getWhere, Sorting } from '@/common/decorators';
 import {
@@ -14,10 +15,11 @@ import {
   ServiceStatus,
   Shop,
   ShopStatus,
+  Subscription,
   User,
   UserRole,
 } from '@/common/models';
-import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, Inject, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { In, Repository } from 'typeorm';
 
@@ -32,6 +34,8 @@ export class ShopService {
     @InjectRepository(Service) private readonly serviceRepository: Repository<Service>,
     @InjectRepository(License) private readonly licenseRepository: Repository<License>,
     @InjectRepository(User) private readonly userRepository: Repository<User>,
+    @InjectRepository(Subscription) private readonly subscriptionRepository: Repository<Subscription>,
+    @Inject() private readonly membershipService: MembershipService,
   ) {}
 
   async getShopsForCustomer(
@@ -196,6 +200,11 @@ export class ShopService {
     userId: string,
     { contractId, isAccepted, name, phone, email, address, licenseImages }: RegisterShopDto,
   ): Promise<void> {
+    const user = await this.userRepository.findOne({ where: { id: userId } });
+    if (!user) throw new NotFoundException('Không tìm thấy người dùng phù hợp');
+    if (user.shop || user.role === UserRole.SHOP) throw new BadRequestException('Người dùng đã có cửa hàng');
+    if (!user.isIdentified) throw new BadRequestException('Bạn cần xác thực danh tính (SDT) để đăng ký cửa hàng');
+    
     if (!isAccepted)
       throw new BadRequestException('Bạn cần đồng ý với điều khoản để đăng ký cửa hàng');
 
@@ -294,10 +303,18 @@ export class ShopService {
         status: ShopStatus.ACTIVE,
         isVerified: true,
       });
+      
       await this.licenseRepository.update(existingShop.license.id, {
         status: LicenseStatus.APPROVED,
       });
+      
       await this.userRepository.update({ shop: existingShop }, { role: UserRole.SHOP });
+      
+      const subscription = await this.subscriptionRepository.findOne({where: { duration: 7}});
+      if (!subscription) {
+        throw new NotFoundException('Không tìm thấy gói đăng ký phù hợp');
+      }
+      await this.membershipService.registerMembership(existingShop.id, subscription.id);
     } else {
       await this.shopRepository.update(existingShop.id, {
         status: ShopStatus.INACTIVE,
