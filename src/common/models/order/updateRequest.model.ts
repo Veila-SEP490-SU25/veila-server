@@ -21,7 +21,7 @@ export class UpdateRequest extends Base {
   })
   @ApiProperty({
     description: 'Yêu cầu cập nhật liên quan',
-    type: Request,
+    type: () => Request,
   })
   request: Request;
 

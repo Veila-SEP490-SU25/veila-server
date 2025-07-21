@@ -22,7 +22,7 @@ export class Request extends Base {
   })
   @ApiProperty({
     description: 'Người gửi yêu cầu',
-    type: User,
+    type: () => User,
   })
   user: User;
 
@@ -89,7 +89,7 @@ export class Request extends Base {
     nullable: true,
   })
   @ApiProperty({
-    type: [UpdateRequest],
+    type: () => [UpdateRequest],
     nullable: true,
     description: 'Danh sách các yêu cầu cập nhật liên quan',
   })

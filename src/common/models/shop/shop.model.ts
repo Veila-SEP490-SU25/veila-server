@@ -177,7 +177,7 @@ export class Shop extends Base {
 
   @OneToMany(() => Membership, (membership) => membership.shop)
   @ApiProperty({
-    type: [Membership],
+    type: () => [Membership],
   })
   memberships: [Membership];
 }

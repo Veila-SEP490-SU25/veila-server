@@ -21,7 +21,7 @@ export class Task extends Base {
   })
   @ApiProperty({
     description: 'Mốc công việc (milestone) mà task này thuộc về',
-    type: Milestone,
+    type: () => Milestone,
   })
   milestone: Milestone;
 

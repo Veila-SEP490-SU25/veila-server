@@ -21,7 +21,7 @@ export class Category extends Base {
   })
   @ApiProperty({
     description: 'Người dùng sở hữu danh mục sản phẩm',
-    type: User,
+    type: () => User,
   })
   user: User;
 

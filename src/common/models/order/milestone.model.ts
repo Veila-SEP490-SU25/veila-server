@@ -21,7 +21,7 @@ export class Milestone extends Base {
   })
   @ApiProperty({
     description: 'Đơn hàng mà mốc công việc này thuộc về',
-    type: Order,
+    type: () => Order,
   })
   order: Order;
 
@@ -105,7 +105,7 @@ export class Milestone extends Base {
 
   @OneToMany(() => Task, (task) => task.milestone)
   @ApiProperty({
-    type: [Task],
+    type: () => [Task],
     description: 'Danh sách các công việc (task) thuộc mốc công việc này',
   })
   tasks: Task[];

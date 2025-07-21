@@ -19,7 +19,7 @@ export class Service extends Base {
   })
   @ApiProperty({
     description: 'Người dùng sở hữu dịch vụ',
-    type: User,
+    type: () => User,
     nullable: false,
   })
   user: User;
@@ -34,7 +34,7 @@ export class Service extends Base {
   })
   @ApiProperty({
     description: 'Danh mục của dịch vụ',
-    type: Category,
+    type: () => Category,
     nullable: true,
   })
   category: Category | null;
@@ -129,7 +129,7 @@ export class Service extends Base {
   @OneToMany(() => Feedback, (feedback) => feedback.service)
   @ApiProperty({
     description: 'Danh sách các Feedback của dịch vụ',
-    type: [Feedback],
+    type: () => [Feedback],
   })
   feedbacks: Feedback[];
 }

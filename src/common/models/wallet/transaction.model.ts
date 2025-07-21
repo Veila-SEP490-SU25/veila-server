@@ -35,7 +35,7 @@ export class Transaction extends Base {
   })
   @ApiProperty({
     description: 'Ví thực hiện giao dịch',
-    type: Wallet,
+    type: () => Wallet,
   })
   wallet: Wallet;
 
@@ -49,7 +49,7 @@ export class Transaction extends Base {
   })
   @ApiProperty({
     description: 'Đơn hàng liên quan (nếu có)',
-    type: Order,
+    type: () => Order,
     nullable: true,
   })
   order: Order | null;
@@ -64,7 +64,7 @@ export class Transaction extends Base {
   })
   @ApiProperty({
     description: 'Gói thành viên liên quan (nếu có)',
-    type: Membership,
+    type: () => Membership,
     nullable: true,
   })
   membership: Membership | null;

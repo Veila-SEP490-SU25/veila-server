@@ -14,7 +14,7 @@ export class Contract extends Base {
   })
   @ApiProperty({
     description: 'Cửa hàng liên quan đến điều khoản ký',
-    type: Shop,
+    type: () => Shop,
   })
   shop: Shop;
 
