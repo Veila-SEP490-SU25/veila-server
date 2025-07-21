@@ -1,6 +1,16 @@
 import { ItemResponse, ListResponse } from '@/common/base';
 import { Shop, UserRole } from '@/common/models';
-import { Controller, Get, HttpStatus, Param, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  HttpStatus,
+  Param,
+  Patch,
+  Post,
+  Put,
+  UseGuards,
+} from '@nestjs/common';
 import {
   ApiBearerAuth,
   ApiExtraModels,
@@ -22,7 +32,14 @@ import {
   SortingParams,
   UserId,
 } from '@/common/decorators';
-import { ItemShopDto, ListShopDto } from '@/app/shop/shop.dto';
+import {
+  ItemShopDto,
+  ListShopDto,
+  ListShopForStaffDto,
+  RegisterShopDto,
+  ResubmitShopDto,
+  ReviewShopDto,
+} from '@/app/shop/shop.dto';
 import { ListDressDto } from '@/app/dress';
 import { ListServiceDto } from '@/app/service';
 import { ListBlogDto } from '@/app/blog';
@@ -48,88 +65,81 @@ import { plainToInstance } from 'class-transformer';
 export class ShopController {
   constructor(private readonly shopService: ShopService) {}
 
-  @Get('me')
+  @Post('me')
   @UseGuards(AuthGuard)
-  @Roles(UserRole.SHOP)
+  @Roles(UserRole.CUSTOMER)
   @ApiOperation({
-    summary: 'Lấy danh sách shop của chủ shop đang đăng nhập',
-    description: `
-**Hướng dẫn sử dụng:**
-- Trả về danh sách shop thuộc về tài khoản đang đăng nhập.
-- Hỗ trợ phân trang, sắp xếp, lọc.
-- Page bắt đầu từ 0
-- Sort theo format: [tên_field]:[asc/desc]
-- Các trường đang có thể sort: name
-- Filter theo format: [tên_field]:[eq|neq|gt|gte|lt|lte|like|nlike|in|nin]:[keyword]; hoặc [tên_field]:[isnull|isnotnull]
-- Các trường đang có thể filter: name, status
-`,
-  })
-  @ApiQuery({
-    name: 'page',
-    required: false,
-    type: Number,
-    default: 0,
-    description: 'Trang hiện tại (bắt đầu từ 0)',
-  })
-  @ApiQuery({
-    name: 'size',
-    required: false,
-    type: Number,
-    default: 10,
-    description: 'Số lượng mỗi trang',
-  })
-  @ApiQuery({
-    name: 'sort',
-    required: false,
-    type: String,
-    description: 'Sắp xếp theo trường, ví dụ: :asc',
-  })
-  @ApiQuery({
-    name: 'filter',
-    required: false,
-    type: String,
-    description: 'Lọc theo trường, ví dụ: :like:',
+    summary: 'Đăng ký mở shop',
+    description: `**Hướng dẫn sử dụng:**
+    - Truyền thông tin shop trong body.
+    - Chỉ dành cho người dùng có vai trò CUSTOMER.
+    - Nếu đăng ký thành công, sẽ trả về thông báo và mã trạng thái CREATED (201).
+    - Nếu có lỗi, sẽ trả về mã trạng thái BAD_REQUEST (400) hoặc CONFLICT (409).
+    - Sau khi đăng ký, shop sẽ được xét duyệt bởi admin.`,
   })
   @ApiOkResponse({
+    description: 'Đăng ký shop mới',
     schema: {
       allOf: [
-        { $ref: getSchemaPath(ListResponse) },
+        { $ref: getSchemaPath(ItemResponse) },
         {
           properties: {
-            item: { $ref: getSchemaPath(Shop) },
+            item: { type: 'null' },
           },
         },
       ],
     },
   })
-  async getShopsForOwner(
+  async registerShop(
     @UserId() userId: string,
-    @PaginationParams() { page, size, limit, offset }: Pagination,
-    @SortingParams(['name']) sort?: Sorting,
-    @FilteringParams(['name', 'status']) filter?: Filtering,
-  ): Promise<ListResponse<Shop>> {
-    const [shops, totalItems] = await this.shopService.getShopsForOwner(
-      userId,
-      limit,
-      offset,
-      sort,
-      filter,
-    );
-    const totalPages = Math.ceil(totalItems / size);
+    @Body() body: RegisterShopDto,
+  ): Promise<ItemResponse<null>> {
+    await this.shopService.registerShop(userId, body);
     return {
-      message: 'Đây là danh sách các shop của bạn',
-      statusCode: HttpStatus.OK,
-      pageIndex: page,
-      pageSize: size,
-      totalItems,
-      totalPages,
-      hasNextPage: page + 1 < totalPages,
-      hasPrevPage: 0 < page,
-      items: shops,
+      message: 'Đơn đăng ký đã được gửi đi thành công, vui lòng chờ xét duyệt',
+      statusCode: HttpStatus.CREATED,
+      item: null,
     };
   }
 
-  @Get(':id/me')
+  @Put('me')
+  @UseGuards(AuthGuard)
+  @Roles(UserRole.CUSTOMER)
+  @ApiOperation({
+    summary: 'Gửi lại đơn đăng ký shop',
+    description: `**Hướng dẫn sử dụng:**
+    - Truyền thông tin shop trong body.
+    - Chỉ dành cho người dùng có vai trò CUSTOMER.
+    - Nếu gửi lại thành công, sẽ trả về thông báo và mã trạng thái ACCEPTED (202).
+    - Nếu có lỗi, sẽ trả về mã trạng thái BAD_REQUEST (400) hoặc CONFLICT (409).
+    - Sau khi gửi lại, shop sẽ được xét duyệt bởi admin.`,
+  })
+  @ApiOkResponse({
+    description: 'Đăng ký shop mới',
+    schema: {
+      allOf: [
+        { $ref: getSchemaPath(ItemResponse) },
+        {
+          properties: {
+            item: { type: 'null' },
+          },
+        },
+      ],
+    },
+  })
+  async resubmitShop(
+    @UserId() userId: string,
+    @Body() body: ResubmitShopDto,
+  ): Promise<ItemResponse<null>> {
+    await this.shopService.resubmitShop(userId, body);
+    return {
+      message: 'Đơn đăng ký đã được gửi đi thành công, vui lòng chờ xét duyệt',
+      statusCode: HttpStatus.ACCEPTED,
+      item: null,
+    };
+  }
+
+  @Get('me')
   @UseGuards(AuthGuard)
   @Roles(UserRole.SHOP)
   @ApiOperation({
@@ -153,15 +163,165 @@ export class ShopController {
       ],
     },
   })
-  async getShopForOwner(
-    @UserId() userId: string,
-    @Param('id') id: string,
-  ): Promise<ItemResponse<Shop>> {
-    const shop = await this.shopService.getShopForOwner(userId, id);
+  async getShopForOwner(@UserId() userId: string): Promise<ItemResponse<Shop>> {
+    const shop = await this.shopService.getShopForOwner(userId);
     return {
       message: 'Đây là thông tin chi tiết của shop',
       statusCode: HttpStatus.OK,
       item: shop,
+    };
+  }
+
+  @Get('staff')
+  @UseGuards(AuthGuard)
+  @Roles(UserRole.STAFF, UserRole.ADMIN, UserRole.SUPER_ADMIN)
+  @ApiOperation({
+    summary: 'Lấy danh sách shop cho nhân viên',
+    description: `**Hướng dẫn sử dụng:**
+    - Trả về danh sách các shop.
+    - Hỗ trợ phân trang, sắp xếp, lọc:
+      - \`page\`: Số trang (bắt đầu từ 0)
+      - \`size\`: Số lượng mỗi trang
+      - \`sort\`: Ví dụ: name:asc
+      - \`filter\`: Ví dụ: name:like:veila
+    - Chỉ trả về các shop có trạng thái ACTIVE.
+    - Page bắt đầu từ 0
+    - Sort theo format: [tên_field]:[asc/desc]
+    - Các trường đang có thể sort: name
+    - Filter theo format: [tên_field]:[eq|neq|gt|gte|lt|lte|like|nlike|in|nin]:[keyword]; hoặc [tên_field]:[isnull|isnotnull]
+    - Các trường đang có thể filter: name, status, isVerified
+`,
+  })
+  @ApiQuery({
+    name: 'page',
+    required: false,
+    type: Number,
+    default: 0,
+    description: 'Trang hiện tại (bắt đầu từ 0)',
+  })
+  @ApiQuery({
+    name: 'size',
+    required: false,
+    type: Number,
+    default: 10,
+    description: 'Số lượng mỗi trang',
+  })
+  @ApiQuery({
+    name: 'sort',
+    required: false,
+    type: String,
+    description: 'Sắp xếp theo trường, ví dụ: name:asc',
+  })
+  @ApiQuery({
+    name: 'filter',
+    required: false,
+    type: String,
+    description: 'Lọc theo trường, ví dụ: name:like:veila',
+  })
+  @ApiOkResponse({
+    schema: {
+      allOf: [
+        { $ref: getSchemaPath(ListResponse) },
+        {
+          properties: {
+            item: { $ref: getSchemaPath(ListShopForStaffDto) },
+          },
+        },
+      ],
+    },
+  })
+  async getShopsForStaff(
+    @PaginationParams() { page, size, limit, offset }: Pagination,
+    @SortingParams(['name']) sort?: Sorting,
+    @FilteringParams(['name', 'status', 'isVerified']) filter?: Filtering,
+  ): Promise<ListResponse<ListShopForStaffDto>> {
+    const [shops, totalItems] = await this.shopService.getShopsForStaff(
+      limit,
+      offset,
+      sort,
+      filter,
+    );
+    const totalPages = Math.ceil(totalItems / size);
+    const dtos = plainToInstance(ListShopForStaffDto, shops, { excludeExtraneousValues: true });
+    return {
+      message: 'Đây là danh sách các shop',
+      statusCode: HttpStatus.OK,
+      pageIndex: page,
+      pageSize: size,
+      totalItems,
+      totalPages,
+      hasNextPage: page + 1 < totalPages,
+      hasPrevPage: 0 < page,
+      items: dtos,
+    };
+  }
+
+  @Get(':id/staff')
+  @UseGuards(AuthGuard)
+  @Roles(UserRole.STAFF, UserRole.ADMIN, UserRole.SUPER_ADMIN)
+  @ApiOperation({
+    summary: 'Lấy thông tin chi tiết shop cho nhân viên',
+    description: `**Hướng dẫn sử dụng:**
+    - Truyền \`id\` của shop trên URL.
+    - Trả về thông tin chi tiết của shop.
+    - Nếu không tìm thấy sẽ trả về lỗi.
+    - Chỉ dành cho nhân viên, admin và super admin.
+    - Nếu shop không tồn tại, sẽ trả về mã trạng thái NOT_FOUND (404).`,
+  })
+  @ApiOkResponse({
+    schema: {
+      allOf: [
+        { $ref: getSchemaPath(ItemResponse) },
+        {
+          properties: {
+            item: { $ref: getSchemaPath(Shop) },
+          },
+        },
+      ],
+    },
+  })
+  async getShopForStaff(@Param('id') id: string): Promise<ItemResponse<Shop>> {
+    const shop = await this.shopService.getShopForStaff(id);
+    return {
+      message: 'Đây là thông tin chi tiết của shop',
+      statusCode: HttpStatus.OK,
+      item: shop,
+    };
+  }
+
+  @Patch(':id/staff')
+  @UseGuards(AuthGuard)
+  @Roles(UserRole.STAFF, UserRole.ADMIN, UserRole.SUPER_ADMIN)
+  @ApiOperation({
+    summary: 'Xử lý yêu cầu đăng ký shop của khách hàng',
+    description: `**Hướng dẫn sử dụng:**
+    - Truyền \`id\` của shop trên URL.
+    - Truyền thông tin xử lý trong body.
+    - Nếu duyệt thành công, sẽ trả về thông báo và mã trạng thái OK (200).
+    - Nếu có lỗi, sẽ trả về mã trạng thái BAD_REQUEST (400) hoặc NOT_FOUND (404).
+    - Nếu từ chối, cần cung cấp lý do từ chối trong body.`,
+  })
+  @ApiOkResponse({
+    schema: {
+      allOf: [
+        { $ref: getSchemaPath(ItemResponse) },
+        {
+          properties: {
+            item: { type: 'null' },
+          },
+        },
+      ],
+    },
+  })
+  async reviewShopRegister(
+    @Param('id') id: string,
+    @Body() body: ReviewShopDto,
+  ): Promise<ItemResponse<null>> {
+    await this.shopService.reviewShopRegister(id, body);
+    return {
+      message: 'Đã xử lý yêu cầu đăng ký shop',
+      statusCode: HttpStatus.OK,
+      item: null,
     };
   }
 

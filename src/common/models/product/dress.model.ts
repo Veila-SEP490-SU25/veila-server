@@ -20,7 +20,7 @@ export class Dress extends Base {
   })
   @ApiProperty({
     description: 'Người dùng sở hữu sản phẩm',
-    type: User,
+    type: () => User,
   })
   user: User;
 
@@ -34,7 +34,7 @@ export class Dress extends Base {
   })
   @ApiProperty({
     description: 'Danh mục của sản phẩm',
-    type: Category,
+    type: () => Category,
     nullable: true,
   })
   category: Category | null;
@@ -45,6 +45,8 @@ export class Dress extends Base {
     length: 100,
     nullable: false,
     comment: 'Tên sản phẩm',
+    charset: 'utf8mb4',
+    collation: 'utf8mb4_unicode_ci',
   })
   @ApiProperty({
     type: 'string',
@@ -60,6 +62,8 @@ export class Dress extends Base {
     type: 'text',
     nullable: true,
     comment: 'Mô tả sản phẩm',
+    charset: 'utf8mb4',
+    collation: 'utf8mb4_unicode_ci',
   })
   @ApiProperty({
     type: 'string',
@@ -201,7 +205,7 @@ export class Dress extends Base {
   @OneToMany(() => Feedback, (feedback) => feedback.dress)
   @ApiProperty({
     description: 'Danh sách feedback của váy cưới',
-    type: [Feedback],
+    type: () => [Feedback],
   })
   feedbacks: Feedback[];
 }

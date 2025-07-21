@@ -26,6 +26,11 @@ export class CUCategoryDto {
   @MaxLength(255)
   description: string | null;
 
+  @ApiProperty({ example: 'https://veila.images/1,https://veila.images/2' })
+  @IsOptional()
+  @IsString()
+  images: string | null;
+
   @ApiProperty({
     enum: CategoryType,
     description: 'Loại danh mục sản phẩm',

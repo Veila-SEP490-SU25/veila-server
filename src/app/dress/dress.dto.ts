@@ -1,7 +1,7 @@
 import { DressStatus } from '@/common/models';
 import { ApiProperty } from '@nestjs/swagger';
 import { ProductFeedbacksDto } from '@/app/feedback';
-import { Expose } from 'class-transformer';
+import { Expose, Type } from 'class-transformer';
 import { IsBoolean, IsEnum, IsNumber, IsOptional, IsString } from 'class-validator';
 
 export class CUDressDto {
@@ -109,12 +109,15 @@ export class ListDressDto {
 }
 
 export class ItemDressDto {
+  @Expose()
   @ApiProperty({ description: 'ID váy cưới', example: 'dress-uuid-123' })
   id: string;
 
+  @Expose()
   @ApiProperty({ description: 'Tên váy cưới', example: 'Đầm cưới công chúa' })
   name: string;
 
+  @Expose()
   @ApiProperty({
     type: 'string',
     description: 'Mô tả sản phẩm (tối đa 500 ký tự)',
@@ -124,6 +127,7 @@ export class ItemDressDto {
   })
   description: string | null;
 
+  @Expose()
   @ApiProperty({
     description: 'Ảnh đại diện váy cưới (URL)',
     example: 'https://storage.veila.com/dresses/img123.jpg',
@@ -131,9 +135,11 @@ export class ItemDressDto {
   })
   images: string | null;
 
+  @Expose()
   @ApiProperty({ description: 'Điểm đánh giá trung bình', example: 4.8 })
   ratingAverage: number;
 
+  @Expose()
   @ApiProperty({
     type: 'integer',
     description: 'Số lượng đánh giá mà sản phẩm đã nhận được',
@@ -143,18 +149,23 @@ export class ItemDressDto {
   })
   ratingCount: number;
 
+  @Expose()
   @ApiProperty({ description: 'Giá bán (VNĐ)', example: 5000000 })
   sellPrice: number;
 
+  @Expose()
   @ApiProperty({ description: 'Giá thuê (VNĐ)', example: 1500000 })
   rentalPrice: number;
 
+  @Expose()
   @ApiProperty({ description: 'Có thể bán không', example: true })
   isSellable: boolean;
 
+  @Expose()
   @ApiProperty({ description: 'Có thể cho thuê không', example: true })
   isRentable: boolean;
 
+  @Expose()
   @ApiProperty({
     enum: DressStatus,
     description: 'Trạng thái váy cưới',
@@ -162,6 +173,8 @@ export class ItemDressDto {
   })
   status: DressStatus;
 
+  @Expose()
+  @Type(() => ProductFeedbacksDto)
   @ApiProperty({
     description: 'Danh sách feedback của váy cưới',
     type: [ProductFeedbacksDto],

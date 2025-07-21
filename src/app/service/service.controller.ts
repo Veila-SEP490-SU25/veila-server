@@ -423,17 +423,7 @@ export class ServiceController {
   })
   async getServiceForCustomer(@Param('id') id: string): Promise<ItemResponse<ItemServiceDto>> {
     const service = await this.serviceService.getServiceForCustomer(id);
-    const feedbacks = (service.feedbacks || []).map((fb) => ({
-      username: fb.customer.username,
-      content: fb.content,
-      rating: fb.rating,
-      images: fb.images,
-    }));
-    const dto = plainToInstance(
-      ItemServiceDto,
-      { ...service, feedbacks },
-      { excludeExtraneousValues: true },
-    );
+    const dto = plainToInstance(ItemServiceDto, service, { excludeExtraneousValues: true });
     return {
       message: 'Đây là thông tin chi tiết của dịch vụ',
       statusCode: HttpStatus.OK,

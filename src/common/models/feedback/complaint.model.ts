@@ -3,12 +3,10 @@ import { Base, Order, User } from '@/common/models';
 import { ApiProperty } from '@nestjs/swagger';
 
 export enum ComplaintStatus {
-  OPEN = 'OPEN',
+  DRAFT = 'DRAFT',
   IN_PROGRESS = 'IN_PROGRESS',
-  RESOLVED = 'RESOLVED',
-  CLOSED = 'CLOSED',
+  APPROVED = 'APPROVED',
   REJECTED = 'REJECTED',
-  CANCELLED = 'CANCELLED',
 }
 
 @Entity('complaints')
@@ -23,7 +21,7 @@ export class Complaint extends Base {
   })
   @ApiProperty({
     description: 'Người gửi khiếu nại',
-    type: User,
+    type: () => User,
   })
   sender: User;
 
@@ -37,7 +35,7 @@ export class Complaint extends Base {
   })
   @ApiProperty({
     description: 'Đơn hàng liên quan đến khiếu nại',
-    type: Order,
+    type: () => Order,
   })
   order: Order;
 
@@ -47,6 +45,8 @@ export class Complaint extends Base {
     length: 200,
     nullable: false,
     comment: 'Tiêu đề khiếu nại',
+    charset: 'utf8mb4',
+    collation: 'utf8mb4_unicode_ci',
   })
   @ApiProperty({
     type: 'string',
@@ -62,6 +62,8 @@ export class Complaint extends Base {
     type: 'text',
     nullable: false,
     comment: 'Mô tả chi tiết khiếu nại',
+    charset: 'utf8mb4',
+    collation: 'utf8mb4_unicode_ci',
   })
   @ApiProperty({
     type: 'string',
@@ -75,15 +77,15 @@ export class Complaint extends Base {
     name: 'status',
     type: 'enum',
     enum: ComplaintStatus,
-    default: ComplaintStatus.OPEN,
+    default: ComplaintStatus.DRAFT,
     nullable: false,
     comment: 'Trạng thái khiếu nại',
   })
   @ApiProperty({
     enum: ComplaintStatus,
     description: 'Trạng thái khiếu nại',
-    example: ComplaintStatus.OPEN,
-    default: ComplaintStatus.OPEN,
+    example: ComplaintStatus.DRAFT,
+    default: ComplaintStatus.DRAFT,
     required: true,
   })
   status: ComplaintStatus;

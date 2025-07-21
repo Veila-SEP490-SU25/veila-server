@@ -1,5 +1,5 @@
-import { Column, Entity, JoinColumn, ManyToOne } from 'typeorm';
-import { Base, Category, User } from '@/common/models';
+import { Column, Entity, JoinColumn, ManyToOne, OneToMany } from 'typeorm';
+import { Base, Category, Feedback, User } from '@/common/models';
 import { ApiProperty } from '@nestjs/swagger';
 
 export enum AccessoryStatus {
@@ -20,7 +20,7 @@ export class Accessory extends Base {
   })
   @ApiProperty({
     description: 'Người dùng sở hữu phụ kiện',
-    type: User,
+    type: () => User,
     nullable: false,
   })
   user: User;
@@ -35,7 +35,7 @@ export class Accessory extends Base {
   })
   @ApiProperty({
     description: 'Danh mục phụ kiện',
-    type: Category,
+    type: () => Category,
     nullable: true,
   })
   category: Category | null;
@@ -46,6 +46,8 @@ export class Accessory extends Base {
     length: 100,
     nullable: false,
     comment: 'Tên của phụ kiện',
+    charset: 'utf8mb4',
+    collation: 'utf8mb4_unicode_ci',
   })
   @ApiProperty({
     type: 'string',
@@ -61,6 +63,8 @@ export class Accessory extends Base {
     type: 'text',
     nullable: true,
     comment: 'Mô tả chi tiết về phụ kiện',
+    charset: 'utf8mb4',
+    collation: 'utf8mb4_unicode_ci',
   })
   @ApiProperty({
     type: 'string',
@@ -145,6 +149,47 @@ export class Accessory extends Base {
   isRentable: boolean;
 
   @Column({
+    name: 'rating_average',
+    type: 'decimal',
+    precision: 3,
+    scale: 2,
+    unsigned: true,
+    nullable: false,
+    default: 0.0,
+    comment: 'Điểm đánh giá trung bình của phụ kiện (từ 0.00 đến 5.00)',
+  })
+  @ApiProperty({
+    type: 'number',
+    format: 'decimal',
+    description:
+      'Điểm đánh giá trung bình của phụ kiện (giá trị từ 0.00 đến 5.00, làm tròn đến 2 chữ số thập phân)',
+    example: 4.25,
+    minimum: 0,
+    maximum: 5,
+    default: 0.0,
+    required: true,
+  })
+  ratingAverage: number;
+
+  @Column({
+    name: 'rating_count',
+    type: 'int',
+    unsigned: true,
+    nullable: false,
+    default: 0,
+    comment: 'Số lượng đánh giá mà phụ kiện đã nhận được',
+  })
+  @ApiProperty({
+    type: 'integer',
+    description: 'Tổng số lượt đánh giá của phụ kiện',
+    example: 120,
+    minimum: 0,
+    default: 0,
+    required: true,
+  })
+  ratingCount: number;
+
+  @Column({
     name: 'status',
     type: 'enum',
     enum: AccessoryStatus,
@@ -158,4 +203,11 @@ export class Accessory extends Base {
     nullable: false,
   })
   status: AccessoryStatus;
+
+  @OneToMany(() => Feedback, (feedback) => feedback.accessory)
+  @ApiProperty({
+    description: 'Danh sách Feedback của phụ kiện',
+    type: () => [Feedback],
+  })
+  feedbacks: Feedback[];
 }

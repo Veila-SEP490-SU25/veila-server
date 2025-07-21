@@ -1,5 +1,5 @@
-import { Column, Entity, JoinColumn, ManyToOne } from 'typeorm';
-import { Base, Order, Wallet } from '@/common/models';
+import { Column, Entity, JoinColumn, ManyToOne, OneToOne } from 'typeorm';
+import { Base, Membership, Order, Wallet } from '@/common/models';
 import { ApiProperty } from '@nestjs/swagger';
 
 export enum TransactionType {
@@ -35,7 +35,7 @@ export class Transaction extends Base {
   })
   @ApiProperty({
     description: 'Ví thực hiện giao dịch',
-    type: Wallet,
+    type: () => Wallet,
   })
   wallet: Wallet;
 
@@ -49,10 +49,25 @@ export class Transaction extends Base {
   })
   @ApiProperty({
     description: 'Đơn hàng liên quan (nếu có)',
-    type: Order,
+    type: () => Order,
     nullable: true,
   })
   order: Order | null;
+
+  @OneToOne(() => Membership, (membership) => membership.transaction, {
+    nullable: true,
+    onDelete: 'SET NULL',
+  })
+  @JoinColumn({
+    name: 'membership_id',
+    foreignKeyConstraintName: 'fk_membership_transaction',
+  })
+  @ApiProperty({
+    description: 'Gói thành viên liên quan (nếu có)',
+    type: () => Membership,
+    nullable: true,
+  })
+  membership: Membership | null;
 
   @Column({
     name: 'from',
@@ -60,6 +75,8 @@ export class Transaction extends Base {
     length: 64,
     nullable: false,
     comment: 'Nguồn chuyển tiền (có thể là user, ví, hệ thống, v.v.)',
+    charset: 'utf8mb4',
+    collation: 'utf8mb4_unicode_ci',
   })
   @ApiProperty({
     type: 'string',
@@ -76,6 +93,8 @@ export class Transaction extends Base {
     length: 64,
     nullable: false,
     comment: 'Nơi nhận tiền (có thể là user, ví, hệ thống, v.v.)',
+    charset: 'utf8mb4',
+    collation: 'utf8mb4_unicode_ci',
   })
   @ApiProperty({
     type: 'string',
@@ -173,6 +192,8 @@ export class Transaction extends Base {
     length: 255,
     nullable: true,
     comment: 'Ghi chú giao dịch (nếu có)',
+    charset: 'utf8mb4',
+    collation: 'utf8mb4_unicode_ci',
   })
   @ApiProperty({
     type: 'string',

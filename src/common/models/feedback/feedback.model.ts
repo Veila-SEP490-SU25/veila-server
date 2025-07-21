@@ -1,5 +1,5 @@
 import { Column, Entity, JoinColumn, ManyToOne } from 'typeorm';
-import { Base, Dress, Order, Service, User } from '@/common/models';
+import { Accessory, Base, Dress, Order, Service, User } from '@/common/models';
 import { ApiProperty } from '@nestjs/swagger';
 
 @Entity('feedbacks')
@@ -14,7 +14,7 @@ export class Feedback extends Base {
   })
   @ApiProperty({
     description: 'Khách hàng gửi đánh giá',
-    type: User,
+    type: () => User,
   })
   customer: User;
 
@@ -28,7 +28,7 @@ export class Feedback extends Base {
   })
   @ApiProperty({
     description: 'Đơn hàng liên quan đến đánh giá',
-    type: Order,
+    type: () => Order,
   })
   order: Order;
 
@@ -41,7 +41,7 @@ export class Feedback extends Base {
   })
   @ApiProperty({
     description: 'Sản phẩm váy được đánh giá (nếu có)',
-    type: Dress,
+    type: () => Dress,
     nullable: true,
   })
   dress: Dress | null;
@@ -55,16 +55,32 @@ export class Feedback extends Base {
   })
   @ApiProperty({
     description: 'Dịch vụ được đánh giá (nếu có)',
-    type: Service,
+    type: () => Service,
     nullable: true,
   })
   service: Service | null;
+
+  @ManyToOne(() => Accessory, (accessory) => accessory.feedbacks, {
+    nullable: true,
+  })
+  @JoinColumn({
+    name: 'accessory_id',
+    foreignKeyConstraintName: 'fk_accessory_feedback',
+  })
+  @ApiProperty({
+    description: 'Phụ kiện được đánh giá (nếu có)',
+    type: () => Accessory,
+    nullable: true,
+  })
+  accessory: Accessory | null;
 
   @Column({
     name: 'content',
     type: 'text',
     nullable: false,
     comment: 'Nội dung đánh giá',
+    charset: 'utf8mb4',
+    collation: 'utf8mb4_unicode_ci',
   })
   @ApiProperty({
     type: 'string',

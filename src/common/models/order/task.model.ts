@@ -21,7 +21,7 @@ export class Task extends Base {
   })
   @ApiProperty({
     description: 'Mốc công việc (milestone) mà task này thuộc về',
-    type: Milestone,
+    type: () => Milestone,
   })
   milestone: Milestone;
 
@@ -31,6 +31,8 @@ export class Task extends Base {
     length: 200,
     nullable: false,
     comment: 'Tiêu đề ngắn gọn của công việc',
+    charset: 'utf8mb4',
+    collation: 'utf8mb4_unicode_ci',
   })
   @ApiProperty({
     type: 'string',
@@ -46,6 +48,8 @@ export class Task extends Base {
     type: 'text',
     nullable: true,
     comment: 'Mô tả chi tiết công việc (có thể để trống)',
+    charset: 'utf8mb4',
+    collation: 'utf8mb4_unicode_ci',
   })
   @ApiProperty({
     type: 'string',
@@ -55,6 +59,21 @@ export class Task extends Base {
     example: 'Chụp 5 góc khác nhau của sản phẩm, đảm bảo ánh sáng tốt.',
   })
   description: string | null;
+
+  @Column({
+    name: 'index',
+    type: 'integer',
+    nullable: false,
+    comment: 'Số thứ tự các task',
+  })
+  @ApiProperty({
+    type: 'number',
+    format: 'number',
+    nullable: false,
+    description: 'Số thứ tự các task',
+    example: '0',
+  })
+  index: number;
 
   @Column({
     name: 'status',

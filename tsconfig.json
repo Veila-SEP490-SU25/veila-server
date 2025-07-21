@@ -22,7 +22,7 @@
     "noImplicitAny": false,
     "strictBindCallApply": false,
     "noFallthroughCasesInSwitch": false,
-    "esModuleInterop": false,
+    "esModuleInterop": true,
     "paths": {
       "@/*": ["./src/*"]
     }

@@ -14,12 +14,20 @@ import { ServiceModule } from '@/app/service';
 import { ShopModule } from '@/app/shop';
 import { TokenModule } from '@/app/token';
 import { UserModule } from '@/app/user';
+import { PayosModule } from '@/app/payos/payos.module';
 import { RolesGuard } from '@/common/guards';
 import { LoggingMiddleware } from '@/common/middlewares';
 import { MiddlewareConsumer, Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { APP_GUARD } from '@nestjs/core';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { ContractModule } from '@/app/contract';
+import { SubscriptionModule } from '@/app/subscription';
+import { WalletModule } from '@/app/wallet';
+import { MembershipModule } from '@/app/membership';
+import { OrderModule } from '@/app/order/order.module';
+import { OrderAccessoriesDetailsModule } from './order-accessories-details/order-accessories-details.module';
+import { OrderDressDetailsModule } from './order-dress-details';
 
 @Module({
   imports: [
@@ -58,6 +66,14 @@ import { TypeOrmModule } from '@nestjs/typeorm';
     BlogModule,
     AccessoryModule,
     FeedbackModule,
+    PayosModule,
+    ContractModule,
+    SubscriptionModule,
+    WalletModule,
+    MembershipModule,
+    OrderModule,
+    OrderAccessoriesDetailsModule,
+    OrderDressDetailsModule,
   ],
   controllers: [AppController],
   providers: [

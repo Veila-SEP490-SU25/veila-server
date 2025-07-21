@@ -50,20 +50,24 @@ export class AuthService {
     };
   }
 
-  async register(body: RegisterDto): Promise<string> {
+  async register({ contractId, isAccepted, ...body }: RegisterDto): Promise<string> {
+    if (!isAccepted)
+      throw new ForbiddenException('Bạn cần đồng ý với điều khoản để đăng ký tài khoản.');
     const user = await this.userService.getByEmail(body.email);
     if (user) throw new ForbiddenException('Tài khoản đã tồn tại trong hệ thống.');
     const activationCode = this.passwordService.generateOTP(6);
     const hashedActivationCode = await this.passwordService.hashPassword(activationCode);
+    const hashedPassword = await this.passwordService.hashPassword(body.password);
     const newUser = await this.userService.createUser({
       ...body,
       username: new Date().getTime().toString(),
       isVerified: false,
-      password: hashedActivationCode,
+      password: hashedPassword,
       id: uuidv4(),
       role: UserRole.CUSTOMER,
       isIdentified: false,
       status: UserStatus.ACTIVE,
+      contract: { id: contractId },
     } as User);
     await Promise.all([
       this.redisService.set(`user:otp:${newUser.id}`, hashedActivationCode, 5 * 60 * 1000),

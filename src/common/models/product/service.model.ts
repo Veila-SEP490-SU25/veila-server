@@ -3,10 +3,9 @@ import { Base, Category, Feedback, User } from '@/common/models';
 import { ApiProperty } from '@nestjs/swagger';
 
 export enum ServiceStatus {
-  ACTIVE = 'ACTIVE',
-  INACTIVE = 'INACTIVE',
-  PENDING = 'PENDING',
-  SUSPENDED = 'SUSPENDED',
+  AVAILABLE = 'AVAILABLE',
+  UNAVAILABLE = 'UNAVAILABLE',
+  DRAFT = 'DRAFT',
 }
 
 @Entity('services')
@@ -21,7 +20,7 @@ export class Service extends Base {
   })
   @ApiProperty({
     description: 'Người dùng sở hữu dịch vụ',
-    type: User,
+    type: () => User,
     nullable: false,
   })
   user: User;
@@ -36,7 +35,7 @@ export class Service extends Base {
   })
   @ApiProperty({
     description: 'Danh mục của dịch vụ',
-    type: Category,
+    type: () => Category,
     nullable: true,
   })
   category: Category | null;
@@ -47,6 +46,8 @@ export class Service extends Base {
     length: 100,
     nullable: false,
     comment: 'Tên của dịch vụ',
+    charset: 'utf8mb4',
+    collation: 'utf8mb4_unicode_ci',
   })
   @ApiProperty({
     type: 'string',
@@ -62,6 +63,8 @@ export class Service extends Base {
     type: 'text',
     nullable: true,
     comment: 'Mô tả dịch vụ',
+    charset: 'utf8mb4',
+    collation: 'utf8mb4_unicode_ci',
   })
   @ApiProperty({
     type: 'string',
@@ -117,21 +120,21 @@ export class Service extends Base {
     name: 'status',
     type: 'enum',
     enum: ServiceStatus,
-    default: ServiceStatus.INACTIVE,
+    default: ServiceStatus.UNAVAILABLE,
     comment: 'Trạng thái dịch vụ',
   })
   @ApiProperty({
     enumName: 'ServiceStatus',
     enum: ServiceStatus,
     description: 'Trạng thái dịch vụ',
-    example: ServiceStatus.ACTIVE,
+    example: ServiceStatus.AVAILABLE,
   })
   status: ServiceStatus;
 
   @OneToMany(() => Feedback, (feedback) => feedback.service)
   @ApiProperty({
     description: 'Danh sách các Feedback của dịch vụ',
-    type: [Feedback],
+    type: () => [Feedback],
   })
   feedbacks: Feedback[];
 }

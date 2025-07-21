@@ -21,7 +21,7 @@ export class Milestone extends Base {
   })
   @ApiProperty({
     description: 'Đơn hàng mà mốc công việc này thuộc về',
-    type: Order,
+    type: () => Order,
   })
   order: Order;
 
@@ -31,6 +31,8 @@ export class Milestone extends Base {
     length: 200,
     nullable: false,
     comment: 'Tiêu đề ngắn gọn của mốc công việc',
+    charset: 'utf8mb4',
+    collation: 'utf8mb4_unicode_ci',
   })
   @ApiProperty({
     type: 'string',
@@ -46,6 +48,8 @@ export class Milestone extends Base {
     type: 'text',
     nullable: true,
     comment: 'Mô tả chi tiết mốc công việc (có thể để trống)',
+    charset: 'utf8mb4',
+    collation: 'utf8mb4_unicode_ci',
   })
   @ApiProperty({
     type: 'string',
@@ -55,6 +59,21 @@ export class Milestone extends Base {
     example: 'Thiết kế mẫu váy dựa trên yêu cầu của khách hàng.',
   })
   description: string | null;
+
+  @Column({
+    name: 'index',
+    type: 'integer',
+    nullable: false,
+    comment: 'Số thứ tự các milestone',
+  })
+  @ApiProperty({
+    type: 'number',
+    format: 'number',
+    nullable: false,
+    description: 'Số thứ tự các milestone',
+    example: '0',
+  })
+  index: number;
 
   @Column({
     name: 'status',
@@ -90,7 +109,7 @@ export class Milestone extends Base {
 
   @OneToMany(() => Task, (task) => task.milestone)
   @ApiProperty({
-    type: [Task],
+    type: () => [Task],
     description: 'Danh sách các công việc (task) thuộc mốc công việc này',
   })
   tasks: Task[];

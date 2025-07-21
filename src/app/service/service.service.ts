@@ -21,7 +21,7 @@ export class ServiceService {
     const dynamicFilter = getWhere(filter);
     const where = {
       ...dynamicFilter,
-      status: ServiceStatus.ACTIVE,
+      status: ServiceStatus.AVAILABLE,
     };
     const order = getOrder(sort);
     return await this.serviceRepository.findAndCount({
@@ -35,7 +35,7 @@ export class ServiceService {
   async getServiceForCustomer(id: string): Promise<Service> {
     const where = {
       id,
-      status: ServiceStatus.ACTIVE,
+      status: ServiceStatus.AVAILABLE,
     };
     const existingService = await this.serviceRepository.findOne({
       where,
@@ -68,6 +68,7 @@ export class ServiceService {
       withDeleted: true,
       relations: {
         category: true,
+        feedbacks: true,
       },
     });
   }

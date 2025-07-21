@@ -3,8 +3,9 @@ import { Base, Category, User } from '@/common/models';
 import { ApiProperty } from '@nestjs/swagger';
 
 export enum BlogStatus {
-  DRAFT = 'draft',
-  PUBLISHED = 'published',
+  DRAFT = 'DRAFT',
+  PUBLISHED = 'PUBLISHED',
+  UNPUBLISHED = 'UNPUBLISHED',
 }
 
 @Entity('blogs')
@@ -19,7 +20,7 @@ export class Blog extends Base {
   })
   @ApiProperty({
     description: 'Người dùng sở hữu blog',
-    type: User,
+    type: () => User,
   })
   user: User;
 
@@ -33,7 +34,7 @@ export class Blog extends Base {
   })
   @ApiProperty({
     description: 'Danh mục blog',
-    type: Category,
+    type: () => Category,
     nullable: true,
   })
   category: Category | null;
@@ -44,6 +45,8 @@ export class Blog extends Base {
     length: 100,
     nullable: false,
     comment: 'Tiêu đề của blog',
+    charset: 'utf8mb4',
+    collation: 'utf8mb4_unicode_ci',
   })
   @ApiProperty({
     type: 'string',
@@ -59,6 +62,8 @@ export class Blog extends Base {
     type: 'text',
     nullable: false,
     comment: 'Nội dung của blog',
+    charset: 'utf8mb4',
+    collation: 'utf8mb4_unicode_ci',
   })
   @ApiProperty({
     type: 'string',

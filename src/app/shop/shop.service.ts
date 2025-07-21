@@ -1,3 +1,5 @@
+import { MembershipService } from '@/app/membership';
+import { RegisterShopDto, ResubmitShopDto, ReviewShopDto } from '@/app/shop/shop.dto';
 import { Filtering, getOrder, getWhere, Sorting } from '@/common/decorators';
 import {
   Accessory,
@@ -7,12 +9,17 @@ import {
   Category,
   Dress,
   DressStatus,
+  License,
+  LicenseStatus,
   Service,
   ServiceStatus,
   Shop,
   ShopStatus,
+  Subscription,
+  User,
+  UserRole,
 } from '@/common/models';
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { In, Repository } from 'typeorm';
 
@@ -25,6 +32,10 @@ export class ShopService {
     @InjectRepository(Category) private readonly categoryRepository: Repository<Category>,
     @InjectRepository(Dress) private readonly dressRepository: Repository<Dress>,
     @InjectRepository(Service) private readonly serviceRepository: Repository<Service>,
+    @InjectRepository(License) private readonly licenseRepository: Repository<License>,
+    @InjectRepository(User) private readonly userRepository: Repository<User>,
+    @InjectRepository(Subscription) private readonly subscriptionRepository: Repository<Subscription>,
+    private readonly membershipService: MembershipService,
   ) {}
 
   async getShopsForCustomer(
@@ -118,7 +129,7 @@ export class ShopService {
     const where = {
       ...dynamicFilter,
       user: { id: existingShop.user.id },
-      status: ServiceStatus.ACTIVE,
+      status: ServiceStatus.AVAILABLE,
     };
     const order = getOrder(sort);
     return await this.serviceRepository.findAndCount({
@@ -175,8 +186,73 @@ export class ShopService {
     });
   }
 
-  async getShopsForOwner(
+  async getShopForOwner(userId: string): Promise<Shop> {
+    const where = { user: { id: userId } };
+    const existingShop = await this.shopRepository.findOne({
+      where,
+      withDeleted: true,
+    });
+    if (!existingShop) throw new NotFoundException('Không tìm thấy cửa hàng phù hợp');
+    return existingShop;
+  }
+
+  async registerShop(
     userId: string,
+    { contractId, isAccepted, name, phone, email, address, licenseImages }: RegisterShopDto,
+  ): Promise<void> {
+    const user = await this.userRepository.findOne({ where: { id: userId } });
+    if (!user) throw new NotFoundException('Không tìm thấy người dùng phù hợp');
+    if (user.shop || user.role === UserRole.SHOP) throw new BadRequestException('Người dùng đã có cửa hàng');
+    if (!user.isIdentified) throw new BadRequestException('Bạn cần xác thực danh tính (SDT) để đăng ký cửa hàng');
+    
+    if (!isAccepted)
+      throw new BadRequestException('Bạn cần đồng ý với điều khoản để đăng ký cửa hàng');
+
+    const newShop = await this.shopRepository.save({
+      user: { id: userId },
+      contract: { id: contractId },
+      name,
+      phone,
+      email,
+      address,
+      status: ShopStatus.PENDING,
+      isVerified: false,
+    });
+    await this.licenseRepository.save({
+      images: licenseImages,
+      shop: newShop,
+      status: LicenseStatus.PENDING,
+    });
+  }
+
+  async resubmitShop(
+    userId: string,
+    { name, phone, email, address, licenseImages }: ResubmitShopDto,
+  ) {
+    const existingShop = await this.shopRepository.findOne({
+      where: { user: { id: userId } },
+      relations: {
+        license: true,
+      },
+    });
+    if (!existingShop) throw new NotFoundException('Không tìm thấy cửa hàng phù hợp');
+    if (!existingShop.license)
+      throw new NotFoundException('Không tìm thấy giấy phép kinh doanh của cửa hàng');
+
+    await this.shopRepository.update(existingShop.id, {
+      name,
+      phone,
+      email,
+      address,
+      status: ShopStatus.PENDING,
+    });
+    await this.licenseRepository.update(existingShop.license.id, {
+      images: licenseImages,
+      status: LicenseStatus.RESUBMIT,
+    });
+  }
+
+  async getShopsForStaff(
     take: number,
     skip: number,
     sort?: Sorting,
@@ -185,7 +261,6 @@ export class ShopService {
     const dynamicFilter = getWhere(filter);
     const where = {
       ...dynamicFilter,
-      user: { id: userId },
     };
     const order = getOrder(sort);
     return await this.shopRepository.findAndCount({
@@ -197,17 +272,58 @@ export class ShopService {
     });
   }
 
-  async getShopForOwner(userId: string, id: string): Promise<Shop> {
-    const where = {
-      id,
-      user: { id: userId },
-    };
+  async getShopForStaff(id: string): Promise<Shop> {
     const existingShop = await this.shopRepository.findOne({
-      where,
+      where: { id },
       withDeleted: true,
+      relations: {
+        user: true,
+        license: true,
+        memberships: true,
+      },
     });
     if (!existingShop) throw new NotFoundException('Không tìm thấy cửa hàng phù hợp');
     return existingShop;
+  }
+
+  async reviewShopRegister(id: string, { isApproved, rejectReason }: ReviewShopDto): Promise<void> {
+    const existingShop = await this.shopRepository.findOne({
+      where: { id },
+      withDeleted: true,
+      relations: { license: true },
+    });
+    if (!existingShop) throw new NotFoundException('Không tìm thấy cửa hàng phù hợp');
+    if (!existingShop.license)
+      throw new NotFoundException('Không tìm thấy giấy phép kinh doanh của cửa hàng');
+    if (existingShop.status !== ShopStatus.PENDING)
+      throw new BadRequestException('Cửa hàng không ở trạng thái chờ duyệt');
+
+    if (isApproved) {
+      await this.shopRepository.update(existingShop.id, {
+        status: ShopStatus.ACTIVE,
+        isVerified: true,
+      });
+      
+      await this.licenseRepository.update(existingShop.license.id, {
+        status: LicenseStatus.APPROVED,
+      });
+      
+      await this.userRepository.update({ shop: existingShop }, { role: UserRole.SHOP });
+      
+      const subscription = await this.subscriptionRepository.findOne({where: { duration: 7}});
+      if (!subscription) {
+        throw new NotFoundException('Không tìm thấy gói đăng ký phù hợp');
+      }
+      await this.membershipService.registerMembership(existingShop.id, subscription.id);
+    } else {
+      await this.shopRepository.update(existingShop.id, {
+        status: ShopStatus.INACTIVE,
+      });
+      await this.licenseRepository.update(existingShop.license.id, {
+        status: LicenseStatus.REJECTED,
+        rejectReason,
+      });
+    }
   }
 
   async getShopWithUserWithoutDeletedById(id: string): Promise<Shop> {
@@ -225,5 +341,29 @@ export class ShopService {
 
   async getAll(): Promise<Shop[]> {
     return await this.shopRepository.find({ withDeleted: true });
+  }
+
+  async getByUserEmail(email: string): Promise<Shop | null> {
+    return await this.shopRepository.findOne({
+      where: { user: { email } },
+      withDeleted: true,
+    });
+  }
+
+  async getAllLicenses(): Promise<License[]> {
+    return await this.licenseRepository.find({
+      withDeleted: true,
+    });
+  }
+
+  async getLicenseByShopId(shopId: string): Promise<License | null> {
+    return await this.licenseRepository.findOne({
+      where: { shop: { id: shopId } },
+      withDeleted: true,
+    });
+  }
+
+  async createLicense(license: License): Promise<void> {
+    await this.licenseRepository.save(license);
   }
 }

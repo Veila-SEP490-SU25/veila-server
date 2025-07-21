@@ -1,10 +1,10 @@
-import { Column, Entity, JoinColumn, ManyToOne, OneToOne } from 'typeorm';
-import { Base, Order, Request, Service } from '@/common/models';
+import { Column, Entity, JoinColumn, ManyToOne, OneToMany, OneToOne } from 'typeorm';
+import { Base, Order, Request, Service, UpdateOrderServiceDetail } from '@/common/models';
 import { ApiProperty } from '@nestjs/swagger';
 
 @Entity('order_service_details')
 export class OrderServiceDetail extends Base {
-  @ManyToOne(() => Order, (order) => order.orderServiceDetail, {
+  @OneToOne(() => Order, (order) => order.orderServiceDetail, {
     nullable: false,
     onDelete: 'CASCADE',
   })
@@ -14,7 +14,7 @@ export class OrderServiceDetail extends Base {
   })
   @ApiProperty({
     description: 'Đơn hàng liên quan',
-    type: Order,
+    type: () => Order,
   })
   order: Order;
 
@@ -25,7 +25,7 @@ export class OrderServiceDetail extends Base {
   })
   @ApiProperty({
     description: 'Yêu cầu dịch vụ liên quan',
-    type: Request,
+    type: () => Request,
   })
   request: Request;
 
@@ -38,7 +38,7 @@ export class OrderServiceDetail extends Base {
   })
   @ApiProperty({
     description: 'Dịch vụ được đặt',
-    type: Service,
+    type: () => Service,
   })
   service: Service;
 
@@ -62,18 +62,31 @@ export class OrderServiceDetail extends Base {
   price: number;
 
   @Column({
-    type: 'int',
-    unsigned: true,
+    type: 'boolean',
     nullable: false,
-    default: 1,
-    comment: 'Phiên bản dịch vụ',
+    default: false,
+    comment: 'Dịch vụ đã được đánh giá hay chưa',
   })
   @ApiProperty({
-    type: 'integer',
-    minimum: 1,
+    type: 'boolean',
+    default: false,
     nullable: false,
-    description: 'Phiên bản dịch vụ',
-    example: 1,
+    description: 'Dịch vụ đã được đánh giá hay chưa',
+    example: false,
   })
-  version: number;
+  isRated: boolean;
+
+  @OneToMany(
+    () => UpdateOrderServiceDetail,
+    (updateOrderServiceDetail) => updateOrderServiceDetail.orderServiceDetail,
+    {
+      nullable: true,
+    },
+  )
+  @ApiProperty({
+    type: () => [UpdateOrderServiceDetail],
+    nullable: true,
+    description: 'Danh sách các yêu cầu cập nhật liên quan',
+  })
+  updateOrderServiceDetails: UpdateOrderServiceDetail[] | null;
 }
