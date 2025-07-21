@@ -45,6 +45,8 @@ export class Dress extends Base {
     length: 100,
     nullable: false,
     comment: 'Tên sản phẩm',
+    charset: 'utf8mb4',
+    collation: 'utf8mb4_unicode_ci',
   })
   @ApiProperty({
     type: 'string',
@@ -60,6 +62,8 @@ export class Dress extends Base {
     type: 'text',
     nullable: true,
     comment: 'Mô tả sản phẩm',
+    charset: 'utf8mb4',
+    collation: 'utf8mb4_unicode_ci',
   })
   @ApiProperty({
     type: 'string',

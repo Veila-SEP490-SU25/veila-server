@@ -31,6 +31,8 @@ export class Task extends Base {
     length: 200,
     nullable: false,
     comment: 'Tiêu đề ngắn gọn của công việc',
+    charset: 'utf8mb4',
+    collation: 'utf8mb4_unicode_ci',
   })
   @ApiProperty({
     type: 'string',
@@ -46,6 +48,8 @@ export class Task extends Base {
     type: 'text',
     nullable: true,
     comment: 'Mô tả chi tiết công việc (có thể để trống)',
+    charset: 'utf8mb4',
+    collation: 'utf8mb4_unicode_ci',
   })
   @ApiProperty({
     type: 'string',

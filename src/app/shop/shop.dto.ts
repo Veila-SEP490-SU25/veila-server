@@ -1,7 +1,137 @@
+import { ShopStatus } from '@/common/models';
 import { ApiProperty } from '@nestjs/swagger';
 import { Expose } from 'class-transformer';
 
-export class RegisterShopDto {}
+export class ReviewShopDto {
+  @ApiProperty({
+    description: 'Có duyệt shop hay không',
+    example: true,
+    nullable: false,
+  })
+  isApproved: boolean;
+
+  @ApiProperty({
+    description: 'Lý do từ chối (nếu có)',
+    example: 'Giấy phép kinh doanh không rõ ràng, cần chụp lại',
+    maxLength: 500,
+    nullable: true,
+  })
+  rejectReason?: string | null;
+}
+
+export class ListShopForStaffDto {
+  @Expose()
+  @ApiProperty({ description: 'ID của shop', example: 'shop-uuid-123' })
+  id: string;
+
+  @Expose()
+  @ApiProperty({ description: 'Tên shop', example: 'Cửa hàng thời trang ABC' })
+  name: string;
+
+  @Expose()
+  @ApiProperty({ description: 'Trạng thái của shop', example: ShopStatus.PENDING })
+  status: ShopStatus;
+
+  @Expose()
+  @ApiProperty({ description: 'Trạng thái xác thực của shop', example: false })
+  isVerified: boolean;
+}
+
+export class ResubmitShopDto {
+  @ApiProperty({
+    description: 'Tên của shop',
+    example: 'Cửa hàng thời trang ABC',
+    maxLength: 100,
+    nullable: false,
+  })
+  name: string;
+
+  @ApiProperty({
+    description: 'Số điện thoại liên hệ của shop',
+    example: '+84901234567',
+    maxLength: 15,
+    nullable: false,
+  })
+  phone: string;
+
+  @ApiProperty({
+    description: 'Email liên hệ của shop',
+    example: 'shopABC@gmail.com',
+    maxLength: 64,
+    nullable: false,
+  })
+  email: string;
+
+  @ApiProperty({
+    description: 'Địa chỉ của shop',
+    example: '123 Đường ABC, Quận 1, TP.HCM',
+    maxLength: 255,
+    nullable: false,
+  })
+  address: string;
+
+  @ApiProperty({
+    description: 'Ảnh giấy phép kinh doanh của shop',
+    example: 'https://storage.veila.com/shops/license123.jpg',
+    nullable: false,
+  })
+  licenseImages: string;
+}
+
+export class RegisterShopDto {
+  @ApiProperty({
+    description: 'ID của điều khoản đồng ý',
+    example: 'contract-uuid-123',
+    nullable: false,
+  })
+  contractId: string;
+
+  @ApiProperty({
+    description: 'Người dùng có đồng ý với điều khoản hay không',
+    example: true,
+    nullable: false,
+  })
+  isAccepted: boolean;
+
+  @ApiProperty({
+    description: 'Tên của shop',
+    example: 'Cửa hàng thời trang ABC',
+    maxLength: 100,
+    nullable: false,
+  })
+  name: string;
+
+  @ApiProperty({
+    description: 'Số điện thoại liên hệ của shop',
+    example: '+84901234567',
+    maxLength: 15,
+    nullable: false,
+  })
+  phone: string;
+
+  @ApiProperty({
+    description: 'Email liên hệ của shop',
+    example: 'shopABC@gmail.com',
+    maxLength: 64,
+    nullable: false,
+  })
+  email: string;
+
+  @ApiProperty({
+    description: 'Địa chỉ của shop',
+    example: '123 Đường ABC, Quận 1, TP.HCM',
+    maxLength: 255,
+    nullable: false,
+  })
+  address: string;
+
+  @ApiProperty({
+    description: 'Ảnh giấy phép kinh doanh của shop',
+    example: 'https://storage.veila.com/shops/license123.jpg',
+    nullable: false,
+  })
+  licenseImages: string;
+}
 
 export class ListShopDto {
   @Expose()

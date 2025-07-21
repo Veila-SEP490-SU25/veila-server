@@ -75,6 +75,8 @@ export class Transaction extends Base {
     length: 64,
     nullable: false,
     comment: 'Nguồn chuyển tiền (có thể là user, ví, hệ thống, v.v.)',
+    charset: 'utf8mb4',
+    collation: 'utf8mb4_unicode_ci',
   })
   @ApiProperty({
     type: 'string',
@@ -91,6 +93,8 @@ export class Transaction extends Base {
     length: 64,
     nullable: false,
     comment: 'Nơi nhận tiền (có thể là user, ví, hệ thống, v.v.)',
+    charset: 'utf8mb4',
+    collation: 'utf8mb4_unicode_ci',
   })
   @ApiProperty({
     type: 'string',
@@ -188,6 +192,8 @@ export class Transaction extends Base {
     length: 255,
     nullable: true,
     comment: 'Ghi chú giao dịch (nếu có)',
+    charset: 'utf8mb4',
+    collation: 'utf8mb4_unicode_ci',
   })
   @ApiProperty({
     type: 'string',

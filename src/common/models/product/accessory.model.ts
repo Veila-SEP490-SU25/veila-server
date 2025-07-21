@@ -46,6 +46,8 @@ export class Accessory extends Base {
     length: 100,
     nullable: false,
     comment: 'Tên của phụ kiện',
+    charset: 'utf8mb4',
+    collation: 'utf8mb4_unicode_ci',
   })
   @ApiProperty({
     type: 'string',
@@ -61,6 +63,8 @@ export class Accessory extends Base {
     type: 'text',
     nullable: true,
     comment: 'Mô tả chi tiết về phụ kiện',
+    charset: 'utf8mb4',
+    collation: 'utf8mb4_unicode_ci',
   })
   @ApiProperty({
     type: 'string',

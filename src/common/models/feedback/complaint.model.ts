@@ -45,6 +45,8 @@ export class Complaint extends Base {
     length: 200,
     nullable: false,
     comment: 'Tiêu đề khiếu nại',
+    charset: 'utf8mb4',
+    collation: 'utf8mb4_unicode_ci',
   })
   @ApiProperty({
     type: 'string',
@@ -60,6 +62,8 @@ export class Complaint extends Base {
     type: 'text',
     nullable: false,
     comment: 'Mô tả chi tiết khiếu nại',
+    charset: 'utf8mb4',
+    collation: 'utf8mb4_unicode_ci',
   })
   @ApiProperty({
     type: 'string',

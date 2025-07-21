@@ -54,7 +54,7 @@ export class ListServiceDto {
   @ApiProperty({
     enum: ServiceStatus,
     description: 'Trạng thái dịch vụ',
-    example: ServiceStatus.ACTIVE,
+    example: ServiceStatus.AVAILABLE,
   })
   status: ServiceStatus;
 }
