@@ -14,7 +14,7 @@ export class Feedback extends Base {
   })
   @ApiProperty({
     description: 'Khách hàng gửi đánh giá',
-    type: User,
+    type: () => User,
   })
   customer: User;
 
@@ -28,7 +28,7 @@ export class Feedback extends Base {
   })
   @ApiProperty({
     description: 'Đơn hàng liên quan đến đánh giá',
-    type: Order,
+    type: () => Order,
   })
   order: Order;
 
@@ -41,7 +41,7 @@ export class Feedback extends Base {
   })
   @ApiProperty({
     description: 'Sản phẩm váy được đánh giá (nếu có)',
-    type: Dress,
+    type: () => Dress,
     nullable: true,
   })
   dress: Dress | null;
@@ -55,7 +55,7 @@ export class Feedback extends Base {
   })
   @ApiProperty({
     description: 'Dịch vụ được đánh giá (nếu có)',
-    type: Service,
+    type: () => Service,
     nullable: true,
   })
   service: Service | null;
@@ -69,7 +69,7 @@ export class Feedback extends Base {
   })
   @ApiProperty({
     description: 'Phụ kiện được đánh giá (nếu có)',
-    type: Accessory,
+    type: () => Accessory,
     nullable: true,
   })
   accessory: Accessory | null;

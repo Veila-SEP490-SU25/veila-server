@@ -19,7 +19,7 @@ import {
   User,
   UserRole,
 } from '@/common/models';
-import { BadRequestException, Inject, Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { In, Repository } from 'typeorm';
 
@@ -35,7 +35,7 @@ export class ShopService {
     @InjectRepository(License) private readonly licenseRepository: Repository<License>,
     @InjectRepository(User) private readonly userRepository: Repository<User>,
     @InjectRepository(Subscription) private readonly subscriptionRepository: Repository<Subscription>,
-    @Inject() private readonly membershipService: MembershipService,
+    private readonly membershipService: MembershipService,
   ) {}
 
   async getShopsForCustomer(

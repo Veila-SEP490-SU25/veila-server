@@ -16,7 +16,7 @@ export class OrderAccessoryDetail extends Base {
   })
   @ApiProperty({
     description: 'Đơn hàng liên quan',
-    type: Order,
+    type: () => Order,
   })
   order: Order;
 
@@ -29,7 +29,7 @@ export class OrderAccessoryDetail extends Base {
   })
   @ApiProperty({
     description: 'Phụ kiện đi kèm',
-    type: Accessory,
+    type: () => Accessory,
   })
   accessory: Accessory;
 

@@ -36,7 +36,7 @@ export class Order extends Base {
   })
   @ApiProperty({
     description: 'Khách hàng đặt đơn',
-    type: User,
+    type: () => User,
   })
   customer: User;
 
@@ -49,7 +49,7 @@ export class Order extends Base {
   })
   @ApiProperty({
     description: 'Cửa hàng thực hiện đơn',
-    type: Shop,
+    type: () => Shop,
   })
   shop: Shop;
 
@@ -201,7 +201,7 @@ export class Order extends Base {
 
   @OneToMany(() => Milestone, (milestone) => milestone.order)
   @ApiProperty({
-    type: [Milestone],
+    type: () => [Milestone],
     description: 'Danh sách các mốc công việc của đơn hàng',
   })
   milestones: Milestone[];
@@ -210,7 +210,7 @@ export class Order extends Base {
     nullable: true,
   })
   @ApiProperty({
-    type: [OrderAccessoryDetail],
+    type: () => [OrderAccessoryDetail],
     nullable: true,
     description: 'Danh sách chi tiết phụ kiện của đơn hàng',
   })
@@ -220,7 +220,7 @@ export class Order extends Base {
     nullable: true,
   })
   @ApiProperty({
-    type: OrderDressDetail,
+    type: () => OrderDressDetail,
     nullable: true,
     description: 'Chi tiết váy của đơn hàng',
   })
@@ -230,7 +230,7 @@ export class Order extends Base {
     nullable: true,
   })
   @ApiProperty({
-    type: OrderServiceDetail,
+    type: () => OrderServiceDetail,
     nullable: true,
     description: 'Chi tiết dịch vụ của đơn hàng',
   })
@@ -240,7 +240,7 @@ export class Order extends Base {
     nullable: false,
   })
   @ApiProperty({
-    type: [Transaction],
+    type: () => [Transaction],
     nullable: false,
     description: 'Danh sách chi tiết các giao dịch của đơn hàng',
   })

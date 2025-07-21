@@ -1,0 +1,36 @@
+import { ApiProperty } from '@nestjs/swagger';
+import { Expose, Transform } from 'class-transformer';
+
+export class OrderAccessoriesDetailDto {
+  @Expose()
+  @ApiProperty({ description: 'ID của các phụ kiện trong đơn hàng', example: 'uuid-accessory-1' })
+  id: string;
+
+  @Expose()
+  @ApiProperty({ description: 'ID của đơn hàng', example: 'uuid-order-1' })
+  @Transform(({ obj: orderAccessoryDetail }) => orderAccessoryDetail.order.id)
+  orderId: string;
+
+  @Expose()
+  @ApiProperty({ description: 'Tên của phụ kiện', example: 'accessory-name-1' })
+  @Transform(({ obj: orderAccessoryDetail }) => orderAccessoryDetail.accessory.name)
+  @Expose()
+  @ApiProperty({ description: 'Tên phụ kiện', example: 'Phụ kiện A' })
+  name: string;
+
+  @Expose()
+  @ApiProperty({ description: 'Số lượng phụ kiện', example: 1 })
+  quality: number;
+
+  @Expose()
+  @ApiProperty({ description: 'Mô tả về phụ kiện', example: 'Phụ kiện này đẳng cấp' })
+  description: string | null;
+
+  @Expose()
+  @ApiProperty({ description: 'Giá của phụ kiện', example: 200000 })
+  price: number;
+
+  @Expose()
+  @ApiProperty({ description: 'Phụ kiện đã được đánh giá hay chưa', example: true })
+  is_rated: boolean;
+}

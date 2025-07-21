@@ -14,7 +14,7 @@ export class OrderDressDetail extends Base {
   })
   @ApiProperty({
     description: 'Đơn hàng liên quan',
-    type: Order,
+    type: () => Order,
   })
   order: Order;
 
@@ -27,7 +27,7 @@ export class OrderDressDetail extends Base {
   })
   @ApiProperty({
     description: 'Váy được đặt',
-    type: Dress,
+    type: () => Dress,
   })
   dress: Dress;
 

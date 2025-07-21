@@ -14,7 +14,7 @@ export class OrderServiceDetail extends Base {
   })
   @ApiProperty({
     description: 'Đơn hàng liên quan',
-    type: Order,
+    type: () => Order,
   })
   order: Order;
 
@@ -25,7 +25,7 @@ export class OrderServiceDetail extends Base {
   })
   @ApiProperty({
     description: 'Yêu cầu dịch vụ liên quan',
-    type: Request,
+    type: () => Request,
   })
   request: Request;
 
@@ -38,7 +38,7 @@ export class OrderServiceDetail extends Base {
   })
   @ApiProperty({
     description: 'Dịch vụ được đặt',
-    type: Service,
+    type: () => Service,
   })
   service: Service;
 
@@ -84,7 +84,7 @@ export class OrderServiceDetail extends Base {
     },
   )
   @ApiProperty({
-    type: [UpdateOrderServiceDetail],
+    type: () => [UpdateOrderServiceDetail],
     nullable: true,
     description: 'Danh sách các yêu cầu cập nhật liên quan',
   })
