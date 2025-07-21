@@ -20,7 +20,7 @@ export class UpdateOrderServiceDetail extends Base {
   })
   @ApiProperty({
     description: 'Chi tiết dịch vụ đơn hàng liên quan',
-    type: OrderServiceDetail,
+    type: () => OrderServiceDetail,
   })
   orderServiceDetail: OrderServiceDetail;
 
@@ -34,7 +34,7 @@ export class UpdateOrderServiceDetail extends Base {
   })
   @ApiProperty({
     description: 'Yêu cầu cập nhật liên quan',
-    type: UpdateRequest,
+    type: () => UpdateRequest,
   })
   updateRequest: UpdateRequest;
 

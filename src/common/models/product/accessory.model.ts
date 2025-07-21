@@ -20,7 +20,7 @@ export class Accessory extends Base {
   })
   @ApiProperty({
     description: 'Người dùng sở hữu phụ kiện',
-    type: User,
+    type: () => User,
     nullable: false,
   })
   user: User;
@@ -35,7 +35,7 @@ export class Accessory extends Base {
   })
   @ApiProperty({
     description: 'Danh mục phụ kiện',
-    type: Category,
+    type: () => Category,
     nullable: true,
   })
   category: Category | null;
@@ -207,7 +207,7 @@ export class Accessory extends Base {
   @OneToMany(() => Feedback, (feedback) => feedback.accessory)
   @ApiProperty({
     description: 'Danh sách Feedback của phụ kiện',
-    type: [Feedback],
+    type: () => [Feedback],
   })
   feedbacks: Feedback[];
 }

@@ -290,7 +290,7 @@ export class User extends Base {
     nullable: true,
   })
   @ApiProperty({
-    type: Shop,
+    type: () => Shop,
     nullable: true,
   })
   shop: Shop | null;

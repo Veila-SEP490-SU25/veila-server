@@ -20,7 +20,7 @@ export class Blog extends Base {
   })
   @ApiProperty({
     description: 'Người dùng sở hữu blog',
-    type: User,
+    type: () => User,
   })
   user: User;
 
@@ -34,7 +34,7 @@ export class Blog extends Base {
   })
   @ApiProperty({
     description: 'Danh mục blog',
-    type: Category,
+    type: () => Category,
     nullable: true,
   })
   category: Category | null;

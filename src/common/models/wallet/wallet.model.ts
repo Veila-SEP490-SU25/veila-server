@@ -13,7 +13,7 @@ export class Wallet extends Base {
     foreignKeyConstraintName: 'fk_user_wallet',
   })
   @ApiProperty({
-    type: User,
+    type: () => User,
     description: 'Chủ sở hữu ví',
   })
   user: User;

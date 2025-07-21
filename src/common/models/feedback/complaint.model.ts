@@ -21,7 +21,7 @@ export class Complaint extends Base {
   })
   @ApiProperty({
     description: 'Người gửi khiếu nại',
-    type: User,
+    type: () => User,
   })
   sender: User;
 
@@ -35,7 +35,7 @@ export class Complaint extends Base {
   })
   @ApiProperty({
     description: 'Đơn hàng liên quan đến khiếu nại',
-    type: Order,
+    type: () => Order,
   })
   order: Order;
 

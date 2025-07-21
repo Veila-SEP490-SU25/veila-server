@@ -57,11 +57,12 @@ export class AuthService {
     if (user) throw new ForbiddenException('Tài khoản đã tồn tại trong hệ thống.');
     const activationCode = this.passwordService.generateOTP(6);
     const hashedActivationCode = await this.passwordService.hashPassword(activationCode);
+    const hashedPassword = await this.passwordService.hashPassword(body.password);
     const newUser = await this.userService.createUser({
       ...body,
       username: new Date().getTime().toString(),
       isVerified: false,
-      password: hashedActivationCode,
+      password: hashedPassword,
       id: uuidv4(),
       role: UserRole.CUSTOMER,
       isIdentified: false,
