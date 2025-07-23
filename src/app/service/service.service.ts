@@ -1,5 +1,5 @@
 import { Filtering, getOrder, getWhere, Sorting } from '@/common/decorators';
-import { Category, Service, ServiceStatus } from '@/common/models';
+import { Category, Service, ServiceStatus, ShopStatus } from '@/common/models';
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
@@ -22,6 +22,7 @@ export class ServiceService {
     const where = {
       ...dynamicFilter,
       status: ServiceStatus.AVAILABLE,
+      user: { shop: { status: ShopStatus.ACTIVE } },
     };
     const order = getOrder(sort);
     return await this.serviceRepository.findAndCount({
@@ -36,11 +37,13 @@ export class ServiceService {
     const where = {
       id,
       status: ServiceStatus.AVAILABLE,
+      user: { shop: { status: ShopStatus.ACTIVE } },
     };
     const existingService = await this.serviceRepository.findOne({
       where,
       relations: {
         feedbacks: { customer: true },
+        user: { shop: true },
       },
     });
     if (!existingService) throw new NotFoundException('Không tìm thấy dịch vụ phù hợp');

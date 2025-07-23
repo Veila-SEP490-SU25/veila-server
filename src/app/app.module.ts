@@ -28,6 +28,8 @@ import { MembershipModule } from '@/app/membership';
 import { OrderModule } from '@/app/order/order.module';
 import { OrderAccessoriesDetailsModule } from './order-accessories-details/order-accessories-details.module';
 import { OrderDressDetailsModule } from './order-dress-details';
+import { ScheduleModule } from '@nestjs/schedule';
+import { ComplaintModule } from '@/app/complaint';
 
 @Module({
   imports: [
@@ -74,6 +76,8 @@ import { OrderDressDetailsModule } from './order-dress-details';
     OrderModule,
     OrderAccessoriesDetailsModule,
     OrderDressDetailsModule,
+    ScheduleModule.forRoot({ cronJobs: true }),
+    ComplaintModule,
   ],
   controllers: [AppController],
   providers: [
