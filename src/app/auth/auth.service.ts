@@ -1,9 +1,15 @@
-import { LoginDto, RegisterDto, TokenResponse } from '@/app/auth/auth.dto';
+import {
+  ChangePasswordDto,
+  LoginDto,
+  RegisterDto,
+  ResetPasswordDto,
+  TokenResponse,
+} from '@/app/auth/auth.dto';
 import { MailService } from '@/app/mail';
 import { PasswordService } from '@/app/password';
 import { RedisService } from '@/app/redis';
 import { TokenService } from '@/app/token';
-import { UserService } from '@/app/user';
+import { UpdateProfile, UserService } from '@/app/user';
 import { User, UserRole, UserStatus } from '@/common/models';
 import {
   ForbiddenException,
@@ -191,5 +197,48 @@ export class AuthService {
     const user = await this.userService.getUserById(userId);
     if (!user) throw new NotFoundException('Tài khoản không tồn tại trong hệ thống.');
     return user;
+  }
+
+  async updateProfile(userId: string, updateData: UpdateProfile): Promise<User> {
+    const user = await this.userService.getUserById(userId);
+    if (!user) throw new NotFoundException('Tài khoản không tồn tại trong hệ thống.');
+    Object.assign(user, updateData);
+    const updatedUser = await this.userService.updateUser(user);
+    return updatedUser;
+  }
+
+  async changePassword(
+    userId: string,
+    { currentPassword, newPassword, confirmPassword }: ChangePasswordDto,
+  ): Promise<void> {
+    const user = await this.userService.getUserById(userId);
+    if (!user) throw new NotFoundException('Tài khoản không tồn tại trong hệ thống.');
+    if (newPassword !== confirmPassword)
+      throw new ForbiddenException('Mật khẩu mới và xác nhận mật khẩu không khớp.');
+    const isOldPasswordValid = await this.passwordService.comparePassword(
+      currentPassword,
+      user.password,
+    );
+    if (!isOldPasswordValid) throw new ForbiddenException('Mật khẩu hiện tại không chính xác.');
+    const hashedNewPassword = await this.passwordService.hashPassword(newPassword);
+    user.password = hashedNewPassword;
+    await this.userService.updateUser(user);
+  }
+
+  async resetPassword({ userId, otp, newPassword }: ResetPasswordDto): Promise<void> {
+    const storedOtp = await this.redisService.get(`user:otp:${userId}`);
+    if (!storedOtp) throw new ForbiddenException('Mã xác thực không hợp lệ hoặc đã hết hạn.');
+    const isValid = await this.passwordService.comparePassword(otp, storedOtp);
+    if (!isValid) {
+      await this.redisService.del(`user:otp:${userId}`);
+      throw new ForbiddenException('Mã xác thực không chính xác.');
+    } else {
+      await this.redisService.del(`user:otp:${userId}`);
+    }
+    const user = await this.userService.getUserById(userId);
+    if (!user) throw new NotFoundException('Tài khoản không tồn tại trong hệ thống.');
+    const hashedNewPassword = await this.passwordService.hashPassword(newPassword);
+    user.password = hashedNewPassword;
+    await this.userService.updateUser(user);
   }
 }
