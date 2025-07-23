@@ -10,7 +10,7 @@ export class MembershipService {
     private readonly membershipRepository: Repository<Membership>,
     @InjectRepository(Subscription)
     private readonly subscriptionRepository: Repository<Subscription>,
-  ) { }
+  ) {}
 
   async findAll(): Promise<Membership[]> {
     return this.membershipRepository.find({ withDeleted: true });
@@ -36,10 +36,10 @@ export class MembershipService {
     const membership = await this.membershipRepository.findOne({
       where: {
         shop: { id: shopId },
-        status: MembershipStatus.ACTIVE
+        status: MembershipStatus.ACTIVE,
       },
     });
-    if(membership) {
+    if (membership) {
       await this.membershipRepository.update(membership.id, {
         status: MembershipStatus.INACTIVE,
       });

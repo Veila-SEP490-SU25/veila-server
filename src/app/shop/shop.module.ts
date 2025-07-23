@@ -1,4 +1,14 @@
-import { Accessory, Blog, Category, Dress, License, Service, Shop, Subscription, User } from '@/common/models';
+import {
+  Accessory,
+  Blog,
+  Category,
+  Dress,
+  License,
+  Service,
+  Shop,
+  Subscription,
+  User,
+} from '@/common/models';
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ShopController } from '@/app/shop/shop.controller';
@@ -7,7 +17,17 @@ import { MembershipModule } from '@/app/membership';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([Shop, Accessory, Blog, Service, Dress, Category, License, User, Subscription]),
+    TypeOrmModule.forFeature([
+      Shop,
+      Accessory,
+      Blog,
+      Service,
+      Dress,
+      Category,
+      License,
+      User,
+      Subscription,
+    ]),
     MembershipModule,
   ],
   controllers: [ShopController],
