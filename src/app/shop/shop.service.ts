@@ -34,7 +34,8 @@ export class ShopService {
     @InjectRepository(Service) private readonly serviceRepository: Repository<Service>,
     @InjectRepository(License) private readonly licenseRepository: Repository<License>,
     @InjectRepository(User) private readonly userRepository: Repository<User>,
-    @InjectRepository(Subscription) private readonly subscriptionRepository: Repository<Subscription>,
+    @InjectRepository(Subscription)
+    private readonly subscriptionRepository: Repository<Subscription>,
     private readonly membershipService: MembershipService,
   ) {}
 
@@ -202,9 +203,11 @@ export class ShopService {
   ): Promise<void> {
     const user = await this.userRepository.findOne({ where: { id: userId } });
     if (!user) throw new NotFoundException('Không tìm thấy người dùng phù hợp');
-    if (user.shop || user.role === UserRole.SHOP) throw new BadRequestException('Người dùng đã có cửa hàng');
-    if (!user.isIdentified) throw new BadRequestException('Bạn cần xác thực danh tính (SDT) để đăng ký cửa hàng');
-    
+    if (user.shop || user.role === UserRole.SHOP)
+      throw new BadRequestException('Người dùng đã có cửa hàng');
+    if (!user.isIdentified)
+      throw new BadRequestException('Bạn cần xác thực danh tính (SDT) để đăng ký cửa hàng');
+
     if (!isAccepted)
       throw new BadRequestException('Bạn cần đồng ý với điều khoản để đăng ký cửa hàng');
 
@@ -303,14 +306,14 @@ export class ShopService {
         status: ShopStatus.ACTIVE,
         isVerified: true,
       });
-      
+
       await this.licenseRepository.update(existingShop.license.id, {
         status: LicenseStatus.APPROVED,
       });
-      
+
       await this.userRepository.update({ shop: existingShop }, { role: UserRole.SHOP });
-      
-      const subscription = await this.subscriptionRepository.findOne({where: { duration: 7}});
+
+      const subscription = await this.subscriptionRepository.findOne({ where: { duration: 7 } });
       if (!subscription) {
         throw new NotFoundException('Không tìm thấy gói đăng ký phù hợp');
       }
