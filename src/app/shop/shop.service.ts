@@ -89,7 +89,7 @@ export class ShopService {
     sort?: Sorting,
     filter?: Filtering,
   ): Promise<[Dress[], number]> {
-    const existingShop = await this.getShopWithUserWithoutDeletedById(id);
+    const existingShop = await this.getShopForCustomerWithUser(id);
     const dynamicFilter = getWhere(filter);
     const where = {
       ...dynamicFilter,
@@ -112,7 +112,7 @@ export class ShopService {
     sort?: Sorting,
     filter?: Filtering,
   ): Promise<[Accessory[], number]> {
-    const existingShop = await this.getShopWithUserWithoutDeletedById(id);
+    const existingShop = await this.getShopForCustomerWithUser(id);
     const dynamicFilter = getWhere(filter);
     const where = {
       ...dynamicFilter,
@@ -135,7 +135,7 @@ export class ShopService {
     sort?: Sorting,
     filter?: Filtering,
   ): Promise<[Service[], number]> {
-    const existingShop = await this.getShopWithUserWithoutDeletedById(id);
+    const existingShop = await this.getShopForCustomerWithUser(id);
     const dynamicFilter = getWhere(filter);
     const where = {
       ...dynamicFilter,
@@ -158,7 +158,7 @@ export class ShopService {
     sort?: Sorting,
     filter?: Filtering,
   ): Promise<[Blog[], number]> {
-    const existingShop = await this.getShopWithUserWithoutDeletedById(id);
+    const existingShop = await this.getShopForCustomerWithUser(id);
     const dynamicFilter = getWhere(filter);
     const where = {
       ...dynamicFilter,
@@ -182,7 +182,7 @@ export class ShopService {
     sort?: Sorting,
     filter?: Filtering,
   ): Promise<[Category[], number]> {
-    const existingShop = await this.getShopWithUserWithoutDeletedById(id);
+    const existingShop = await this.getShopForCustomerWithUser(id);
     const dynamicFilter = getWhere(filter);
     const where = {
       ...dynamicFilter,
@@ -339,9 +339,9 @@ export class ShopService {
     }
   }
 
-  async getShopWithUserWithoutDeletedById(id: string): Promise<Shop> {
+  async getShopForCustomerWithUser(id: string): Promise<Shop> {
     const existingShop = await this.shopRepository.findOne({
-      where: { id },
+      where: { id, status: ShopStatus.ACTIVE, isVerified: true },
       relations: { user: true },
     });
     if (!existingShop) throw new NotFoundException('Không tìm thấy cửa hàng phù hợp');

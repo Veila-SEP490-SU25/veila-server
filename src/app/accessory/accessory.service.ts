@@ -1,5 +1,5 @@
 import { Filtering, getOrder, getWhere, Sorting } from '@/common/decorators';
-import { Accessory, AccessoryStatus, Category } from '@/common/models';
+import { Accessory, AccessoryStatus, Category, ShopStatus } from '@/common/models';
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { In, Repository } from 'typeorm';
@@ -16,10 +16,11 @@ export class AccessoryService {
     const where = {
       id,
       status: In([AccessoryStatus.AVAILABLE, AccessoryStatus.OUT_OF_STOCK]),
+      user: { shop: { status: ShopStatus.ACTIVE } },
     };
     const existingAccessory = await this.accessoryRepository.findOne({
       where,
-      relations: { feedbacks: { customer: true } },
+      relations: { feedbacks: { customer: true }, user: { shop: true } },
     });
     if (!existingAccessory) throw new NotFoundException('Không tìm thấy phụ kiện phù hợp');
     return existingAccessory;
