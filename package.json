@@ -46,6 +46,7 @@
     "@nestjs/jwt": "10.2.0",
     "@nestjs/passport": "10.0.3",
     "@nestjs/platform-express": "10.0.0",
+    "@nestjs/schedule": "6.0.0",
     "@nestjs/swagger": "8.0.1",
     "@nestjs/typeorm": "10.0.2",
     "@payos/node": "1.0.10",

@@ -16,6 +16,7 @@ import {
   DressStatus,
   License,
   LicenseStatus,
+  MembershipStatus,
   Service,
   ServiceStatus,
   Shop,
@@ -25,6 +26,7 @@ import {
   UserRole,
 } from '@/common/models';
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
+import { Cron, CronExpression } from '@nestjs/schedule';
 import { InjectRepository } from '@nestjs/typeorm';
 import { In, Repository } from 'typeorm';
 
@@ -378,5 +380,32 @@ export class ShopService {
 
   async createLicense(license: License): Promise<void> {
     await this.licenseRepository.save(license);
+  }
+
+  @Cron(CronExpression.EVERY_DAY_AT_MIDNIGHT, { timeZone: 'Asia/Ho_Chi_Minh' })
+  async suspendShopsUnRenewedMemberships(): Promise<void> {
+    const today = new Date();
+    const shops = await this.shopRepository.find({
+      where: { status: ShopStatus.ACTIVE },
+      relations: {
+        memberships: true,
+      },
+    });
+
+    const shopIdsToSuspend = shops
+      .filter((shop) => {
+        const activeMembership = shop.memberships.find(
+          (membership) => membership.status === MembershipStatus.ACTIVE,
+        );
+        return activeMembership && new Date(activeMembership.endDate) < today;
+      })
+      .map((shop) => shop.id);
+
+    if (shopIdsToSuspend.length > 0) {
+      await this.shopRepository.update(
+        { id: In(shopIdsToSuspend) },
+        { status: ShopStatus.SUSPENDED },
+      );
+    }
   }
 }
