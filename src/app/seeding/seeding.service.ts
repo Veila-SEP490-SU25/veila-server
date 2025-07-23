@@ -438,14 +438,14 @@ export class SeedingService implements OnModuleInit {
       phone: email.includes('customer.')
         ? `+84${this.customFaker.string.numeric(1)}00${email.charAt(9)}${this.customFaker.string.numeric(5)}`
         : email.includes('shop.')
-        ? `+84${this.customFaker.string.numeric(1)}11${email.charAt(5)}${this.customFaker.string.numeric(5)}`
-        : email.includes('admin')
-        ? `+84${this.customFaker.string.numeric(1)}22${this.customFaker.string.numeric(6)}`
-        : email.includes('staff')
-        ? `+84${this.customFaker.string.numeric(1)}33${this.customFaker.string.numeric(6)}`
-        : email.includes('super.admin')
-        ? `+84${this.customFaker.string.numeric(1)}44${this.customFaker.string.numeric(6)}`
-        : null,
+          ? `+84${this.customFaker.string.numeric(1)}11${email.charAt(5)}${this.customFaker.string.numeric(5)}`
+          : email.includes('admin')
+            ? `+84${this.customFaker.string.numeric(1)}22${this.customFaker.string.numeric(6)}`
+            : email.includes('staff')
+              ? `+84${this.customFaker.string.numeric(1)}33${this.customFaker.string.numeric(6)}`
+              : email.includes('super.admin')
+                ? `+84${this.customFaker.string.numeric(1)}44${this.customFaker.string.numeric(6)}`
+                : null,
       address: this.customFaker.datatype.boolean()
         ? `${faker.location.streetAddress()}, ${faker.location.city()}`
         : null,

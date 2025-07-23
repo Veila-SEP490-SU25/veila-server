@@ -1,5 +1,5 @@
 import { Filtering, getOrder, getWhere, Sorting } from '@/common/decorators';
-import { Category, Dress, DressStatus } from '@/common/models';
+import { Category, Dress, DressStatus, ShopStatus } from '@/common/models';
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { In, Repository } from 'typeorm';
@@ -22,6 +22,7 @@ export class DressService {
     const where = {
       ...dynamicFilter,
       status: In([DressStatus.AVAILABLE, DressStatus.OUT_OF_STOCK]),
+      user: { shop: { status: ShopStatus.ACTIVE } },
     };
     const order = getOrder(sort);
     return await this.dressRepository.findAndCount({
@@ -37,9 +38,11 @@ export class DressService {
       where: {
         id,
         status: DressStatus.AVAILABLE,
+        user: { shop: { status: ShopStatus.ACTIVE } },
       },
       relations: {
         feedbacks: { customer: true },
+        user: { shop: true },
       },
     });
     if (!dress) throw new NotFoundException('Không tìm thấy váy cưới nào phù hợp');

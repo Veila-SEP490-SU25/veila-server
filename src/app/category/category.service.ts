@@ -12,6 +12,7 @@ import {
   DressStatus,
   Service,
   ServiceStatus,
+  ShopStatus,
 } from '@/common/models';
 import { Repository } from 'typeorm';
 import { Filtering, getOrder, getWhere, Sorting } from '@/common/decorators';
@@ -27,7 +28,12 @@ export class CategoryService {
   ) {}
 
   async findCategoryForCustomer(id: string): Promise<Category> {
-    const category = await this.categoryRepository.findOneBy({ id });
+    const category = await this.categoryRepository.findOne({
+      where: {
+        id,
+        user: { shop: { status: ShopStatus.ACTIVE } },
+      },
+    });
     if (!category) throw new NotFoundException('Không tìm thấy Category phù hợp');
     return category;
   }
@@ -44,6 +50,7 @@ export class CategoryService {
       ...dynamicFilter,
       category: { id },
       status: DressStatus.AVAILABLE,
+      user: { shop: { status: ShopStatus.ACTIVE } },
     };
     const order = getOrder(sort);
     return await this.dressRepository.findAndCount({
@@ -66,6 +73,7 @@ export class CategoryService {
       ...dynamicFilter,
       category: { id },
       status: ServiceStatus.AVAILABLE,
+      user: { shop: { status: ShopStatus.ACTIVE } },
     };
     const order = getOrder(sort);
     return await this.serviceRepository.findAndCount({
@@ -89,6 +97,7 @@ export class CategoryService {
       category: { id },
       status: BlogStatus.PUBLISHED,
       isVerified: true,
+      user: { shop: { status: ShopStatus.ACTIVE } },
     };
     const order = getOrder(sort);
     return await this.blogRepository.findAndCount({
@@ -111,6 +120,7 @@ export class CategoryService {
       ...dynamicFilter,
       category: { id },
       status: AccessoryStatus.AVAILABLE,
+      user: { shop: { status: ShopStatus.ACTIVE } },
     };
     const order = getOrder(sort);
     return await this.accessoryRepository.findAndCount({

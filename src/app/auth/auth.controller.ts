@@ -1,7 +1,9 @@
 import {
+  ChangePasswordDto,
   LoginDto,
   RegisterDto,
   RequestOtpDto,
+  ResetPasswordDto,
   TokenResponse,
   VerifyOtpDto,
 } from '@/app/auth/auth.dto';
@@ -9,7 +11,7 @@ import { AuthService } from '@/app/auth/auth.service';
 import { ItemResponse } from '@/common/base';
 import { Token, UserId } from '@/common/decorators';
 import { AuthGuard } from '@/common/guards';
-import { Body, Controller, Get, HttpStatus, Post, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, HttpStatus, Post, Put, UseGuards } from '@nestjs/common';
 import {
   ApiBearerAuth,
   ApiBody,
@@ -21,6 +23,7 @@ import {
 } from '@nestjs/swagger';
 import { RefreshTokenDto } from '@/app/auth/auth.dto';
 import { User } from '@/common/models';
+import { UpdateProfile } from '@/app/user';
 
 @Controller('auth')
 @ApiTags('Auth Controller')
@@ -224,6 +227,97 @@ export class AuthController {
       statusCode: HttpStatus.OK,
       message: 'Lấy thông tin người dùng thành công.',
       item: user,
+    };
+  }
+
+  @Put('me')
+  @ApiOperation({
+    summary: 'Cập nhật thông tin người dùng',
+    description: 'Cập nhật thông tin người dùng hiện tại',
+  })
+  @UseGuards(AuthGuard)
+  @ApiBearerAuth()
+  @ApiBody({ type: UpdateProfile })
+  @ApiOkResponse({
+    schema: {
+      allOf: [
+        { $ref: getSchemaPath(ItemResponse) },
+        {
+          properties: {
+            item: { $ref: getSchemaPath(User) },
+          },
+        },
+      ],
+    },
+  })
+  async updateProfile(
+    @UserId() userId: string,
+    @Body() body: UpdateProfile,
+  ): Promise<ItemResponse<User>> {
+    const user = await this.authService.updateProfile(userId, body);
+    return {
+      statusCode: HttpStatus.OK,
+      message: 'Cập nhật thông tin người dùng thành công.',
+      item: user,
+    };
+  }
+
+  @Post('change-password')
+  @ApiOperation({
+    summary: 'Thay đổi mật khẩu',
+    description: 'Thay đổi mật khẩu của người dùng hiện tại',
+  })
+  @UseGuards(AuthGuard)
+  @ApiBearerAuth()
+  @ApiBody({ type: ChangePasswordDto })
+  @ApiOkResponse({
+    schema: {
+      allOf: [
+        { $ref: getSchemaPath(ItemResponse) },
+        {
+          properties: {
+            item: { example: null },
+          },
+        },
+      ],
+    },
+  })
+  async changePassword(
+    @UserId() userId: string,
+    @Body() body: ChangePasswordDto,
+  ): Promise<ItemResponse<null>> {
+    await this.authService.changePassword(userId, body);
+    return {
+      statusCode: HttpStatus.OK,
+      message: 'Thay đổi mật khẩu thành công.',
+      item: null,
+    };
+  }
+
+  @Post('reset-password')
+  @ApiOperation({
+    summary: 'Đặt lại mật khẩu',
+    description: 'Đặt lại mật khẩu cho người dùng',
+  })
+  @ApiBody({ type: ResetPasswordDto })
+  @ApiOkResponse({
+    schema: {
+      allOf: [
+        { $ref: getSchemaPath(ItemResponse) },
+        {
+          properties: {
+            item: { example: null },
+          },
+        },
+      ],
+    },
+  })
+  async resetPassword(@Body() body: ResetPasswordDto): Promise<ItemResponse<null>> {
+    await this.authService.resetPassword(body);
+    return {
+      statusCode: HttpStatus.OK,
+      message: 'Đặt lại mật khẩu thành công.',
+      item: null,
     };
   }
 }

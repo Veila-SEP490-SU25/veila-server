@@ -1,5 +1,5 @@
 import { Filtering, getOrder, getWhere, Sorting } from '@/common/decorators';
-import { Blog, BlogStatus, Category } from '@/common/models';
+import { Blog, BlogStatus, Category, ShopStatus } from '@/common/models';
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
@@ -23,6 +23,7 @@ export class BlogService {
       ...dynamicFilter,
       isVerified: true,
       status: BlogStatus.PUBLISHED,
+      user: { shop: { status: ShopStatus.ACTIVE } },
     };
     const order = getOrder(sort);
     return await this.blogRepository.findAndCount({
@@ -30,6 +31,9 @@ export class BlogService {
       order,
       take,
       skip,
+      relations: {
+        user: { shop: true },
+      },
     });
   }
 
@@ -38,9 +42,11 @@ export class BlogService {
       id,
       status: BlogStatus.PUBLISHED,
       isVerified: true,
+      user: { shop: { status: ShopStatus.ACTIVE } },
     };
     const blog = await this.blogRepository.findOne({
       where,
+      relations: { category: true, user: { shop: true } },
     });
     if (!blog) throw new NotFoundException('Không tìm thấy bài blog phù hợp');
     return blog;

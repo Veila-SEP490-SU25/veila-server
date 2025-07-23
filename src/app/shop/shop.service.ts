@@ -1,5 +1,10 @@
 import { MembershipService } from '@/app/membership';
-import { RegisterShopDto, ResubmitShopDto, ReviewShopDto } from '@/app/shop/shop.dto';
+import {
+  RegisterShopDto,
+  ResubmitShopDto,
+  ReviewShopDto,
+  UpdateShopDto,
+} from '@/app/shop/shop.dto';
 import { Filtering, getOrder, getWhere, Sorting } from '@/common/decorators';
 import {
   Accessory,
@@ -11,6 +16,7 @@ import {
   DressStatus,
   License,
   LicenseStatus,
+  MembershipStatus,
   Service,
   ServiceStatus,
   Shop,
@@ -20,6 +26,7 @@ import {
   UserRole,
 } from '@/common/models';
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
+import { Cron, CronExpression } from '@nestjs/schedule';
 import { InjectRepository } from '@nestjs/typeorm';
 import { In, Repository } from 'typeorm';
 
@@ -34,9 +41,15 @@ export class ShopService {
     @InjectRepository(Service) private readonly serviceRepository: Repository<Service>,
     @InjectRepository(License) private readonly licenseRepository: Repository<License>,
     @InjectRepository(User) private readonly userRepository: Repository<User>,
-    @InjectRepository(Subscription) private readonly subscriptionRepository: Repository<Subscription>,
+    @InjectRepository(Subscription)
+    private readonly subscriptionRepository: Repository<Subscription>,
     private readonly membershipService: MembershipService,
   ) {}
+
+  async updateShopProfile(userId: string, body: UpdateShopDto): Promise<void> {
+    const existingShop = await this.getShopForOwner(userId);
+    await this.shopRepository.update(existingShop.id, { ...body });
+  }
 
   async getShopsForCustomer(
     take: number,
@@ -78,7 +91,7 @@ export class ShopService {
     sort?: Sorting,
     filter?: Filtering,
   ): Promise<[Dress[], number]> {
-    const existingShop = await this.getShopWithUserWithoutDeletedById(id);
+    const existingShop = await this.getShopForCustomerWithUser(id);
     const dynamicFilter = getWhere(filter);
     const where = {
       ...dynamicFilter,
@@ -101,7 +114,7 @@ export class ShopService {
     sort?: Sorting,
     filter?: Filtering,
   ): Promise<[Accessory[], number]> {
-    const existingShop = await this.getShopWithUserWithoutDeletedById(id);
+    const existingShop = await this.getShopForCustomerWithUser(id);
     const dynamicFilter = getWhere(filter);
     const where = {
       ...dynamicFilter,
@@ -124,7 +137,7 @@ export class ShopService {
     sort?: Sorting,
     filter?: Filtering,
   ): Promise<[Service[], number]> {
-    const existingShop = await this.getShopWithUserWithoutDeletedById(id);
+    const existingShop = await this.getShopForCustomerWithUser(id);
     const dynamicFilter = getWhere(filter);
     const where = {
       ...dynamicFilter,
@@ -147,7 +160,7 @@ export class ShopService {
     sort?: Sorting,
     filter?: Filtering,
   ): Promise<[Blog[], number]> {
-    const existingShop = await this.getShopWithUserWithoutDeletedById(id);
+    const existingShop = await this.getShopForCustomerWithUser(id);
     const dynamicFilter = getWhere(filter);
     const where = {
       ...dynamicFilter,
@@ -171,7 +184,7 @@ export class ShopService {
     sort?: Sorting,
     filter?: Filtering,
   ): Promise<[Category[], number]> {
-    const existingShop = await this.getShopWithUserWithoutDeletedById(id);
+    const existingShop = await this.getShopForCustomerWithUser(id);
     const dynamicFilter = getWhere(filter);
     const where = {
       ...dynamicFilter,
@@ -202,9 +215,11 @@ export class ShopService {
   ): Promise<void> {
     const user = await this.userRepository.findOne({ where: { id: userId } });
     if (!user) throw new NotFoundException('Không tìm thấy người dùng phù hợp');
-    if (user.shop || user.role === UserRole.SHOP) throw new BadRequestException('Người dùng đã có cửa hàng');
-    if (!user.isIdentified) throw new BadRequestException('Bạn cần xác thực danh tính (SDT) để đăng ký cửa hàng');
-    
+    if (user.shop || user.role === UserRole.SHOP)
+      throw new BadRequestException('Người dùng đã có cửa hàng');
+    if (!user.isIdentified)
+      throw new BadRequestException('Bạn cần xác thực danh tính (SDT) để đăng ký cửa hàng');
+
     if (!isAccepted)
       throw new BadRequestException('Bạn cần đồng ý với điều khoản để đăng ký cửa hàng');
 
@@ -303,14 +318,14 @@ export class ShopService {
         status: ShopStatus.ACTIVE,
         isVerified: true,
       });
-      
+
       await this.licenseRepository.update(existingShop.license.id, {
         status: LicenseStatus.APPROVED,
       });
-      
+
       await this.userRepository.update({ shop: existingShop }, { role: UserRole.SHOP });
-      
-      const subscription = await this.subscriptionRepository.findOne({where: { duration: 7}});
+
+      const subscription = await this.subscriptionRepository.findOne({ where: { duration: 7 } });
       if (!subscription) {
         throw new NotFoundException('Không tìm thấy gói đăng ký phù hợp');
       }
@@ -326,9 +341,9 @@ export class ShopService {
     }
   }
 
-  async getShopWithUserWithoutDeletedById(id: string): Promise<Shop> {
+  async getShopForCustomerWithUser(id: string): Promise<Shop> {
     const existingShop = await this.shopRepository.findOne({
-      where: { id },
+      where: { id, status: ShopStatus.ACTIVE, isVerified: true },
       relations: { user: true },
     });
     if (!existingShop) throw new NotFoundException('Không tìm thấy cửa hàng phù hợp');
@@ -365,5 +380,32 @@ export class ShopService {
 
   async createLicense(license: License): Promise<void> {
     await this.licenseRepository.save(license);
+  }
+
+  @Cron(CronExpression.EVERY_DAY_AT_MIDNIGHT, { timeZone: 'Asia/Ho_Chi_Minh' })
+  async suspendShopsUnRenewedMemberships(): Promise<void> {
+    const today = new Date();
+    const shops = await this.shopRepository.find({
+      where: { status: ShopStatus.ACTIVE },
+      relations: {
+        memberships: true,
+      },
+    });
+
+    const shopIdsToSuspend = shops
+      .filter((shop) => {
+        const activeMembership = shop.memberships.find(
+          (membership) => membership.status === MembershipStatus.ACTIVE,
+        );
+        return activeMembership && new Date(activeMembership.endDate) < today;
+      })
+      .map((shop) => shop.id);
+
+    if (shopIdsToSuspend.length > 0) {
+      await this.shopRepository.update(
+        { id: In(shopIdsToSuspend) },
+        { status: ShopStatus.SUSPENDED },
+      );
+    }
   }
 }
