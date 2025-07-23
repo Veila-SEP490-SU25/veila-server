@@ -1,5 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { Expose } from 'class-transformer';
+import { IsNumber, IsOptional, IsString } from 'class-validator';
 
 export class ListSubscriptionDto {
   @Expose()
@@ -60,6 +61,7 @@ export class CUSubscriptionDto {
     maxLength: 100,
     nullable: false,
   })
+  @IsString()
   name: string;
 
   @ApiProperty({
@@ -67,6 +69,7 @@ export class CUSubscriptionDto {
     example: 'Gói cung cấp dịch vụ 1 năm, tiết kiệm 20% chi phí theo tháng',
     nullable: false,
   })
+  @IsString()
   description: string;
 
   @ApiProperty({
@@ -74,6 +77,8 @@ export class CUSubscriptionDto {
     example: 'https://example.com/image.jpg',
     nullable: true,
   })
+  @IsString()
+  @IsOptional()
   images: string | null;
 
   @ApiProperty({
@@ -81,6 +86,7 @@ export class CUSubscriptionDto {
     example: 365,
     nullable: false,
   })
+  @IsNumber()
   duration: number;
 
   @ApiProperty({
@@ -88,5 +94,6 @@ export class CUSubscriptionDto {
     example: 1200000,
     nullable: false,
   })
+  @IsNumber()
   amount: number;
 }
