@@ -83,3 +83,52 @@ export class TokenResponse {
   @ApiProperty()
   refreshToken: string;
 }
+
+export class ChangePasswordDto {
+  @ApiProperty({
+    required: true,
+    description: 'Mật khẩu hiện tại',
+    example: 'currentPassword123@',
+  })
+  @IsNotEmpty()
+  @IsPassword()
+  currentPassword: string;
+
+  @ApiProperty({
+    required: true,
+    description: 'Mật khẩu mới (tối thiểu 8 ký tự, có chữ hoa, chữ thường, số, ký tự đặc biệt)',
+    example: 'newPassword123@',
+  })
+  @IsNotEmpty()
+  @IsPassword()
+  newPassword: string;
+
+  @ApiProperty({
+    required: true,
+    description: 'Xác nhận mật khẩu mới',
+    example: 'newPassword123@',
+  })
+  @IsNotEmpty()
+  @IsPassword()
+  confirmPassword: string;
+}
+
+export class ResetPasswordDto {
+  @ApiProperty({ required: true })
+  @IsUUID('4', { message: 'Mã người dùng không hợp lệ.' })
+  @IsString({ message: 'Mã người dùng không hợp lệ.' })
+  userId: string;
+
+  @ApiProperty({ required: true })
+  @IsString({ message: 'Mã xác thực không hợp lệ.' })
+  otp: string;
+
+  @ApiProperty({
+    required: true,
+    description: 'Mật khẩu mới (tối thiểu 8 ký tự, có chữ hoa, chữ thường, số, ký tự đặc biệt)',
+    example: 'newPassword123@',
+  })
+  @IsNotEmpty()
+  @IsPassword()
+  newPassword: string;
+}
