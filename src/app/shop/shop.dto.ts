@@ -1,6 +1,85 @@
 import { ShopStatus } from '@/common/models';
 import { ApiProperty } from '@nestjs/swagger';
 import { Expose } from 'class-transformer';
+import { IsBoolean, IsOptional, IsString } from 'class-validator';
+
+export class UpdateShopDto {
+  @ApiProperty({
+    description: 'Tên của shop',
+    example: 'Cửa hàng thời trang ABC',
+    maxLength: 100,
+    nullable: false,
+  })
+  @IsString({ message: 'Tên shop phải là chuỗi.' })
+  name: string;
+
+  @ApiProperty({
+    description: 'Số điện thoại liên hệ của shop',
+    example: '+84901234567',
+    maxLength: 15,
+    nullable: false,
+  })
+  @IsString({ message: 'Số điện thoại phải là chuỗi.' })
+  phone: string;
+
+  @ApiProperty({
+    description: 'Email liên hệ của shop',
+    example: 'shopABC@gmail.com',
+    maxLength: 64,
+    nullable: false,
+  })
+  @IsString({ message: 'Email phải là chuỗi.' })
+  email: string;
+
+  @ApiProperty({
+    description: 'Địa chỉ của shop',
+    example: '123 Đường ABC, Quận 1, TP.HCM',
+    maxLength: 255,
+    nullable: false,
+  })
+  @IsString({ message: 'Địa chỉ phải là chuỗi.' })
+  address: string;
+
+  @ApiProperty({
+    description: 'Mô tả về shop',
+    example: 'Cửa hàng thời trang chuyên cung cấp các sản phẩm mới nhất',
+    maxLength: 500,
+    nullable: true,
+  })
+  @IsString({ message: 'Mô tả phải là chuỗi.' })
+  @IsOptional()
+  description?: string | null;
+
+  @ApiProperty({
+    description: 'URL ảnh đại diện của shop',
+    example: 'https://storage.veila.com/shops/logo123.jpg',
+    nullable: true,
+  })
+  @IsString({ message: 'URL ảnh đại diện phải là chuỗi.' })
+  @IsOptional()
+  logoUrl?: string | null;
+
+  @ApiProperty({
+    description: 'URL ảnh bìa của shop',
+    example: 'https://storage.veila.com/shops/cover123.jpg',
+    nullable: true,
+  })
+  @IsString({ message: 'URL ảnh bìa phải là chuỗi.' })
+  @IsOptional()
+  coverUrl?: string | null;
+
+  @ApiProperty({
+    description: 'Danh sách URL ảnh của shop',
+    example: [
+      'https://storage.veila.com/shops/image1.jpg',
+      'https://storage.veila.com/shops/image2.jpg',
+    ],
+    nullable: true,
+  })
+  @IsString({ message: 'Danh sách ảnh phải là chuỗi.' })
+  @IsOptional()
+  images?: string | null;
+}
 
 export class ReviewShopDto {
   @ApiProperty({
@@ -8,6 +87,7 @@ export class ReviewShopDto {
     example: true,
     nullable: false,
   })
+  @IsBoolean({ message: 'Trạng thái duyệt phải là boolean.' })
   isApproved: boolean;
 
   @ApiProperty({
@@ -16,6 +96,8 @@ export class ReviewShopDto {
     maxLength: 500,
     nullable: true,
   })
+  @IsString({ message: 'Lý do từ chối phải là chuỗi.' })
+  @IsOptional()
   rejectReason?: string | null;
 }
 
@@ -44,6 +126,7 @@ export class ResubmitShopDto {
     maxLength: 100,
     nullable: false,
   })
+  @IsString({ message: 'Tên shop phải là chuỗi.' })
   name: string;
 
   @ApiProperty({
@@ -52,6 +135,7 @@ export class ResubmitShopDto {
     maxLength: 15,
     nullable: false,
   })
+  @IsString({ message: 'Số điện thoại phải là chuỗi.' })
   phone: string;
 
   @ApiProperty({
@@ -60,6 +144,7 @@ export class ResubmitShopDto {
     maxLength: 64,
     nullable: false,
   })
+  @IsString({ message: 'Email phải là chuỗi.' })
   email: string;
 
   @ApiProperty({
@@ -68,6 +153,7 @@ export class ResubmitShopDto {
     maxLength: 255,
     nullable: false,
   })
+  @IsString({ message: 'Địa chỉ phải là chuỗi.' })
   address: string;
 
   @ApiProperty({
@@ -75,6 +161,7 @@ export class ResubmitShopDto {
     example: 'https://storage.veila.com/shops/license123.jpg',
     nullable: false,
   })
+  @IsString({ message: 'Ảnh giấy phép kinh doanh phải là chuỗi.' })
   licenseImages: string;
 }
 
@@ -84,6 +171,7 @@ export class RegisterShopDto {
     example: 'contract-uuid-123',
     nullable: false,
   })
+  @IsString({ message: 'Mã hợp đồng phải là chuỗi.' })
   contractId: string;
 
   @ApiProperty({
@@ -91,6 +179,7 @@ export class RegisterShopDto {
     example: true,
     nullable: false,
   })
+  @IsBoolean({ message: 'Trạng thái đồng ý với điều khoản phải là boolean.' })
   isAccepted: boolean;
 
   @ApiProperty({
@@ -99,6 +188,7 @@ export class RegisterShopDto {
     maxLength: 100,
     nullable: false,
   })
+  @IsString({ message: 'Tên shop phải là chuỗi.' })
   name: string;
 
   @ApiProperty({
@@ -107,6 +197,7 @@ export class RegisterShopDto {
     maxLength: 15,
     nullable: false,
   })
+  @IsString({ message: 'Số điện thoại phải là chuỗi.' })
   phone: string;
 
   @ApiProperty({
@@ -115,6 +206,7 @@ export class RegisterShopDto {
     maxLength: 64,
     nullable: false,
   })
+  @IsString({ message: 'Email phải là chuỗi.' })
   email: string;
 
   @ApiProperty({
@@ -123,6 +215,7 @@ export class RegisterShopDto {
     maxLength: 255,
     nullable: false,
   })
+  @IsString({ message: 'Địa chỉ phải là chuỗi.' })
   address: string;
 
   @ApiProperty({
@@ -130,6 +223,7 @@ export class RegisterShopDto {
     example: 'https://storage.veila.com/shops/license123.jpg',
     nullable: false,
   })
+  @IsString({ message: 'Ảnh giấy phép kinh doanh phải là chuỗi.' })
   licenseImages: string;
 }
 

@@ -1,5 +1,10 @@
 import { MembershipService } from '@/app/membership';
-import { RegisterShopDto, ResubmitShopDto, ReviewShopDto } from '@/app/shop/shop.dto';
+import {
+  RegisterShopDto,
+  ResubmitShopDto,
+  ReviewShopDto,
+  UpdateShopDto,
+} from '@/app/shop/shop.dto';
 import { Filtering, getOrder, getWhere, Sorting } from '@/common/decorators';
 import {
   Accessory,
@@ -38,6 +43,11 @@ export class ShopService {
     private readonly subscriptionRepository: Repository<Subscription>,
     private readonly membershipService: MembershipService,
   ) {}
+
+  async updateShopProfile(userId: string, body: UpdateShopDto): Promise<void> {
+    const existingShop = await this.getShopForOwner(userId);
+    await this.shopRepository.update(existingShop.id, { ...body });
+  }
 
   async getShopsForCustomer(
     take: number,
