@@ -30,6 +30,8 @@ import { OrderAccessoriesDetailsModule } from './order-accessories-details/order
 import { OrderDressDetailsModule } from './order-dress-details';
 import { ScheduleModule } from '@nestjs/schedule';
 import { ComplaintModule } from '@/app/complaint';
+import { TaskModule } from './task';
+import { SingleModule } from '@/app/single';
 
 @Module({
   imports: [
@@ -78,6 +80,8 @@ import { ComplaintModule } from '@/app/complaint';
     OrderDressDetailsModule,
     ScheduleModule.forRoot({ cronJobs: true }),
     ComplaintModule,
+    TaskModule,
+    SingleModule,
   ],
   controllers: [AppController],
   providers: [

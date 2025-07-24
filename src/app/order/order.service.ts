@@ -1,3 +1,5 @@
+import { OrderAccessoriesDetailsService } from './../order-accessories-details/order-accessories-details.service';
+import { OrderDressDetailsService } from './../order-dress-details/order-dress-details.service';
 import { ShopService } from './../shop/shop.service';
 import { Filtering, getOrder, getWhere, Sorting } from '@/common/decorators';
 import { Order, OrderStatus } from '@/common/models';
@@ -9,7 +11,7 @@ import {
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { In, Repository } from 'typeorm';
-import { CUOrderDto, orderDto } from './order.dto';
+import { CreateOrderRequestDto, CUOrderDto, orderDto } from './order.dto';
 import { plainToInstance } from 'class-transformer';
 import { UserService } from '../user';
 
@@ -20,6 +22,8 @@ export class OrderService {
     private readonly orderRepository: Repository<Order>,
     private readonly userService: UserService,
     private readonly shopService: ShopService,
+    private readonly orderDressDetailsService: OrderDressDetailsService,
+    private readonly orderAccessoriesDetailsService: OrderAccessoriesDetailsService,
   ) {}
 
   async getOrdersForAdmin(
@@ -140,36 +144,43 @@ export class OrderService {
     return plainToInstance(orderDto, order);
   }
 
-  async createOrder(userId: string, newOrder: CUOrderDto): Promise<Order> {
+  async createOrder(userId: string, body: CreateOrderRequestDto): Promise<Order> {
     const user = await this.userService.getUserById(userId);
     if (!user) throw new NotFoundException('Người dùng này không tồn tại');
 
     if (!user.isIdentified) throw new ForbiddenException('Người dùng chưa định danh');
 
-    const shop = await this.shopService.getShopForCustomer(newOrder.shopId);
+    const shop = await this.shopService.getShopForCustomer(body.newOrder.shopId);
     if (!shop) throw new NotFoundException('Không tìm thấy cửa hàng');
 
     const order = {
       customer: { id: userId },
-      shop: { id: newOrder.shopId },
-      phone: newOrder.phone,
-      email: newOrder.email,
-      address: newOrder.address,
-      dueDate: newOrder.dueDate,
-      returnDate: newOrder.returnDate,
-      isBuyBack: newOrder.isBuyBack,
-      amount: newOrder.amount,
-      type: newOrder.type,
+      shop: { id: body.newOrder.shopId },
+      phone: body.newOrder.phone,
+      email: body.newOrder.email,
+      address: body.newOrder.address,
+      dueDate: body.newOrder.dueDate,
+      returnDate: body.newOrder.returnDate,
+      isBuyBack: body.newOrder.isBuyBack,
+      amount: body.newOrder.amount,
+      type: body.newOrder.type,
       status: OrderStatus.PENDING,
     } as Order;
-    await this.orderRepository.save(order);
+    const orderId = (await this.orderRepository.save(order)).id;
+
+    await this.orderDressDetailsService.saveOrderDressDetails(orderId, body.dressDetails);
+    await this.orderAccessoriesDetailsService.saveOrderAccessoryDetails(
+      orderId,
+      body.accessoriesDetails,
+    );
+
     return order;
   }
 
   async updateOrder(userId: string, id: string, updatedOrder: CUOrderDto): Promise<Order> {
-    const existingOrder = await this.getOrderById(id);
+    const existingOrder = await this.orderRepository.findOneBy({ id });
 
-    if (existingOrder.status !== OrderStatus.PENDING)
+    if (existingOrder?.status !== OrderStatus.PENDING)
       throw new BadRequestException('Đơn hàng đang trong quá trình thực hiện');
 
     if (!existingOrder) throw new NotFoundException('Không tìm thấy đơn hàng này');
@@ -181,18 +192,18 @@ export class OrderService {
     if (!shop) throw new NotFoundException('Không tìm thấy cửa hàng');
 
     existingOrder.phone = updatedOrder.phone;
-    existingOrder.email = updatedOrder.email;
+    existingOrder.email = updatedOrder.email || '';
     existingOrder.address = updatedOrder.address;
     existingOrder.dueDate = updatedOrder.dueDate;
     existingOrder.returnDate = updatedOrder.returnDate;
     existingOrder.isBuyBack = updatedOrder.isBuyBack;
     existingOrder.amount = updatedOrder.amount;
 
-    return await this.orderRepository.save(plainToInstance(Order, existingOrder));
+    return await this.orderRepository.save(existingOrder);
   }
 
   async updateOrderStatus(userId: string, id: string, status: OrderStatus): Promise<Order> {
-    const existingOrder = await this.getOrderById(id);
+    const existingOrder = await this.orderRepository.findOneBy({ id });
 
     if (!existingOrder || existingOrder.status === OrderStatus.CANCELLED)
       throw new NotFoundException('Không tìm thấy đơn hàng này');
@@ -202,6 +213,6 @@ export class OrderService {
 
     existingOrder.status = status;
 
-    return await this.orderRepository.save(plainToInstance(Order, existingOrder));
+    return await this.orderRepository.save(existingOrder);
   }
 }

@@ -1,0 +1,196 @@
+import { CUSlideDto } from '@/app/single/single.dto';
+import { SingleService } from '@/app/single/single.service';
+import { ItemResponse, ListResponse } from '@/common/base';
+import { Slide } from '@/common/models/single';
+import { Body, Controller, Delete, Get, HttpStatus, Param, Patch, Post, Put } from '@nestjs/common';
+import {
+  ApiExtraModels,
+  ApiOkResponse,
+  ApiOperation,
+  ApiTags,
+  getSchemaPath,
+} from '@nestjs/swagger';
+
+@Controller('singles')
+@ApiTags('Single Controller')
+@ApiExtraModels(ListResponse, ItemResponse, Slide)
+export class SingleController {
+  constructor(private readonly singleService: SingleService) {}
+
+  @Get('slides')
+  @ApiOperation({
+    summary: 'Get all slides',
+    description: 'Api lẻ',
+  })
+  @ApiOkResponse({
+    schema: {
+      allOf: [
+        { $ref: getSchemaPath(ListResponse) },
+        {
+          properties: {
+            item: {
+              $ref: getSchemaPath(Slide),
+            },
+          },
+        },
+      ],
+    },
+  })
+  async getSlides(): Promise<ListResponse<Slide>> {
+    const slides = await this.singleService.getSlides();
+    return {
+      message: 'Get all slides successfully',
+      statusCode: HttpStatus.OK,
+      pageIndex: 1,
+      pageSize: slides.length,
+      totalItems: slides.length,
+      totalPages: 1,
+      hasNextPage: false,
+      hasPrevPage: false,
+      items: slides,
+    };
+  }
+
+  @Get('slides/:id')
+  @ApiOperation({
+    summary: 'Get slide by id',
+    description: 'Api lẻ',
+  })
+  @ApiOkResponse({
+    schema: {
+      allOf: [
+        { $ref: getSchemaPath(ItemResponse) },
+        {
+          properties: {
+            item: {
+              $ref: getSchemaPath(Slide),
+            },
+          },
+        },
+      ],
+    },
+  })
+  async getSlideById(@Param('id') id: string): Promise<ItemResponse<Slide>> {
+    const slide = await this.singleService.getSlideById(id);
+    return {
+      message: 'Get slide by id successfully',
+      statusCode: HttpStatus.OK,
+      item: slide,
+    };
+  }
+
+  @Post('slides')
+  @ApiOperation({
+    summary: 'Create a new slide',
+    description: 'Api lẻ',
+  })
+  @ApiOkResponse({
+    schema: {
+      allOf: [
+        { $ref: getSchemaPath(ItemResponse) },
+        {
+          properties: {
+            item: {
+              $ref: getSchemaPath(Slide),
+            },
+          },
+        },
+      ],
+    },
+  })
+  async createSlide(@Body() body: CUSlideDto): Promise<ItemResponse<Slide>> {
+    const slide = await this.singleService.createSlide(body);
+    return {
+      message: 'Create slide successfully',
+      statusCode: HttpStatus.CREATED,
+      item: slide,
+    };
+  }
+
+  @Put('slides/:id')
+  @ApiOperation({
+    summary: 'Update slide by id',
+    description: 'Api lẻ',
+  })
+  @ApiOkResponse({
+    schema: {
+      allOf: [
+        { $ref: getSchemaPath(ItemResponse) },
+        {
+          properties: {
+            item: {
+              type: 'null',
+            },
+          },
+        },
+      ],
+    },
+  })
+  async updateSlide(
+    @Param('id') id: string,
+    @Body() body: CUSlideDto,
+  ): Promise<ItemResponse<null>> {
+    await this.singleService.updateSlide(id, body);
+    return {
+      message: 'Update slide successfully',
+      statusCode: HttpStatus.NO_CONTENT,
+      item: null,
+    };
+  }
+
+  @Delete('slides/:id')
+  @ApiOperation({
+    summary: 'Delete slide by id',
+    description: 'Api lẻ',
+  })
+  @ApiOkResponse({
+    schema: {
+      allOf: [
+        { $ref: getSchemaPath(ItemResponse) },
+        {
+          properties: {
+            item: {
+              type: 'null',
+            },
+          },
+        },
+      ],
+    },
+  })
+  async deleteSlide(@Param('id') id: string): Promise<ItemResponse<null>> {
+    await this.singleService.deleteSlide(id);
+    return {
+      message: 'Delete slide successfully',
+      statusCode: HttpStatus.NO_CONTENT,
+      item: null,
+    };
+  }
+
+  @Patch('slides/:id')
+  @ApiOperation({
+    summary: 'Restore slide by id',
+    description: 'Api lẻ',
+  })
+  @ApiOkResponse({
+    schema: {
+      allOf: [
+        { $ref: getSchemaPath(ItemResponse) },
+        {
+          properties: {
+            item: {
+              type: 'null',
+            },
+          },
+        },
+      ],
+    },
+  })
+  async restoreSlide(@Param('id') id: string): Promise<ItemResponse<null>> {
+    await this.singleService.restoreSlide(id);
+    return {
+      message: 'Restore slide successfully',
+      statusCode: HttpStatus.NO_CONTENT,
+      item: null,
+    };
+  }
+}
