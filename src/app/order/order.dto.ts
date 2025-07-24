@@ -1,7 +1,17 @@
 import { OrderStatus, OrderType } from '@/common/models';
 import { ApiProperty } from '@nestjs/swagger';
-import { Expose, Transform } from 'class-transformer';
-import { IsBoolean, IsDate, IsNotEmpty, IsNumber, IsString } from 'class-validator';
+import { Expose, Transform, Type } from 'class-transformer';
+import {
+  IsArray,
+  IsBoolean,
+  IsDate,
+  IsNotEmpty,
+  IsNumber,
+  IsString,
+  ValidateNested,
+} from 'class-validator';
+import { CUOrderAccessoriesDetailDto } from '../order-accessories-details';
+import { CUOrderDressDetailDto } from '../order-dress-details';
 
 export class CUOrderDto {
   @ApiProperty({
@@ -222,4 +232,20 @@ export class orderDto {
   })
   @IsNotEmpty()
   status: OrderStatus;
+}
+
+export class CreateOrderRequestDto {
+  @ValidateNested()
+  @Type(() => CUOrderDto)
+  newOrder: CUOrderDto;
+
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => CUOrderDressDetailDto)
+  dressDetails: CUOrderDressDetailDto[];
+
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => CUOrderAccessoriesDetailDto)
+  accessoriesDetails: CUOrderAccessoriesDetailDto[];
 }
