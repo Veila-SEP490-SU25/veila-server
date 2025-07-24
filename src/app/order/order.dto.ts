@@ -234,7 +234,7 @@ export class orderDto {
   status: OrderStatus;
 }
 
-export class CreateOrderRequestDto {
+export class createOrderRequestDto {
   @ValidateNested()
   @Type(() => CUOrderDto)
   newOrder: CUOrderDto;

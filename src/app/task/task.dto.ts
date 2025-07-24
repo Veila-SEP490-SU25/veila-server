@@ -57,7 +57,7 @@ export class CUTaskDto {
   dueDate: Date;
 }
 
-export class TaskDto {
+export class taskDto {
   @Expose()
   @ApiProperty({ description: 'ID của công việc', example: 'task-uuid-123' })
   @Expose()

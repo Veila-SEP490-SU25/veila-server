@@ -31,6 +31,7 @@ import { OrderDressDetailsModule } from './order-dress-details';
 import { ScheduleModule } from '@nestjs/schedule';
 import { ComplaintModule } from '@/app/complaint';
 import { TaskModule } from './task';
+import { MilestoneModule } from './milestone';
 
 @Module({
   imports: [
@@ -80,6 +81,7 @@ import { TaskModule } from './task';
     ScheduleModule.forRoot({ cronJobs: true }),
     ComplaintModule,
     TaskModule,
+    MilestoneModule,
   ],
   controllers: [AppController],
   providers: [
