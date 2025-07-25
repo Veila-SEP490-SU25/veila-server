@@ -408,4 +408,13 @@ export class ShopService {
       );
     }
   }
+
+  async getShopByUserId(userId: string): Promise<Shop | null> {
+    return await this.shopRepository
+      .createQueryBuilder('shop')
+      .leftJoinAndSelect('shop.user', 'user')
+      .where('user.id = :userId', { userId })
+      .andWhere('shop.status = :status', { status: ShopStatus.ACTIVE })
+      .getOne();
+  }
 }
