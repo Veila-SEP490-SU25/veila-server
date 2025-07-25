@@ -1,7 +1,8 @@
 import { MilestoneStatus } from '@/common/models';
 import { ApiProperty } from '@nestjs/swagger';
-import { Expose, Transform } from 'class-transformer';
-import { IsNotEmpty, IsNumber, IsString } from 'class-validator';
+import { Expose, Transform, Type } from 'class-transformer';
+import { IsArray, IsNotEmpty, IsNumber, IsString, ValidateNested } from 'class-validator';
+import { CUTaskDto } from '../task';
 
 export class CUMilestoneDto {
   @ApiProperty({
@@ -57,7 +58,7 @@ export class CUMilestoneDto {
   dueDate: Date;
 }
 
-export class MilestoneDto {
+export class milestoneDto {
   @Expose()
   @ApiProperty({ description: 'ID của mốc công việc', example: 'milestone-uuid-123' })
   milestoneId: string;
@@ -89,4 +90,15 @@ export class MilestoneDto {
   @Expose()
   @ApiProperty({ description: 'Hạn hoàn thành mốc công việc', example: '2025-07-01T17:00:00.000Z' })
   dueDate: Date;
+}
+
+export class createMilestoneRequestDto {
+  @ValidateNested()
+  @Type(() => CUMilestoneDto)
+  newMilestone: CUMilestoneDto;
+
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => CUTaskDto)
+  tasks: CUTaskDto[];
 }

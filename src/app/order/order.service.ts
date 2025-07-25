@@ -1,5 +1,3 @@
-import { OrderAccessoriesDetailsService } from './../order-accessories-details/order-accessories-details.service';
-import { OrderDressDetailsService } from './../order-dress-details/order-dress-details.service';
 import { ShopService } from './../shop/shop.service';
 import { Filtering, getOrder, getWhere, Sorting } from '@/common/decorators';
 import { Order, OrderStatus } from '@/common/models';
@@ -11,9 +9,11 @@ import {
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { In, Repository } from 'typeorm';
-import { CreateOrderRequestDto, CUOrderDto, orderDto } from './order.dto';
+import { createOrderRequestDto, CUOrderDto, orderDto } from './order.dto';
 import { plainToInstance } from 'class-transformer';
 import { UserService } from '../user';
+import { OrderDressDetailsService } from '../order-dress-details';
+import { OrderAccessoriesDetailsService } from '../order-accessories-details';
 
 @Injectable()
 export class OrderService {
@@ -144,7 +144,7 @@ export class OrderService {
     return plainToInstance(orderDto, order);
   }
 
-  async createOrder(userId: string, body: CreateOrderRequestDto): Promise<Order> {
+  async createOrder(userId: string, body: createOrderRequestDto): Promise<Order> {
     const user = await this.userService.getUserById(userId);
     if (!user) throw new NotFoundException('Người dùng này không tồn tại');
 
@@ -173,14 +173,13 @@ export class OrderService {
       orderId,
       body.accessoriesDetails,
     );
-
     return order;
   }
 
   async updateOrder(userId: string, id: string, updatedOrder: CUOrderDto): Promise<Order> {
-    const existingOrder = await this.orderRepository.findOneBy({ id });
+    const existingOrder = await this.getOrderById(id);
 
-    if (existingOrder?.status !== OrderStatus.PENDING)
+    if (existingOrder.status !== OrderStatus.PENDING)
       throw new BadRequestException('Đơn hàng đang trong quá trình thực hiện');
 
     if (!existingOrder) throw new NotFoundException('Không tìm thấy đơn hàng này');
@@ -192,18 +191,18 @@ export class OrderService {
     if (!shop) throw new NotFoundException('Không tìm thấy cửa hàng');
 
     existingOrder.phone = updatedOrder.phone;
-    existingOrder.email = updatedOrder.email || '';
+    existingOrder.email = updatedOrder.email;
     existingOrder.address = updatedOrder.address;
     existingOrder.dueDate = updatedOrder.dueDate;
     existingOrder.returnDate = updatedOrder.returnDate;
     existingOrder.isBuyBack = updatedOrder.isBuyBack;
     existingOrder.amount = updatedOrder.amount;
 
-    return await this.orderRepository.save(existingOrder);
+    return await this.orderRepository.save(plainToInstance(Order, existingOrder));
   }
 
   async updateOrderStatus(userId: string, id: string, status: OrderStatus): Promise<Order> {
-    const existingOrder = await this.orderRepository.findOneBy({ id });
+    const existingOrder = await this.getOrderById(id);
 
     if (!existingOrder || existingOrder.status === OrderStatus.CANCELLED)
       throw new NotFoundException('Không tìm thấy đơn hàng này');
@@ -213,6 +212,17 @@ export class OrderService {
 
     existingOrder.status = status;
 
-    return await this.orderRepository.save(existingOrder);
+    return await this.orderRepository.save(plainToInstance(Order, existingOrder));
+  }
+
+  async getOrderByShopId(shopId: string): Promise<Order[] | null> {
+    return await this.orderRepository
+      .createQueryBuilder('order')
+      .leftJoinAndSelect('order.shop', 'shop')
+      .where('shop.id = :shopId', { shopId })
+      .andWhere('order.status IN (:...statuses)', {
+        statuses: [OrderStatus.PENDING, OrderStatus.IN_PROCESS],
+      })
+      .getMany();
   }
 }

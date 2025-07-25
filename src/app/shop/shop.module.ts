@@ -14,6 +14,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { ShopController } from '@/app/shop/shop.controller';
 import { ShopService } from '@/app/shop/shop.service';
 import { MembershipModule } from '@/app/membership';
+import { ContractModule } from '@/app/contract';
 
 @Module({
   imports: [
@@ -29,6 +30,7 @@ import { MembershipModule } from '@/app/membership';
       Subscription,
     ]),
     MembershipModule,
+    ContractModule,
   ],
   controllers: [ShopController],
   providers: [ShopService],

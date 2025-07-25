@@ -167,22 +167,6 @@ export class ResubmitShopDto {
 
 export class RegisterShopDto {
   @ApiProperty({
-    description: 'ID của điều khoản đồng ý',
-    example: 'contract-uuid-123',
-    nullable: false,
-  })
-  @IsString({ message: 'Mã hợp đồng phải là chuỗi.' })
-  contractId: string;
-
-  @ApiProperty({
-    description: 'Người dùng có đồng ý với điều khoản hay không',
-    example: true,
-    nullable: false,
-  })
-  @IsBoolean({ message: 'Trạng thái đồng ý với điều khoản phải là boolean.' })
-  isAccepted: boolean;
-
-  @ApiProperty({
     description: 'Tên của shop',
     example: 'Cửa hàng thời trang ABC',
     maxLength: 100,

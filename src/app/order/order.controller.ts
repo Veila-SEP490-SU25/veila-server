@@ -1,6 +1,6 @@
 import { OrderStatus } from './../../common/models/order/order.model';
 import { ItemResponse, ListResponse } from '@/common/base';
-import { Milestone, Order, UserRole } from '@/common/models';
+import { Order, UserRole } from '@/common/models';
 import { Body, Controller, Get, HttpStatus, Post, Put, Param, UseGuards } from '@nestjs/common';
 import {
   ApiBearerAuth,
@@ -23,7 +23,7 @@ import {
   UserId,
 } from '@/common/decorators';
 import { AuthGuard } from '@/common/guards';
-import { CreateOrderRequestDto, CUOrderDto, orderDto } from './order.dto';
+import { createOrderRequestDto, CUOrderDto, orderDto } from './order.dto';
 
 @Controller('orders')
 @ApiTags('Order Controller')
@@ -374,7 +374,7 @@ export class OrderController {
   })
   async createOrder(
     @UserId() userId: string,
-    @Body() body: CreateOrderRequestDto,
+    @Body() body: createOrderRequestDto,
   ): Promise<ItemResponse<Order>> {
     const order = await this.orderService.createOrder(userId, body);
     return {
@@ -413,47 +413,6 @@ export class OrderController {
     },
   })
   async updateOrder(
-    @UserId() userId: string,
-    @Param('id') id: string,
-    @Body() updatedOrder: CUOrderDto,
-  ): Promise<ItemResponse<Order>> {
-    const order = await this.orderService.updateOrder(userId, id, updatedOrder);
-    return {
-      message: 'Đơn hàng đã được cập nhật thành công',
-      statusCode: HttpStatus.OK,
-      item: order,
-    };
-  }
-
-  @Put(':id/milestones')
-  @UseGuards(AuthGuard)
-  @Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN, UserRole.STAFF, UserRole.SHOP)
-  @ApiOperation({
-    summary: 'Cập nhật thông tin milestones của đơn hàng đơn hàng',
-    description: `
-          **Hướng dẫn sử dụng:**
-
-          - Truyền \`id\` của đơn hàng trên URL.
-          - Truyền dữ liệu cập nhật milestone trong body theo dạng JSON.
-          - Các trường bắt buộc: \`address\`, \`due_date\`, \`type\`.
-          - Nếu không tìm thấy đơn hang sẽ trả về lỗi.
-          - OrderStatus: PENDING, IN_PROCESS, COMPLETED, CANCELLED
-          - Trả về thông tin chi tiết milestones của đơn hàng đã cập nhật.
-      `,
-  })
-  @ApiOkResponse({
-    schema: {
-      allOf: [
-        { $ref: getSchemaPath(ListResponse) },
-        {
-          properties: {
-            item: { example: null, $ref: getSchemaPath(Milestone) },
-          },
-        },
-      ],
-    },
-  })
-  async updateOrderMilestone(
     @UserId() userId: string,
     @Param('id') id: string,
     @Body() updatedOrder: CUOrderDto,

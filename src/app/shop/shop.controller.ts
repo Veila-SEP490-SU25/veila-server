@@ -66,23 +66,6 @@ import { plainToInstance } from 'class-transformer';
 export class ShopController {
   constructor(private readonly shopService: ShopService) {}
 
-  @Patch(':id')
-  @UseGuards(AuthGuard)
-  @Roles(UserRole.SHOP)
-  @ApiOperation({})
-  @ApiOkResponse({})
-  async updateShopProfile(
-    @UserId() userId: string,
-    @Body() body: UpdateShopDto,
-  ): Promise<ItemResponse<null>> {
-    await this.shopService.updateShopProfile(userId, body);
-    return {
-      message: 'Cập nhật thông tin shop thành công',
-      statusCode: HttpStatus.OK,
-      item: null,
-    };
-  }
-
   @Post('me')
   @UseGuards(AuthGuard)
   @Roles(UserRole.CUSTOMER)
@@ -153,6 +136,23 @@ export class ShopController {
     return {
       message: 'Đơn đăng ký đã được gửi đi thành công, vui lòng chờ xét duyệt',
       statusCode: HttpStatus.ACCEPTED,
+      item: null,
+    };
+  }
+
+  @Patch('me')
+  @UseGuards(AuthGuard)
+  @Roles(UserRole.SHOP)
+  @ApiOperation({})
+  @ApiOkResponse({})
+  async updateShopProfile(
+    @UserId() userId: string,
+    @Body() body: UpdateShopDto,
+  ): Promise<ItemResponse<null>> {
+    await this.shopService.updateShopProfile(userId, body);
+    return {
+      message: 'Cập nhật thông tin shop thành công',
+      statusCode: HttpStatus.OK,
       item: null,
     };
   }
