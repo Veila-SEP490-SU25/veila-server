@@ -1,6 +1,6 @@
 import { IsPassword } from '@/common/validators';
 import { ApiProperty } from '@nestjs/swagger';
-import { IsBoolean, IsEmail, IsNotEmpty, IsOptional, IsString, IsUUID } from 'class-validator';
+import { IsEmail, IsNotEmpty, IsOptional, IsString, IsUUID } from 'class-validator';
 
 export class LoginDto {
   @ApiProperty({ required: true })
@@ -33,24 +33,6 @@ export class RegisterDto {
   @IsString({ message: 'Tên đệm không hợp lệ.' })
   @IsOptional()
   middleName?: string;
-
-  @ApiProperty({
-    nullable: false,
-    description: 'Id của hợp đồng đã được chấp nhận',
-    example: 'contract-uuid-123',
-  })
-  @IsString({ message: 'Mã hợp đồng không hợp lệ.' })
-  @IsNotEmpty({ message: 'Mã hợp đồng không được để trống.' })
-  contractId: string;
-
-  @ApiProperty({
-    nullable: false,
-    description: 'Người dùng có đồng ý với điều khoản hay không',
-    example: true,
-  })
-  @IsNotEmpty({ message: 'Trạng thái đồng ý với điều khoản không được để trống.' })
-  @IsBoolean({ message: 'Trạng thái đồng ý với điều khoản phải là boolean.' })
-  isAccepted: boolean;
 }
 
 export class RequestOtpDto {

@@ -5,12 +5,13 @@ import {
   ResetPasswordDto,
   TokenResponse,
 } from '@/app/auth/auth.dto';
+import { ContractService } from '@/app/contract';
 import { MailService } from '@/app/mail';
 import { PasswordService } from '@/app/password';
 import { RedisService } from '@/app/redis';
 import { TokenService } from '@/app/token';
 import { UpdateProfile, UserService } from '@/app/user';
-import { User, UserRole, UserStatus } from '@/common/models';
+import { ContractType, User, UserRole, UserStatus } from '@/common/models';
 import {
   ForbiddenException,
   Injectable,
@@ -27,6 +28,7 @@ export class AuthService {
     private readonly tokenService: TokenService,
     private readonly mailService: MailService,
     private readonly passwordService: PasswordService,
+    private readonly contractService: ContractService,
   ) {}
 
   async login(body: LoginDto): Promise<TokenResponse> {
@@ -56,11 +58,10 @@ export class AuthService {
     };
   }
 
-  async register({ contractId, isAccepted, ...body }: RegisterDto): Promise<string> {
-    if (!isAccepted)
-      throw new ForbiddenException('Bạn cần đồng ý với điều khoản để đăng ký tài khoản.');
+  async register(body: RegisterDto): Promise<string> {
     const user = await this.userService.getByEmail(body.email);
     if (user) throw new ForbiddenException('Tài khoản đã tồn tại trong hệ thống.');
+    const contract = await this.contractService.findAvailableContract(ContractType.CUSTOMER);
     const activationCode = this.passwordService.generateOTP(6);
     const hashedActivationCode = await this.passwordService.hashPassword(activationCode);
     const hashedPassword = await this.passwordService.hashPassword(body.password);
@@ -73,7 +74,7 @@ export class AuthService {
       role: UserRole.CUSTOMER,
       isIdentified: false,
       status: UserStatus.ACTIVE,
-      contract: { id: contractId },
+      contract,
     } as User);
     await Promise.all([
       this.redisService.set(`user:otp:${newUser.id}`, hashedActivationCode, 5 * 60 * 1000),

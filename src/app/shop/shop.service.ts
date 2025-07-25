@@ -1,3 +1,4 @@
+import { ContractService } from '@/app/contract';
 import { MembershipService } from '@/app/membership';
 import {
   RegisterShopDto,
@@ -12,6 +13,7 @@ import {
   Blog,
   BlogStatus,
   Category,
+  ContractType,
   Dress,
   DressStatus,
   License,
@@ -44,6 +46,7 @@ export class ShopService {
     @InjectRepository(Subscription)
     private readonly subscriptionRepository: Repository<Subscription>,
     private readonly membershipService: MembershipService,
+    private readonly contractService: ContractService,
   ) {}
 
   async updateShopProfile(userId: string, body: UpdateShopDto): Promise<void> {
@@ -211,7 +214,7 @@ export class ShopService {
 
   async registerShop(
     userId: string,
-    { contractId, isAccepted, name, phone, email, address, licenseImages }: RegisterShopDto,
+    { name, phone, email, address, licenseImages }: RegisterShopDto,
   ): Promise<void> {
     const user = await this.userRepository.findOne({ where: { id: userId } });
     if (!user) throw new NotFoundException('Không tìm thấy người dùng phù hợp');
@@ -219,13 +222,11 @@ export class ShopService {
       throw new BadRequestException('Người dùng đã có cửa hàng');
     if (!user.isIdentified)
       throw new BadRequestException('Bạn cần xác thực danh tính (SDT) để đăng ký cửa hàng');
-
-    if (!isAccepted)
-      throw new BadRequestException('Bạn cần đồng ý với điều khoản để đăng ký cửa hàng');
+    const contract = await this.contractService.findAvailableContract(ContractType.SHOP);
 
     const newShop = await this.shopRepository.save({
       user: { id: userId },
-      contract: { id: contractId },
+      contract,
       name,
       phone,
       email,
