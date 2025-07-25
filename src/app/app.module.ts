@@ -32,6 +32,7 @@ import { ScheduleModule } from '@nestjs/schedule';
 import { ComplaintModule } from '@/app/complaint';
 import { TaskModule } from './task';
 import { MilestoneModule } from './milestone';
+import { SingleModule } from '@/app/single';
 
 @Module({
   imports: [
@@ -82,6 +83,7 @@ import { MilestoneModule } from './milestone';
     ComplaintModule,
     TaskModule,
     MilestoneModule,
+    SingleModule,
   ],
   controllers: [AppController],
   providers: [
