@@ -1,5 +1,5 @@
-import { Contract, ContractType } from '@/common/models';
-import { Injectable } from '@nestjs/common';
+import { Contract, ContractStatus, ContractType } from '@/common/models';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 
@@ -8,6 +8,14 @@ export class ContractService {
   constructor(
     @InjectRepository(Contract) private readonly contractRepository: Repository<Contract>,
   ) {}
+
+  async findAvailableContract(type: ContractType): Promise<Contract> {
+    const contract = await this.contractRepository.findOne({
+      where: { contractType: type, status: ContractStatus.ACTIVE },
+    });
+    if (!contract) throw new NotFoundException('Hợp đồng không tồn tại.');
+    return contract;
+  }
 
   async findAll(): Promise<Contract[]> {
     return this.contractRepository.find({ withDeleted: true });
