@@ -33,6 +33,7 @@ import { ComplaintModule } from '@/app/complaint';
 import { TaskModule } from './task';
 import { MilestoneModule } from './milestone';
 import { SingleModule } from '@/app/single';
+import { TransactionModule } from './transaction';
 
 @Module({
   imports: [
@@ -84,6 +85,7 @@ import { SingleModule } from '@/app/single';
     TaskModule,
     MilestoneModule,
     SingleModule,
+    TransactionModule,
   ],
   controllers: [AppController],
   providers: [
