@@ -435,7 +435,7 @@ export class OrderController {
 
           - Chỉ người dùng có quyền \`CUSTOMER\` không thể cập nhật trạng thái đơn hàng.
           - Truyền \`id\` của đơn hàng trên URL.
-          - Truyền dữ liệu cập nhật trong body theo dạng JSON.
+          - Truyền dữ liệu cập nhật trên URL.
           - Các trường bắt buộc: \`address\`, \`due_date\`, \`type\`.
           - Nếu không tìm thấy đơn hang sẽ trả về lỗi.
           - OrderStatus: PENDING, IN_PROCESS, COMPLETED, CANCELLED
