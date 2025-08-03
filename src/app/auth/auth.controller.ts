@@ -1,6 +1,7 @@
 import {
   ChangePasswordDto,
   LoginDto,
+  LoginGoogleDto,
   RegisterDto,
   RequestOtpDto,
   ResetPasswordDto,
@@ -24,6 +25,7 @@ import {
 import { RefreshTokenDto } from '@/app/auth/auth.dto';
 import { User } from '@/common/models';
 import { UpdateProfile } from '@/app/user';
+import { Public } from '@/common/decorators/public.decorator';
 
 @Controller('auth')
 @ApiTags('Auth Controller')
@@ -319,5 +321,38 @@ export class AuthController {
       message: 'Đặt lại mật khẩu thành công.',
       item: null,
     };
+  }
+
+  @Public()
+  @Post('google/login')
+  @ApiOperation({
+    summary: 'Đăng nhập với tài khoản google',
+    description: 'đăng nhập bằng tài khoản google, nếu chưa có thì tạo tài khoản mới và tiếp tục đăng nhập',
+  })
+  @ApiBody({ type: LoginGoogleDto })
+  @ApiOkResponse({
+    schema: {
+      allOf: [
+        { $ref: getSchemaPath(ItemResponse) },
+        {
+          properties: {
+            item: {
+              $ref: getSchemaPath(TokenResponse),
+            },
+          },
+        },
+      ],
+    },
+  })
+  async loginGoogle(
+    @Body() body: LoginGoogleDto
+  ): Promise<ItemResponse<TokenResponse>> {
+    const response = await this.authService.loginGoogle(body);
+
+    return {
+      statusCode: HttpStatus.OK,
+      message: 'Đăng nhập bằng tài khoản Google thành công',
+      item: response,
+    }
   }
 }
