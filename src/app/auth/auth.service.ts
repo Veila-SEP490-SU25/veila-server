@@ -1,6 +1,7 @@
 import {
   ChangePasswordDto,
   LoginDto,
+  LoginGoogleDto,
   RegisterDto,
   ResetPasswordDto,
   TokenResponse,
@@ -241,5 +242,58 @@ export class AuthService {
     const hashedNewPassword = await this.passwordService.hashPassword(newPassword);
     user.password = hashedNewPassword;
     await this.userService.updateUser(user);
+  }
+
+  async loginGoogle(body: LoginGoogleDto) {
+    let user = await this.userService.getByEmail(body.email);
+
+    //đã tồn tại user có email này
+    if(user) {
+      const loginDto: LoginDto = {
+        email: user.email,
+        password: user.password,
+      };
+
+      await this.login(loginDto);
+    }
+
+    //user chưa tồn tại
+    const randomPassword = this.passwordService.generatePassword(8);
+    const hashedPassword = await this.passwordService.hashPassword(randomPassword);
+    
+    user = await this.userService.create({
+      username: body.fullname,
+      email: body.email,
+      password: hashedPassword,
+      firstName: body.fullname,
+      lastName: body.fullname,
+      role: UserRole.CUSTOMER,
+      status: UserStatus.ACTIVE,
+      isVerified: true,
+      isIdentified: false,
+    });
+
+    await this.mailService.sendWelcomeWithPasswordEmail(
+      user.email,
+      body.fullname,
+      randomPassword,
+    );
+
+    const accessToken = await this.tokenService.createToken(user, {
+      isRefresh: false,
+    });
+    const refreshToken = await this.tokenService.createToken(user, {
+      isRefresh: true,
+    });
+    const hashedRefreshToken = await this.passwordService.hashPassword(refreshToken);
+    await this.redisService.set(
+      `user:refreshToken:${user.id}`,
+      hashedRefreshToken,
+      60 * 60 * 24 * 7 * 1000,
+    );
+    return {
+      accessToken,
+      refreshToken,
+    };
   }
 }
