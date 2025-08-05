@@ -1,7 +1,7 @@
 import { ProductFeedbacksDto } from '@/app/feedback';
 import { AccessoryStatus } from '@/common/models';
 import { ApiProperty } from '@nestjs/swagger';
-import { Expose, Type } from 'class-transformer';
+import { Expose, Transform, Type } from 'class-transformer';
 import { IsBoolean, IsEnum, IsNumber, IsOptional, IsString } from 'class-validator';
 
 export class ItemAccessoryDto {
@@ -53,6 +53,36 @@ export class ItemAccessoryDto {
   @Type(() => ProductFeedbacksDto)
   @ApiProperty({ type: [ProductFeedbacksDto] })
   feedbacks: ProductFeedbacksDto[];
+
+  @Expose()
+  @ApiProperty({ description: 'ID của shop sở hữu phụ kiện', example: 'uuid-shop-1' })
+  @Transform(({ obj: user }) => user.shop.id)
+  shopId: string;
+
+  @Expose()
+  @ApiProperty({ description: 'Tên của shop sở hữu phụ kiện', example: 'Cửa hàng thời trang ABC' })
+  @Transform(({ obj: user }) => user.shop.name)
+  shopName: string;
+
+  @Expose()
+  @ApiProperty({ description: 'Địa chỉ của shop sở hữu phụ kiện', example: '123 Đường ABC, Quận 1, TP.HCM' })
+  @Transform(({ obj: user }) => user.shop.address)
+  shopAddress: string;
+
+  @Expose()
+  @ApiProperty({ description: 'Đánh giá trung bình của shop', example: 4.5 })
+  @Transform(({ obj: user }) => user.shop.ratingAverage)
+  shopRatingAverage: number;
+
+  @Expose()
+  @ApiProperty({ description: 'URL logo của shop', example: 'https://veila.images/logo-shop-1' })
+  @Transform(({ obj: user }) => user.shop.logoUrl)
+  shopLogoUrl: string;
+
+  @Expose()
+  @ApiProperty({ description: 'Đánh giá của shop', example: 4.5 })
+  @Transform(({ obj: user }) => user.shop.reputation)
+  shopReputation: number;
 }
 
 export class CUAccessoryDto {
@@ -132,4 +162,34 @@ export class ListAccessoryDto {
   @Expose()
   @ApiProperty()
   status: AccessoryStatus;
+
+  @Expose()
+  @ApiProperty({ description: 'ID của shop sở hữu phụ kiện', example: 'uuid-shop-1' })
+  @Transform(({ obj: user }) => user.shop.id)
+  shopId: string;
+
+  @Expose()
+  @ApiProperty({ description: 'Tên của shop sở hữu phụ kiện', example: 'Cửa hàng thời trang ABC' })
+  @Transform(({ obj: user }) => user.shop.name)
+  shopName: string;
+
+  @Expose()
+  @ApiProperty({ description: 'Địa chỉ của shop sở hữu phụ kiện', example: '123 Đường ABC, Quận 1, TP.HCM' })
+  @Transform(({ obj: user }) => user.shop.address)
+  shopAddress: string;
+
+  @Expose()
+  @ApiProperty({ description: 'Đánh giá trung bình của shop', example: 4.5 })
+  @Transform(({ obj: user }) => user.shop.ratingAverage)
+  shopRatingAverage: number;
+
+  @Expose()
+  @ApiProperty({ description: 'URL logo của shop', example: 'https://veila.images/logo-shop-1' })
+  @Transform(({ obj: user }) => user.shop.logoUrl)
+  shopLogoUrl: string;
+
+  @Expose()
+  @ApiProperty({ description: 'Đánh giá của shop', example: 4.5 })
+  @Transform(({ obj: user }) => user.shop.reputation)
+  shopReputation: number;
 }

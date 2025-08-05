@@ -30,6 +30,7 @@ export class DressService {
       order,
       take,
       skip,
+      relations: { user: { shop: true } },
     });
   }
 

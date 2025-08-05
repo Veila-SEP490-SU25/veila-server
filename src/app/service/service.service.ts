@@ -30,6 +30,7 @@ export class ServiceService {
       order,
       take,
       skip,
+      relations: { user: { shop: true } },
     });
   }
 

@@ -58,6 +58,7 @@ export class CategoryService {
       order,
       take,
       skip,
+      relations: { user: { shop: true } }
     });
   }
 
@@ -81,6 +82,7 @@ export class CategoryService {
       order,
       take,
       skip,
+      relations: { user: { shop: true } }
     });
   }
 
@@ -105,6 +107,7 @@ export class CategoryService {
       order,
       take,
       skip,
+      relations: { user: { shop: true } }
     });
   }
 
@@ -128,6 +131,7 @@ export class CategoryService {
       order,
       take,
       skip,
+      relations: { user: { shop: true } }
     });
   }
 

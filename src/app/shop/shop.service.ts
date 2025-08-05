@@ -107,6 +107,7 @@ export class ShopService {
       order,
       take,
       skip,
+      relations: { user: { shop: true } },
     });
   }
 
@@ -130,6 +131,7 @@ export class ShopService {
       order,
       take,
       skip,
+      relations: { user: { shop: true } },
     });
   }
 
@@ -153,6 +155,7 @@ export class ShopService {
       order,
       take,
       skip,
+      relations: { user: { shop: true } },
     });
   }
 
@@ -177,6 +180,7 @@ export class ShopService {
       order,
       take,
       skip,
+      relations: { user: { shop: true } },
     });
   }
 
