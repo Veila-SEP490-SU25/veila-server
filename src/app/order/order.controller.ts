@@ -4,6 +4,7 @@ import { Order, UserRole } from '@/common/models';
 import { Body, Controller, Get, HttpStatus, Post, Put, Param, UseGuards } from '@nestjs/common';
 import {
   ApiBearerAuth,
+  ApiBody,
   ApiExtraModels,
   ApiOkResponse,
   ApiOperation,
@@ -372,6 +373,7 @@ export class OrderController {
       ],
     },
   })
+  @ApiBody({ type: createOrderRequestDto })
   async createOrder(
     @UserId() userId: string,
     @Body() body: createOrderRequestDto,
