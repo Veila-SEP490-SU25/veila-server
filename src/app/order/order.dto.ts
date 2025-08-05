@@ -111,7 +111,6 @@ export class CUOrderDto {
   @IsNotEmpty()
   status: OrderStatus;
 }
-
 export class orderDto {
   @Expose()
   @ApiProperty({
@@ -235,15 +234,18 @@ export class orderDto {
 }
 
 export class createOrderRequestDto {
+  @ApiProperty()
   @ValidateNested()
   @Type(() => CUOrderDto)
   newOrder: CUOrderDto;
 
+ @ApiProperty({ type: () => [CUOrderDressDetailDto] })
   @IsArray()
   @ValidateNested({ each: true })
   @Type(() => CUOrderDressDetailDto)
   dressDetails: CUOrderDressDetailDto[];
 
+  @ApiProperty({ type: () => [CUOrderAccessoriesDetailDto] })
   @IsArray()
   @ValidateNested({ each: true })
   @Type(() => CUOrderAccessoriesDetailDto)

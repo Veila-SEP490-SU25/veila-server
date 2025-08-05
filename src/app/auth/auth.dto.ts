@@ -114,3 +114,13 @@ export class ResetPasswordDto {
   @IsPassword()
   newPassword: string;
 }
+
+export class LoginGoogleDto {
+  @ApiProperty()
+  @IsEmail()
+  email: string;
+
+  @ApiProperty()
+  @IsNotEmpty()
+  fullname: string;
+}
