@@ -12,6 +12,7 @@ import { PasswordService } from '@/app/password';
 import { RedisService } from '@/app/redis';
 import { TokenService } from '@/app/token';
 import { UpdateProfile, UserService } from '@/app/user';
+import { WalletService } from '@/app/wallet';
 import { ContractType, User, UserRole, UserStatus } from '@/common/models';
 import {
   ForbiddenException,
@@ -30,6 +31,7 @@ export class AuthService {
     private readonly mailService: MailService,
     private readonly passwordService: PasswordService,
     private readonly contractService: ContractService,
+    private readonly walletService: WalletService,
   ) {}
 
   async login(body: LoginDto): Promise<TokenResponse> {
@@ -77,6 +79,7 @@ export class AuthService {
       status: UserStatus.ACTIVE,
       contract,
     } as User);
+    await this.walletService.createWalletForUser(newUser.id);
     await Promise.all([
       this.redisService.set(`user:otp:${newUser.id}`, hashedActivationCode, 5 * 60 * 1000),
       this.mailService.sendOtpEmail(
@@ -248,7 +251,7 @@ export class AuthService {
     let user = await this.userService.getByEmail(body.email);
 
     //đã tồn tại user có email này
-    if(user) {
+    if (user) {
       const loginDto: LoginDto = {
         email: user.email,
         password: user.password,
@@ -260,7 +263,7 @@ export class AuthService {
     //user chưa tồn tại
     const randomPassword = this.passwordService.generatePassword(8);
     const hashedPassword = await this.passwordService.hashPassword(randomPassword);
-    
+
     user = await this.userService.create({
       username: body.fullname,
       email: body.email,
@@ -273,11 +276,7 @@ export class AuthService {
       isIdentified: false,
     });
 
-    await this.mailService.sendWelcomeWithPasswordEmail(
-      user.email,
-      body.fullname,
-      randomPassword,
-    );
+    await this.mailService.sendWelcomeWithPasswordEmail(user.email, body.fullname, randomPassword);
 
     const accessToken = await this.tokenService.createToken(user, {
       isRefresh: false,
