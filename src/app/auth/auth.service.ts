@@ -12,6 +12,7 @@ import { PasswordService } from '@/app/password';
 import { RedisService } from '@/app/redis';
 import { TokenService } from '@/app/token';
 import { UpdateProfile, UserService } from '@/app/user';
+import { WalletService } from '@/app/wallet';
 import { ContractType, User, UserRole, UserStatus } from '@/common/models';
 import {
   ForbiddenException,
@@ -30,6 +31,7 @@ export class AuthService {
     private readonly mailService: MailService,
     private readonly passwordService: PasswordService,
     private readonly contractService: ContractService,
+    private readonly walletService: WalletService,
   ) {}
 
   async login(body: LoginDto): Promise<TokenResponse> {
@@ -77,6 +79,7 @@ export class AuthService {
       status: UserStatus.ACTIVE,
       contract,
     } as User);
+    await this.walletService.createWalletForUser(newUser.id);
     await Promise.all([
       this.redisService.set(`user:otp:${newUser.id}`, hashedActivationCode, 5 * 60 * 1000),
       this.mailService.sendOtpEmail(
