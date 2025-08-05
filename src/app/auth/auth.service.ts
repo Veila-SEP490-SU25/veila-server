@@ -251,7 +251,7 @@ export class AuthService {
     let user = await this.userService.getByEmail(body.email);
 
     //đã tồn tại user có email này
-    if(user) {
+    if (user) {
       const loginDto: LoginDto = {
         email: user.email,
         password: user.password,
@@ -263,7 +263,7 @@ export class AuthService {
     //user chưa tồn tại
     const randomPassword = this.passwordService.generatePassword(8);
     const hashedPassword = await this.passwordService.hashPassword(randomPassword);
-    
+
     user = await this.userService.create({
       username: body.fullname,
       email: body.email,
@@ -276,11 +276,7 @@ export class AuthService {
       isIdentified: false,
     });
 
-    await this.mailService.sendWelcomeWithPasswordEmail(
-      user.email,
-      body.fullname,
-      randomPassword,
-    );
+    await this.mailService.sendWelcomeWithPasswordEmail(user.email, body.fullname, randomPassword);
 
     const accessToken = await this.tokenService.createToken(user, {
       isRefresh: false,

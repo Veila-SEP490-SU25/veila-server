@@ -30,7 +30,7 @@ export class ServiceService {
       order,
       take,
       skip,
-      relations: { user: { shop: true } },
+      relations: { user: { shop: true }, category: true },
     });
   }
 
@@ -45,6 +45,7 @@ export class ServiceService {
       relations: {
         feedbacks: { customer: true },
         user: { shop: true },
+        category: true,
       },
     });
     if (!existingService) throw new NotFoundException('Không tìm thấy dịch vụ phù hợp');

@@ -239,7 +239,7 @@ export class createOrderRequestDto {
   @Type(() => CUOrderDto)
   newOrder: CUOrderDto;
 
- @ApiProperty({ type: () => [CUOrderDressDetailDto] })
+  @ApiProperty({ type: () => [CUOrderDressDetailDto] })
   @IsArray()
   @ValidateNested({ each: true })
   @Type(() => CUOrderDressDetailDto)

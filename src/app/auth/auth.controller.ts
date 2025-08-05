@@ -327,7 +327,8 @@ export class AuthController {
   @Post('google/login')
   @ApiOperation({
     summary: 'Đăng nhập với tài khoản google',
-    description: 'đăng nhập bằng tài khoản google, nếu chưa có thì tạo tài khoản mới và tiếp tục đăng nhập',
+    description:
+      'đăng nhập bằng tài khoản google, nếu chưa có thì tạo tài khoản mới và tiếp tục đăng nhập',
   })
   @ApiBody({ type: LoginGoogleDto })
   @ApiOkResponse({
@@ -344,15 +345,13 @@ export class AuthController {
       ],
     },
   })
-  async loginGoogle(
-    @Body() body: LoginGoogleDto
-  ): Promise<ItemResponse<TokenResponse>> {
+  async loginGoogle(@Body() body: LoginGoogleDto): Promise<ItemResponse<TokenResponse>> {
     const response = await this.authService.loginGoogle(body);
 
     return {
       statusCode: HttpStatus.OK,
       message: 'Đăng nhập bằng tài khoản Google thành công',
       item: response,
-    }
+    };
   }
 }

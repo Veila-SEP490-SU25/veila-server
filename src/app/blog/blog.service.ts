@@ -33,6 +33,7 @@ export class BlogService {
       skip,
       relations: {
         user: { shop: true },
+        category: true,
       },
     });
   }
