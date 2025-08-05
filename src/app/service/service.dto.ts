@@ -1,6 +1,6 @@
 import { ServiceStatus } from '@/common/models';
 import { ApiProperty } from '@nestjs/swagger';
-import { Expose, Type } from 'class-transformer';
+import { Expose, Transform, Type } from 'class-transformer';
 import { ProductFeedbacksDto } from '@/app/feedback';
 import { IsEnum, IsOptional, IsString } from 'class-validator';
 
@@ -57,6 +57,62 @@ export class ListServiceDto {
     example: ServiceStatus.AVAILABLE,
   })
   status: ServiceStatus;
+
+  @Expose()
+  @ApiProperty({ description: 'ID của shop sở hữu phụ kiện', example: 'uuid-shop-1' })
+  @Transform(({ obj: user }) => user.shop.id)
+  shopId: string;
+
+  @Expose()
+  @ApiProperty({ description: 'Tên của shop sở hữu phụ kiện', example: 'Cửa hàng thời trang ABC' })
+  @Transform(({ obj: user }) => user.shop.name)
+  shopName: string;
+
+  @Expose()
+  @ApiProperty({
+    description: 'Địa chỉ của shop sở hữu phụ kiện',
+    example: '123 Đường ABC, Quận 1, TP.HCM',
+  })
+  @Transform(({ obj: user }) => user.shop.address)
+  shopAddress: string;
+
+  @Expose()
+  @ApiProperty({ description: 'Đánh giá trung bình của shop', example: 4.5 })
+  @Transform(({ obj: user }) => user.shop.ratingAverage)
+  shopRatingAverage: number;
+
+  @Expose()
+  @ApiProperty({ description: 'URL logo của shop', example: 'https://veila.images/logo-shop-1' })
+  @Transform(({ obj: user }) => user.shop.logoUrl)
+  shopLogoUrl: string;
+
+  @Expose()
+  @ApiProperty({ description: 'Đánh giá của shop', example: 4.5 })
+  @Transform(({ obj: user }) => user.shop.reputation)
+  shopReputation: number;
+
+  @Expose()
+  @ApiProperty({ description: 'ID danh mục phụ kiện', example: 'uuid-category-1' })
+  @Transform(({ obj: category }) => category.id)
+  categoryId: string;
+
+  @Expose()
+  @ApiProperty({ description: 'Tên danh mục phụ kiện', example: 'Phụ kiện thời trang' })
+  @Transform(({ obj: category }) => category.name)
+  categoryName: string;
+
+  @Expose()
+  @ApiProperty({ description: 'Loại danh mục phụ kiện', example: 'accessory' })
+  @Transform(({ obj: category }) => category.type)
+  categoryType: string;
+
+  @Expose()
+  @ApiProperty({
+    description: 'Hình ảnh của danh mục phụ kiện',
+    example: 'https://veila.images/category-1',
+  })
+  @Transform(({ obj: category }) => category.images)
+  categoryImages: string | null;
 }
 
 export class ItemServiceDto {
@@ -94,4 +150,60 @@ export class ItemServiceDto {
     type: [ProductFeedbacksDto],
   })
   feedbacks: ProductFeedbacksDto[];
+
+  @Expose()
+  @ApiProperty({ description: 'ID của shop sở hữu phụ kiện', example: 'uuid-shop-1' })
+  @Transform(({ obj: user }) => user.shop.id)
+  shopId: string;
+
+  @Expose()
+  @ApiProperty({ description: 'Tên của shop sở hữu phụ kiện', example: 'Cửa hàng thời trang ABC' })
+  @Transform(({ obj: user }) => user.shop.name)
+  shopName: string;
+
+  @Expose()
+  @ApiProperty({
+    description: 'Địa chỉ của shop sở hữu phụ kiện',
+    example: '123 Đường ABC, Quận 1, TP.HCM',
+  })
+  @Transform(({ obj: user }) => user.shop.address)
+  shopAddress: string;
+
+  @Expose()
+  @ApiProperty({ description: 'Đánh giá trung bình của shop', example: 4.5 })
+  @Transform(({ obj: user }) => user.shop.ratingAverage)
+  shopRatingAverage: number;
+
+  @Expose()
+  @ApiProperty({ description: 'URL logo của shop', example: 'https://veila.images/logo-shop-1' })
+  @Transform(({ obj: user }) => user.shop.logoUrl)
+  shopLogoUrl: string;
+
+  @Expose()
+  @ApiProperty({ description: 'Đánh giá của shop', example: 4.5 })
+  @Transform(({ obj: user }) => user.shop.reputation)
+  shopReputation: number;
+
+  @Expose()
+  @ApiProperty({ description: 'ID danh mục phụ kiện', example: 'uuid-category-1' })
+  @Transform(({ obj: category }) => category.id)
+  categoryId: string;
+
+  @Expose()
+  @ApiProperty({ description: 'Tên danh mục phụ kiện', example: 'Phụ kiện thời trang' })
+  @Transform(({ obj: category }) => category.name)
+  categoryName: string;
+
+  @Expose()
+  @ApiProperty({ description: 'Loại danh mục phụ kiện', example: 'accessory' })
+  @Transform(({ obj: category }) => category.type)
+  categoryType: string;
+
+  @Expose()
+  @ApiProperty({
+    description: 'Hình ảnh của danh mục phụ kiện',
+    example: 'https://veila.images/category-1',
+  })
+  @Transform(({ obj: category }) => category.images)
+  categoryImages: string | null;
 }

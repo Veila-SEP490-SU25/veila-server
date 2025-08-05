@@ -131,4 +131,13 @@ export class WalletService {
   async create(wallet: Wallet): Promise<void> {
     await this.walletRepository.save(wallet);
   }
+
+  async createWalletForUser(userId: string): Promise<Wallet> {
+    const wallet = {
+      user: { id: userId },
+      availableBalance: 0,
+      lockedBalance: 0,
+    };
+    return await this.walletRepository.save(wallet);
+  }
 }

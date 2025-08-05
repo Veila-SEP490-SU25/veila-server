@@ -20,7 +20,7 @@ export class AccessoryService {
     };
     const existingAccessory = await this.accessoryRepository.findOne({
       where,
-      relations: { feedbacks: { customer: true }, user: { shop: true } },
+      relations: { feedbacks: { customer: true }, user: { shop: true }, category: true },
     });
     if (!existingAccessory) throw new NotFoundException('Không tìm thấy phụ kiện phù hợp');
     return existingAccessory;
