@@ -237,13 +237,15 @@ export class OrderService {
     return await this.orderRepository.save(order);
   }
 
-  async getFirstOrderByCustomerIdAndType(
+  async getFirstOrderByCustomerIdAndShopIdAndType(
     customerId: string,
+    shopId: string,
     type: OrderType,
   ): Promise<Order | null> {
     return await this.orderRepository.findOne({
       where: {
         customer: { id: customerId },
+        shop: { id: shopId },
         type,
       },
       order: { createdAt: 'ASC' },

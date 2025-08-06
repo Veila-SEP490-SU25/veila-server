@@ -1040,7 +1040,7 @@ export class SeedingService implements OnModuleInit {
 
   private async seedSellOrders() {
     const orders = await this.orderService.getAllTypeOrders(OrderType.SELL);
-    if (orders.length >= 5) {
+    if (orders.length >= 15) {
       this.logger.log(`Enough sell orders available. Skipping seeding.`);
       return;
     }
@@ -1051,6 +1051,16 @@ export class SeedingService implements OnModuleInit {
         await this.seedSellOrder(3, 1),
         await this.seedSellOrder(4, 1),
         await this.seedSellOrder(5, 1),
+        await this.seedSellOrder(1, 2),
+        await this.seedSellOrder(2, 2),
+        await this.seedSellOrder(3, 2),
+        await this.seedSellOrder(4, 2),
+        await this.seedSellOrder(5, 2),
+        await this.seedSellOrder(1, 3),
+        await this.seedSellOrder(2, 3),
+        await this.seedSellOrder(3, 3),
+        await this.seedSellOrder(4, 3),
+        await this.seedSellOrder(5, 3),
       ]);
       this.logger.log('Seeding process completed successfully!');
     } catch (error) {
@@ -1262,17 +1272,22 @@ export class SeedingService implements OnModuleInit {
 
   private async seedRentOrders() {
     const orders = await this.orderService.getAllTypeOrders(OrderType.RENT);
-    if (orders.length >= 5) {
+    if (orders.length >= 10) {
       this.logger.log(`Enough rent orders available. Skipping seeding.`);
       return;
     }
     try {
       Promise.all([
-        await this.seedRentOrder(1, 1),
-        await this.seedRentOrder(2, 1),
-        await this.seedRentOrder(3, 1),
-        await this.seedRentOrder(4, 1),
-        await this.seedRentOrder(5, 1),
+        await this.seedRentOrder(1, 4),
+        await this.seedRentOrder(2, 4),
+        await this.seedRentOrder(3, 4),
+        await this.seedRentOrder(4, 4),
+        await this.seedRentOrder(5, 4),
+        await this.seedRentOrder(1, 5),
+        await this.seedRentOrder(2, 5),
+        await this.seedRentOrder(3, 5),
+        await this.seedRentOrder(4, 5),
+        await this.seedRentOrder(5, 5),
       ]);
       this.logger.log('Seeding process completed successfully!');
     } catch (error) {
@@ -1522,22 +1537,37 @@ export class SeedingService implements OnModuleInit {
 
   private async seedFeedbacks() {
     const feedbacks = await this.feedbackService.getAllFeedbacks();
-    if (feedbacks.length >= 20) {
+    if (feedbacks.length >= 50) {
       this.logger.log(`Enough feedbacks available. Skipping seeding.`);
       return;
     }
     try {
       Promise.all([
-        await this.seedFeedback(1, OrderType.SELL),
-        await this.seedFeedback(2, OrderType.SELL),
-        await this.seedFeedback(3, OrderType.SELL),
-        await this.seedFeedback(4, OrderType.SELL),
-        await this.seedFeedback(5, OrderType.SELL),
-        await this.seedFeedback(1, OrderType.RENT),
-        await this.seedFeedback(2, OrderType.RENT),
-        await this.seedFeedback(3, OrderType.RENT),
-        await this.seedFeedback(4, OrderType.RENT),
-        await this.seedFeedback(5, OrderType.RENT),
+        await this.seedFeedback(1, 1, OrderType.SELL),
+        await this.seedFeedback(2, 1, OrderType.SELL),
+        await this.seedFeedback(3, 1, OrderType.SELL),
+        await this.seedFeedback(4, 1, OrderType.SELL),
+        await this.seedFeedback(5, 1, OrderType.SELL),
+        await this.seedFeedback(1, 2, OrderType.SELL),
+        await this.seedFeedback(2, 2, OrderType.SELL),
+        await this.seedFeedback(3, 2, OrderType.SELL),
+        await this.seedFeedback(4, 2, OrderType.SELL),
+        await this.seedFeedback(5, 2, OrderType.SELL),
+        await this.seedFeedback(1, 3, OrderType.SELL),
+        await this.seedFeedback(2, 3, OrderType.SELL),
+        await this.seedFeedback(3, 3, OrderType.SELL),
+        await this.seedFeedback(4, 3, OrderType.SELL),
+        await this.seedFeedback(5, 3, OrderType.SELL),
+        await this.seedFeedback(1, 4, OrderType.RENT),
+        await this.seedFeedback(2, 4, OrderType.RENT),
+        await this.seedFeedback(3, 4, OrderType.RENT),
+        await this.seedFeedback(4, 4, OrderType.RENT),
+        await this.seedFeedback(5, 4, OrderType.RENT),
+        await this.seedFeedback(1, 5, OrderType.RENT),
+        await this.seedFeedback(2, 5, OrderType.RENT),
+        await this.seedFeedback(3, 5, OrderType.RENT),
+        await this.seedFeedback(4, 5, OrderType.RENT),
+        await this.seedFeedback(5, 5, OrderType.RENT),
       ]);
       this.logger.log('Seeding process completed successfully!');
     } catch (error) {
@@ -1546,7 +1576,7 @@ export class SeedingService implements OnModuleInit {
     }
   }
 
-  private async seedFeedback(customerNumber: number, type: OrderType) {
+  private async seedFeedback(customerNumber: number, shopNumber: number, type: OrderType) {
     const customer = await this.userService.getByEmail(`customer.${customerNumber}@veila.studio`);
     if (!customer) {
       this.logger.warn(
@@ -1554,7 +1584,23 @@ export class SeedingService implements OnModuleInit {
       );
       return;
     }
-    const order = await this.orderService.getFirstOrderByCustomerIdAndType(customer.id, type);
+    const shopAccount = await this.userService.getByEmail(`shop.${shopNumber}@veila.studio`);
+    if (!shopAccount) {
+      this.logger.warn(
+        `Shop with email shop.${shopNumber}@veila.studio not found. Skipping feedback seeding.`,
+      );
+      return;
+    }
+    const shop = await this.shopService.getShopByUserId(shopAccount.id);
+    if (!shop) {
+      this.logger.warn(`Shop not found for user ${shopAccount.email}. Skipping feedback seeding.`);
+      return;
+    }
+    const order = await this.orderService.getFirstOrderByCustomerIdAndShopIdAndType(
+      customer.id,
+      shop.id,
+      type,
+    );
     if (!order) {
       this.logger.warn(
         `Order not found for customer ${customer.id} and type ${type}. Skipping feedback seeding.`,
