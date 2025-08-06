@@ -303,6 +303,24 @@ export class ItemShopDto {
   coverUrl: string | null;
 }
 
+export class ShopContactDto {
+  @Expose()
+  @ApiProperty({ description: 'Số điện thoại liên hệ', example: '+84901234567', nullable: false })
+  phone: string;
+
+  @Expose()
+  @ApiProperty({ description: 'Email liên hệ', example: 'shop@example.com', nullable: false })
+  email: string;
+
+  @Expose()
+  @ApiProperty({
+    description: 'Địa chỉ shop',
+    example: '123 Đường ABC, Quận 1, TP.HCM',
+    nullable: false,
+  })
+  address: string;
+}
+
 export class ProductShopDto {
   @Expose()
   @ApiProperty({ description: 'ID của shop sở hữu phụ kiện', example: 'uuid-shop-1' })

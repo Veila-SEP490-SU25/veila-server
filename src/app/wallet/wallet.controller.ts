@@ -120,7 +120,6 @@ export class WalletController {
     description: `
                 **Hướng dẫn sử dụng:**
     
-                - Truyền \`id\` của ví điện tử trên URL.
                 - Nếu không tìm thấy sẽ trả về lỗi.
                 - Nếu tìm thấy sẽ trả về chi tiết ví điện tử.
             `,
