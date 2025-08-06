@@ -302,3 +302,28 @@ export class ItemShopDto {
   })
   coverUrl: string | null;
 }
+
+export class ProductShopDto {
+  @Expose()
+  @ApiProperty({ description: 'ID của shop sở hữu phụ kiện', example: 'uuid-shop-1' })
+  id: string;
+
+  @Expose()
+  @ApiProperty({ description: 'Tên của shop sở hữu phụ kiện', example: 'Cửa hàng thời trang ABC' })
+  name: string;
+
+  @Expose()
+  @ApiProperty({
+    description: 'Địa chỉ của shop sở hữu phụ kiện',
+    example: '123 Đường ABC, Quận 1, TP.HCM',
+  })
+  address: string;
+
+  @Expose()
+  @ApiProperty({ description: 'URL logo của shop', example: 'https://veila.images/logo-shop-1' })
+  logoUrl: string;
+
+  @Expose()
+  @ApiProperty({ description: 'Đánh giá của shop', example: 4.5 })
+  reputation: number;
+}
