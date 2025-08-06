@@ -92,3 +92,33 @@ export class ItemCategoryDto {
   @ApiProperty({ enum: CategoryType, description: 'Loại danh mục', example: CategoryType.DRESS })
   type: CategoryType;
 }
+
+export class ProductCategoryDto {
+  @Expose()
+  @ApiProperty({ description: 'ID danh mục', example: 'category-uuid-123' })
+  id: string;
+
+  @Expose()
+  @ApiProperty({ description: 'Tên danh mục', example: 'Đầm Dự Tiệc' })
+  name: string;
+
+  @Expose()
+  @ApiProperty({
+    description: 'Ảnh đại diện danh mục (URL)',
+    example: 'https://storage.veila.com/categories/img123.jpg',
+    nullable: true,
+  })
+  images: string | null;
+
+  @Expose()
+  @ApiProperty({
+    description: 'Mô tả danh mục',
+    example: 'Những mẫu đầm dự tiệc sang trọng và thanh lịch',
+    nullable: true,
+  })
+  description: string | null;
+
+  @Expose()
+  @ApiProperty({ enum: CategoryType, description: 'Loại danh mục', example: CategoryType.DRESS })
+  type: CategoryType;
+}
