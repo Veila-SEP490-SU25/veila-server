@@ -160,4 +160,11 @@ export class DressService {
       withDeleted: true,
     });
   }
+
+  async getOneDressByUserId(userId: string): Promise<Dress | null> {
+    return await this.dressRepository.findOne({
+      where: { user: { id: userId } },
+      withDeleted: true,
+    });
+  }
 }

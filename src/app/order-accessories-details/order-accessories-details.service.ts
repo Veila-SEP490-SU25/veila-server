@@ -78,4 +78,10 @@ export class OrderAccessoriesDetailsService {
   async deleteOrderAccessoryDetail(id: string): Promise<void> {
     await this.orderAccessoryDetailRepository.delete(id);
   }
+
+  async createOrderAccessoryDetailForSeeding(
+    orderAccessoryDetail: OrderAccessoryDetail,
+  ): Promise<OrderAccessoryDetail> {
+    return await this.orderAccessoryDetailRepository.save(orderAccessoryDetail);
+  }
 }

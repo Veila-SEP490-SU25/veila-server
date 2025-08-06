@@ -1,6 +1,6 @@
 import { ShopService } from './../shop/shop.service';
 import { Filtering, getOrder, getWhere, Sorting } from '@/common/decorators';
-import { Order, OrderStatus } from '@/common/models';
+import { Order, OrderStatus, OrderType } from '@/common/models';
 import {
   BadRequestException,
   ForbiddenException,
@@ -224,5 +224,16 @@ export class OrderService {
         statuses: [OrderStatus.PENDING, OrderStatus.IN_PROCESS],
       })
       .getMany();
+  }
+
+  async getAllSellOrders(): Promise<Order[]> {
+    return await this.orderRepository.find({
+      where: { type: OrderType.SELL },
+      withDeleted: true,
+    });
+  }
+
+  async createOrderForSeeding(order: Order): Promise<Order> {
+    return await this.orderRepository.save(order);
   }
 }
