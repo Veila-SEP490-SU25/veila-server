@@ -3,6 +3,7 @@ import { BlogModule } from '@/app/blog';
 import { CategoryModule } from '@/app/category';
 import { ContractModule } from '@/app/contract';
 import { DressModule } from '@/app/dress';
+import { FeedbackModule } from '@/app/feedback';
 import { MembershipModule } from '@/app/membership';
 import { MilestoneModule } from '@/app/milestone';
 import { OrderModule } from '@/app/order';
@@ -39,6 +40,7 @@ import { Module } from '@nestjs/common';
     MilestoneModule,
     TaskModule,
     TransactionModule,
+    FeedbackModule,
   ],
   providers: [SeedingService],
 })

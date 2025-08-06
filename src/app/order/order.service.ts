@@ -236,4 +236,21 @@ export class OrderService {
   async createOrderForSeeding(order: Order): Promise<Order> {
     return await this.orderRepository.save(order);
   }
+
+  async getFirstOrderByCustomerIdAndType(
+    customerId: string,
+    type: OrderType,
+  ): Promise<Order | null> {
+    return await this.orderRepository.findOne({
+      where: {
+        customer: { id: customerId },
+        type,
+      },
+      order: { createdAt: 'ASC' },
+      relations: {
+        orderAccessoryDetail: { accessory: true },
+        orderDressDetail: { dress: true },
+      },
+    });
+  }
 }

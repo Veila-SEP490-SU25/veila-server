@@ -3,6 +3,7 @@ import { BlogService } from '@/app/blog';
 import { CategoryService } from '@/app/category';
 import { ContractService } from '@/app/contract';
 import { DressService } from '@/app/dress';
+import { FeedbackService } from '@/app/feedback';
 import { MembershipService } from '@/app/membership';
 import { MilestoneService } from '@/app/milestone';
 import { OrderService } from '@/app/order';
@@ -28,6 +29,7 @@ import {
   ContractType,
   Dress,
   DressStatus,
+  Feedback,
   License,
   LicenseStatus,
   Membership,
@@ -87,6 +89,7 @@ export class SeedingService implements OnModuleInit {
     private readonly milestoneService: MilestoneService,
     private readonly taskService: TaskService,
     private readonly transactionService: TransactionService,
+    private readonly feedbackService: FeedbackService,
   ) {
     // Khởi tạo faker với locale tiếng Việt
     this.customFaker = new Faker({
@@ -118,6 +121,9 @@ export class SeedingService implements OnModuleInit {
       .then(async () => {
         await this.seedSellOrders();
         await this.seedRentOrders();
+      })
+      .then(async () => {
+        await this.seedFeedbacks();
       });
   }
 
@@ -1511,6 +1517,77 @@ export class SeedingService implements OnModuleInit {
 
     this.logger.log(
       `Rent order created successfully! Order ID: ${newOrder.id}, Customer: ${customer.email}, Shop: ${shopAccount.email}`,
+    );
+  }
+
+  private async seedFeedbacks() {
+    const feedbacks = await this.feedbackService.getAllFeedbacks();
+    if (feedbacks.length >= 20) {
+      this.logger.log(`Enough feedbacks available. Skipping seeding.`);
+      return;
+    }
+    try {
+      Promise.all([
+        await this.seedFeedback(1, OrderType.SELL),
+        await this.seedFeedback(2, OrderType.SELL),
+        await this.seedFeedback(3, OrderType.SELL),
+        await this.seedFeedback(4, OrderType.SELL),
+        await this.seedFeedback(5, OrderType.SELL),
+        await this.seedFeedback(1, OrderType.RENT),
+        await this.seedFeedback(2, OrderType.RENT),
+        await this.seedFeedback(3, OrderType.RENT),
+        await this.seedFeedback(4, OrderType.RENT),
+        await this.seedFeedback(5, OrderType.RENT),
+      ]);
+      this.logger.log('Seeding process completed successfully!');
+    } catch (error) {
+      this.logger.error('Seeding feedbacks failed.', error);
+      throw new Error('Seeding feedbacks failed.');
+    }
+  }
+
+  private async seedFeedback(customerNumber: number, type: OrderType) {
+    const customer = await this.userService.getByEmail(`customer.${customerNumber}@veila.studio`);
+    if (!customer) {
+      this.logger.warn(
+        `Customer with email customer.${customerNumber}@veila.studio not found. Skipping rent order seeding.`,
+      );
+      return;
+    }
+    const order = await this.orderService.getFirstOrderByCustomerIdAndType(customer.id, type);
+    if (!order) {
+      this.logger.warn(
+        `Order not found for customer ${customer.id} and type ${type}. Skipping feedback seeding.`,
+      );
+      return;
+    }
+    this.logger.log(`Seeding feedback for customer: ${customer.email}, order ID: ${order.id}`);
+    const dress = order.orderDressDetail?.dress;
+    if (!dress) {
+      this.logger.warn(`No dress found for order ID ${order.id}. Skipping feedback seeding.`);
+      return;
+    }
+    const accessory = order.orderAccessoryDetail?.[0].accessory;
+    if (!accessory) {
+      this.logger.warn(`No accessory found for order ID ${order.id}. Skipping feedback seeding.`);
+      return;
+    }
+    await this.feedbackService.createFeedbackForSeeding({
+      customer,
+      order,
+      dress,
+      content: this.customFaker.lorem.sentence(),
+      rating: this.customFaker.number.int({ min: 1, max: 5 }),
+    } as Feedback);
+    await this.feedbackService.createFeedbackForSeeding({
+      customer,
+      order,
+      accessory,
+      content: this.customFaker.lorem.sentence(),
+      rating: this.customFaker.number.int({ min: 1, max: 5 }),
+    } as Feedback);
+    this.logger.log(
+      `Feedback created successfully for customer: ${customer.email}, order ID: ${order.id}`,
     );
   }
 }
