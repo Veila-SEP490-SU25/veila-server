@@ -4,6 +4,7 @@ import {
   RegisterShopDto,
   ResubmitShopDto,
   ReviewShopDto,
+  ShopContactDto,
   UpdateShopDto,
 } from '@/app/shop/shop.dto';
 import { Filtering, getOrder, getWhere, Sorting } from '@/common/decorators';
@@ -27,7 +28,12 @@ import {
   User,
   UserRole,
 } from '@/common/models';
-import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  ForbiddenException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { Cron, CronExpression } from '@nestjs/schedule';
 import { InjectRepository } from '@nestjs/typeorm';
 import { In, Repository } from 'typeorm';
@@ -421,5 +427,20 @@ export class ShopService {
       .where('user.id = :userId', { userId })
       .andWhere('shop.status = :status', { status: ShopStatus.ACTIVE })
       .getOne();
+  }
+
+  async getContactInformation(userId: string): Promise<ShopContactDto> {
+    const shop = await this.getShopByUserId(userId);
+    if (!shop) throw new NotFoundException('Không tìm thấy cửa hàng');
+
+    if (!shop.isVerified) throw new ForbiddenException('Cừa hàng chưa được xác thực');
+
+    const shopContact = {
+      email: shop.email,
+      phone: shop.phone,
+      address: shop.address,
+    } as ShopContactDto;
+
+    return shopContact;
   }
 }
