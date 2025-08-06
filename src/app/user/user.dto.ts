@@ -1,7 +1,8 @@
+import { ProductShopDto } from '@/app/shop/shop.dto';
 import { UserRole, UserStatus } from '@/common/models';
 import { IsPassword } from '@/common/validators';
 import { ApiProperty } from '@nestjs/swagger';
-import { Expose } from 'class-transformer';
+import { Expose, Type } from 'class-transformer';
 import { IsEmail, IsNotEmpty, IsOptional, IsString } from 'class-validator';
 
 export class CreateUser {
@@ -197,4 +198,11 @@ export class UserContactDto {
   @IsNotEmpty()
   @IsString()
   address: string;
+}
+
+export class ProductUserDto {
+  @Expose()
+  @Type(() => ProductShopDto)
+  @ApiProperty({ description: 'Thông tin cửa hàng', type: () => ProductShopDto })
+  shop: ProductShopDto;
 }

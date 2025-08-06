@@ -1,4 +1,6 @@
+import { ProductCategoryDto } from '@/app/category/category.dto';
 import { ProductFeedbacksDto } from '@/app/feedback';
+import { ProductUserDto } from '@/app/user/user.dto';
 import { AccessoryStatus } from '@/common/models';
 import { ApiProperty } from '@nestjs/swagger';
 import { Expose, Type } from 'class-transformer';
@@ -53,6 +55,22 @@ export class ItemAccessoryDto {
   @Type(() => ProductFeedbacksDto)
   @ApiProperty({ type: [ProductFeedbacksDto] })
   feedbacks: ProductFeedbacksDto[];
+
+  @Expose()
+  @Type(() => ProductUserDto)
+  @ApiProperty({
+    description: 'Thông tin người dùng sở hữu dịch vụ',
+    type: () => ProductUserDto,
+  })
+  user: ProductUserDto;
+
+  @Expose()
+  @Type(() => ProductCategoryDto)
+  @ApiProperty({
+    description: 'Thông tin danh mục dịch vụ',
+    type: () => ProductCategoryDto,
+  })
+  category: ProductCategoryDto;
 }
 
 export class CUAccessoryDto {
@@ -132,4 +150,20 @@ export class ListAccessoryDto {
   @Expose()
   @ApiProperty()
   status: AccessoryStatus;
+
+  @Expose()
+  @Type(() => ProductUserDto)
+  @ApiProperty({
+    description: 'Thông tin người dùng sở hữu dịch vụ',
+    type: () => ProductUserDto,
+  })
+  user: ProductUserDto;
+
+  @Expose()
+  @Type(() => ProductCategoryDto)
+  @ApiProperty({
+    description: 'Thông tin danh mục dịch vụ',
+    type: () => ProductCategoryDto,
+  })
+  category: ProductCategoryDto;
 }

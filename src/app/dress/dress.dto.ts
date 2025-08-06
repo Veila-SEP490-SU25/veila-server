@@ -3,6 +3,8 @@ import { ApiProperty } from '@nestjs/swagger';
 import { ProductFeedbacksDto } from '@/app/feedback';
 import { Expose, Type } from 'class-transformer';
 import { IsBoolean, IsEnum, IsNumber, IsOptional, IsString } from 'class-validator';
+import { ProductCategoryDto } from '@/app/category/category.dto';
+import { ProductUserDto } from '@/app/user/user.dto';
 
 export class CUDressDto {
   @ApiProperty({
@@ -106,6 +108,22 @@ export class ListDressDto {
     example: DressStatus.AVAILABLE,
   })
   status: DressStatus;
+
+  @Expose()
+  @Type(() => ProductUserDto)
+  @ApiProperty({
+    description: 'Thông tin người dùng sở hữu dịch vụ',
+    type: () => ProductUserDto,
+  })
+  user: ProductUserDto;
+
+  @Expose()
+  @Type(() => ProductCategoryDto)
+  @ApiProperty({
+    description: 'Thông tin danh mục dịch vụ',
+    type: () => ProductCategoryDto,
+  })
+  category: ProductCategoryDto;
 }
 
 export class ItemDressDto {
@@ -180,4 +198,20 @@ export class ItemDressDto {
     type: [ProductFeedbacksDto],
   })
   feedbacks: ProductFeedbacksDto[];
+
+  @Expose()
+  @Type(() => ProductUserDto)
+  @ApiProperty({
+    description: 'Thông tin người dùng sở hữu dịch vụ',
+    type: () => ProductUserDto,
+  })
+  user: ProductUserDto;
+
+  @Expose()
+  @Type(() => ProductCategoryDto)
+  @ApiProperty({
+    description: 'Thông tin danh mục dịch vụ',
+    type: () => ProductCategoryDto,
+  })
+  category: ProductCategoryDto;
 }

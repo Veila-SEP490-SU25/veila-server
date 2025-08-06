@@ -30,6 +30,7 @@ export class DressService {
       order,
       take,
       skip,
+      relations: { user: { shop: true }, category: true },
     });
   }
 
@@ -43,6 +44,7 @@ export class DressService {
       relations: {
         feedbacks: { customer: true },
         user: { shop: true },
+        category: true,
       },
     });
     if (!dress) throw new NotFoundException('Không tìm thấy váy cưới nào phù hợp');

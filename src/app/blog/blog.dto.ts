@@ -1,6 +1,8 @@
+import { ProductCategoryDto } from '@/app/category/category.dto';
+import { ProductUserDto } from '@/app/user/user.dto';
 import { BlogStatus } from '@/common/models';
 import { ApiProperty } from '@nestjs/swagger';
-import { Expose } from 'class-transformer';
+import { Expose, Type } from 'class-transformer';
 import { IsEnum, IsOptional, IsString } from 'class-validator';
 
 export class CUBlogDto {
@@ -46,6 +48,22 @@ export class ListBlogDto {
     nullable: true,
   })
   images: string | null;
+
+  @Expose()
+  @Type(() => ProductUserDto)
+  @ApiProperty({
+    description: 'Thông tin người dùng sở hữu dịch vụ',
+    type: () => ProductUserDto,
+  })
+  user: ProductUserDto;
+
+  @Expose()
+  @Type(() => ProductCategoryDto)
+  @ApiProperty({
+    description: 'Thông tin danh mục dịch vụ',
+    type: () => ProductCategoryDto,
+  })
+  category: ProductCategoryDto;
 }
 
 export class ItemBlogDto {
@@ -64,4 +82,20 @@ export class ItemBlogDto {
   @Expose()
   @ApiProperty()
   content: string;
+
+  @Expose()
+  @Type(() => ProductUserDto)
+  @ApiProperty({
+    description: 'Thông tin người dùng sở hữu dịch vụ',
+    type: () => ProductUserDto,
+  })
+  user: ProductUserDto;
+
+  @Expose()
+  @Type(() => ProductCategoryDto)
+  @ApiProperty({
+    description: 'Thông tin danh mục dịch vụ',
+    type: () => ProductCategoryDto,
+  })
+  category: ProductCategoryDto;
 }
