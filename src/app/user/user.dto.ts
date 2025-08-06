@@ -1,6 +1,7 @@
 import { UserRole, UserStatus } from '@/common/models';
 import { IsPassword } from '@/common/validators';
 import { ApiProperty } from '@nestjs/swagger';
+import { Expose } from 'class-transformer';
 import { IsEmail, IsNotEmpty, IsOptional, IsString } from 'class-validator';
 
 export class CreateUser {
@@ -166,4 +167,34 @@ export class UpdateProfile {
   @IsOptional()
   @IsString()
   images: string | null;
+}
+
+export class UserContactDto {
+  @Expose()
+  @ApiProperty({
+    description: 'Email hợp lệ',
+    example: 'newuser@example.com',
+    nullable: false,
+  })
+  @IsEmail({}, { message: 'Định dạng email không hợp lệ.' })
+  email: string;
+
+  @Expose()
+  @ApiProperty({
+    description: 'Số điện thoại của người dùng',
+    example: '0123456789',
+    nullable: false,
+  })
+  @IsNotEmpty()
+  @IsString()
+  phone: string;
+
+  @ApiProperty({
+    description: 'Địa chỉ',
+    example: '123 Main St',
+    nullable: false,
+  })
+  @IsNotEmpty()
+  @IsString()
+  address: string;
 }

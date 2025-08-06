@@ -39,6 +39,7 @@ import {
   RegisterShopDto,
   ResubmitShopDto,
   ReviewShopDto,
+  ShopContactDto,
   UpdateShopDto,
 } from '@/app/shop/shop.dto';
 import { ListDressDto } from '@/app/dress';
@@ -271,6 +272,39 @@ export class ShopController {
       hasNextPage: page + 1 < totalPages,
       hasPrevPage: 0 < page,
       items: dtos,
+    };
+  }
+
+  @Get(':id/contact-information')
+  @UseGuards(AuthGuard)
+  @Roles(UserRole.SHOP)
+  @ApiOperation({
+    summary: 'Lấy thông tin liên lạc, địa chỉ của cửa hàng',
+    description: `
+      **Hướng dẫn sử dụng:**
+
+      - Trả về địa chỉ, email, số điện thoại của cửa hàng.
+    `,
+  })
+  @ApiOkResponse({
+    schema: {
+      allOf: [
+        { $ref: getSchemaPath(ItemResponse) },
+        {
+          properties: {
+            items: { $ref: getSchemaPath(ShopContactDto) },
+          },
+        },
+      ],
+    },
+  })
+  async getContactInformation(@UserId() userId: string): Promise<ItemResponse<ShopContactDto>> {
+    const shopContactInformation = await this.shopService.getContactInformation(userId);
+
+    return {
+      message: 'Đây là thông tin liên lạc của cửa hàng',
+      statusCode: HttpStatus.OK,
+      item: shopContactInformation,
     };
   }
 

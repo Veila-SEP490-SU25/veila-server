@@ -8,6 +8,7 @@ import {
   Roles,
   Sorting,
   SortingParams,
+  UserId,
 } from '@/common/decorators';
 import { AuthGuard } from '@/common/guards';
 import { User, UserRole } from '@/common/models';
@@ -33,7 +34,7 @@ import {
   ApiTags,
   getSchemaPath,
 } from '@nestjs/swagger';
-import { CreateUser, UpdateUser } from '@/app/user/user.dto';
+import { CreateUser, UpdateUser, UserContactDto } from '@/app/user/user.dto';
 
 @Controller('users')
 @UseGuards(AuthGuard)
@@ -627,6 +628,39 @@ export class UserController {
       statusCode: HttpStatus.NO_CONTENT,
       message: 'User đã khôi phục thành công',
       item: null,
+    };
+  }
+
+  @Get('contact-information')
+  @UseGuards(AuthGuard)
+  @Roles(UserRole.CUSTOMER)
+  @ApiOperation({
+    summary: 'Lấy thông tin liên lạc, địa chỉ của người dùng',
+    description: `
+      **Hướng dẫn sử dụng:**
+
+      - Trả về địa chỉ, email, số điện thoại của người dùng.
+    `,
+  })
+  @ApiOkResponse({
+    schema: {
+      allOf: [
+        { $ref: getSchemaPath(ItemResponse) },
+        {
+          properties: {
+            items: { $ref: getSchemaPath(UserContactDto) },
+          },
+        },
+      ],
+    },
+  })
+  async getContactInformation(@UserId() userId: string): Promise<ItemResponse<UserContactDto>> {
+    const userContactInformation = await this.userService.getContactInformation(userId);
+
+    return {
+      message: 'Đây là thông tin liên lạc của người dùng',
+      statusCode: HttpStatus.OK,
+      item: userContactInformation,
     };
   }
 }

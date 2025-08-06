@@ -29,26 +29,25 @@ export class MailService {
   }
 
   async sendWelcomeWithPasswordEmail(
-  email: string,
-  username: string,
-  password: string,
-): Promise<boolean> {
-  try {
-    await this.mailerService.sendMail({
-      to: email,
-      subject: 'Tài khoản Veila của bạn đã được tạo',
-      template: 'welcome-password', 
-      context: {
-        username,
-        email,
-        password,
-      },
-    });
-    return true;
-  } catch (error) {
-    console.error(error);
-    throw new UnprocessableEntityException(`Gửi email tạo tài khoản tới ${email} thất bại.`);
+    email: string,
+    username: string,
+    password: string,
+  ): Promise<boolean> {
+    try {
+      await this.mailerService.sendMail({
+        to: email,
+        subject: 'Tài khoản Veila của bạn đã được tạo',
+        template: 'welcome-password',
+        context: {
+          username,
+          email,
+          password,
+        },
+      });
+      return true;
+    } catch (error) {
+      console.error(error);
+      throw new UnprocessableEntityException(`Gửi email tạo tài khoản tới ${email} thất bại.`);
+    }
   }
-}
-
 }
