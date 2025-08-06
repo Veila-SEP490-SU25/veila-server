@@ -226,9 +226,9 @@ export class OrderService {
       .getMany();
   }
 
-  async getAllSellOrders(): Promise<Order[]> {
+  async getAllTypeOrders(type: OrderType): Promise<Order[]> {
     return await this.orderRepository.find({
-      where: { type: OrderType.SELL },
+      where: { type },
       withDeleted: true,
     });
   }
