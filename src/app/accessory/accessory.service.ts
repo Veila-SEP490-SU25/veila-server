@@ -135,4 +135,11 @@ export class AccessoryService {
       withDeleted: true,
     });
   }
+
+  async getOneAccessoryByUserId(userId: string): Promise<Accessory | null> {
+    return await this.accessoryRepository.findOne({
+      where: { user: { id: userId } },
+      withDeleted: true,
+    });
+  }
 }

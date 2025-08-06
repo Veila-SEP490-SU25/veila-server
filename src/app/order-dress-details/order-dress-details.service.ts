@@ -94,4 +94,10 @@ export class OrderDressDetailsService {
   async deleteOrderDressDetail(id: string): Promise<void> {
     await this.orderDressDetailRepository.delete(id);
   }
+
+  async createOrderDressDetailForSeeding(
+    orderDressDetail: OrderDressDetail,
+  ): Promise<OrderDressDetail> {
+    return await this.orderDressDetailRepository.save(orderDressDetail);
+  }
 }
