@@ -768,36 +768,16 @@ export class SeedingService implements OnModuleInit {
 
   private async seedServices() {
     const services = await this.serviceService.getAll();
-    if (services.length >= 25) {
+    if (services.length >= 5) {
       this.logger.log(`Enough data available for service. Skipping seeding`);
       return;
     }
     try {
       Promise.all([
         await this.seedService(1),
-        await this.seedService(1),
-        await this.seedService(1),
-        await this.seedService(1),
-        await this.seedService(1),
-        await this.seedService(2),
-        await this.seedService(2),
-        await this.seedService(2),
-        await this.seedService(2),
         await this.seedService(2),
         await this.seedService(3),
-        await this.seedService(3),
-        await this.seedService(3),
-        await this.seedService(3),
-        await this.seedService(3),
         await this.seedService(4),
-        await this.seedService(4),
-        await this.seedService(4),
-        await this.seedService(4),
-        await this.seedService(4),
-        await this.seedService(5),
-        await this.seedService(5),
-        await this.seedService(5),
-        await this.seedService(5),
         await this.seedService(5),
       ]);
       this.logger.log('Seeding process completed successfully!');
@@ -823,8 +803,8 @@ export class SeedingService implements OnModuleInit {
     const newService = {
       user,
       category,
-      name: faker.commerce.productName(),
-      description: faker.commerce.productDescription(),
+      name: 'Dịch vụ máy váy cưới mới',
+      description: 'Mô tả dịch vụ máy váy cưới mới',
       status: ServiceStatus.AVAILABLE,
       ratingAverage: this.customFaker.number.float({ min: 3, max: 5, fractionDigits: 2 }),
       ratingCount: this.customFaker.number.int({ min: 0, max: 100 }),
