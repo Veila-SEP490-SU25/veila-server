@@ -169,7 +169,7 @@ export class OrderService {
     await Promise.all(
       body.accessoriesDetails.map(async (accessory) => {
         const item = await this.accessoryService.getAccessoryById(accessory.accessoryId);
-        accessoriesPrice +=  item.sellPrice* accessory.quantity;
+        accessoriesPrice += item.sellPrice * accessory.quantity;
       }),
     );
 

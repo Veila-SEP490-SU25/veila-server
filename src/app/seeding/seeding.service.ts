@@ -1669,11 +1669,7 @@ export class SeedingService implements OnModuleInit {
       this.logger.warn(`Shop not found for user ${shopAccount.email}. Skipping feedback seeding.`);
       return;
     }
-    const order = await this.orderService.getCompletedOrderForSeeding(
-      customer.id,
-      shop.id,
-      type,
-    );
+    const order = await this.orderService.getCompletedOrderForSeeding(customer.id, shop.id, type);
     if (!order) {
       this.logger.warn(
         `Order not found for customer ${customer.id} and type ${type}. Skipping feedback seeding.`,
@@ -1711,7 +1707,10 @@ export class SeedingService implements OnModuleInit {
   }
 
   private async seedInProgressSellOrders() {
-    const orders = await this.orderService.getAllOrdersForSeeding(OrderType.SELL, OrderStatus.IN_PROCESS);
+    const orders = await this.orderService.getAllOrdersForSeeding(
+      OrderType.SELL,
+      OrderStatus.IN_PROCESS,
+    );
     if (orders.length >= 5) {
       this.logger.log(`Enough in-progress sell orders available. Skipping seeding.`);
       return;

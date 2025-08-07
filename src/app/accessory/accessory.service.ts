@@ -151,8 +151,7 @@ export class AccessoryService {
       },
     });
 
-    if(!accessory)
-      throw new NotFoundException('Không tìm thấy phụ kiện');
+    if (!accessory) throw new NotFoundException('Không tìm thấy phụ kiện');
     return accessory;
   }
 }
