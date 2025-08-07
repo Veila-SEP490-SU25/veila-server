@@ -24,12 +24,12 @@ import {
   UserId,
 } from '@/common/decorators';
 import { AuthGuard } from '@/common/guards';
-import { createOrderRequestDto, CUOrderDto, orderDto } from './order.dto';
+import { createOrderRequestDto, CUOrderDto, OrderDto } from './order.dto';
 
 @Controller('orders')
 @ApiTags('Order Controller')
 @ApiBearerAuth()
-@ApiExtraModels(ItemResponse, ListResponse, orderDto)
+@ApiExtraModels(ItemResponse, ListResponse, OrderDto, Order)
 export class OrderController {
   constructor(private readonly orderService: OrderService) {}
 
@@ -47,7 +47,7 @@ export class OrderController {
         - Sort theo format: [tên_field]:[asc/desc]
         - Các trường đang có thể sort: due_date, amount
         - Filter theo format: [tên_field]:[eq|neq|gt|gte|lt|lte|like|nlike|in|nin]:[keyword]; hoặc [tên_field]:[isnull|isnotnull]
-        - Các trường đang có thể filter: customer_id, shop_id, phone, email address, due_date, return_date, is_buy_back, amount, type, status`,
+        - Các trường đang có thể filter: customer_id, shop_id, phone, email address, due_date, return_date, amount, type, status`,
   })
   @ApiQuery({
     name: 'page',
@@ -81,7 +81,7 @@ export class OrderController {
         { $ref: getSchemaPath(ListResponse) },
         {
           properties: {
-            items: { $ref: getSchemaPath(orderDto) },
+            items: { $ref: getSchemaPath(OrderDto) },
           },
         },
       ],
@@ -98,13 +98,12 @@ export class OrderController {
       'address',
       'due_date',
       'return_date',
-      'is_buy_back',
       'amount',
       'type',
       'status',
     ])
     filter?: Filtering,
-  ): Promise<ListResponse<orderDto>> {
+  ): Promise<ListResponse<OrderDto>> {
     const [orders, totalItems] = await this.orderService.getOrdersForAdmin(
       limit,
       offset,
@@ -133,13 +132,13 @@ export class OrderController {
     description: `
         **Hướng dẫn sử dụng:**
 
-        - Trả về danh sách đơn hàng của khách hàng hiện tại.
+        - Trả về danh sách đơn hàng đã/đang được thực hiện của khách hàng hiện tại.
         - Hỗ trợ phân trang, sắp xếp, lọc.
         - Page bắt đầu từ 0
         - Sort theo format: [tên_field]:[asc/desc]
         - Các trường đang có thể sort: due_date, amount
         - Filter theo format: [tên_field]:[eq|neq|gt|gte|lt|lte|like|nlike|in|nin]:[keyword]; hoặc [tên_field]:[isnull|isnotnull]
-        - Các trường đang có thể filter: customer_id, shop_id, phone, email address, due_date, return_date, is_buy_back, amount, type, status`,
+        - Các trường đang có thể filter: customer_id, shop_id, phone, email address, due_date, return_date, amount, type, status`,
   })
   @ApiQuery({
     name: 'page',
@@ -173,7 +172,7 @@ export class OrderController {
         { $ref: getSchemaPath(ListResponse) },
         {
           properties: {
-            items: { $ref: getSchemaPath(orderDto) },
+            items: { $ref: getSchemaPath(OrderDto) },
           },
         },
       ],
@@ -190,13 +189,12 @@ export class OrderController {
       'address',
       'due_date',
       'return_date',
-      'is_buy_back',
       'amount',
       'type',
       'status',
     ])
     filter?: Filtering,
-  ): Promise<ListResponse<orderDto>> {
+  ): Promise<ListResponse<OrderDto>> {
     const [orders, totalItems] = await this.orderService.getOrdersForCustomer(
       userId,
       limit,
@@ -226,13 +224,13 @@ export class OrderController {
     description: `
         **Hướng dẫn sử dụng:**
 
-        - Trả về danh sách đơn hàng của cửa hàng hiện tại.
+        - Trả về danh sách đơn hàng đã/đang được thực hiện của cửa hàng hiện tại.
         - Hỗ trợ phân trang, sắp xếp, lọc.
         - Page bắt đầu từ 0
         - Sort theo format: [tên_field]:[asc/desc]
         - Các trường đang có thể sort: due_date, amount
         - Filter theo format: [tên_field]:[eq|neq|gt|gte|lt|lte|like|nlike|in|nin]:[keyword]; hoặc [tên_field]:[isnull|isnotnull]
-        - Các trường đang có thể filter: customer_id, shop_id, phone, email address, due_date, return_date, is_buy_back, amount, type, status`,
+        - Các trường đang có thể filter: customer_id, shop_id, phone, email address, due_date, return_date, amount, type, status`,
   })
   @ApiQuery({
     name: 'page',
@@ -266,7 +264,7 @@ export class OrderController {
         { $ref: getSchemaPath(ListResponse) },
         {
           properties: {
-            items: { $ref: getSchemaPath(orderDto) },
+            items: { $ref: getSchemaPath(OrderDto) },
           },
         },
       ],
@@ -283,13 +281,12 @@ export class OrderController {
       'address',
       'due_date',
       'return_date',
-      'is_buy_back',
       'amount',
       'type',
       'status',
     ])
     filter?: Filtering,
-  ): Promise<ListResponse<orderDto>> {
+  ): Promise<ListResponse<OrderDto>> {
     const [orders, totalItems] = await this.orderService.getOrdersForShop(
       userId,
       limit,
@@ -330,13 +327,13 @@ export class OrderController {
         { $ref: getSchemaPath(ItemResponse) },
         {
           properties: {
-            items: { $ref: getSchemaPath(orderDto) },
+            items: { $ref: getSchemaPath(OrderDto) },
           },
         },
       ],
     },
   })
-  async getOrderById(@Param('id') id: string): Promise<ItemResponse<orderDto>> {
+  async getOrderById(@Param('id') id: string): Promise<ItemResponse<OrderDto>> {
     const order = await this.orderService.getOrderById(id);
     return {
       message: 'Đây là thông tin chi tiết của đơn hàng',
@@ -349,16 +346,15 @@ export class OrderController {
   @UseGuards(AuthGuard)
   @Roles(UserRole.CUSTOMER)
   @ApiOperation({
-    summary: 'Tạo đơn hàng mới',
+    summary: 'Tạo đơn hàng mới (cho loại mua - sell)',
     description: `
           **Hướng dẫn sử dụng:**
 
           - Chỉ người dùng có quyền \`CUSTOMER\` mới có thể tạo đơn hàng.
           - Truyền dữ liệu đơn hàng trong body theo dạng JSON.
-          - Các trường bắt buộc: \`customer_id\`, \`shop_id\`, \`address\`, \`due_date\`, \`type\`.
+          - Các trường bắt buộc: \`shop_id\`, \`address\`, \`due_date\`,...
           - Trả về thông tin chi tiết của đơn hàng vừa tạo.
-          - OrderStatus: PENDING, IN_PROCESS, COMPLETED, CANCELLED
-          - OrderType: SELL, RENT, CUSTOM
+          - OrderType: SELL
       `,
   })
   @ApiOkResponse({
@@ -374,11 +370,11 @@ export class OrderController {
     },
   })
   @ApiBody({ type: createOrderRequestDto })
-  async createOrder(
+  async createOrderForSell(
     @UserId() userId: string,
     @Body() body: createOrderRequestDto,
   ): Promise<ItemResponse<Order>> {
-    const order = await this.orderService.createOrder(userId, body);
+    const order = await this.orderService.createOrderForSell(userId, body);
     return {
       message: 'Đơn hàng đã được tạo thành công',
       statusCode: HttpStatus.CREATED,

@@ -63,6 +63,7 @@ import { plainToInstance } from 'class-transformer';
   ListBlogDto,
   ListCategoryDto,
   ListAccessoryDto,
+  ShopContactDto,
 )
 export class ShopController {
   constructor(private readonly shopService: ShopService) {}

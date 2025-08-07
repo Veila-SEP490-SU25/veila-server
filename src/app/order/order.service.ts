@@ -1,6 +1,6 @@
 import { ShopService } from './../shop/shop.service';
 import { Filtering, getOrder, getWhere, Sorting } from '@/common/decorators';
-import { Order, OrderStatus } from '@/common/models';
+import { Order, OrderStatus, OrderType } from '@/common/models';
 import {
   BadRequestException,
   ForbiddenException,
@@ -9,11 +9,12 @@ import {
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { In, Repository } from 'typeorm';
-import { createOrderRequestDto, CUOrderDto, orderDto } from './order.dto';
+import { createOrderRequestDto, CUOrderDto, OrderDto } from './order.dto';
 import { plainToInstance } from 'class-transformer';
 import { UserService } from '../user';
 import { OrderDressDetailsService } from '../order-dress-details';
 import { OrderAccessoriesDetailsService } from '../order-accessories-details';
+import { AccessoryService } from '../accessory';
 
 @Injectable()
 export class OrderService {
@@ -24,6 +25,7 @@ export class OrderService {
     private readonly shopService: ShopService,
     private readonly orderDressDetailsService: OrderDressDetailsService,
     private readonly orderAccessoriesDetailsService: OrderAccessoriesDetailsService,
+    private readonly accessoryService: AccessoryService,
   ) {}
 
   async getOrdersForAdmin(
@@ -31,7 +33,7 @@ export class OrderService {
     skip: number,
     sort?: Sorting,
     filter?: Filtering,
-  ): Promise<[orderDto[], number]> {
+  ): Promise<[OrderDto[], number]> {
     const dynamicFilter = getWhere(filter);
     const where = {
       ...dynamicFilter,
@@ -52,7 +54,7 @@ export class OrderService {
       relations: ['customer', 'shop'],
     });
 
-    return [plainToInstance(orderDto, orders), orders.length];
+    return [plainToInstance(OrderDto, orders), orders.length];
     // return await this.orderRepository.findAndCount({
     //   where,
     //   order,
@@ -67,7 +69,7 @@ export class OrderService {
     skip: number,
     sort?: Sorting,
     filter?: Filtering,
-  ): Promise<[orderDto[], number]> {
+  ): Promise<[OrderDto[], number]> {
     const dynamicFilter = getWhere(filter);
     const where = {
       ...dynamicFilter,
@@ -88,7 +90,7 @@ export class OrderService {
       relations: ['customer', 'shop'],
     });
 
-    return [plainToInstance(orderDto, orders), orders.length];
+    return [plainToInstance(OrderDto, orders), orders.length];
 
     // return await this.orderRepository.findAndCount({
     //   where,
@@ -104,7 +106,7 @@ export class OrderService {
     skip: number,
     sort?: Sorting,
     filter?: Filtering,
-  ): Promise<[orderDto[], number]> {
+  ): Promise<[OrderDto[], number]> {
     const dynamicFilter = getWhere(filter);
     const where = {
       ...dynamicFilter,
@@ -126,7 +128,7 @@ export class OrderService {
       relations: ['customer', 'shop'],
     });
 
-    return [plainToInstance(orderDto, orders), orders.length];
+    return [plainToInstance(OrderDto, orders), orders.length];
     // return await this.orderRepository.findAndCount({
     //   where,
     //   order,
@@ -135,16 +137,17 @@ export class OrderService {
     // });
   }
 
-  async getOrderById(id: string): Promise<orderDto> {
+  async getOrderById(id: string): Promise<OrderDto> {
     const order = await this.orderRepository.findOne({
       where: { id },
       relations: ['customer', 'shop'],
     });
     if (!order) throw new NotFoundException('Không tìm thấy đơn hàng nào phù hợp');
-    return plainToInstance(orderDto, order);
+    return plainToInstance(OrderDto, order);
   }
 
-  async createOrder(userId: string, body: createOrderRequestDto): Promise<Order> {
+  async createOrderForSell(userId: string, body: createOrderRequestDto): Promise<Order> {
+    //Kiểm tra logic, đảm bảo đầy đủ ràng buộc
     const user = await this.userService.getUserById(userId);
     if (!user) throw new NotFoundException('Người dùng này không tồn tại');
 
@@ -153,6 +156,24 @@ export class OrderService {
     const shop = await this.shopService.getShopForCustomer(body.newOrder.shopId);
     if (!shop) throw new NotFoundException('Không tìm thấy cửa hàng');
 
+    //tính tiền váy
+    let dressPrice = 0;
+    await Promise.all(
+      body.dressDetails.map((dress) => {
+        dressPrice += dress.price;
+      }),
+    );
+
+    //tính tiền phụ kiện
+    let accessoriesPrice = 0;
+    await Promise.all(
+      body.accessoriesDetails.map(async (accessory) => {
+        const item = await this.accessoryService.getAccessoryById(accessory.accessoryId);
+        accessoriesPrice +=  item.sellPrice* accessory.quantity;
+      }),
+    );
+
+    //tạo đơn hàng
     const order = {
       customer: { id: userId },
       shop: { id: body.newOrder.shopId },
@@ -161,9 +182,8 @@ export class OrderService {
       address: body.newOrder.address,
       dueDate: body.newOrder.dueDate,
       returnDate: body.newOrder.returnDate,
-      isBuyBack: body.newOrder.isBuyBack,
-      amount: body.newOrder.amount,
-      type: body.newOrder.type,
+      amount: dressPrice + accessoriesPrice,
+      type: OrderType.SELL,
       status: OrderStatus.PENDING,
     } as Order;
     const orderId = (await this.orderRepository.save(order)).id;
@@ -195,8 +215,6 @@ export class OrderService {
     existingOrder.address = updatedOrder.address;
     existingOrder.dueDate = updatedOrder.dueDate;
     existingOrder.returnDate = updatedOrder.returnDate;
-    existingOrder.isBuyBack = updatedOrder.isBuyBack;
-    existingOrder.amount = updatedOrder.amount;
 
     return await this.orderRepository.save(plainToInstance(Order, existingOrder));
   }

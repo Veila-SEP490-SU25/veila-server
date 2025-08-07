@@ -116,11 +116,21 @@ export class ResetPasswordDto {
 }
 
 export class LoginGoogleDto {
-  @ApiProperty()
+  @ApiProperty({
+    description: 'Email của tài khoản google dùng để đăng nhập',
+    example: 'hieu@gmail.com',
+    nullable: false,
+  })
   @IsEmail()
+  @IsNotEmpty()
   email: string;
 
-  @ApiProperty()
+  @ApiProperty({
+    description: 'Tên của tài khoản google',
+    example: 'hieuvuanguday',
+    nullable: false,
+  })
   @IsNotEmpty()
+  @IsString()
   fullname: string;
 }

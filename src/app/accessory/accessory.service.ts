@@ -135,4 +135,17 @@ export class AccessoryService {
       withDeleted: true,
     });
   }
+
+  async getAccessoryById(id: string): Promise<Accessory> {
+    const accessory = await this.accessoryRepository.findOne({
+      where: {
+        id,
+        status: AccessoryStatus.AVAILABLE,
+      },
+    });
+
+    if(!accessory)
+      throw new NotFoundException('Không tìm thấy phụ kiện');
+    return accessory;
+  }
 }

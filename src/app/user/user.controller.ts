@@ -34,15 +34,48 @@ import {
   ApiTags,
   getSchemaPath,
 } from '@nestjs/swagger';
-import { CreateUser, UpdateUser, UserContactDto } from '@/app/user/user.dto';
+import { CreateUser, IdentifyAuthDto, UpdateUser, UserContactDto } from '@/app/user/user.dto';
 
 @Controller('users')
 @UseGuards(AuthGuard)
 @ApiTags('User Controller')
 @ApiBearerAuth()
-@ApiExtraModels(ItemResponse, ListResponse, User)
+@ApiExtraModels(ItemResponse, ListResponse, User, UserContactDto)
 export class UserController {
   constructor(private readonly userService: UserService) {}
+
+  @Put('identify')
+  @ApiOperation({
+    summary: 'Xác minh số điện thoại người dùng',
+    description: 'Cập nhật số điện thoại của người dùng',
+  })
+  @UseGuards(AuthGuard)
+  @Roles(UserRole.CUSTOMER, UserRole.SHOP)
+  @ApiBearerAuth()
+  @ApiBody({ type: IdentifyAuthDto })
+  @ApiOkResponse({
+    schema: {
+      allOf: [
+        { $ref: getSchemaPath(ItemResponse) },
+        {
+          properties: {
+            item: { example: null },
+          },
+        },
+      ],
+    },
+  })
+  async identifyUser(
+    @UserId() userId: string,
+    @Body() body: IdentifyAuthDto,
+  ): Promise<ItemResponse<null>> {
+    await this.userService.identifyUser(userId, body);
+    return {
+      message: 'Xác minh số điện thoại cho người dùng thành công',
+      statusCode: HttpStatus.OK,
+      item: null,
+    };
+  }
 
   @Get('super-admin')
   @Roles(UserRole.SUPER_ADMIN)

@@ -14,11 +14,6 @@ import { CUOrderAccessoriesDetailDto } from '../order-accessories-details';
 import { CUOrderDressDetailDto } from '../order-dress-details';
 
 export class CUOrderDto {
-  @ApiProperty({
-    description: 'ID của khách hàng',
-    example: 'customer-uuid-123',
-    nullable: false,
-  })
   @IsNotEmpty()
   @IsString()
   customerId: string;
@@ -74,44 +69,8 @@ export class CUOrderDto {
   })
   @IsDate()
   returnDate: Date | null;
-
-  @ApiProperty({
-    description: 'Cửa hàng có mua lại váy cưới sau khi may cho khách không',
-    example: 'true',
-    nullable: false,
-  })
-  @IsNotEmpty()
-  @IsBoolean()
-  isBuyBack: boolean;
-
-  @ApiProperty({
-    description: 'Tổng giá trị đơn hàng (VNĐ)',
-    example: 5000000,
-    nullable: false,
-  })
-  @IsNotEmpty()
-  @IsNumber()
-  amount: number;
-
-  @ApiProperty({
-    description: 'Loại đơn hàng',
-    example: OrderType.SELL,
-    enum: OrderType,
-    nullable: false,
-  })
-  @IsNotEmpty()
-  type: OrderType;
-
-  @ApiProperty({
-    description: 'Trạng thái đơn hàng',
-    example: OrderStatus.PENDING,
-    enum: OrderStatus,
-    nullable: false,
-  })
-  @IsNotEmpty()
-  status: OrderStatus;
 }
-export class orderDto {
+export class OrderDto {
   @Expose()
   @ApiProperty({
     description: 'ID của đơn hàng',

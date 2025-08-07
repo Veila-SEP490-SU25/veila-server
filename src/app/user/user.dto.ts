@@ -190,6 +190,7 @@ export class UserContactDto {
   @IsString()
   phone: string;
 
+  @Expose()
   @ApiProperty({
     description: 'Địa chỉ',
     example: '123 Main St',
@@ -205,4 +206,15 @@ export class ProductUserDto {
   @Type(() => ProductShopDto)
   @ApiProperty({ description: 'Thông tin cửa hàng', type: () => ProductShopDto })
   shop: ProductShopDto;
+}
+
+export class IdentifyAuthDto {
+  @ApiProperty({
+    description: 'Số điện thoại người dùng dùng để xác minh danh tính',
+    example: '0967475325',
+    nullable: false,
+  })
+  @IsNotEmpty()
+  @IsString()
+  phone: string;
 }

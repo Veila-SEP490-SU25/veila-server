@@ -3,11 +3,6 @@ import { Expose, Transform } from 'class-transformer';
 import { IsBoolean, IsNotEmpty, IsNumber, IsString } from 'class-validator';
 
 export class CUOrderDressDetailDto {
-  @ApiProperty({ description: 'ID của đơn hàng', example: 'uuid-order-1' })
-  @IsNotEmpty()
-  @IsString()
-  orderId: string;
-
   @ApiProperty({ description: 'ID của váy cưới', example: 'uuid-dress-1' })
   @IsNotEmpty()
   @IsString()

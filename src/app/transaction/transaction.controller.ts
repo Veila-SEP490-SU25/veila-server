@@ -26,7 +26,7 @@ import { Transaction, TransactionStatus, UserRole } from '@/common/models';
 @Controller('transactions')
 @ApiTags('Transaction Controller')
 @ApiBearerAuth()
-@ApiExtraModels(ItemResponse, ListResponse, transactionDto)
+@ApiExtraModels(ItemResponse, ListResponse, transactionDto, Transaction)
 export class TransactionController {
   constructor(private readonly transactionService: TransactionService) {}
 
