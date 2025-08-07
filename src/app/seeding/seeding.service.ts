@@ -1175,7 +1175,7 @@ export class SeedingService implements OnModuleInit {
       return;
     }
 
-    const shop = await this.shopService.getShopByUserId(shopAccount.id);
+    const shop = await this.shopService.getShopForSeeding(shopAccount.id);
     if (!shop) {
       this.logger.warn(
         `Shop not found for user ${shopAccount.email}. Skipping seeding sell order.`,
@@ -1402,7 +1402,7 @@ export class SeedingService implements OnModuleInit {
       return;
     }
 
-    const shop = await this.shopService.getShopByUserId(shopAccount.id);
+    const shop = await this.shopService.getShopForSeeding(shopAccount.id);
     if (!shop) {
       this.logger.warn(
         `Shop not found for user ${shopAccount.email}. Skipping seeding rent order.`,
@@ -1664,7 +1664,7 @@ export class SeedingService implements OnModuleInit {
       );
       return;
     }
-    const shop = await this.shopService.getShopByUserId(shopAccount.id);
+    const shop = await this.shopService.getShopForSeeding(shopAccount.id);
     if (!shop) {
       this.logger.warn(`Shop not found for user ${shopAccount.email}. Skipping feedback seeding.`);
       return;
@@ -1763,7 +1763,7 @@ export class SeedingService implements OnModuleInit {
       return;
     }
 
-    const shop = await this.shopService.getShopByUserId(shopAccount.id);
+    const shop = await this.shopService.getShopForSeeding(shopAccount.id);
     if (!shop) {
       this.logger.warn(
         `Shop not found for user ${shopAccount.email}. Skipping seeding sell order.`,
