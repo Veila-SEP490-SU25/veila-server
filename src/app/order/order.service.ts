@@ -233,11 +233,18 @@ export class OrderService {
     });
   }
 
+  async getAllOrdersForSeeding(type: OrderType, status: OrderStatus): Promise<Order[]> {
+    return await this.orderRepository.find({
+      where: { type, status },
+      withDeleted: true,
+    });
+  }
+
   async createOrderForSeeding(order: Order): Promise<Order> {
     return await this.orderRepository.save(order);
   }
 
-  async getFirstOrderByCustomerIdAndShopIdAndType(
+  async getCompletedOrderForSeeding(
     customerId: string,
     shopId: string,
     type: OrderType,
@@ -247,6 +254,7 @@ export class OrderService {
         customer: { id: customerId },
         shop: { id: shopId },
         type,
+        status: OrderStatus.COMPLETED,
       },
       order: { createdAt: 'ASC' },
       relations: {
