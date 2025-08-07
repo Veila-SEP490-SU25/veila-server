@@ -119,4 +119,8 @@ export class MilestoneService {
     const matchedOrder = orders.find((order) => order.id === orderId);
     if (!matchedOrder) throw new NotFoundException('Đơn hàng cần tạo milestone không tồn tại');
   }
+
+  async createMilestoneForSeeding(milestone: Milestone): Promise<Milestone> {
+    return await this.milestoneRepository.save(milestone);
+  }
 }

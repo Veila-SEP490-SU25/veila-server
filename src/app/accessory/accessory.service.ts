@@ -136,6 +136,13 @@ export class AccessoryService {
     });
   }
 
+  async getOneAccessoryByUserId(userId: string): Promise<Accessory | null> {
+    return await this.accessoryRepository.findOne({
+      where: { user: { id: userId } },
+      withDeleted: true,
+    });
+  }
+
   async getAccessoryById(id: string): Promise<Accessory> {
     const accessory = await this.accessoryRepository.findOne({
       where: {

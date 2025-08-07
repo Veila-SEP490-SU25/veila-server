@@ -243,4 +243,42 @@ export class OrderService {
       })
       .getMany();
   }
+
+  async getAllTypeOrders(type: OrderType): Promise<Order[]> {
+    return await this.orderRepository.find({
+      where: { type },
+      withDeleted: true,
+    });
+  }
+
+  async getAllOrdersForSeeding(type: OrderType, status: OrderStatus): Promise<Order[]> {
+    return await this.orderRepository.find({
+      where: { type, status },
+      withDeleted: true,
+    });
+  }
+
+  async createOrderForSeeding(order: Order): Promise<Order> {
+    return await this.orderRepository.save(order);
+  }
+
+  async getCompletedOrderForSeeding(
+    customerId: string,
+    shopId: string,
+    type: OrderType,
+  ): Promise<Order | null> {
+    return await this.orderRepository.findOne({
+      where: {
+        customer: { id: customerId },
+        shop: { id: shopId },
+        type,
+        status: OrderStatus.COMPLETED,
+      },
+      order: { createdAt: 'ASC' },
+      relations: {
+        orderAccessoryDetail: { accessory: true },
+        orderDressDetail: { dress: true },
+      },
+    });
+  }
 }

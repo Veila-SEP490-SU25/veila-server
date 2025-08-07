@@ -118,4 +118,8 @@ export class TransactionService {
     });
     return plainToInstance(transactionDto, transaction);
   }
+
+  async createTransactionForSeeding(transaction: Transaction): Promise<Transaction> {
+    return await this.transactionRepository.save(transaction);
+  }
 }
