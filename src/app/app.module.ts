@@ -34,6 +34,8 @@ import { TaskModule } from './task';
 import { MilestoneModule } from './milestone';
 import { SingleModule } from '@/app/single';
 import { TransactionModule } from './transaction';
+import { RequestModule } from '@/app/request';
+import { UpdateRequestModule } from '@/app/update-request';
 
 @Module({
   imports: [
@@ -86,6 +88,8 @@ import { TransactionModule } from './transaction';
     MilestoneModule,
     SingleModule,
     TransactionModule,
+    UpdateRequestModule,
+    RequestModule,
   ],
   controllers: [AppController],
   providers: [
