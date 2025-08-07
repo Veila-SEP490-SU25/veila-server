@@ -79,4 +79,8 @@ export class TaskService {
 
     await this.taskRepository.delete(id);
   }
+
+  async createTaskForSeeding(task: Task): Promise<Task> {
+    return await this.taskRepository.save(task);
+  }
 }
