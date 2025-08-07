@@ -12,20 +12,12 @@ export class OrderServiceDetail extends Base {
     name: 'order_id',
     foreignKeyConstraintName: 'fk_order_order_service_detail',
   })
-  @ApiProperty({
-    description: 'Đơn hàng liên quan',
-    type: () => Order,
-  })
   order: Order;
 
   @OneToOne(() => Request)
   @JoinColumn({
     name: 'request_id',
     foreignKeyConstraintName: 'fk_request_order_service_detail',
-  })
-  @ApiProperty({
-    description: 'Yêu cầu dịch vụ liên quan',
-    type: () => Request,
   })
   request: Request;
 
@@ -35,10 +27,6 @@ export class OrderServiceDetail extends Base {
   @JoinColumn({
     name: 'service_id',
     foreignKeyConstraintName: 'fk_service_order_service_detail',
-  })
-  @ApiProperty({
-    description: 'Dịch vụ được đặt',
-    type: () => Service,
   })
   service: Service;
 
@@ -83,10 +71,5 @@ export class OrderServiceDetail extends Base {
       nullable: true,
     },
   )
-  @ApiProperty({
-    type: () => [UpdateOrderServiceDetail],
-    nullable: true,
-    description: 'Danh sách các yêu cầu cập nhật liên quan',
-  })
   updateOrderServiceDetails: UpdateOrderServiceDetail[] | null;
 }

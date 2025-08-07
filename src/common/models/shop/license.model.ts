@@ -19,10 +19,6 @@ export class License extends Base {
     name: 'shop_id',
     foreignKeyConstraintName: 'fk_license_shop',
   })
-  @ApiProperty({
-    description: 'Shop sở hữu giấy phép',
-    type: () => Shop,
-  })
   shop: Shop;
 
   @Column({

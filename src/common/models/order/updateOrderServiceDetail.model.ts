@@ -18,10 +18,6 @@ export class UpdateOrderServiceDetail extends Base {
     name: 'order_service_detail_id',
     foreignKeyConstraintName: 'fk_order_service_detail_update_order_service_detail',
   })
-  @ApiProperty({
-    description: 'Chi tiết dịch vụ đơn hàng liên quan',
-    type: () => OrderServiceDetail,
-  })
   orderServiceDetail: OrderServiceDetail;
 
   @OneToOne(() => UpdateRequest, {
@@ -31,10 +27,6 @@ export class UpdateOrderServiceDetail extends Base {
   @JoinColumn({
     name: 'update_request_id',
     foreignKeyConstraintName: 'fk_update_request_update_order_service_detail',
-  })
-  @ApiProperty({
-    description: 'Yêu cầu cập nhật liên quan',
-    type: () => UpdateRequest,
   })
   updateRequest: UpdateRequest;
 

@@ -12,10 +12,6 @@ export class Feedback extends Base {
     name: 'customer_id',
     foreignKeyConstraintName: 'fk_customer_feedback',
   })
-  @ApiProperty({
-    description: 'Khách hàng gửi đánh giá',
-    type: () => User,
-  })
   customer: User;
 
   @ManyToOne(() => Order, {
@@ -26,10 +22,6 @@ export class Feedback extends Base {
     name: 'order_id',
     foreignKeyConstraintName: 'fk_order_feedback',
   })
-  @ApiProperty({
-    description: 'Đơn hàng liên quan đến đánh giá',
-    type: () => Order,
-  })
   order: Order;
 
   @ManyToOne(() => Dress, (dress) => dress.feedbacks, {
@@ -38,11 +30,6 @@ export class Feedback extends Base {
   @JoinColumn({
     name: 'dress_id',
     foreignKeyConstraintName: 'fk_dress_feedback',
-  })
-  @ApiProperty({
-    description: 'Sản phẩm váy được đánh giá (nếu có)',
-    type: () => Dress,
-    nullable: true,
   })
   dress: Dress | null;
 
@@ -53,11 +40,6 @@ export class Feedback extends Base {
     name: 'service_id',
     foreignKeyConstraintName: 'fk_service_feedback',
   })
-  @ApiProperty({
-    description: 'Dịch vụ được đánh giá (nếu có)',
-    type: () => Service,
-    nullable: true,
-  })
   service: Service | null;
 
   @ManyToOne(() => Accessory, (accessory) => accessory.feedbacks, {
@@ -66,11 +48,6 @@ export class Feedback extends Base {
   @JoinColumn({
     name: 'accessory_id',
     foreignKeyConstraintName: 'fk_accessory_feedback',
-  })
-  @ApiProperty({
-    description: 'Phụ kiện được đánh giá (nếu có)',
-    type: () => Accessory,
-    nullable: true,
   })
   accessory: Accessory | null;
 

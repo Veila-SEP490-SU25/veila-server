@@ -19,10 +19,6 @@ export class Complaint extends Base {
     name: 'sender_id',
     foreignKeyConstraintName: 'fk_sender_complaint',
   })
-  @ApiProperty({
-    description: 'Người gửi khiếu nại',
-    type: () => User,
-  })
   sender: User;
 
   @ManyToOne(() => Order, {
@@ -32,10 +28,6 @@ export class Complaint extends Base {
   @JoinColumn({
     name: 'order_id',
     foreignKeyConstraintName: 'fk_order_complaint',
-  })
-  @ApiProperty({
-    description: 'Đơn hàng liên quan đến khiếu nại',
-    type: () => Order,
   })
   order: Order;
 

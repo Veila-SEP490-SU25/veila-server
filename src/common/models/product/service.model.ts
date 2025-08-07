@@ -18,11 +18,6 @@ export class Service extends Base {
     name: 'user_id',
     foreignKeyConstraintName: 'fk_service_user',
   })
-  @ApiProperty({
-    description: 'Người dùng sở hữu dịch vụ',
-    type: () => User,
-    nullable: false,
-  })
   user: User;
 
   @ManyToOne(() => Category, {
@@ -32,11 +27,6 @@ export class Service extends Base {
   @JoinColumn({
     name: 'category_id',
     foreignKeyConstraintName: 'fk_service_category',
-  })
-  @ApiProperty({
-    description: 'Danh mục của dịch vụ',
-    type: () => Category,
-    nullable: true,
   })
   category: Category | null;
 
@@ -132,9 +122,5 @@ export class Service extends Base {
   status: ServiceStatus;
 
   @OneToMany(() => Feedback, (feedback) => feedback.service)
-  @ApiProperty({
-    description: 'Danh sách các Feedback của dịch vụ',
-    type: () => [Feedback],
-  })
   feedbacks: Feedback[];
 }

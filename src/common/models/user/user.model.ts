@@ -289,10 +289,6 @@ export class User extends Base {
   @OneToOne(() => Shop, (shop) => shop.user, {
     nullable: true,
   })
-  @ApiProperty({
-    type: () => Shop,
-    nullable: true,
-  })
   shop: Shop | null;
 
   @ManyToOne(() => Contract, {
@@ -302,10 +298,6 @@ export class User extends Base {
   @JoinColumn({
     name: 'contract_id',
     foreignKeyConstraintName: 'fk_user_contract',
-  })
-  @ApiProperty({
-    type: () => Contract,
-    description: 'Hợp đồng liên quan đến người dùng',
   })
   contract: Contract;
 }

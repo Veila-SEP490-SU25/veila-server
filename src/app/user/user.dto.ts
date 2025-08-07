@@ -204,7 +204,6 @@ export class UserContactDto {
 export class ProductUserDto {
   @Expose()
   @Type(() => ProductShopDto)
-  @ApiProperty({ description: 'Thông tin cửa hàng', type: () => ProductShopDto })
   shop: ProductShopDto;
 }
 

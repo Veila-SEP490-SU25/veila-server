@@ -19,10 +19,6 @@ export class UpdateRequest extends Base {
     name: 'request_id',
     foreignKeyConstraintName: 'fk_request_update_request',
   })
-  @ApiProperty({
-    description: 'Yêu cầu cập nhật liên quan',
-    type: () => Request,
-  })
   request: Request;
 
   @Column({

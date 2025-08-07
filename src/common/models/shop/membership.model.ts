@@ -20,10 +20,6 @@ export class Membership extends Base {
     name: 'shop_id',
     foreignKeyConstraintName: 'fk_membership_shop',
   })
-  @ApiProperty({
-    description: 'Gói của shop',
-    type: () => Shop,
-  })
   shop: Shop;
 
   @ManyToOne(() => Subscription, {
@@ -34,17 +30,9 @@ export class Membership extends Base {
     name: 'subscription_id',
     foreignKeyConstraintName: 'fk_membership_subscription',
   })
-  @ApiProperty({
-    description: 'Gói đã đăng ký',
-    type: () => Subscription,
-  })
   subscription: Subscription;
 
   @OneToOne(() => Transaction, (transaction) => transaction.membership)
-  @ApiProperty({
-    description: 'Giao dịch của gói',
-    type: () => Transaction,
-  })
   transaction: Transaction;
 
   @Column({

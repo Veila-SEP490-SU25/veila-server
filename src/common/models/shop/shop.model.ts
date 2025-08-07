@@ -20,10 +20,6 @@ export class Shop extends Base {
     name: 'user_id',
     foreignKeyConstraintName: 'fk_shop_user',
   })
-  @ApiProperty({
-    description: 'Thông tin chủ sở hữu shop',
-    type: () => User,
-  })
   user: User;
 
   @Column({
@@ -197,17 +193,10 @@ export class Shop extends Base {
   isVerified: boolean;
 
   @OneToMany(() => Membership, (membership) => membership.shop)
-  @ApiProperty({
-    type: () => [Membership],
-  })
   memberships: [Membership];
 
   @OneToOne(() => License, (license) => license.shop, {
     nullable: true,
-  })
-  @ApiProperty({
-    type: () => License,
-    description: 'Giấy phép kinh doanh của shop',
   })
   license: License | null;
 
@@ -218,10 +207,6 @@ export class Shop extends Base {
   @JoinColumn({
     name: 'contract_id',
     foreignKeyConstraintName: 'fk_shop_contract',
-  })
-  @ApiProperty({
-    type: () => Contract,
-    description: 'Hợp đồng liên quan đến shop',
   })
   contract: Contract;
 }

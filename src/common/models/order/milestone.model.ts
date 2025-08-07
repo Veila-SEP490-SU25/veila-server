@@ -19,10 +19,6 @@ export class Milestone extends Base {
     name: 'order_id',
     foreignKeyConstraintName: 'fk_order_milestone',
   })
-  @ApiProperty({
-    description: 'Đơn hàng mà mốc công việc này thuộc về',
-    type: () => Order,
-  })
   order: Order;
 
   @Column({
@@ -108,9 +104,5 @@ export class Milestone extends Base {
   dueDate: Date;
 
   @OneToMany(() => Task, (task) => task.milestone)
-  @ApiProperty({
-    type: () => [Task],
-    description: 'Danh sách các công việc (task) thuộc mốc công việc này',
-  })
   tasks: Task[];
 }

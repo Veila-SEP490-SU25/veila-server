@@ -14,10 +14,6 @@ export class OrderAccessoryDetail extends Base {
     name: 'order_id',
     foreignKeyConstraintName: 'fk_order_order_accessory_detail',
   })
-  @ApiProperty({
-    description: 'Đơn hàng liên quan',
-    type: () => Order,
-  })
   order: Order;
 
   @ManyToOne(() => Accessory, {
@@ -26,10 +22,6 @@ export class OrderAccessoryDetail extends Base {
   @JoinColumn({
     name: 'accessory_id',
     foreignKeyConstraintName: 'fk_accessory_order_accessory_detail',
-  })
-  @ApiProperty({
-    description: 'Phụ kiện đi kèm',
-    type: () => Accessory,
   })
   accessory: Accessory;
 

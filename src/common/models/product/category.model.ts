@@ -19,10 +19,6 @@ export class Category extends Base {
     name: 'user_id',
     foreignKeyConstraintName: 'fk_category_user',
   })
-  @ApiProperty({
-    description: 'Người dùng sở hữu danh mục sản phẩm',
-    type: () => User,
-  })
   user: User;
 
   @Column({

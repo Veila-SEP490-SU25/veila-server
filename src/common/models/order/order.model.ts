@@ -34,10 +34,6 @@ export class Order extends Base {
     name: 'customer_id',
     foreignKeyConstraintName: 'fk_customer_order',
   })
-  @ApiProperty({
-    description: 'Khách hàng đặt đơn',
-    type: () => User,
-  })
   customer: User;
 
   @ManyToOne(() => Shop, {
@@ -46,10 +42,6 @@ export class Order extends Base {
   @JoinColumn({
     name: 'shop_id',
     foreignKeyConstraintName: 'fk_shop_order',
-  })
-  @ApiProperty({
-    description: 'Cửa hàng thực hiện đơn',
-    type: () => Shop,
   })
   shop: Shop;
 
@@ -200,49 +192,25 @@ export class Order extends Base {
   status: OrderStatus;
 
   @OneToMany(() => Milestone, (milestone) => milestone.order)
-  @ApiProperty({
-    type: () => [Milestone],
-    description: 'Danh sách các mốc công việc của đơn hàng',
-  })
   milestones: Milestone[];
 
   @OneToMany(() => OrderAccessoryDetail, (orderAccessoryDetail) => orderAccessoryDetail.order, {
     nullable: true,
-  })
-  @ApiProperty({
-    type: () => [OrderAccessoryDetail],
-    nullable: true,
-    description: 'Danh sách chi tiết phụ kiện của đơn hàng',
   })
   orderAccessoryDetail: OrderAccessoryDetail[] | null;
 
   @OneToOne(() => OrderDressDetail, (orderDressDetail) => orderDressDetail.order, {
     nullable: true,
   })
-  @ApiProperty({
-    type: () => OrderDressDetail,
-    nullable: true,
-    description: 'Chi tiết váy của đơn hàng',
-  })
   orderDressDetail: OrderDressDetail | null;
 
   @OneToOne(() => OrderServiceDetail, (orderServiceDetail) => orderServiceDetail.order, {
     nullable: true,
   })
-  @ApiProperty({
-    type: () => OrderServiceDetail,
-    nullable: true,
-    description: 'Chi tiết dịch vụ của đơn hàng',
-  })
   orderServiceDetail: OrderServiceDetail | null;
 
   @OneToMany(() => Transaction, (transaction) => transaction.order, {
     nullable: false,
-  })
-  @ApiProperty({
-    type: () => [Transaction],
-    nullable: false,
-    description: 'Danh sách chi tiết các giao dịch của đơn hàng',
   })
   transaction: Transaction[];
 }

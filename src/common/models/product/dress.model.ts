@@ -18,10 +18,6 @@ export class Dress extends Base {
     name: 'user_id',
     foreignKeyConstraintName: 'fk_dress_user',
   })
-  @ApiProperty({
-    description: 'Người dùng sở hữu sản phẩm',
-    type: () => User,
-  })
   user: User;
 
   @ManyToOne(() => Category, {
@@ -31,11 +27,6 @@ export class Dress extends Base {
   @JoinColumn({
     name: 'category_id',
     foreignKeyConstraintName: 'fk_dress_category',
-  })
-  @ApiProperty({
-    description: 'Danh mục của sản phẩm',
-    type: () => Category,
-    nullable: true,
   })
   category: Category | null;
 
@@ -203,9 +194,5 @@ export class Dress extends Base {
   status: DressStatus;
 
   @OneToMany(() => Feedback, (feedback) => feedback.dress)
-  @ApiProperty({
-    description: 'Danh sách feedback của váy cưới',
-    type: () => [Feedback],
-  })
   feedbacks: Feedback[];
 }

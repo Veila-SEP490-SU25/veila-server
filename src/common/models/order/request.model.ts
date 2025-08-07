@@ -19,10 +19,6 @@ export class Request extends Base {
     name: 'user_id',
     foreignKeyConstraintName: 'fk_user_request',
   })
-  @ApiProperty({
-    description: 'Người gửi yêu cầu',
-    type: () => User,
-  })
   user: User;
 
   @Column({
@@ -391,11 +387,6 @@ export class Request extends Base {
 
   @OneToMany(() => UpdateRequest, (updateRequest) => updateRequest.request, {
     nullable: true,
-  })
-  @ApiProperty({
-    type: () => [UpdateRequest],
-    nullable: true,
-    description: 'Danh sách các yêu cầu cập nhật liên quan',
   })
   updateRequests: UpdateRequest[] | null;
 }

@@ -111,18 +111,10 @@ export class ListDressDto {
 
   @Expose()
   @Type(() => ProductUserDto)
-  @ApiProperty({
-    description: 'Thông tin người dùng sở hữu dịch vụ',
-    type: () => ProductUserDto,
-  })
   user: ProductUserDto;
 
   @Expose()
   @Type(() => ProductCategoryDto)
-  @ApiProperty({
-    description: 'Thông tin danh mục dịch vụ',
-    type: () => ProductCategoryDto,
-  })
   category: ProductCategoryDto;
 }
 
@@ -201,17 +193,9 @@ export class ItemDressDto {
 
   @Expose()
   @Type(() => ProductUserDto)
-  @ApiProperty({
-    description: 'Thông tin người dùng sở hữu dịch vụ',
-    type: () => ProductUserDto,
-  })
   user: ProductUserDto;
 
   @Expose()
   @Type(() => ProductCategoryDto)
-  @ApiProperty({
-    description: 'Thông tin danh mục dịch vụ',
-    type: () => ProductCategoryDto,
-  })
   category: ProductCategoryDto;
 }

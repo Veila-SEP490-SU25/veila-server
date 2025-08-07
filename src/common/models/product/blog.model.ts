@@ -18,10 +18,6 @@ export class Blog extends Base {
     name: 'user_id',
     foreignKeyConstraintName: 'fk_blog_user',
   })
-  @ApiProperty({
-    description: 'Người dùng sở hữu blog',
-    type: () => User,
-  })
   user: User;
 
   @ManyToOne(() => Category, {
@@ -31,11 +27,6 @@ export class Blog extends Base {
   @JoinColumn({
     name: 'category_id',
     foreignKeyConstraintName: 'fk_blog_category',
-  })
-  @ApiProperty({
-    description: 'Danh mục blog',
-    type: () => Category,
-    nullable: true,
   })
   category: Category | null;
 

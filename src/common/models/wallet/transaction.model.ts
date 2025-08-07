@@ -33,10 +33,6 @@ export class Transaction extends Base {
     name: 'wallet_id',
     foreignKeyConstraintName: 'fk_wallet_transaction',
   })
-  @ApiProperty({
-    description: 'Ví thực hiện giao dịch',
-    type: () => Wallet,
-  })
   wallet: Wallet;
 
   @ManyToOne(() => Order, (order) => order.transaction, {
@@ -47,11 +43,6 @@ export class Transaction extends Base {
     name: 'order_id',
     foreignKeyConstraintName: 'fk_order_transaction',
   })
-  @ApiProperty({
-    description: 'Đơn hàng liên quan (nếu có)',
-    type: () => Order,
-    nullable: true,
-  })
   order: Order | null;
 
   @OneToOne(() => Membership, (membership) => membership.transaction, {
@@ -61,11 +52,6 @@ export class Transaction extends Base {
   @JoinColumn({
     name: 'membership_id',
     foreignKeyConstraintName: 'fk_membership_transaction',
-  })
-  @ApiProperty({
-    description: 'Gói thành viên liên quan (nếu có)',
-    type: () => Membership,
-    nullable: true,
   })
   membership: Membership | null;
 

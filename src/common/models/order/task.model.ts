@@ -19,10 +19,6 @@ export class Task extends Base {
     name: 'milestone_id',
     foreignKeyConstraintName: 'fk_milestone_task',
   })
-  @ApiProperty({
-    description: 'Mốc công việc (milestone) mà task này thuộc về',
-    type: () => Milestone,
-  })
   milestone: Milestone;
 
   @Column({
