@@ -5,9 +5,11 @@ import { ContractService } from '@/app/contract';
 import { DressService } from '@/app/dress';
 import { MembershipService } from '@/app/membership';
 import { PasswordService } from '@/app/password';
+import { RequestService } from '@/app/request';
 import { ServiceService } from '@/app/service';
 import { ShopService } from '@/app/shop';
 import { SubscriptionService } from '@/app/subscription';
+import { UpdateRequestService } from '@/app/update-request';
 import { UserService } from '@/app/user';
 import { WalletService } from '@/app/wallet';
 import {
@@ -26,6 +28,8 @@ import {
   LicenseStatus,
   Membership,
   MembershipStatus,
+  Request,
+  RequestStatus,
   Service,
   ServiceStatus,
   Shop,
@@ -62,6 +66,8 @@ export class SeedingService implements OnModuleInit {
     private readonly subscriptionService: SubscriptionService,
     private readonly walletService: WalletService,
     private readonly membershipService: MembershipService,
+    private readonly requestService: RequestService,
+    private readonly updateRequestService: UpdateRequestService,
   ) {
     // Khởi tạo faker với locale tiếng Việt
     this.customFaker = new Faker({
@@ -90,7 +96,9 @@ export class SeedingService implements OnModuleInit {
         await this.seedBlogs();
         await this.seedLicenses();
       })
-      .then(async () => {});
+      .then(async () => {
+        await this.seedSubmitRequests();
+      });
   }
 
   private async seedContracts() {
@@ -1022,5 +1030,70 @@ export class SeedingService implements OnModuleInit {
     } as License;
     await this.shopService.createLicense(newLicense);
     this.logger.log(`License created successfully for shop: ${shop.name}`);
+  }
+
+  private async seedSubmitRequests() {
+    const requests = await this.requestService.getAllRequestsForSeeding();
+    if (requests.length >= 5) {
+      this.logger.log(`Enough data available for submit request. Skipping seeding`);
+      return;
+    }
+    try {
+      Promise.all([
+        await this.seedSubmitRequest(1),
+        await this.seedSubmitRequest(2),
+        await this.seedSubmitRequest(3),
+        await this.seedSubmitRequest(4),
+        await this.seedSubmitRequest(5),
+      ]);
+    } catch (error) {
+      this.logger.error('Seeding process failed.', error);
+      throw new Error('Seeding process failed.');
+    }
+  }
+
+  private async seedSubmitRequest(customerNumber: number) {
+    const customer = await this.userService.getByEmail(`customer.${customerNumber}@veila.studio`);
+    if (!customer) {
+      this.logger.warn(
+        `Customer with email customer.${customerNumber}@veila.studio not found. Skipping seeding submit request.`,
+      );
+      return;
+    }
+    this.logger.log(`Seeding submit request for customer: ${customer.email}`);
+
+    const newRequest = {
+      user: customer,
+      title: `May váy cưới cho khách hàng ${customerNumber}`,
+      description: `May váy cưới đẹp và sang trọng, giá thành từ 100 triệu đồng đổ lại.`,
+      high: this.customFaker.number.int({ min: 150, max: 200 }),
+      weight: this.customFaker.number.int({ min: 40, max: 80 }),
+      bust: this.customFaker.number.int({ min: 70, max: 100 }),
+      waist: this.customFaker.number.int({ min: 60, max: 90 }),
+      hip: this.customFaker.number.int({ min: 80, max: 110 }),
+      armpit: this.customFaker.number.int({ min: 30, max: 50 }),
+      bicep: this.customFaker.number.int({ min: 20, max: 40 }),
+      neck: this.customFaker.number.int({ min: 30, max: 50 }),
+      shoulderWidth: this.customFaker.number.int({ min: 30, max: 50 }),
+      sleeveLength: this.customFaker.number.int({ min: 20, max: 40 }),
+      backLength: this.customFaker.number.int({ min: 30, max: 50 }),
+      lowerWaist: this.customFaker.number.int({ min: 60, max: 90 }),
+      waistToFloor: this.customFaker.number.int({ min: 80, max: 120 }),
+      dressStyle: 'A-line',
+      curtainNeckline: 'V-neck',
+      sleeveStyle: 'Long sleeve',
+      material: 'Silk',
+      color: 'White',
+      specialElement: 'Lace',
+      coverage: 'Full',
+      status: RequestStatus.SUBMIT,
+      isPrivate: false,
+      images: this.customFaker.datatype.boolean()
+        ? this.customFaker.image.url({ width: 800, height: 600 })
+        : '',
+    } as Request;
+
+    await this.requestService.createRequestForSeeding(newRequest);
+    this.logger.log(`Submit request created successfully for customer: ${customer.email}`);
   }
 }

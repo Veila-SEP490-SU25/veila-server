@@ -106,4 +106,17 @@ export class RequestService {
     if (!request) throw new NotFoundException(`Request with id ${id} not found`);
     return request;
   }
+
+  async getAllRequestsForSeeding(): Promise<Request[]> {
+    return await this.requestRepository.find({
+      withDeleted: true,
+      where: {
+        status: RequestStatus.SUBMIT,
+      },
+    });
+  }
+
+  async createRequestForSeeding(request: Request): Promise<Request> {
+    return await this.requestRepository.save(request);
+  }
 }
