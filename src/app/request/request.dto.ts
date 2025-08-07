@@ -27,6 +27,17 @@ export class CURequestDto {
   description: string;
 
   @ApiProperty({
+    type: 'string',
+    format: 'text',
+    nullable: true,
+    description: "Chuỗi hình ảnh (mẫu hình minh họa), cách nhau bằng dấu ','",
+    example: 'https://veila.images/1,https://veila.images/2',
+  })
+  @IsString()
+  @IsOptional()
+  images: string | null;
+
+  @ApiProperty({
     type: 'number',
     nullable: true,
     description: 'Chiều cao của cô dâu (cm)',
