@@ -21,12 +21,14 @@ export class OrderAccessoriesDetailsService {
     orderId: string,
     accessoriesDetails: CUOrderAccessoriesDetailDto[],
   ): Promise<void> {
-    const orderAccessoryDetails = accessoriesDetails.map((accessoriesDetail) => ({
+    const orderAccessoryDetails = accessoriesDetails.map(async (accessoriesDetail) => ({
       orderId,
       accessoryId: accessoriesDetail.accessoryId,
       quantity: accessoriesDetail.quantity,
       description: accessoriesDetail.description,
-      price: accessoriesDetail.price,
+      price:
+        (await this.accessoryService.getAccessoryById(accessoriesDetail.accessoryId)).sellPrice *
+        accessoriesDetail.quantity,
       isRated: accessoriesDetail.is_rated,
     }));
     await this.orderAccessoryDetailRepository.save(
@@ -54,7 +56,9 @@ export class OrderAccessoriesDetailsService {
     existingOrderAccessoryDetail.accessory.id = accessoriesDetail.accessoryId;
     existingOrderAccessoryDetail.quantity = accessoriesDetail.quantity;
     existingOrderAccessoryDetail.description = accessoriesDetail.description;
-    existingOrderAccessoryDetail.price = accessoriesDetail.price;
+    existingOrderAccessoryDetail.price =
+      (await this.accessoryService.getAccessoryById(accessoriesDetail.accessoryId)).sellPrice *
+      accessoriesDetail.quantity;
 
     await this.orderAccessoryDetailRepository.save(existingOrderAccessoryDetail);
   }

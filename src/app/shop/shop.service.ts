@@ -443,4 +443,11 @@ export class ShopService {
 
     return shopContact;
   }
+
+  async getShopForSeeding(userId: string): Promise<Shop | null> {
+    return await this.shopRepository.findOne({
+      where: { user: { id: userId } },
+      withDeleted: true,
+    });
+  }
 }

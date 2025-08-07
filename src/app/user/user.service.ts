@@ -10,7 +10,7 @@ import {
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { In, Not, Repository } from 'typeorm';
-import { CreateUser, UpdateUser, UserContactDto } from '@/app/user';
+import { CreateUser, IdentifyAuthDto, UpdateUser, UserContactDto } from '@/app/user';
 import { PasswordService } from '@/app/password';
 
 @Injectable()
@@ -235,5 +235,15 @@ export class UserService {
     } as UserContactDto;
 
     return userContact;
+  }
+
+  async identifyUser(userId: string, body: IdentifyAuthDto) {
+    const user = await this.getUserById(userId);
+    if (!user) throw new NotFoundException('Không tìm thấy người dùng');
+
+    user.phone = body.phone;
+    user.isIdentified = true;
+
+    await this.userRepository.save(user);
   }
 }
