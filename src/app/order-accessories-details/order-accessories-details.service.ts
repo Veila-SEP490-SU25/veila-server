@@ -1,4 +1,4 @@
-import { OrderAccessoryDetail } from '@/common/models';
+import { Accessory, OrderAccessoryDetail } from '@/common/models';
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm/repository/Repository';
@@ -27,7 +27,7 @@ export class OrderAccessoriesDetailsService {
       quantity: accessoriesDetail.quantity,
       description: accessoriesDetail.description,
       price:
-        (await this.accessoryService.getAccessoryById(accessoriesDetail.accessoryId)).sellPrice *
+        (await this.getAccessoryById(accessoriesDetail.accessoryId)).sellPrice *
         accessoriesDetail.quantity,
       isRated: accessoriesDetail.is_rated,
     }));
@@ -47,17 +47,14 @@ export class OrderAccessoriesDetailsService {
     if (!existingOrderAccessoryDetail)
       throw new NotFoundException('Không tìm thấy chi tiết phụ kiện trong đơn hàng');
 
-    const boolean = await this.accessoryService.isCategoryExistForOwner(
-      accessoriesDetail.accessoryId,
-      shopId,
-    );
+    const boolean = await this.accessoryService.isAccessoryExistForOwner(accessoriesDetail.accessoryId, shopId);
     if (!boolean) throw new NotFoundException('Không tìm thấy phụ kiện này trong shop');
 
     existingOrderAccessoryDetail.accessory.id = accessoriesDetail.accessoryId;
     existingOrderAccessoryDetail.quantity = accessoriesDetail.quantity;
     existingOrderAccessoryDetail.description = accessoriesDetail.description;
     existingOrderAccessoryDetail.price =
-      (await this.accessoryService.getAccessoryById(accessoriesDetail.accessoryId)).sellPrice *
+      (await this.getAccessoryById(accessoriesDetail.accessoryId)).sellPrice *
       accessoriesDetail.quantity;
 
     await this.orderAccessoryDetailRepository.save(existingOrderAccessoryDetail);
@@ -87,5 +84,9 @@ export class OrderAccessoriesDetailsService {
     orderAccessoryDetail: OrderAccessoryDetail,
   ): Promise<OrderAccessoryDetail> {
     return await this.orderAccessoryDetailRepository.save(orderAccessoryDetail);
+  }
+
+  async getAccessoryById(id: string): Promise<Accessory> {
+    return await this.accessoryService.getAccessoryById(id);
   }
 }

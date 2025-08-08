@@ -9,7 +9,7 @@ import {
   ApiTags,
   getSchemaPath,
 } from '@nestjs/swagger';
-import { transactionDto } from './transaction.dto';
+import { TransactionDto } from './transaction.dto';
 import { TransactionService } from './transaction.service';
 import { AuthGuard } from '@/common/guards';
 import {
@@ -26,7 +26,7 @@ import { Transaction, TransactionStatus, UserRole } from '@/common/models';
 @Controller('transactions')
 @ApiTags('Transaction Controller')
 @ApiBearerAuth()
-@ApiExtraModels(ItemResponse, ListResponse, transactionDto, Transaction)
+@ApiExtraModels(ItemResponse, ListResponse, TransactionDto, Transaction)
 export class TransactionController {
   constructor(private readonly transactionService: TransactionService) {}
 
@@ -77,7 +77,7 @@ export class TransactionController {
         { $ref: getSchemaPath(ListResponse) },
         {
           properties: {
-            items: { $ref: getSchemaPath(transactionDto) },
+            items: { $ref: getSchemaPath(TransactionDto) },
           },
         },
       ],
@@ -113,7 +113,7 @@ export class TransactionController {
       'note',
     ])
     filter?: Filtering,
-  ): Promise<ListResponse<transactionDto>> {
+  ): Promise<ListResponse<TransactionDto>> {
     const [transactions, totalItems] = await this.transactionService.getTransactionsForAdmin(
       limit,
       offset,
@@ -182,7 +182,7 @@ export class TransactionController {
         { $ref: getSchemaPath(ListResponse) },
         {
           properties: {
-            items: { $ref: getSchemaPath(transactionDto) },
+            items: { $ref: getSchemaPath(TransactionDto) },
           },
         },
       ],
@@ -219,7 +219,7 @@ export class TransactionController {
       'note',
     ])
     filter?: Filtering,
-  ): Promise<ListResponse<transactionDto>> {
+  ): Promise<ListResponse<TransactionDto>> {
     const [transactions, totalItems] = await this.transactionService.getTransactionsForUser(
       walletId,
       limit,
@@ -260,13 +260,13 @@ export class TransactionController {
         { $ref: getSchemaPath(ItemResponse) },
         {
           properties: {
-            items: { $ref: getSchemaPath(transactionDto) },
+            items: { $ref: getSchemaPath(TransactionDto) },
           },
         },
       ],
     },
   })
-  async getOrderById(@Param('id') id: string): Promise<ItemResponse<transactionDto>> {
+  async getOrderById(@Param('id') id: string): Promise<ItemResponse<TransactionDto>> {
     const transaction = await this.transactionService.getTransactionById(id);
     return {
       message: 'Đây là thông tin chi tiết của giao dịch',

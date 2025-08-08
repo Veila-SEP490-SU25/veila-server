@@ -1,7 +1,7 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { CUTransactionDto, transactionDto } from './transaction.dto';
+import { CUTransactionDto, TransactionDto } from './transaction.dto';
 import { TransactionStatus, Transaction } from '@/common/models';
 import { plainToInstance } from 'class-transformer';
 import { Filtering, getOrder, getWhere, Sorting } from '@/common/decorators';
@@ -70,7 +70,7 @@ export class TransactionService {
     skip: number,
     sort?: Sorting,
     filter?: Filtering,
-  ): Promise<[transactionDto[], number]> {
+  ): Promise<[TransactionDto[], number]> {
     const dynamicFilter = getWhere(filter);
     const where = {
       ...dynamicFilter,
@@ -84,7 +84,7 @@ export class TransactionService {
       skip,
       relations: ['wallet', 'order', 'membership'],
     });
-    return [plainToInstance(transactionDto, transactions), transactions.length];
+    return [plainToInstance(TransactionDto, transactions), transactions.length];
   }
 
   async getTransactionsForUser(
@@ -93,7 +93,7 @@ export class TransactionService {
     skip: number,
     sort?: Sorting,
     filter?: Filtering,
-  ): Promise<[transactionDto[], number]> {
+  ): Promise<[TransactionDto[], number]> {
     const dynamicFilter = getWhere(filter);
     const where = {
       ...dynamicFilter,
@@ -108,15 +108,15 @@ export class TransactionService {
       relations: ['wallet', 'order', 'membership'],
     });
 
-    return [plainToInstance(transactionDto, transactions), transactions.length];
+    return [plainToInstance(TransactionDto, transactions), transactions.length];
   }
 
-  async getTransactionById(id: string): Promise<transactionDto> {
+  async getTransactionById(id: string): Promise<TransactionDto> {
     const transaction = await this.transactionRepository.findOne({
       where: { id },
       relations: ['wallet', 'order', 'membership'],
     });
-    return plainToInstance(transactionDto, transaction);
+    return plainToInstance(TransactionDto, transaction);
   }
 
   async createTransactionForSeeding(transaction: Transaction): Promise<Transaction> {

@@ -10,9 +10,8 @@ import {
   IsString,
   ValidateNested,
 } from 'class-validator';
-import { CUOrderAccessoriesDetailDto } from '../order-accessories-details';
-import { CUOrderDressDetailDto } from '../order-dress-details';
-import { ProductShopDto } from '@/app/shop';
+import { CUOrderAccessoriesDetailDto } from '@/app/order-accessories-details';
+import { CUOrderDressDetailDto } from '@/app/order-dress-details';
 
 export class CUOrderDto {
   @IsNotEmpty()
@@ -210,10 +209,4 @@ export class createOrderRequestDto {
   @ValidateNested({ each: true })
   @Type(() => CUOrderAccessoriesDetailDto)
   accessoriesDetails: CUOrderAccessoriesDetailDto[];
-}
-
-export class ShopOrderDto {
-  @Expose()
-  @Type(() => ProductShopDto)
-  shop: ProductShopDto;
 }

@@ -14,7 +14,6 @@ import { plainToInstance } from 'class-transformer';
 import { UserService } from '../user';
 import { OrderDressDetailsService } from '../order-dress-details';
 import { OrderAccessoriesDetailsService } from '../order-accessories-details';
-import { AccessoryService } from '../accessory';
 
 @Injectable()
 export class OrderService {
@@ -25,7 +24,6 @@ export class OrderService {
     private readonly shopService: ShopService,
     private readonly orderDressDetailsService: OrderDressDetailsService,
     private readonly orderAccessoriesDetailsService: OrderAccessoriesDetailsService,
-    private readonly accessoryService: AccessoryService,
   ) {}
 
   async getOrdersForAdmin(
@@ -168,7 +166,7 @@ export class OrderService {
     let accessoriesPrice = 0;
     await Promise.all(
       body.accessoriesDetails.map(async (accessory) => {
-        const item = await this.accessoryService.getAccessoryById(accessory.accessoryId);
+        const item = await this.orderAccessoriesDetailsService.getAccessoryById(accessory.accessoryId);
         accessoriesPrice += item.sellPrice * accessory.quantity;
       }),
     );

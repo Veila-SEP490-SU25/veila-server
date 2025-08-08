@@ -1,6 +1,6 @@
 import { CUFeedbackDto, ItemFeedbackDto } from '@/app/feedback/feedback.dto';
 import { FeedbackService } from '@/app/feedback/feedback.service';
-import { ItemResponse, ListResponse } from '@/common/base';
+import { ItemResponse } from '@/common/base';
 import { Roles, UserId } from '@/common/decorators';
 import { AuthGuard } from '@/common/guards';
 import { Feedback, UserRole } from '@/common/models';
@@ -18,7 +18,7 @@ import { plainToInstance } from 'class-transformer';
 @Controller('feedbacks')
 @ApiTags('Feedback Controller')
 @ApiBearerAuth()
-@ApiExtraModels(ItemResponse, ListResponse, Feedback, ItemFeedbackDto)
+@ApiExtraModels(ItemResponse, Feedback, ItemFeedbackDto)
 export class FeedbackController {
   constructor(private readonly feedbackService: FeedbackService) {}
 

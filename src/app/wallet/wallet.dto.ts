@@ -35,7 +35,7 @@ export class CUWalletDto {
   lockedBalance: number;
 }
 
-export class walletDto {
+export class WalletDto {
   @Expose()
   @ApiProperty({
     description: 'ID của ví điện tử',

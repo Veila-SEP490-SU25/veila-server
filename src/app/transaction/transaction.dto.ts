@@ -96,7 +96,7 @@ export class CUTransactionDto {
   note: string;
 }
 
-export class transactionDto {
+export class TransactionDto {
   @Expose()
   @ApiProperty({
     description: 'ID của giao dịch',

@@ -9,7 +9,7 @@ import {
   ApiTags,
   getSchemaPath,
 } from '@nestjs/swagger';
-import { walletDto } from './wallet.dto';
+import { WalletDto } from './wallet.dto';
 import {
   Filtering,
   FilteringParams,
@@ -28,7 +28,7 @@ import { CUTransactionDto } from '../transaction';
 @Controller('wallet')
 @ApiTags('Wallet Controller')
 @ApiBearerAuth()
-@ApiExtraModels(ItemResponse, ListResponse, walletDto)
+@ApiExtraModels(ItemResponse, ListResponse, WalletDto)
 export class WalletController {
   constructor(private readonly walletService: WalletService) {}
 
@@ -80,7 +80,7 @@ export class WalletController {
         { $ref: getSchemaPath(ListResponse) },
         {
           properties: {
-            items: { $ref: getSchemaPath(walletDto) },
+            items: { $ref: getSchemaPath(WalletDto) },
           },
         },
       ],
@@ -91,7 +91,7 @@ export class WalletController {
     @SortingParams(['available_balance', 'locked_balance']) sort?: Sorting,
     @FilteringParams(['user_id', 'available_balance', 'locked_balance'])
     filter?: Filtering,
-  ): Promise<ListResponse<walletDto>> {
+  ): Promise<ListResponse<WalletDto>> {
     const [wallets, totalItems] = await this.walletService.getWalletsForAdmin(
       limit,
       offset,
@@ -130,13 +130,13 @@ export class WalletController {
         { $ref: getSchemaPath(ItemResponse) },
         {
           properties: {
-            items: { $ref: getSchemaPath(walletDto) },
+            items: { $ref: getSchemaPath(WalletDto) },
           },
         },
       ],
     },
   })
-  async getOrderById(@UserId() userId: string): Promise<ItemResponse<walletDto>> {
+  async getOrderById(@UserId() userId: string): Promise<ItemResponse<WalletDto>> {
     const wallet = await this.walletService.getWalletByUserId(userId);
     return {
       message: 'Đây là thông tin chi tiết của ví điện tử',

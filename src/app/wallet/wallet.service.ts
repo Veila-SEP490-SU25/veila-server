@@ -8,7 +8,7 @@ import {
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { walletDto } from './wallet.dto';
+import { WalletDto } from './wallet.dto';
 import { plainToInstance } from 'class-transformer';
 import { UserService } from '../user';
 import { CUTransactionDto, TransactionService } from '../transaction';
@@ -27,7 +27,7 @@ export class WalletService {
     skip: number,
     sort?: Sorting,
     filter?: Filtering,
-  ): Promise<[walletDto[], number]> {
+  ): Promise<[WalletDto[], number]> {
     const dynamicFilter = getWhere(filter);
     const where = {
       ...dynamicFilter,
@@ -42,10 +42,10 @@ export class WalletService {
       relations: ['user'],
     });
 
-    return [plainToInstance(walletDto, wallets), wallets.length];
+    return [plainToInstance(WalletDto, wallets), wallets.length];
   }
 
-  async getWalletByUserId(userId: string): Promise<walletDto> {
+  async getWalletByUserId(userId: string): Promise<WalletDto> {
     const wallet = await this.walletRepository.findOne({
       where: {
         user: { id: userId },
@@ -53,7 +53,7 @@ export class WalletService {
       relations: ['user'],
     });
     if (!wallet) throw new NotFoundException('Không tìm thấy ví điện tử của người dùng này');
-    return plainToInstance(walletDto, wallet);
+    return plainToInstance(WalletDto, wallet);
   }
 
   async createWallet(userId: string): Promise<Wallet> {

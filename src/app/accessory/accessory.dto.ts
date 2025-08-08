@@ -1,10 +1,32 @@
 import { ProductCategoryDto } from '@/app/category/category.dto';
-import { ProductFeedbacksDto } from '@/app/feedback';
 import { ProductUserDto } from '@/app/user/user.dto';
 import { AccessoryStatus } from '@/common/models';
 import { ApiProperty } from '@nestjs/swagger';
-import { Expose, Type } from 'class-transformer';
+import { Expose, Transform, Type } from 'class-transformer';
 import { IsBoolean, IsEnum, IsNumber, IsOptional, IsString } from 'class-validator';
+
+export class AccesoryFeedbacksDto {
+  @Expose()
+  @ApiProperty({ description: 'ID Feedback', example: 'uuid-feedback-1' })
+  id: string;
+
+  @Expose()
+  @ApiProperty({ description: 'Tên người dùng đánh giá', example: 'customer123' })
+  @Transform(({ obj: feedback }) => feedback.customer.username)
+  username: string;
+
+  @Expose()
+  @ApiProperty({ description: 'Nội dung đánh giá', example: 'Váy rất đẹp!' })
+  content: string;
+
+  @Expose()
+  @ApiProperty({ description: 'Điểm đánh giá', example: 4.5 })
+  rating: number;
+
+  @Expose()
+  @ApiProperty({ description: 'Ảnh feedback (nếu có)', example: 'https://...' })
+  images: string | null;
+}
 
 export class ItemAccessoryDto {
   @Expose()
@@ -52,8 +74,8 @@ export class ItemAccessoryDto {
   status: AccessoryStatus;
 
   @Expose()
-  @Type(() => ProductFeedbacksDto)
-  feedbacks: ProductFeedbacksDto[];
+  @Type(() => AccesoryFeedbacksDto)
+  feedbacks: AccesoryFeedbacksDto[];
 
   @Expose()
   @Type(() => ProductUserDto)

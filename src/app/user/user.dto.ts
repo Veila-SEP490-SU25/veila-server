@@ -1,9 +1,34 @@
-import { ProductShopDto } from '@/app/shop/shop.dto';
 import { UserRole, UserStatus } from '@/common/models';
 import { IsPassword } from '@/common/validators';
 import { ApiProperty } from '@nestjs/swagger';
 import { Expose, Type } from 'class-transformer';
 import { IsEmail, IsNotEmpty, IsOptional, IsString } from 'class-validator';
+
+
+export class UserShopDto {
+  @Expose()
+  @ApiProperty({ description: 'ID của shop sở hữu phụ kiện', example: 'uuid-shop-1' })
+  id: string;
+
+  @Expose()
+  @ApiProperty({ description: 'Tên của shop sở hữu phụ kiện', example: 'Cửa hàng thời trang ABC' })
+  name: string;
+
+  @Expose()
+  @ApiProperty({
+    description: 'Địa chỉ của shop sở hữu phụ kiện',
+    example: '123 Đường ABC, Quận 1, TP.HCM',
+  })
+  address: string;
+
+  @Expose()
+  @ApiProperty({ description: 'URL logo của shop', example: 'https://veila.images/logo-shop-1' })
+  logoUrl: string;
+
+  @Expose()
+  @ApiProperty({ description: 'Đánh giá của shop', example: 4.5 })
+  reputation: number;
+}
 
 export class CreateUser {
   @ApiProperty({
@@ -203,8 +228,8 @@ export class UserContactDto {
 
 export class ProductUserDto {
   @Expose()
-  @Type(() => ProductShopDto)
-  shop: ProductShopDto;
+  @Type(() => UserShopDto)
+  shop: UserShopDto;
 }
 
 export class IdentifyAuthDto {
@@ -216,18 +241,4 @@ export class IdentifyAuthDto {
   @IsNotEmpty()
   @IsString()
   phone: string;
-}
-
-export class LogoUserDto {
-  @Expose()
-  @ApiProperty()
-  id: string;
-
-  @Expose()
-  @ApiProperty()
-  username: string;
-
-  @Expose()
-  @ApiProperty()
-  avatarUrl: string | null;
 }
