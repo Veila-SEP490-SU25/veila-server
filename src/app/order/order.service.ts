@@ -323,4 +323,27 @@ export class OrderService {
     });
     return customerOrder || shopOrder;
   }
+
+  async getAllComplaintsForSeeding(): Promise<Complaint[]> {
+    return await this.complaintService.getAllForSeeding();
+  }
+
+  async getOrderForSeedingComplaint(
+    customerId: string,
+    shopId: string,
+    type: OrderType,
+  ): Promise<Order | null> {
+    return await this.orderRepository.findOne({
+      where: {
+        customer: { id: customerId },
+        shop: { user: { id: shopId } },
+        status: OrderStatus.COMPLETED,
+        type,
+      },
+    });
+  }
+
+  async createComplaintForSeeding(complaint: Complaint): Promise<Complaint> {
+    return await this.complaintService.createComplaintForSeeding(complaint);
+  }
 }

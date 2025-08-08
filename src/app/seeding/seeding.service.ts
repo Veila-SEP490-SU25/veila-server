@@ -60,6 +60,8 @@ import {
   UserRole,
   UserStatus,
   Wallet,
+  ComplaintStatus,
+  Complaint,
 } from '@/common/models';
 import { Faker, faker, vi } from '@faker-js/faker';
 import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
@@ -132,6 +134,7 @@ export class SeedingService implements OnModuleInit {
       })
       .then(async () => {
         await this.seedFeedbacks();
+        await this.seedComplaintsForOrder();
       });
   }
 
@@ -1919,5 +1922,78 @@ export class SeedingService implements OnModuleInit {
     this.logger.log(
       `Sell order created successfully! Order ID: ${newOrder.id}, Customer: ${customer.email}, Shop: ${shopAccount.email}`,
     );
+  }
+
+  private async seedComplaintsForOrder() {
+    const complaints = await this.orderService.getAllComplaintsForSeeding();
+    if (complaints.length >= 10) {
+      this.logger.log(`Enough complaints available. Skipping seeding.`);
+      return;
+    }
+    try {
+      await Promise.all([
+        await this.seedComplaintForOrder(1, 1, OrderType.SELL, ComplaintStatus.DRAFT),
+        await this.seedComplaintForOrder(2, 2, OrderType.SELL, ComplaintStatus.IN_PROGRESS),
+        await this.seedComplaintForOrder(3, 3, OrderType.SELL, ComplaintStatus.APPROVED),
+        await this.seedComplaintForOrder(4, 4, OrderType.RENT, ComplaintStatus.REJECTED),
+        await this.seedComplaintForOrder(5, 5, OrderType.RENT, ComplaintStatus.IN_PROGRESS),
+        await this.seedComplaintForOrder(1, 4, OrderType.RENT, ComplaintStatus.IN_PROGRESS),
+        await this.seedComplaintForOrder(2, 3, OrderType.SELL, ComplaintStatus.APPROVED),
+        await this.seedComplaintForOrder(3, 5, OrderType.RENT, ComplaintStatus.IN_PROGRESS),
+        await this.seedComplaintForOrder(4, 2, OrderType.SELL, ComplaintStatus.REJECTED),
+        await this.seedComplaintForOrder(5, 1, OrderType.SELL, ComplaintStatus.DRAFT),
+      ]);
+      this.logger.log('Seeding process completed successfully!');
+    } catch (error) {
+      this.logger.error('Seeding complaints failed.', error);
+      throw new Error('Seeding complaints failed.');
+    }
+  }
+
+  private async seedComplaintForOrder(
+    customerNumber: number,
+    shopNumber: number,
+    type: OrderType,
+    status: ComplaintStatus,
+  ) {
+    const customer = await this.userService.getByEmail(`customer.${customerNumber}@veila.studio`);
+    if (!customer) {
+      this.logger.warn(`Customer with email customer.${customerNumber}@veila.studio not found.`);
+      return;
+    }
+
+    const shop = await this.userService.getByEmail(`shop.${shopNumber}@veila.studio`);
+    if (!shop) {
+      this.logger.warn(`Shop with email shop.${shopNumber}@veila.studio not found.`);
+      return;
+    }
+
+    const order = await this.orderService.getOrderForSeedingComplaint(customer.id, shop.id, type);
+    if (!order) {
+      this.logger.warn(`Order not found for customer ${customer.id} and shop ${shop.id}.`);
+      return;
+    }
+
+    if (type === OrderType.RENT) {
+      const newComplaint = {
+        sender: { id: this.customFaker.datatype.boolean() ? customer.id : shop.id },
+        order,
+        title: `Complaint for order ${order.id}`,
+        description: this.customFaker.lorem.sentence(),
+        images: this.customFaker.image.avatar(),
+        status,
+      } as Complaint;
+      await this.orderService.createComplaintForSeeding(newComplaint);
+    } else {
+      const newComplaint = {
+        sender: { id: customer.id },
+        order,
+        title: `Complaint for order ${order.id}`,
+        description: this.customFaker.lorem.sentence(),
+        images: this.customFaker.image.avatar(),
+        status,
+      } as Complaint;
+      await this.orderService.createComplaintForSeeding(newComplaint);
+    }
   }
 }

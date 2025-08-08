@@ -143,4 +143,14 @@ export class ComplaintService {
     });
     return isExist;
   }
+
+  async getAllForSeeding(): Promise<Complaint[]> {
+    return await this.complaintRepository.find({
+      withDeleted: true,
+    });
+  }
+
+  async createComplaintForSeeding(complaint: Complaint): Promise<Complaint> {
+    return await this.complaintRepository.save(complaint);
+  }
 }
