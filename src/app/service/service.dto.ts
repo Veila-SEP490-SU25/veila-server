@@ -100,9 +100,6 @@ export class ItemServiceDto {
 
   @Expose()
   @Type(() => ProductFeedbacksDto)
-  @ApiProperty({
-    type: [ProductFeedbacksDto],
-  })
   feedbacks: ProductFeedbacksDto[];
 
   @Expose()

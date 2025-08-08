@@ -12,6 +12,7 @@ import {
 } from 'class-validator';
 import { CUOrderAccessoriesDetailDto } from '../order-accessories-details';
 import { CUOrderDressDetailDto } from '../order-dress-details';
+import { ProductShopDto } from '@/app/shop';
 
 export class CUOrderDto {
   @IsNotEmpty()
@@ -209,4 +210,10 @@ export class createOrderRequestDto {
   @ValidateNested({ each: true })
   @Type(() => CUOrderAccessoriesDetailDto)
   accessoriesDetails: CUOrderAccessoriesDetailDto[];
+}
+
+export class ShopOrderDto {
+  @Expose()
+  @Type(() => ProductShopDto)
+  shop: ProductShopDto;
 }

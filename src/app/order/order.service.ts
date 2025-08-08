@@ -276,7 +276,7 @@ export class OrderService {
       },
       order: { createdAt: 'ASC' },
       relations: {
-        orderAccessoryDetail: { accessory: true },
+        orderAccessoriesDetail: { accessory: true },
         orderDressDetail: { dress: true },
       },
     });

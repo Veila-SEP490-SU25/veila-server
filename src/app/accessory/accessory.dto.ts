@@ -53,7 +53,6 @@ export class ItemAccessoryDto {
 
   @Expose()
   @Type(() => ProductFeedbacksDto)
-  @ApiProperty({ type: [ProductFeedbacksDto] })
   feedbacks: ProductFeedbacksDto[];
 
   @Expose()

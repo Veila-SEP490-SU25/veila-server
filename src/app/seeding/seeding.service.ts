@@ -1682,7 +1682,7 @@ export class SeedingService implements OnModuleInit {
       this.logger.warn(`No dress found for order ID ${order.id}. Skipping feedback seeding.`);
       return;
     }
-    const accessory = order.orderAccessoryDetail?.[0].accessory;
+    const accessory = order.orderAccessoriesDetail?.[0].accessory;
     if (!accessory) {
       this.logger.warn(`No accessory found for order ID ${order.id}. Skipping feedback seeding.`);
       return;

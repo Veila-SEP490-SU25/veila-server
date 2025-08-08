@@ -185,10 +185,6 @@ export class ItemDressDto {
 
   @Expose()
   @Type(() => ProductFeedbacksDto)
-  @ApiProperty({
-    description: 'Danh sách feedback của váy cưới',
-    type: [ProductFeedbacksDto],
-  })
   feedbacks: ProductFeedbacksDto[];
 
   @Expose()

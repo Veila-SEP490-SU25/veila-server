@@ -197,7 +197,7 @@ export class Order extends Base {
   @OneToMany(() => OrderAccessoryDetail, (orderAccessoryDetail) => orderAccessoryDetail.order, {
     nullable: true,
   })
-  orderAccessoryDetail: OrderAccessoryDetail[] | null;
+  orderAccessoriesDetail: OrderAccessoryDetail[] | null;
 
   @OneToOne(() => OrderDressDetail, (orderDressDetail) => orderDressDetail.order, {
     nullable: true,

@@ -217,3 +217,17 @@ export class IdentifyAuthDto {
   @IsString()
   phone: string;
 }
+
+export class LogoUserDto {
+  @Expose()
+  @ApiProperty()
+  id: string;
+
+  @Expose()
+  @ApiProperty()
+  username: string;
+
+  @Expose()
+  @ApiProperty()
+  avatarUrl: string | null;
+}
