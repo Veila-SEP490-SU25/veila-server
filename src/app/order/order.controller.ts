@@ -1,6 +1,6 @@
 import { OrderStatus } from './../../common/models/order/order.model';
 import { ItemResponse, ListResponse } from '@/common/base';
-import { Order, UserRole } from '@/common/models';
+import { Complaint, Order, UserRole } from '@/common/models';
 import { Body, Controller, Get, HttpStatus, Post, Put, Param, UseGuards } from '@nestjs/common';
 import {
   ApiBearerAuth,
@@ -25,11 +25,12 @@ import {
 } from '@/common/decorators';
 import { AuthGuard } from '@/common/guards';
 import { createOrderRequestDto, CUOrderDto, OrderDto } from './order.dto';
+import { CUComplaintDto } from '@/app/complaint';
 
 @Controller('orders')
 @ApiTags('Order Controller')
 @ApiBearerAuth()
-@ApiExtraModels(ItemResponse, ListResponse, OrderDto, Order)
+@ApiExtraModels(ItemResponse, ListResponse, OrderDto, Order, Complaint)
 export class OrderController {
   constructor(private readonly orderService: OrderService) {}
 
@@ -462,6 +463,129 @@ export class OrderController {
       message: 'Đơn hàng đã được cập nhật trạng thái thành công',
       statusCode: HttpStatus.OK,
       item: order,
+    };
+  }
+
+  @Get(':id/complaints/me')
+  @UseGuards(AuthGuard)
+  @ApiOperation({
+    summary: 'Lấy danh sách khiếu nại của đơn hàng',
+    description: `
+          **Hướng dẫn sử dụng:**
+
+          - Truyền \`id\` của đơn hàng trên URL.
+          - Truyền các tham số phân trang, sắp xếp và lọc trong query.
+          - Nếu không tìm thấy đơn hàng sẽ trả về lỗi.
+          - Trả về danh sách khiếu nại của đơn hàng.
+        - Page bắt đầu từ 0
+        - Sort theo format: [tên_field]:[asc/desc]
+        - Các trường đang có thể sort: status, createdAt, updatedAt
+        - Filter theo format: [tên_field]:[eq|neq|gt|gte|lt|lte|like|nlike|in|nin]:[keyword]; hoặc [tên_field]:[isnull|isnotnull]
+        - Các trường đang có thể filter: status`,
+  })
+  @ApiQuery({
+    name: 'page',
+    required: false,
+    type: Number,
+    default: 0,
+    description: 'Trang hiện tại (bắt đầu từ 0)',
+  })
+  @ApiQuery({
+    name: 'size',
+    required: false,
+    type: Number,
+    default: 10,
+    description: 'Số lượng mỗi trang',
+  })
+  @ApiQuery({
+    name: 'sort',
+    required: false,
+    type: String,
+    description: 'Sắp xếp theo trường: ví dụ: status:asc',
+  })
+  @ApiQuery({
+    name: 'filter',
+    required: false,
+    type: String,
+    description: 'Lọc theo trường: ví dụ: status:DRAFT',
+  })
+  @ApiOkResponse({
+    schema: {
+      allOf: [
+        { $ref: getSchemaPath(ListResponse) },
+        {
+          properties: {
+            items: { type: 'array', items: { $ref: getSchemaPath(Complaint) } },
+          },
+        },
+      ],
+    },
+  })
+  async getOwnerComplaints(
+    @UserId() userId: string,
+    @Param('id') orderId: string,
+    @PaginationParams() { page, size, limit, offset }: Pagination,
+    @SortingParams(['createdAt', 'updatedAt', 'status']) sort: Sorting,
+    @FilteringParams(['status']) filter: Filtering,
+  ): Promise<ListResponse<Complaint>> {
+    const [complaints, totalItems] = await this.orderService.getOwnerComplaints(
+      userId,
+      orderId,
+      limit,
+      offset,
+      sort,
+      filter,
+    );
+    const totalPages = Math.ceil(totalItems / limit);
+    return {
+      message: 'Danh sách khiếu nại của đơn hàng',
+      statusCode: HttpStatus.OK,
+      pageIndex: page,
+      pageSize: size,
+      totalItems,
+      totalPages,
+      hasNextPage: page + 1 < totalPages,
+      hasPrevPage: 0 > page,
+      items: complaints,
+    };
+  }
+
+  @Post(':id/complaints/me')
+  @UseGuards(AuthGuard)
+  @ApiOperation({
+    summary: 'Tạo khiếu nại cho đơn hàng',
+    description: `
+          **Hướng dẫn sử dụng:**
+
+          - Truyền \`id\` của đơn hàng trên URL.
+          - Truyền dữ liệu khiếu nại trong body.
+          - Các trường bắt buộc: \`reason\`, \`description\`.
+          - Nếu không tìm thấy đơn hàng sẽ trả về lỗi.
+          - Trả về thông tin chi tiết của khiếu nại đã tạo.
+      `,
+  })
+  @ApiOkResponse({
+    schema: {
+      allOf: [
+        { $ref: getSchemaPath(ItemResponse) },
+        {
+          properties: {
+            item: { example: null, $ref: getSchemaPath(Complaint) },
+          },
+        },
+      ],
+    },
+  })
+  async createComplaint(
+    @UserId() userId: string,
+    @Param('id') orderId: string,
+    @Body() body: CUComplaintDto,
+  ): Promise<ItemResponse<Complaint>> {
+    const complaint = await this.orderService.createComplaint(userId, orderId, body);
+    return {
+      message: 'Khiếu nại đã được tạo thành công',
+      statusCode: HttpStatus.CREATED,
+      item: complaint,
     };
   }
 }

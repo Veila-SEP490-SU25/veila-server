@@ -1,9 +1,10 @@
 import { ShopService } from './../shop/shop.service';
 import { Filtering, getOrder, getWhere, Sorting } from '@/common/decorators';
-import { Order, OrderStatus, OrderType } from '@/common/models';
+import { Complaint, Order, OrderStatus, OrderType } from '@/common/models';
 import {
   BadRequestException,
   ForbiddenException,
+  Inject,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
@@ -14,6 +15,7 @@ import { plainToInstance } from 'class-transformer';
 import { UserService } from '../user';
 import { OrderDressDetailsService } from '../order-dress-details';
 import { OrderAccessoriesDetailsService } from '../order-accessories-details';
+import { ComplaintService, CUComplaintDto } from '@/app/complaint';
 
 @Injectable()
 export class OrderService {
@@ -24,6 +26,8 @@ export class OrderService {
     private readonly shopService: ShopService,
     private readonly orderDressDetailsService: OrderDressDetailsService,
     private readonly orderAccessoriesDetailsService: OrderAccessoriesDetailsService,
+    @Inject(ComplaintService)
+    private readonly complaintService: ComplaintService,
   ) {}
 
   async getOrdersForAdmin(
@@ -166,7 +170,9 @@ export class OrderService {
     let accessoriesPrice = 0;
     await Promise.all(
       body.accessoriesDetails.map(async (accessory) => {
-        const item = await this.orderAccessoriesDetailsService.getAccessoryById(accessory.accessoryId);
+        const item = await this.orderAccessoriesDetailsService.getAccessoryById(
+          accessory.accessoryId,
+        );
         accessoriesPrice += item.sellPrice * accessory.quantity;
       }),
     );
@@ -278,5 +284,43 @@ export class OrderService {
         orderDressDetail: { dress: true },
       },
     });
+  }
+
+  async getOwnerComplaints(
+    userId: string,
+    orderId: string,
+    take: number,
+    skip: number,
+    sort?: Sorting,
+    filter?: Filtering,
+  ): Promise<[Complaint[], number]> {
+    return await this.complaintService.getOwnerComplaints(
+      userId,
+      orderId,
+      take,
+      skip,
+      sort,
+      filter,
+    );
+  }
+
+  async createComplaint(userId: string, orderId: string, body: CUComplaintDto): Promise<Complaint> {
+    return await this.complaintService.createComplaint(userId, orderId, body);
+  }
+
+  async getOwnerOrderById(userId: string, orderId: string): Promise<Order | null> {
+    const customerOrder = await this.orderRepository.findOne({
+      where: {
+        id: orderId,
+        customer: { id: userId },
+      },
+    });
+    const shopOrder = await this.orderRepository.findOne({
+      where: {
+        id: orderId,
+        shop: { user: { id: userId } },
+      },
+    });
+    return customerOrder || shopOrder;
   }
 }

@@ -1,3 +1,4 @@
+import { CUComplaintDto, ReviewComplaintDto } from '@/app/complaint/complaint.dto';
 import { ComplaintService } from '@/app/complaint/complaint.service';
 import { ItemResponse, ListResponse } from '@/common/base';
 import {
@@ -8,13 +9,15 @@ import {
   Roles,
   Sorting,
   SortingParams,
+  UserId,
 } from '@/common/decorators';
 import { AuthGuard } from '@/common/guards';
 import { Complaint, UserRole } from '@/common/models';
-import { Controller, Get, HttpStatus, Param, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, HttpStatus, Param, Put, UseGuards } from '@nestjs/common';
 import {
   ApiBearerAuth,
   ApiExtraModels,
+  ApiNoContentResponse,
   ApiOkResponse,
   ApiOperation,
   ApiQuery,
@@ -115,7 +118,15 @@ export class ComplaintController {
   @Get(':id/staff')
   @UseGuards(AuthGuard)
   @Roles(UserRole.STAFF, UserRole.ADMIN, UserRole.SUPER_ADMIN)
-  @ApiOperation({})
+  @ApiOperation({
+    summary: 'Lấy chi tiết khiếu nại cho nhân viên',
+    description: `
+        **Hướng dẫn sử dụng:**
+
+        - Truyền \`id\` của khiếu nại trên URL.
+        - Trả về thông tin chi tiết của khiếu nại.
+    `,
+  })
   @ApiOkResponse({
     schema: {
       allOf: [
@@ -134,6 +145,120 @@ export class ComplaintController {
       message: 'Chi tiết khiếu nại cho nhân viên',
       statusCode: HttpStatus.OK,
       item: complaint,
+    };
+  }
+
+  @Put(':id/review/staff')
+  @UseGuards(AuthGuard)
+  @Roles(UserRole.STAFF, UserRole.ADMIN, UserRole.SUPER_ADMIN)
+  @ApiOperation({
+    summary: 'Cập nhật trạng thái khiếu nại cho nhân viên',
+    description: `
+        **Hướng dẫn sử dụng:**
+
+        - Truyền \`id\` của khiếu nại trên URL.
+        - Truyền dữ liệu cập nhật trong body.
+        - Các trường bắt buộc: \`status\`.
+        - Nếu không tìm thấy khiếu nại sẽ trả về lỗi.
+        - Trả về thông tin chi tiết của khiếu nại đã cập nhật.
+        - APPROVED/REJECTED
+    `,
+  })
+  @ApiNoContentResponse({
+    schema: {
+      allOf: [
+        { $ref: getSchemaPath(ItemResponse) },
+        {
+          properties: {
+            item: { example: null },
+          },
+        },
+      ],
+    },
+  })
+  async updateComplaintForStaff(
+    @Param('id') id: string,
+    @Body() body: ReviewComplaintDto,
+  ): Promise<ItemResponse<null>> {
+    await this.complaintService.reviewComplaint(id, body.status);
+    return {
+      message: 'Khiếu nại đã được cập nhật thành công',
+      statusCode: HttpStatus.OK,
+      item: null,
+    };
+  }
+
+  @Get(':id/me')
+  @UseGuards(AuthGuard)
+  @ApiOperation({
+    summary: 'Lấy chi tiết khiếu nại của bạn',
+    description: `
+        **Hướng dẫn sử dụng:**
+
+        - Truyền \`id\` của khiếu nại trên URL.
+        - Trả về thông tin chi tiết của khiếu nại.
+    `,
+  })
+  @ApiOkResponse({
+    schema: {
+      allOf: [
+        { $ref: getSchemaPath(ItemResponse) },
+        {
+          properties: {
+            item: { $ref: getSchemaPath(Complaint) },
+          },
+        },
+      ],
+    },
+  })
+  async getOwnerComplaint(
+    @Param('id') id: string,
+    @UserId() userId: string,
+  ): Promise<ItemResponse<Complaint>> {
+    const complaint = await this.complaintService.getOwnerComplaintById(userId, id);
+    return {
+      message: 'Chi tiết khiếu nại của bạn',
+      statusCode: HttpStatus.OK,
+      item: complaint,
+    };
+  }
+
+  @Put(':id/me')
+  @UseGuards(AuthGuard)
+  @ApiOperation({
+    summary: 'Cập nhật khiếu nại của bạn',
+    description: `
+        **Hướng dẫn sử dụng:**
+
+        - Truyền \`id\` của khiếu nại trên URL.
+        - Truyền dữ liệu cập nhật trong body.
+        - Các trường bắt buộc: \`status\`.
+        - Nếu không tìm thấy khiếu nại sẽ trả về lỗi.
+        - Trả về thông tin chi tiết của khiếu nại đã cập nhật.
+    `,
+  })
+  @ApiNoContentResponse({
+    schema: {
+      allOf: [
+        { $ref: getSchemaPath(ItemResponse) },
+        {
+          properties: {
+            item: { example: null },
+          },
+        },
+      ],
+    },
+  })
+  async updateOwnerComplaint(
+    @Param('id') id: string,
+    @Body() body: CUComplaintDto,
+    @UserId() userId: string,
+  ): Promise<ItemResponse<null>> {
+    await this.complaintService.updateComplaint(userId, id, body);
+    return {
+      message: 'Khiếu nại của bạn đã được cập nhật',
+      statusCode: HttpStatus.NO_CONTENT,
+      item: null,
     };
   }
 }

@@ -7,6 +7,7 @@ import { UserModule } from '../user';
 import { ShopModule } from '../shop/shop.module';
 import { OrderAccessoriesDetailsModule } from '../order-accessories-details';
 import { OrderDressDetailsModule } from '../order-dress-details';
+import { ComplaintModule } from '@/app/complaint';
 
 @Module({
   imports: [
@@ -15,6 +16,7 @@ import { OrderDressDetailsModule } from '../order-dress-details';
     ShopModule,
     OrderAccessoriesDetailsModule,
     OrderDressDetailsModule,
+    ComplaintModule,
   ],
   controllers: [OrderController],
   providers: [OrderService],

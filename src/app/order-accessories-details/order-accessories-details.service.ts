@@ -47,7 +47,10 @@ export class OrderAccessoriesDetailsService {
     if (!existingOrderAccessoryDetail)
       throw new NotFoundException('Không tìm thấy chi tiết phụ kiện trong đơn hàng');
 
-    const boolean = await this.accessoryService.isAccessoryExistForOwner(accessoriesDetail.accessoryId, shopId);
+    const boolean = await this.accessoryService.isAccessoryExistForOwner(
+      accessoriesDetail.accessoryId,
+      shopId,
+    );
     if (!boolean) throw new NotFoundException('Không tìm thấy phụ kiện này trong shop');
 
     existingOrderAccessoryDetail.accessory.id = accessoriesDetail.accessoryId;
