@@ -5,15 +5,6 @@ import { IsNotEmpty, IsNumber, IsString } from 'class-validator';
 
 export class CUTaskDto {
   @ApiProperty({
-    description: 'ID của mốc công việc',
-    example: 'milestone-uuid-123',
-    nullable: false,
-  })
-  @IsNotEmpty()
-  @IsString()
-  milestoneId: string;
-
-  @ApiProperty({
     description: 'Tiêu đề của công việc',
     example: 'May cổ áo',
     nullable: false,
@@ -57,9 +48,11 @@ export class CUTaskDto {
   dueDate: Date;
 }
 
-export class taskDto {
+export class TaskDto {
   @Expose()
   @ApiProperty({ description: 'ID của công việc', example: 'task-uuid-123' })
+  id: string;
+
   @Expose()
   @ApiProperty({ description: 'ID của mốc công việc', example: 'milestone-uuid-123' })
   @Transform(({ obj: task }) => task.milestone.id)

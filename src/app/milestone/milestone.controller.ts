@@ -21,14 +21,28 @@ import {
   getSchemaPath,
 } from '@nestjs/swagger';
 import { AuthGuard } from '@/common/guards';
-import { Roles, Sorting, SortingParams, UserId } from '@/common/decorators';
-import { createMilestoneRequestDto, CUMilestoneDto, milestoneDto as MilestoneDto } from './milestone.dto';
+import {
+  Filtering,
+  FilteringParams,
+  Pagination,
+  PaginationParams,
+  Roles,
+  Sorting,
+  SortingParams,
+  UserId,
+} from '@/common/decorators';
+import {
+  createMilestoneRequestDto,
+  CUMilestoneDto,
+  milestoneDto as MilestoneDto,
+} from './milestone.dto';
 import { Milestone, MilestoneStatus, UserRole } from '@/common/models';
+import { TaskDto } from '@/app/task';
 
 @Controller('milestones')
 @ApiTags('Milestone Controller')
 @ApiBearerAuth()
-@ApiExtraModels(ItemResponse, ListResponse, MilestoneDto, Milestone)
+@ApiExtraModels(ItemResponse, ListResponse, MilestoneDto, Milestone, TaskDto)
 export class MilestoneController {
   constructor(private readonly milestoneService: MilestoneService) {}
 
@@ -116,6 +130,120 @@ export class MilestoneController {
     };
   }
 
+  @Get(':id/tasks')
+  @UseGuards(AuthGuard)
+  @ApiOperation({
+    summary: 'Lấy danh sách công việc theo mốc công việc',
+    description: `
+            **Hướng dẫn sử dụng:**
+            
+            - Trả về danh sách công việc theo mốc công việc
+            - Hỗ trợ phân trang, sắp xếp và lọc
+            - Sắp xếp theo định dạng: [tên_trường]:[asc/desc]. Ví dụ: index:asc
+            - Hỗ trợ sắp xếp: index
+            - Lọc theo định dạng: [tên_trường]:[toán_tử]:[giá_trị]. Ví dụ: status:like:PENDING
+            - Hỗ trợ lọc: status
+        `,
+  })
+  @ApiQuery({
+    name: 'page',
+    required: false,
+    type: Number,
+    default: 0,
+    description: 'Trang hiện tại (bắt đầu từ 0)',
+  })
+  @ApiQuery({
+    name: 'size',
+    required: false,
+    type: Number,
+    default: 10,
+    description: 'Số lượng mỗi trang',
+  })
+  @ApiQuery({
+    name: 'sort',
+    required: false,
+    type: String,
+    description: 'Sắp xếp theo trường, ví dụ: index:asc',
+  })
+  @ApiQuery({
+    name: 'filter',
+    required: false,
+    type: String,
+    description: 'Lọc theo trường, ví dụ: status:like:PENDING',
+  })
+  @ApiOkResponse({
+    schema: {
+      allOf: [
+        { $ref: getSchemaPath(ListResponse) },
+        {
+          properties: {
+            items: { $ref: getSchemaPath(TaskDto) },
+          },
+        },
+      ],
+    },
+  })
+  async getTasksByMilestoneId(
+    @Param('id') id: string,
+    @PaginationParams() { page, size, limit, offset }: Pagination,
+    @SortingParams(['index']) sort?: Sorting,
+    @FilteringParams(['status']) filter?: Filtering,
+  ): Promise<ListResponse<TaskDto>> {
+    const [items, totalItems] = await this.milestoneService.getTasksByMilestonesId(
+      id,
+      limit,
+      offset,
+      sort,
+      filter,
+    );
+    const totalPages = Math.ceil(totalItems / size);
+    return {
+      message: 'Danh sách công việc theo mốc công việc',
+      statusCode: HttpStatus.OK,
+      pageIndex: page,
+      pageSize: size,
+      totalItems,
+      totalPages,
+      hasNextPage: page < totalPages - 1,
+      hasPrevPage: page > 0,
+      items,
+    };
+  }
+
+  @Get(':id/tasks/:taskId')
+  @UseGuards(AuthGuard)
+  @ApiOperation({
+    summary: 'Lấy thông tin chi tiết công việc theo id và mốc công việc',
+    description: `
+            **Hướng dẫn sử dụng:**
+
+            - Trả về thông tin chi tiết công việc theo id và mốc công việc
+        `,
+  })
+  @ApiOkResponse({
+    schema: {
+      allOf: [
+        { $ref: getSchemaPath(ItemResponse) },
+        {
+          properties: {
+            item: { $ref: getSchemaPath(TaskDto) },
+          },
+        },
+      ],
+    },
+  })
+  async getTaskByIdAndMilestoneId(
+    @Param('id') id: string,
+    @Param('taskId') taskId: string,
+  ): Promise<ItemResponse<TaskDto>> {
+    const task = await this.milestoneService.getTaskByIdAndMilestoneId(id, taskId);
+    return {
+      message: 'Thông tin chi tiết công việc',
+      statusCode: HttpStatus.OK,
+      item: task,
+    };
+  }
+
   @Post()
   @UseGuards(AuthGuard)
   @Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN, UserRole.SHOP)
@@ -196,7 +324,7 @@ export class MilestoneController {
     };
   }
 
-  @Put(':id/status')
+  @Put(':id/:status')
   @UseGuards(AuthGuard)
   @Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN, UserRole.STAFF, UserRole.SHOP)
   @ApiOperation({

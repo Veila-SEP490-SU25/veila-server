@@ -3,11 +3,11 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { In, Repository } from 'typeorm';
 import { createMilestoneRequestDto, CUMilestoneDto, milestoneDto } from './milestone.dto';
-import { getOrder, Sorting } from '@/common/decorators';
+import { Filtering, getOrder, Sorting } from '@/common/decorators';
 import { plainToInstance } from 'class-transformer';
 import { OrderService } from '../order';
 import { ShopService } from '../shop';
-import { TaskService } from '../task';
+import { TaskDto, TaskService } from '../task';
 
 @Injectable()
 export class MilestoneService {
@@ -18,6 +18,20 @@ export class MilestoneService {
     private readonly shopService: ShopService,
     private readonly taskService: TaskService,
   ) {}
+
+  async getTaskByIdAndMilestoneId(milestoneId: string, taskId: string): Promise<TaskDto> {
+    return await this.taskService.getTaskByIdAndMilestoneId(milestoneId, taskId);
+  }
+
+  async getTasksByMilestonesId(
+    milestoneId: string,
+    take: number,
+    skip: number,
+    sort?: Sorting,
+    filter?: Filtering,
+  ): Promise<[TaskDto[], number]> {
+    return await this.taskService.getTasksByMilestoneId(milestoneId, take, skip, sort, filter);
+  }
 
   async getAllMilestonesForOrder(orderId: string, sort?: Sorting): Promise<milestoneDto[]> {
     const existingOrder = await this.orderService.getOrderById(orderId);
