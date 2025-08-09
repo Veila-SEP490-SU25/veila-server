@@ -22,13 +22,13 @@ import {
 } from '@nestjs/swagger';
 import { AuthGuard } from '@/common/guards';
 import { Roles, Sorting, SortingParams, UserId } from '@/common/decorators';
-import { createMilestoneRequestDto, CUMilestoneDto, milestoneDto } from './milestone.dto';
+import { createMilestoneRequestDto, CUMilestoneDto, milestoneDto as MilestoneDto } from './milestone.dto';
 import { Milestone, MilestoneStatus, UserRole } from '@/common/models';
 
 @Controller('milestones')
 @ApiTags('Milestone Controller')
 @ApiBearerAuth()
-@ApiExtraModels(ItemResponse, ListResponse, milestoneDto)
+@ApiExtraModels(ItemResponse, ListResponse, MilestoneDto, Milestone)
 export class MilestoneController {
   constructor(private readonly milestoneService: MilestoneService) {}
 
@@ -58,7 +58,7 @@ export class MilestoneController {
         { $ref: getSchemaPath(ListResponse) },
         {
           properties: {
-            items: { $ref: getSchemaPath(milestoneDto) },
+            items: { $ref: getSchemaPath(MilestoneDto) },
           },
         },
       ],
@@ -67,7 +67,7 @@ export class MilestoneController {
   async getAllMilestonesForOrder(
     @Query('orderId') orderId: string,
     @SortingParams(['index']) sort?: Sorting,
-  ): Promise<ListResponse<milestoneDto>> {
+  ): Promise<ListResponse<MilestoneDto>> {
     const milestones = await this.milestoneService.getAllMilestonesForOrder(orderId, sort);
     return {
       message: 'Danh sách milestone đã sắp xếp tăng dần',
@@ -101,13 +101,13 @@ export class MilestoneController {
         { $ref: getSchemaPath(ItemResponse) },
         {
           properties: {
-            items: { $ref: getSchemaPath(milestoneDto) },
+            items: { $ref: getSchemaPath(MilestoneDto) },
           },
         },
       ],
     },
   })
-  async getMilestoneById(@Param('id') id: string): Promise<ItemResponse<milestoneDto>> {
+  async getMilestoneById(@Param('id') id: string): Promise<ItemResponse<MilestoneDto>> {
     const milestone = await this.milestoneService.getMilestoneById(id);
     return {
       message: 'Đây là thông tin chi tiết mốc công việc',

@@ -95,10 +95,12 @@ export class milestoneDto {
 export class createMilestoneRequestDto {
   @ValidateNested()
   @Type(() => CUMilestoneDto)
+  @ApiProperty({ description: 'Thông tin mốc công việc mới', type: () => CUMilestoneDto })
   newMilestone: CUMilestoneDto;
 
   @IsArray()
   @ValidateNested({ each: true })
   @Type(() => CUTaskDto)
+  @ApiProperty({ description: 'Danh sách các công việc trong mốc', type: () => [CUTaskDto] })
   tasks: CUTaskDto[];
 }
