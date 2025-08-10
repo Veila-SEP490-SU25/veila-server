@@ -14,12 +14,13 @@ export class TaskService {
   ) {}
 
   async saveTask(milestoneId: string, newTasks: CUTaskDto[]): Promise<void> {
-    const tasks = newTasks.map((newTask) => ({
+    const tasks = newTasks.map((newTask, index) => ({
       milestoneId,
       title: newTask.title,
       description: newTask.description,
-      index: newTask.index,
-      status: TaskStatus.PENDING,
+      // ghi chú: index sẽ được đánh từ 0
+      index: index,
+      status: index === 0 ? TaskStatus.PENDING : TaskStatus.IN_PROGRESS,
       dueDate: newTask.dueDate,
     }));
     await this.taskRepository.save(plainToInstance(Task, tasks));
@@ -34,7 +35,6 @@ export class TaskService {
 
     existingTask.title = task.title;
     existingTask.description = task.description;
-    existingTask.index = task.index;
     existingTask.dueDate = task.dueDate;
 
     await this.taskRepository.save(existingTask);
@@ -116,5 +116,23 @@ export class TaskService {
     });
     if (!task) throw new NotFoundException('Không tìm thấy công việc trong mốc công việc');
     return plainToInstance(TaskDto, task);
+  }
+
+  async getTasksByMilestoneIdV2(milestoneId: string): Promise<Task[]> {
+    const tasks = await this.taskRepository.find({
+      where: { milestone: { id: milestoneId } },
+      order: { index: 'ASC' },
+      relations: ['milestone'],
+    });
+    return tasks;
+  }
+
+  async getTaskByIdAndMilestoneIdV2(milestoneId: string, taskId: string): Promise<Task> {
+    const task = await this.taskRepository.findOne({
+      where: { id: taskId, milestone: { id: milestoneId } },
+      relations: { milestone: true },
+    });
+    if (!task) throw new NotFoundException('Không tìm thấy công việc trong mốc công việc');
+    return task;
   }
 }

@@ -103,6 +103,11 @@ export class OrderDressDetailDto {
   dressId: string;
 
   @Expose()
+  @ApiProperty({ description: 'Tên của váy cưới', example: 'Váy cưới đẹp' })
+  @Transform(({ obj: orderDressDetail }) => orderDressDetail.dress.name)
+  dressName: string;
+
+  @Expose()
   @ApiProperty({ description: 'Chiều cao của cô dâu', example: 165 })
   high: number;
 

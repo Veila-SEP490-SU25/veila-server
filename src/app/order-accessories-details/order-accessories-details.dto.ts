@@ -33,6 +33,11 @@ export class OrderAccessoriesDetailDto {
   orderId: string;
 
   @Expose()
+  @ApiProperty({ description: 'ID của phụ kiện', example: 'uuid-accessory-1' })
+  @Transform(({ obj: orderAccessoryDetail }) => orderAccessoryDetail.accessory.id)
+  accessoryId: string;
+
+  @Expose()
   @ApiProperty({ description: 'Tên của phụ kiện', example: 'Phụ kiện 1' })
   @Transform(({ obj: orderAccessoryDetail }) => orderAccessoryDetail.accessory.name)
   name: string;

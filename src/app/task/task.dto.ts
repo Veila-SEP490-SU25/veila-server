@@ -1,7 +1,7 @@
 import { TaskStatus } from '@/common/models';
 import { ApiProperty } from '@nestjs/swagger';
 import { Expose, Transform } from 'class-transformer';
-import { IsNotEmpty, IsNumber, IsString } from 'class-validator';
+import { IsNotEmpty, IsString } from 'class-validator';
 
 export class CUTaskDto {
   @ApiProperty({
@@ -21,22 +21,6 @@ export class CUTaskDto {
   @IsNotEmpty()
   @IsString()
   description: string;
-
-  @ApiProperty({
-    description: 'Số thứ tự của công việc',
-    example: 1,
-    nullable: false,
-  })
-  @IsNotEmpty()
-  @IsNumber()
-  index: number;
-
-  @ApiProperty({
-    description: 'Trạng thái công việc',
-    example: TaskStatus.IN_PROGRESS,
-    nullable: false,
-  })
-  status: TaskStatus;
 
   @ApiProperty({
     description: 'Hạn hoàn thành công việc',

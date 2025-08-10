@@ -23,9 +23,11 @@ import {
   SortingParams,
   UserId,
 } from '@/common/decorators';
-import { AuthGuard } from '@/common/guards';
-import { createOrderRequestDto, CUOrderDto, OrderDto } from './order.dto';
+import { AuthGuard, RolesGuard } from '@/common/guards';
+import { createOrderRequestDto, OrderDto, UOrderDto } from './order.dto';
 import { CUComplaintDto } from '@/app/complaint';
+import { OrderAccessoriesDetailDto } from '../order-accessories-details';
+import { OrderDressDetailDto } from '../order-dress-details';
 
 @Controller('orders')
 @ApiTags('Order Controller')
@@ -35,7 +37,7 @@ export class OrderController {
   constructor(private readonly orderService: OrderService) {}
 
   @Get()
-  @UseGuards(AuthGuard)
+  @UseGuards(AuthGuard, RolesGuard)
   @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.STAFF)
   @ApiOperation({
     summary: 'Lấy danh sách đơn hàng với phân trang, sắp xếp và lọc (Super Admin/Admin/Staff)',
@@ -126,7 +128,7 @@ export class OrderController {
   }
 
   @Get('/customer')
-  @UseGuards(AuthGuard)
+  @UseGuards(AuthGuard, RolesGuard)
   @Roles(UserRole.CUSTOMER)
   @ApiOperation({
     summary: 'Lấy danh sách đơn hàng của khách hàng (Customer only)',
@@ -218,7 +220,7 @@ export class OrderController {
   }
 
   @Get('/shop')
-  @UseGuards(AuthGuard)
+  @UseGuards(AuthGuard, RolesGuard)
   @Roles(UserRole.SHOP)
   @ApiOperation({
     summary: 'Lấy danh sách đơn hàng của cửa hàng (Shop only)',
@@ -311,7 +313,6 @@ export class OrderController {
 
   @Get(':id')
   @UseGuards(AuthGuard)
-  @Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN, UserRole.STAFF, UserRole.CUSTOMER, UserRole.SHOP)
   @ApiOperation({
     summary: 'Lấy chi tiết đơn hàng',
     description: `
@@ -384,7 +385,7 @@ export class OrderController {
   }
 
   @Put(':id')
-  @UseGuards(AuthGuard)
+  @UseGuards(AuthGuard, RolesGuard)
   @Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN, UserRole.STAFF, UserRole.CUSTOMER)
   @ApiOperation({
     summary: 'Cập nhật thông tin đơn hàng',
@@ -414,7 +415,7 @@ export class OrderController {
   async updateOrder(
     @UserId() userId: string,
     @Param('id') id: string,
-    @Body() updatedOrder: CUOrderDto,
+    @Body() updatedOrder: UOrderDto,
   ): Promise<ItemResponse<Order>> {
     const order = await this.orderService.updateOrder(userId, id, updatedOrder);
     return {
@@ -424,8 +425,8 @@ export class OrderController {
     };
   }
 
-  @Put(':id/status')
-  @UseGuards(AuthGuard)
+  @Put(':id/:status')
+  @UseGuards(AuthGuard, RolesGuard)
   @Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN, UserRole.STAFF, UserRole.SHOP)
   @ApiOperation({
     summary: 'Cập nhật trạng thái đơn hàng',
@@ -463,6 +464,163 @@ export class OrderController {
       message: 'Đơn hàng đã được cập nhật trạng thái thành công',
       statusCode: HttpStatus.OK,
       item: order,
+    };
+  }
+
+  @Get(':id/order-accessories-details')
+  @UseGuards(AuthGuard)
+  @ApiOperation({
+    summary: 'Lấy danh sách phụ kiện của đơn hàng',
+    description: `
+          **Hướng dẫn sử dụng:**
+
+          - Truyền \`id\` của đơn hàng trên URL.
+          - Nếu không tìm thấy đơn hàng sẽ trả về lỗi.
+          - Trả về danh sách phụ kiện của đơn hàng.
+    `,
+  })
+  @ApiOkResponse({
+    schema: {
+      allOf: [
+        { $ref: getSchemaPath(ListResponse) },
+        {
+          properties: {
+            items: { type: 'array', items: { $ref: getSchemaPath(OrderAccessoriesDetailDto) } },
+          },
+        },
+      ],
+    },
+  })
+  async getOrderAccessoriesDetails(
+    @Param('id') orderId: string,
+  ): Promise<ListResponse<OrderAccessoriesDetailDto>> {
+    const orderAccessoriesDetails = await this.orderService.getOrderAccessoriesDetails(orderId);
+    return {
+      message: 'Danh sách phụ kiện của đơn hàng',
+      statusCode: HttpStatus.OK,
+      pageIndex: 0,
+      pageSize: 0,
+      totalItems: orderAccessoriesDetails.length,
+      totalPages: 1,
+      hasNextPage: false,
+      hasPrevPage: false,
+      items: orderAccessoriesDetails,
+    };
+  }
+
+  @Get(':id/order-accessories-details/:accessoryId')
+  @UseGuards(AuthGuard)
+  @ApiOperation({
+    summary: 'Lấy chi tiết phụ kiện của đơn hàng',
+    description: `
+          **Hướng dẫn sử dụng:**
+
+          - Truyền \`id\` của đơn hàng và \`accessoryId\` trên URL.
+          - Nếu không tìm thấy phụ kiện sẽ trả về lỗi.
+          - Trả về thông tin chi tiết của phụ kiện trong đơn hàng.
+        `,
+  })
+  @ApiOkResponse({
+    schema: {
+      allOf: [
+        { $ref: getSchemaPath(ItemResponse) },
+        {
+          properties: {
+            item: { $ref: getSchemaPath(OrderAccessoriesDetailDto) },
+          },
+        },
+      ],
+    },
+  })
+  async getOrderAccessoryDetailById(
+    @Param('id') orderId: string,
+    @Param('accessoryId') accessoryId: string,
+  ): Promise<ItemResponse<OrderAccessoriesDetailDto>> {
+    const orderAccessoryDetail = await this.orderService.getOrderAccessoryDetailById(
+      orderId,
+      accessoryId,
+    );
+    return {
+      message: 'Chi tiết phụ kiện trong đơn hàng',
+      statusCode: HttpStatus.OK,
+      item: orderAccessoryDetail,
+    };
+  }
+
+  @Get(':id/order-dress-details')
+  @UseGuards(AuthGuard)
+  @ApiOperation({
+    summary: 'Lấy váy của đơn hàng',
+    description: `
+          **Hướng dẫn sử dụng:**
+
+          - Truyền \`id\` của đơn hàng trên URL.
+          - Nếu không tìm thấy đơn hàng sẽ trả về lỗi.
+          - Trả về váy của đơn hàng.
+    `,
+  })
+  @ApiOkResponse({
+    schema: {
+      allOf: [
+        { $ref: getSchemaPath(ListResponse) },
+        {
+          properties: {
+            items: { type: 'array', items: { $ref: getSchemaPath(OrderDressDetailDto) } },
+          },
+        },
+      ],
+    },
+  })
+  async getOrderDressDetails(
+    @Param('id') orderId: string,
+  ): Promise<ListResponse<OrderDressDetailDto>> {
+    const orderDressDetails = await this.orderService.getOrderDressDetails(orderId);
+    return {
+      message: 'Danh sách phụ kiện của đơn hàng',
+      statusCode: HttpStatus.OK,
+      pageIndex: 0,
+      pageSize: 0,
+      totalItems: orderDressDetails.length,
+      totalPages: 1,
+      hasNextPage: false,
+      hasPrevPage: false,
+      items: orderDressDetails,
+    };
+  }
+
+  @Get(':id/order-dress-details/:dressId')
+  @UseGuards(AuthGuard)
+  @ApiOperation({
+    summary: 'Lấy chi tiết váy của đơn hàng',
+    description: `
+          **Hướng dẫn sử dụng:**
+
+          - Truyền \`id\` của đơn hàng và \`orderId\` trên URL.
+          - Nếu không tìm thấy váy sẽ trả về lỗi.
+          - Trả về thông tin chi tiết của váy trong đơn hàng.
+        `,
+  })
+  @ApiOkResponse({
+    schema: {
+      allOf: [
+        { $ref: getSchemaPath(ItemResponse) },
+        {
+          properties: {
+            item: { $ref: getSchemaPath(OrderDressDetailDto) },
+          },
+        },
+      ],
+    },
+  })
+  async getOrderDressDetailById(
+    @Param('id') orderId: string,
+    @Param('dressId') dressId: string,
+  ): Promise<ItemResponse<OrderDressDetailDto>> {
+    const orderDressDetail = await this.orderService.getOrderDressDetailById(orderId, dressId);
+    return {
+      message: 'Chi tiết váy trong đơn hàng',
+      statusCode: HttpStatus.OK,
+      item: orderDressDetail,
     };
   }
 

@@ -10,11 +10,14 @@ import {
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { In, Repository } from 'typeorm';
-import { createOrderRequestDto, CUOrderDto, OrderDto } from './order.dto';
+import { createOrderRequestDto, OrderDto, UOrderDto } from './order.dto';
 import { plainToInstance } from 'class-transformer';
 import { UserService } from '../user';
-import { OrderDressDetailsService } from '../order-dress-details';
-import { OrderAccessoriesDetailsService } from '../order-accessories-details';
+import { OrderDressDetailDto, OrderDressDetailsService } from '../order-dress-details';
+import {
+  OrderAccessoriesDetailDto,
+  OrderAccessoriesDetailsService,
+} from '../order-accessories-details';
 import { ComplaintService, CUComplaintDto } from '@/app/complaint';
 
 @Injectable()
@@ -200,7 +203,7 @@ export class OrderService {
     return order;
   }
 
-  async updateOrder(userId: string, id: string, updatedOrder: CUOrderDto): Promise<Order> {
+  async updateOrder(userId: string, id: string, updatedOrder: UOrderDto): Promise<Order> {
     const existingOrder = await this.getOrderById(id);
 
     if (existingOrder.status !== OrderStatus.PENDING)
@@ -210,9 +213,6 @@ export class OrderService {
 
     const user = await this.userService.getUserById(userId);
     if (!user) throw new NotFoundException('Người dùng này không tồn tại');
-
-    const shop = await this.shopService.getShopForCustomer(updatedOrder.shopId);
-    if (!shop) throw new NotFoundException('Không tìm thấy cửa hàng');
 
     existingOrder.phone = updatedOrder.phone;
     existingOrder.email = updatedOrder.email;
@@ -345,5 +345,59 @@ export class OrderService {
 
   async createComplaintForSeeding(complaint: Complaint): Promise<Complaint> {
     return await this.complaintService.createComplaintForSeeding(complaint);
+  }
+
+  async getOrderAccessoriesDetails(orderId: string): Promise<OrderAccessoriesDetailDto[]> {
+    const orderAccessoriesDetails =
+      await this.orderAccessoriesDetailsService.getOrderAccessoryDetails(orderId);
+    return plainToInstance(OrderAccessoriesDetailDto, orderAccessoriesDetails);
+  }
+
+  async getOrderDressDetails(orderId: string): Promise<OrderDressDetailDto[]> {
+    const orderAccessoriesDetails =
+      await this.orderDressDetailsService.getOrderDressDetails(orderId);
+    return plainToInstance(OrderDressDetailDto, orderAccessoriesDetails);
+  }
+
+  async getOrderAccessoryDetailById(
+    orderId: string,
+    accessoryId: string,
+  ): Promise<OrderAccessoriesDetailDto> {
+    const orderAccessoryDetails =
+      await this.orderAccessoriesDetailsService.getOrderAccessoryDetails(orderId);
+    if (!orderAccessoryDetails || orderAccessoryDetails.length === 0)
+      throw new NotFoundException('Không tìm thấy phụ kiện trong đơn hàng');
+
+    const orderAccessoryDetail = orderAccessoryDetails.find(
+      (detail) => detail.accessoryId === accessoryId,
+    );
+
+    if (!orderAccessoryDetail)
+      throw new NotFoundException('Không tìm thấy phụ kiện trong đơn hàng');
+
+    return orderAccessoryDetail;
+  }
+
+  async getOrderDressDetailById(orderId: string, dressId: string): Promise<OrderDressDetailDto> {
+    const orderDressDetails = await this.orderDressDetailsService.getOrderDressDetails(orderId);
+    if (!orderDressDetails || orderDressDetails.length === 0)
+      throw new NotFoundException('Không tìm thấy váy trong đơn hàng');
+
+    const orderDressDetail = orderDressDetails.find((detail) => detail.dressId === dressId);
+
+    if (!orderDressDetail) throw new NotFoundException('Không tìm thấy váy trong đơn hàng');
+
+    return orderDressDetail;
+  }
+
+  async updateOrderStatusV2(id: string, status: OrderStatus): Promise<Order> {
+    const existingOrder = await this.getOrderById(id);
+
+    if (!existingOrder || existingOrder.status === OrderStatus.CANCELLED)
+      throw new NotFoundException('Không tìm thấy đơn hàng này');
+
+    existingOrder.status = status;
+
+    return await this.orderRepository.save(plainToInstance(Order, existingOrder));
   }
 }

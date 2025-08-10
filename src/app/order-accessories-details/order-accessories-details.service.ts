@@ -8,6 +8,7 @@ import {
 } from './order-accessories-details.dto';
 import { plainToInstance } from 'class-transformer';
 import { AccessoryService } from '../accessory';
+import { Filtering, getOrder, getWhere, Sorting } from '@/common/decorators';
 
 @Injectable()
 export class OrderAccessoriesDetailsService {
@@ -91,5 +92,28 @@ export class OrderAccessoriesDetailsService {
 
   async getAccessoryById(id: string): Promise<Accessory> {
     return await this.accessoryService.getAccessoryById(id);
+  }
+  async getOrderAccessoriesDetailsByOrderId(
+    orderId: string,
+    take: number,
+    skip: number,
+    sort?: Sorting,
+    filter?: Filtering,
+  ): Promise<OrderAccessoryDetail[]> {
+    const dynamicFilter = getWhere(filter);
+    const where = {
+      ...dynamicFilter,
+      order: { id: orderId },
+    };
+    const order = getOrder(sort);
+
+    const orderAccessoriesDetails = await this.orderAccessoryDetailRepository.find({
+      where,
+      relations: ['accessory', 'order'],
+      take,
+      skip,
+      order,
+    });
+    return orderAccessoriesDetails;
   }
 }

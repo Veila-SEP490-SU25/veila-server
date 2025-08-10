@@ -13,7 +13,7 @@ import {
 import { CUOrderAccessoriesDetailDto } from '@/app/order-accessories-details';
 import { CUOrderDressDetailDto } from '@/app/order-dress-details';
 
-export class CUOrderDto {
+export class COrderDto {
   @IsNotEmpty()
   @IsString()
   customerId: string;
@@ -70,6 +70,52 @@ export class CUOrderDto {
   @IsDate()
   returnDate: Date | null;
 }
+
+export class UOrderDto {
+  @ApiProperty({
+    description: 'Số điện thoại liên hệ',
+    example: '0123456789',
+    nullable: false,
+  })
+  @IsNotEmpty()
+  @IsString()
+  phone: string;
+
+  @ApiProperty({
+    description: 'Email liên hệ',
+    example: 'customer.example@gmail.com',
+    nullable: true,
+  })
+  @IsString()
+  email: string | null;
+
+  @ApiProperty({
+    description: 'Địa chỉ giao hàng',
+    example: '123 Đường ABC, Quận X, TP Y',
+    nullable: false,
+  })
+  @IsNotEmpty()
+  @IsString()
+  address: string;
+
+  @ApiProperty({
+    description: 'Hạn giao hàng cho khách',
+    example: '2023-12-31',
+    nullable: false,
+  })
+  @IsNotEmpty()
+  @IsDate()
+  dueDate: Date;
+
+  @ApiProperty({
+    description: 'Ngày trả hàng (nếu có)',
+    example: '2024-01-15',
+    nullable: true,
+  })
+  @IsDate()
+  returnDate: Date | null;
+}
+
 export class OrderDto {
   @Expose()
   @ApiProperty({
@@ -195,8 +241,8 @@ export class OrderDto {
 export class createOrderRequestDto {
   @ApiProperty()
   @ValidateNested()
-  @Type(() => CUOrderDto)
-  newOrder: CUOrderDto;
+  @Type(() => COrderDto)
+  newOrder: COrderDto;
 
   @ApiProperty({ type: () => [CUOrderDressDetailDto] })
   @IsArray()

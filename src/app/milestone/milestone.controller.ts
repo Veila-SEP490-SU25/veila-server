@@ -20,7 +20,7 @@ import {
   ApiTags,
   getSchemaPath,
 } from '@nestjs/swagger';
-import { AuthGuard } from '@/common/guards';
+import { AuthGuard, RolesGuard } from '@/common/guards';
 import {
   Filtering,
   FilteringParams,
@@ -31,11 +31,7 @@ import {
   SortingParams,
   UserId,
 } from '@/common/decorators';
-import {
-  createMilestoneRequestDto,
-  CUMilestoneDto,
-  milestoneDto as MilestoneDto,
-} from './milestone.dto';
+import { CreateMilestoneRequestDto, CUMilestoneDto, MilestoneDto } from './milestone.dto';
 import { Milestone, MilestoneStatus, UserRole } from '@/common/models';
 import { TaskDto } from '@/app/task';
 
@@ -48,7 +44,6 @@ export class MilestoneController {
 
   @Get()
   @UseGuards(AuthGuard)
-  @Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN, UserRole.STAFF, UserRole.SHOP, UserRole.CUSTOMER)
   @ApiOperation({
     summary: 'Lấy danh sách mốc công việc với sắp xếp tăng dần (All role trừ guest)',
     description: `
@@ -245,7 +240,7 @@ export class MilestoneController {
   }
 
   @Post()
-  @UseGuards(AuthGuard)
+  @UseGuards(AuthGuard, RolesGuard)
   @Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN, UserRole.SHOP)
   @ApiOperation({
     summary: 'Tạo mốc công việc mới',
@@ -254,9 +249,9 @@ export class MilestoneController {
 
             - Chỉ có \`SHOP\` (không tính Admin) mới có thể tạo mốc công việc.
             -Truyền dữ liệu mốc công việc trong body theo dạng JSON.
-            - Các trường bắt buộc: order_id, title, description, index, status,...
+            - Các trường bắt buộc: order_id, title, description, status,...
             - Trả về thông tin chi tiết của mốc công việc vừa tạo.
-            - MilestoneStatus: PENDING, IN_PROGRESS, COMPLETED, CANCELLED.
+            - MilestoneStatus: PENDING
         `,
   })
   @ApiOkResponse({
@@ -273,7 +268,7 @@ export class MilestoneController {
   })
   async createMilestone(
     @UserId() userId: string,
-    @Body() body: createMilestoneRequestDto,
+    @Body() body: CreateMilestoneRequestDto,
   ): Promise<ItemResponse<Milestone>> {
     const milestone = await this.milestoneService.createMilestone(userId, body);
     return {
@@ -284,7 +279,7 @@ export class MilestoneController {
   }
 
   @Put(':id')
-  @UseGuards(AuthGuard)
+  @UseGuards(AuthGuard, RolesGuard)
   @Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN, UserRole.STAFF, UserRole.SHOP)
   @ApiOperation({
     summary: 'Cập nhật thông tin mốc công việc',
@@ -295,7 +290,7 @@ export class MilestoneController {
             - Truyền dữ liệu cập nhật trong body theo dạng JSON.
             - Các trường bắt buộc: \`due_date\`....
             - Nếu không tìm thấy mốc công việc sẽ trả về lỗi.
-            - OrderStatus: PENDING, IN_PROGRESS, COMPLETED, CANCELLED
+            - MilestoneStatus: PENDING, IN_PROGRESS, COMPLETED, CANCELLED
             - Trả về thông tin chi tiết của mốc công việc đã cập nhật.
         `,
   })
@@ -325,7 +320,7 @@ export class MilestoneController {
   }
 
   @Put(':id/:status')
-  @UseGuards(AuthGuard)
+  @UseGuards(AuthGuard, RolesGuard)
   @Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN, UserRole.STAFF, UserRole.SHOP)
   @ApiOperation({
     summary: 'Cập nhật trạng thái mốc công việc',
@@ -362,5 +357,33 @@ export class MilestoneController {
       statusCode: HttpStatus.OK,
       item: milestone,
     };
+  }
+
+  @Put(':id/tasks/:taskId')
+  @UseGuards(AuthGuard, RolesGuard)
+  @Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN, UserRole.STAFF, UserRole.SHOP)
+  @ApiOperation({
+    summary: 'Cập nhật trạng thái hoàn thành cho công việc trong mốc công việc',
+    description: `
+            **Hướng dẫn sử dụng:** 
+            - Truyền \`id\` của mốc công việc và \`taskId\` của công việc trên URL.
+            - Nếu không tìm thấy công việc sẽ trả về lỗi.
+            - Trả về thông tin chi tiết của công việc đã cập nhật.
+        `,
+  })
+  @ApiOkResponse({
+    schema: {
+      allOf: [
+        { $ref: getSchemaPath(ItemResponse) },
+        {
+          properties: {
+            item: { example: null, $ref: getSchemaPath(TaskDto) },
+          },
+        },
+      ],
+    },
+  })
+  async completeTask(@Param('id') id: string, @Param('taskId') taskId: string): Promise<void> {
+    await this.milestoneService.completeTask(id, taskId);
   }
 }
