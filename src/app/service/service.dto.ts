@@ -29,26 +29,42 @@ export class ServiceFeedbacksDto {
 }
 
 export class CUServiceDto {
-  @ApiProperty()
+  @ApiProperty({
+    description: 'ID danh mục dịch vụ',
+    example: 'category-uuid-123',
+  })
   @IsOptional()
   @IsString()
   categoryId: string | null;
 
-  @ApiProperty()
+  @ApiProperty({
+    description: 'Tên dịch vụ',
+    example: 'May váy cưới theo yêu cầu',
+  })
   @IsString()
   name: string;
 
-  @ApiProperty()
+  @ApiProperty({
+    description: 'Mô tả dịch vụ',
+    example: 'Dịch vụ may váy cưới theo yêu cầu',
+  })
   @IsOptional()
   @IsString()
   description: string | null;
 
-  @ApiProperty()
+  @ApiProperty({
+    description: 'Ảnh dịch vụ (nếu có)',
+    example: 'https://storage.veila.com/services/img123.jpg',
+  })
   @IsOptional()
   @IsString()
   images: string | null;
 
-  @ApiProperty()
+  @ApiProperty({
+    enum: ServiceStatus,
+    description: 'Trạng thái dịch vụ',
+    example: ServiceStatus.AVAILABLE,
+  })
   @IsEnum(ServiceStatus)
   status: ServiceStatus;
 }
