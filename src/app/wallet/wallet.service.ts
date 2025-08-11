@@ -3,6 +3,8 @@ import { Wallet } from '@/common/models';
 import {
   BadRequestException,
   ForbiddenException,
+  forwardRef,
+  Inject,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
@@ -11,7 +13,7 @@ import { Repository } from 'typeorm';
 import { WalletDto } from './wallet.dto';
 import { plainToInstance } from 'class-transformer';
 import { UserService } from '../user';
-import { CUTransactionDto, TransactionService } from '../transaction';
+import { DepositAndWithdrawTransactionDto, TransactionService } from '../transaction';
 
 @Injectable()
 export class WalletService {
@@ -19,6 +21,7 @@ export class WalletService {
     @InjectRepository(Wallet)
     private readonly walletRepository: Repository<Wallet>,
     private readonly userService: UserService,
+    @Inject(forwardRef(() => TransactionService))
     private readonly transactionService: TransactionService,
   ) {}
 
@@ -76,7 +79,7 @@ export class WalletService {
     }
   }
 
-  async depositWallet(userId: string, depositWallet: CUTransactionDto): Promise<Wallet> {
+  async depositWallet(userId: string, depositWallet: DepositAndWithdrawTransactionDto): Promise<Wallet> {
     const user = await this.userService.getUserById(userId);
     if (!user) throw new NotFoundException('Người dùng không tồn tại');
 
@@ -85,17 +88,14 @@ export class WalletService {
     const wallet = await this.findOneByUserId(userId);
     if (!wallet) throw new NotFoundException('Người dùng này chưa sở hữu ví điện tử');
 
-    if (wallet.id !== depositWallet.walletId)
-      throw new ForbiddenException('Người dùng không được quyền truy cập ví điện tử này');
-
-    await this.transactionService.saveTransaction(wallet.id, depositWallet);
+    await this.transactionService.saveDepositTransaction(user, wallet.id, depositWallet);
     wallet.availableBalance = wallet.availableBalance + depositWallet.amount;
 
     await this.walletRepository.save(wallet);
     return wallet;
   }
 
-  async withdrawWalletRequest(userId: string, withdrawWallet: CUTransactionDto): Promise<string> {
+  async withdrawWalletRequest(userId: string, withdrawWallet: DepositAndWithdrawTransactionDto): Promise<string> {
     const user = await this.userService.getUserById(userId);
     if (!user) throw new NotFoundException('Người dùng không tồn tại');
 
@@ -104,14 +104,11 @@ export class WalletService {
     const wallet = await this.findOneByUserId(userId);
     if (!wallet) throw new NotFoundException('Người dùng này chưa sở hữu ví điện tử');
 
-    if (wallet.id !== withdrawWallet.walletId)
-      throw new ForbiddenException('Người dùng không được quyền truy cập ví điện tử này');
-
     if (wallet.availableBalance < withdrawWallet.amount)
       throw new BadRequestException(
         'Số dư khả dụng trong tài khoản không đủ để thực hiện rút tiền',
       );
-    else await this.transactionService.saveTransaction(wallet.id, withdrawWallet);
+    else await this.transactionService.saveWithdrawTransaction(user, wallet.id, withdrawWallet);
 
     return 'Yêu cầu rút tiền của bạn đã được tạo, xin vui lòng chờ hệ thống của chúng tôi xác nhận';
   }
