@@ -1,5 +1,5 @@
 import { ItemResponse, ListResponse } from '@/common/base';
-import { Controller, Get, HttpStatus, Param, Put, UseGuards } from '@nestjs/common';
+import { Controller, forwardRef, Get, HttpStatus, Inject, Param, Put, UseGuards } from '@nestjs/common';
 import {
   ApiBearerAuth,
   ApiExtraModels,
@@ -11,7 +11,7 @@ import {
 } from '@nestjs/swagger';
 import { TransactionDto } from './transaction.dto';
 import { TransactionService } from './transaction.service';
-import { AuthGuard } from '@/common/guards';
+import { AuthGuard, RolesGuard } from '@/common/guards';
 import {
   Filtering,
   FilteringParams,
@@ -20,18 +20,24 @@ import {
   Roles,
   Sorting,
   SortingParams,
+  UserId,
 } from '@/common/decorators';
 import { Transaction, TransactionStatus, UserRole } from '@/common/models';
+import { WalletService } from '../wallet';
 
 @Controller('transactions')
 @ApiTags('Transaction Controller')
 @ApiBearerAuth()
 @ApiExtraModels(ItemResponse, ListResponse, TransactionDto, Transaction)
 export class TransactionController {
-  constructor(private readonly transactionService: TransactionService) {}
+  constructor(
+    private readonly transactionService: TransactionService,
+    @Inject(forwardRef(() => WalletService))
+    private readonly walletService: WalletService,
+  ) {}
 
   @Get()
-  @UseGuards(AuthGuard)
+  @UseGuards(AuthGuard, RolesGuard)
   @Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN, UserRole.STAFF)
   @ApiOperation({
     summary: 'Lấy danh sách tất cả giao dịch với phân trang, sắp xếp và lọc',
@@ -135,14 +141,15 @@ export class TransactionController {
     };
   }
 
-  @Get(':walletId/my-transaction')
-  @UseGuards(AuthGuard)
+  @Get('my-transaction/:walletId')
+  @UseGuards(AuthGuard, RolesGuard)
   @Roles(UserRole.CUSTOMER, UserRole.SHOP)
   @ApiOperation({
     summary: 'Lấy danh sách giao dịch theo người dùng',
     description: `
             **Hướng dẫn sử dụng:**
 
+            - Truyền id của ví trên Url
             - Trả về danh sách giao dịch của người dùng hiện tại.
             - Hỗ trợ phân trang, lọc và sắp xếp.
             - Page bắt đầu từ số 0.
@@ -189,7 +196,7 @@ export class TransactionController {
     },
   })
   async getTransactionsForUser(
-    @Param('walletId') walletId: string,
+    @UserId() userId: string,
     @PaginationParams() { page, size, limit, offset }: Pagination,
     @SortingParams([
       'wallet_id',
@@ -220,8 +227,9 @@ export class TransactionController {
     ])
     filter?: Filtering,
   ): Promise<ListResponse<TransactionDto>> {
+    const wallet = await this.walletService.getWalletByUserId(userId);
     const [transactions, totalItems] = await this.transactionService.getTransactionsForUser(
-      walletId,
+      wallet.id,
       limit,
       offset,
       sort,
@@ -243,7 +251,6 @@ export class TransactionController {
 
   @Get(':id')
   @UseGuards(AuthGuard)
-  @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.STAFF, UserRole.CUSTOMER, UserRole.SHOP)
   @ApiOperation({
     summary: 'Lấy chi tiết giao dịch',
     description: `
@@ -275,7 +282,7 @@ export class TransactionController {
     };
   }
 
-  @Put(':id/status')
+  @Put(':id/:status')
   @UseGuards(AuthGuard)
   @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.STAFF)
   @ApiOperation({
@@ -309,6 +316,74 @@ export class TransactionController {
     const transaction = await this.transactionService.updateTransactionStatus(id, status);
     return {
       message: 'Giao dịch đã được cập nhật trạng thái thành công',
+      statusCode: HttpStatus.OK,
+      item: transaction,
+    };
+  }
+
+  @Put('approve-withdraw/:id')
+  @UseGuards(AuthGuard, RolesGuard)
+  @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.STAFF)
+  @ApiOperation({
+    summary: 'Duyệt yêu cầu rút tiền',
+    description: `
+            **Hướng dẫn sử dụng:**
+      
+            - Truyền \`id\` của giao dịch yêu cầu rút tiền trên URL.
+            - Nếu không tìm thấy giao dịch sẽ trả về lỗi.
+            - Trả về thông tin chi tiết của giao dịch đã cập nhật.
+        `,
+  })
+  @ApiOkResponse({
+    schema: {
+      allOf: [
+        { $ref: getSchemaPath(ItemResponse) },
+        {
+          properties: {
+            item: { example: null, $ref: getSchemaPath(Transaction) },
+          },
+        },
+      ],
+    },
+  })
+  async approveWithdrawRequest(@Param('id') id: string): Promise<ItemResponse<Transaction>> {
+    const transaction = await this.transactionService.approveWithdrawRequest(id);
+    return {
+      message: 'Yêu cầu rút tiền đã được duyệt thành công',
+      statusCode: HttpStatus.OK,
+      item: transaction,
+    };
+  }
+
+  @Put('cancel-withdraw/:id')
+  @UseGuards(AuthGuard, RolesGuard)
+  @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.STAFF)
+  @ApiOperation({
+    summary: 'Từ chối yêu cầu rút tiền',
+    description: `
+            **Hướng dẫn sử dụng:**
+      
+            - Truyền \`id\` của giao dịch yêu cầu rút tiền trên URL.
+            - Nếu không tìm thấy giao dịch sẽ trả về lỗi.
+            - Trả về thông tin chi tiết của giao dịch đã cập nhật.
+        `,
+  })
+  @ApiOkResponse({
+    schema: {
+      allOf: [
+        { $ref: getSchemaPath(ItemResponse) },
+        {
+          properties: {
+            item: { example: null, $ref: getSchemaPath(Transaction) },
+          },
+        },
+      ],
+    },
+  })
+  async cancelWithdrawRequest(@Param('id') id: string): Promise<ItemResponse<Transaction>> {
+    const transaction = await this.transactionService.cancelWithdrawRequest(id);
+    return {
+      message: 'Yêu cầu rút tiền đã bị từ chối',
       statusCode: HttpStatus.OK,
       item: transaction,
     };

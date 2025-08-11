@@ -96,6 +96,24 @@ export class CUTransactionDto {
   note: string;
 }
 
+export class DepositAndWithdrawTransactionDto {
+  @ApiProperty({
+    description: 'Số tiền giao dịch (VNĐ)',
+    example: 200000,
+    nullable: false,
+  })
+  @IsNotEmpty()
+  @IsNumber()
+  amount: number;
+
+  @ApiProperty({
+    description: 'Ghi chú giao dịch nếu có',
+    example: 'Đơn hàng này đã yêu cầu hoàn tiền',
+    nullable: true,
+  })
+  note: string;
+}
+
 export class TransactionDto {
   @Expose()
   @ApiProperty({

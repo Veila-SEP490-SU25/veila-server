@@ -22,8 +22,8 @@ import {
 } from '@/common/decorators';
 import { UserRole, Wallet } from '@/common/models';
 import { WalletService } from './wallet.service';
-import { AuthGuard } from '@/common/guards';
-import { CUTransactionDto } from '../transaction';
+import { AuthGuard, RolesGuard } from '@/common/guards';
+import { DepositAndWithdrawTransactionDto } from '../transaction';
 
 @Controller('wallet')
 @ApiTags('Wallet Controller')
@@ -33,7 +33,7 @@ export class WalletController {
   constructor(private readonly walletService: WalletService) {}
 
   @Get()
-  @UseGuards(AuthGuard)
+  @UseGuards(AuthGuard, RolesGuard)
   @Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN, UserRole.STAFF)
   @ApiOperation({
     summary: 'Lấy danh sách tất cả các ví điện tử với phân trang, sắp xếp và lọc',
@@ -112,9 +112,8 @@ export class WalletController {
     };
   }
 
-  @Get('/my-wallet')
+  @Get('my-wallet')
   @UseGuards(AuthGuard)
-  @Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN, UserRole.STAFF, UserRole.CUSTOMER, UserRole.SHOP)
   @ApiOperation({
     summary: 'Lấy chi tiết Ví điện tử',
     description: `
@@ -211,7 +210,7 @@ export class WalletController {
   })
   async depositWallet(
     @UserId() userId: string,
-    @Body() depositWallet: CUTransactionDto,
+    @Body() depositWallet: DepositAndWithdrawTransactionDto,
   ): Promise<ItemResponse<Wallet>> {
     const wallet = await this.walletService.depositWallet(userId, depositWallet);
     return {
@@ -252,7 +251,7 @@ export class WalletController {
   })
   async withdrawWalletRequest(
     @UserId() userId: string,
-    @Body() withdrawWallet: CUTransactionDto,
+    @Body() withdrawWallet: DepositAndWithdrawTransactionDto,
   ): Promise<ItemResponse<string>> {
     const wallet = await this.walletService.withdrawWalletRequest(userId, withdrawWallet);
     return {
