@@ -70,7 +70,8 @@ export class UpdateShopDto {
 
   @ApiProperty({
     description: 'Danh sách URL ảnh của shop',
-    example: 'https://storage.veila.com/shops/image1.jpg, https://storage.veila.com/shops/image2.jpg',
+    example:
+      'https://storage.veila.com/shops/image1.jpg, https://storage.veila.com/shops/image2.jpg',
     nullable: true,
   })
   @IsString({ message: 'Danh sách ảnh phải là chuỗi.' })

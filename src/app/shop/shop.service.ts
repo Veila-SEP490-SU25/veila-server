@@ -219,7 +219,7 @@ export class ShopService {
       withDeleted: true,
       relations: {
         license: true,
-      }
+      },
     });
     if (!existingShop) throw new NotFoundException('Không tìm thấy cửa hàng phù hợp');
     return existingShop;
