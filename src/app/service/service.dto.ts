@@ -1,9 +1,15 @@
 import { ServiceStatus } from '@/common/models';
 import { ApiProperty } from '@nestjs/swagger';
-import { Expose, Transform, Type } from 'class-transformer';
+import { Expose, Type } from 'class-transformer';
 import { IsEnum, IsOptional, IsString } from 'class-validator';
 import { ProductUserDto } from '@/app/user/user.dto';
 import { ProductCategoryDto } from '@/app/category/category.dto';
+
+export class ServiceUsernameDto {
+  @Expose()
+  @ApiProperty({ description: 'Tên người dùng', example: 'customer123' })
+  username: string;
+}
 
 export class ServiceFeedbacksDto {
   @Expose()
@@ -12,8 +18,8 @@ export class ServiceFeedbacksDto {
 
   @Expose()
   @ApiProperty({ description: 'Tên người dùng đánh giá', example: 'customer123' })
-  @Transform(({ obj: feedback }) => feedback.customer.username)
-  username: string;
+  @Type(() => ServiceUsernameDto)
+  customer: ServiceUsernameDto;
 
   @Expose()
   @ApiProperty({ description: 'Nội dung đánh giá', example: 'Váy rất đẹp!' })

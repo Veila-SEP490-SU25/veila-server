@@ -2,8 +2,14 @@ import { ProductCategoryDto } from '@/app/category/category.dto';
 import { ProductUserDto } from '@/app/user/user.dto';
 import { AccessoryStatus } from '@/common/models';
 import { ApiProperty } from '@nestjs/swagger';
-import { Expose, Transform, Type } from 'class-transformer';
+import { Expose, Type } from 'class-transformer';
 import { IsBoolean, IsEnum, IsNumber, IsOptional, IsString } from 'class-validator';
+
+export class AccesoryUsernameDto {
+  @Expose()
+  @ApiProperty({ description: 'Tên người dùng', example: 'customer123' })
+  username: string;
+}
 
 export class AccesoryFeedbacksDto {
   @Expose()
@@ -12,8 +18,8 @@ export class AccesoryFeedbacksDto {
 
   @Expose()
   @ApiProperty({ description: 'Tên người dùng đánh giá', example: 'customer123' })
-  @Transform(({ obj: feedback }) => feedback.customer.username)
-  username: string;
+  @Type(() => AccesoryUsernameDto)
+  customer: AccesoryUsernameDto;
 
   @Expose()
   @ApiProperty({ description: 'Nội dung đánh giá', example: 'Váy rất đẹp!' })
