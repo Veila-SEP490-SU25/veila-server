@@ -248,36 +248,60 @@ export class AuthService {
   }
 
   async loginGoogle(body: LoginGoogleDto) {
-    let user = await this.userService.getByEmail(body.email);
+    const user = await this.userService.getByEmail(body.email);
 
     //đã tồn tại user có email này
     if (user) {
-      const loginDto: LoginDto = {
-        email: user.email,
-        password: user.password,
-      };
-
-      await this.login(loginDto);
+      const tokenResponse =  await this.loginByEmail(body.email);
+      return {
+        accessToken: tokenResponse.accessToken,
+        refreshToken: tokenResponse.refreshToken,
+      }
     }
 
     //user chưa tồn tại
     const randomPassword = this.passwordService.generatePassword(8);
-    const hashedPassword = await this.passwordService.hashPassword(randomPassword);
+    const { firstName, lastName, middleName } = await this.splitVietnameseName(body.fullname);
 
-    user = await this.userService.create({
-      username: body.fullname,
-      email: body.email,
-      password: hashedPassword,
-      firstName: body.fullname,
-      lastName: body.fullname,
-      role: UserRole.CUSTOMER,
-      status: UserStatus.ACTIVE,
+    const registerDto = new RegisterDto();
+    registerDto.email = body.email;
+    registerDto.password = randomPassword;
+    registerDto.firstName = firstName;
+    registerDto.lastName = lastName;
+    registerDto.middleName = middleName;
+
+    const tokenResponse = await this.registerGoogleUser(registerDto);
+
+    await this.mailService.sendWelcomeWithPasswordEmail(body.email, body.fullname, randomPassword);
+
+    return tokenResponse;
+  }
+
+  private async registerGoogleUser(body: RegisterDto): Promise<TokenResponse> {
+    const user = await this.userService.getByEmail(body.email);
+    if (user) throw new ForbiddenException('Tài khoản đã tồn tại trong hệ thống.');
+    const contract = await this.contractService.findAvailableContract(ContractType.CUSTOMER);
+    const hashedPassword = await this.passwordService.hashPassword(body.password);
+    const newUser = await this.userService.createUser({
+      ...body,
+      username: new Date().getTime().toString(),
       isVerified: true,
+      password: hashedPassword,
+      id: uuidv4(),
+      role: UserRole.CUSTOMER,
       isIdentified: false,
-    });
+      status: UserStatus.ACTIVE,
+      contract,
+    } as User);
+    await this.walletService.createWalletForUser(newUser.id);
+    
+    return this.loginByEmail(body.email);
+  }
 
-    await this.mailService.sendWelcomeWithPasswordEmail(user.email, body.fullname, randomPassword);
-
+  private async loginByEmail(email: string): Promise<TokenResponse> {
+    const user = await this.userService.getByEmail(email);
+    if (!user) throw new NotFoundException('Tài khoản không tồn tại trong hệ thống.');
+    await this.checkValidUser(user, false);
     const accessToken = await this.tokenService.createToken(user, {
       isRefresh: false,
     });
@@ -294,5 +318,24 @@ export class AuthService {
       accessToken,
       refreshToken,
     };
+  }
+
+  private async splitVietnameseName(
+    fullname: string,
+  ) {
+    const parts = fullname.trim().split(/\s+/);
+    if(parts.length === 1) {
+      return {
+        firstName: parts[0],
+        lastName: '',
+        middleName: '',
+      };
+    }
+
+    return {
+      firstName: parts[0],
+      lastName: parts[parts.length - 1],
+      middleName: parts.slice(1, -1).join(' ') || '',
+    }
   }
 }

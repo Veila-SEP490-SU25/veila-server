@@ -18,9 +18,9 @@ export class TaskService {
       milestoneId,
       title: newTask.title,
       description: newTask.description,
-      // ghi chú: index sẽ được đánh từ 0
-      index: index,
-      status: index === 0 ? TaskStatus.PENDING : TaskStatus.IN_PROGRESS,
+      // ghi chú: index sẽ được đánh từ 1
+      index: index + 1,
+      status: index === 1 ? TaskStatus.IN_PROGRESS : TaskStatus.PENDING,
       dueDate: newTask.dueDate,
     }));
     await this.taskRepository.save(plainToInstance(Task, tasks));

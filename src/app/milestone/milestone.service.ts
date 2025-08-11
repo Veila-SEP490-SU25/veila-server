@@ -76,8 +76,8 @@ export class MilestoneService {
       order: { id: body.newMilestone.orderId },
       title: body.newMilestone.title,
       description: body.newMilestone.description,
-      //ghi chú: index sẽ được đánh từ 0
-      index: existingMilestones.length,
+      //ghi chú: index sẽ được đánh từ 1
+      index: existingMilestones.length + 1,
       status: milestoneStatus,
       dueDate: body.newMilestone.dueDate,
     } as Milestone;
