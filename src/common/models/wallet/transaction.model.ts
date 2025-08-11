@@ -21,6 +21,7 @@ export enum TransactionStatus {
 export enum TypeBalance {
   AVAILABLE = 'available',
   LOCKED = 'locked',
+  BANK = 'bank',
 }
 
 @Entity('transactions')
