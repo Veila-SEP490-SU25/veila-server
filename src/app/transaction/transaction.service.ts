@@ -1,8 +1,8 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { CUTransactionDto, TransactionDto } from './transaction.dto';
-import { TransactionStatus, Transaction } from '@/common/models';
+import { CUTransactionDto, DepositAndWithdrawTransactionDto, TransactionDto } from './transaction.dto';
+import { TransactionStatus, Transaction, User, TypeBalance, TransactionType } from '@/common/models';
 import { plainToInstance } from 'class-transformer';
 import { Filtering, getOrder, getWhere, Sorting } from '@/common/decorators';
 
@@ -11,19 +11,34 @@ export class TransactionService {
   constructor(
     @InjectRepository(Transaction)
     private readonly transactionRepository: Repository<Transaction>,
+    // @Inject(forwardRef(() => WalletService))
+    // private readonly walletService: WalletService,
   ) {}
 
-  async saveTransaction(walletId: string, transactionDetail: CUTransactionDto): Promise<void> {
+  async saveDepositTransaction(user: User, walletId: string, transactionDetail: DepositAndWithdrawTransactionDto): Promise<void> {
     const newTransaction = {
       walletId,
-      orderId: transactionDetail.orderId,
-      membershipId: transactionDetail.membershipId,
-      from: transactionDetail.from,
-      to: transactionDetail.to,
-      fromTypeBalance: transactionDetail.fromTypeBalance,
-      toTypeBalance: transactionDetail.toTypeBalance,
+      from: user.firstName + ' ' + user.middleName + ' ' + user.lastName,
+      to: user.firstName + ' ' + user.middleName + ' ' + user.lastName + ' Wallet',
+      fromTypeBalance: TypeBalance.AVAILABLE,
+      toTypeBalance: TypeBalance.AVAILABLE,
       amount: transactionDetail.amount,
-      type: transactionDetail.type,
+      type: TransactionType.DEPOSIT,
+      status: TransactionStatus.PENDING,
+      note: transactionDetail.note,
+    };
+    await this.transactionRepository.save(plainToInstance(Transaction, newTransaction));
+  }
+
+  async saveWithdrawTransaction(user: User, walletId: string, transactionDetail: DepositAndWithdrawTransactionDto): Promise<void> {
+    const newTransaction = {
+      walletId,
+      from: user.firstName + ' ' + user.middleName + ' ' + user.lastName + ' Wallet',
+      to: user.firstName + ' ' + user.middleName + ' ' + user.lastName,
+      fromTypeBalance: TypeBalance.AVAILABLE,
+      toTypeBalance: TypeBalance.AVAILABLE,
+      amount: transactionDetail.amount,
+      type: TransactionType.WITHDRAW,
       status: TransactionStatus.PENDING,
       note: transactionDetail.note,
     };
@@ -121,5 +136,33 @@ export class TransactionService {
 
   async createTransactionForSeeding(transaction: Transaction): Promise<Transaction> {
     return await this.transactionRepository.save(transaction);
+  }
+
+  async approveWithdrawRequest(id: string): Promise<Transaction> {
+    const transaction = await this.getTransactionById(id);
+    if (!transaction) throw new NotFoundException('Không tìm thấy giao dịch');
+
+    if (transaction.type !== TransactionType.WITHDRAW)
+      throw new NotFoundException('Giao dịch không phải là yêu cầu rút tiền');
+
+    if (transaction.status !== TransactionStatus.PENDING)
+      throw new NotFoundException('Giao dịch rút tiền này đã được xử lý hoặc không còn hiệu lực');
+
+    transaction.status = TransactionStatus.COMPLETED;
+    return await this.transactionRepository.save(plainToInstance(Transaction, transaction));
+  }
+
+  async cancelWithdrawRequest(id: string): Promise<Transaction> {
+    const transaction = await this.getTransactionById(id);
+    if (!transaction) throw new NotFoundException('Không tìm thấy giao dịch');
+
+    if (transaction.type !== TransactionType.WITHDRAW)
+      throw new NotFoundException('Giao dịch không phải là yêu cầu rút tiền');
+
+    if (transaction.status !== TransactionStatus.PENDING)
+      throw new NotFoundException('Giao dịch rút tiền này đã được xử lý hoặc không còn hiệu lực');
+
+    transaction.status = TransactionStatus.CANCELLED;
+    return await this.transactionRepository.save(plainToInstance(Transaction, transaction));
   }
 }
