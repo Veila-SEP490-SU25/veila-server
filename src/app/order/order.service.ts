@@ -10,7 +10,7 @@ import {
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { In, Repository } from 'typeorm';
-import { createOrderRequestDto, OrderDto, UOrderDto } from './order.dto';
+import { CreateOrderRequestDto, OrderDto, UOrderDto } from './order.dto';
 import { plainToInstance } from 'class-transformer';
 import { UserService } from '../user';
 import { OrderDressDetailDto, OrderDressDetailsService } from '../order-dress-details';
@@ -19,6 +19,8 @@ import {
   OrderAccessoriesDetailsService,
 } from '../order-accessories-details';
 import { ComplaintService, CUComplaintDto } from '@/app/complaint';
+import { DressService } from '../dress';
+import { WalletService } from '../wallet';
 
 @Injectable()
 export class OrderService {
@@ -31,6 +33,8 @@ export class OrderService {
     private readonly orderAccessoriesDetailsService: OrderAccessoriesDetailsService,
     @Inject(ComplaintService)
     private readonly complaintService: ComplaintService,
+    private readonly dressService: DressService,
+    private readonly walletService: WalletService,
   ) {}
 
   async getOrdersForAdmin(
@@ -151,56 +155,95 @@ export class OrderService {
     return plainToInstance(OrderDto, order);
   }
 
-  async createOrderForSell(userId: string, body: createOrderRequestDto): Promise<Order> {
+  async createOrderForSellAndRent(userId: string, body: CreateOrderRequestDto): Promise<Order> {
     //Kiểm tra logic, đảm bảo đầy đủ ràng buộc
     const user = await this.userService.getUserById(userId);
     if (!user) throw new NotFoundException('Người dùng này không tồn tại');
 
     if (!user.isIdentified) throw new ForbiddenException('Người dùng chưa định danh');
 
-    const shop = await this.shopService.getShopForCustomer(body.newOrder.shopId);
+    const dress = await this.dressService.getDressForCustomer(body.dressDetails.dressId);
+
+    const shop = await this.shopService.getShopByUserId(dress.id);
     if (!shop) throw new NotFoundException('Không tìm thấy cửa hàng');
 
-    //tính tiền váy
-    let dressPrice = 0;
-    await Promise.all(
-      body.dressDetails.map((dress) => {
-        dressPrice += dress.price;
-      }),
-    );
+    //xác định là luồng mua hay thuê dựa trên type
+    if (body.newOrder.type === OrderType.SELL) {
+      //Đây là luồng mua váy
 
-    //tính tiền phụ kiện
-    let accessoriesPrice = 0;
-    await Promise.all(
-      body.accessoriesDetails.map(async (accessory) => {
-        const item = await this.orderAccessoriesDetailsService.getAccessoryById(
-          accessory.accessoryId,
-        );
-        accessoriesPrice += item.sellPrice * accessory.quantity;
-      }),
-    );
+      //tính tiền váy
+      const dressPrice = dress.sellPrice;
 
-    //tạo đơn hàng
-    const order = {
-      customer: { id: userId },
-      shop: { id: body.newOrder.shopId },
-      phone: body.newOrder.phone,
-      email: body.newOrder.email,
-      address: body.newOrder.address,
-      dueDate: body.newOrder.dueDate,
-      returnDate: body.newOrder.returnDate,
-      amount: dressPrice + accessoriesPrice,
-      type: OrderType.SELL,
-      status: OrderStatus.PENDING,
-    } as Order;
-    const orderId = (await this.orderRepository.save(order)).id;
+      //tính tiền phụ kiện
+      let accessoriesPrice = 0;
+      await Promise.all(
+        body.accessoriesDetails.map(async (accessory) => {
+          const item = await this.orderAccessoriesDetailsService.getAccessoryById(
+            accessory.accessoryId,
+          );
+          accessoriesPrice += item.sellPrice * accessory.quantity;
+        }),
+      );
 
-    await this.orderDressDetailsService.saveOrderDressDetails(orderId, body.dressDetails);
-    await this.orderAccessoriesDetailsService.saveOrderAccessoryDetails(
-      orderId,
-      body.accessoriesDetails,
-    );
-    return order;
+      //tạo đơn hàng
+      const order = {
+        customer: { id: userId },
+        shop: { id: shop.id },
+        phone: body.newOrder.phone,
+        email: body.newOrder.email,
+        address: body.newOrder.address,
+        dueDate: body.newOrder.dueDate,
+        amount: dressPrice + accessoriesPrice,
+        type: OrderType.SELL,
+        status: OrderStatus.PENDING,
+      } as Order;
+      const orderId = (await this.orderRepository.save(order)).id;
+
+      await this.orderDressDetailsService.saveOrderDressDetails(orderId, body.dressDetails);
+      await this.orderAccessoriesDetailsService.saveOrderAccessoryDetails(
+        orderId,
+        body.accessoriesDetails,
+      );
+      return order;
+    } else {
+      //Đây là luồng thuê váy
+
+      //tính tiền váy
+      const dressPrice = dress.rentalPrice;
+
+      //tính tiền phụ kiện
+      let accessoriesPrice = 0;
+      await Promise.all(
+        body.accessoriesDetails.map(async (accessory) => {
+          const item = await this.orderAccessoriesDetailsService.getAccessoryById(
+            accessory.accessoryId,
+          );
+          accessoriesPrice += item.rentalPrice * accessory.quantity;
+        }),
+      );
+
+      //tạo đơn hàng
+      const order = {
+        customer: { id: userId },
+        shop: { id: shop.id },
+        phone: body.newOrder.phone,
+        email: body.newOrder.email,
+        address: body.newOrder.address,
+        dueDate: body.newOrder.dueDate,
+        returnDate: body.newOrder.returnDate,
+        amount: dressPrice + accessoriesPrice,
+        type: OrderType.RENT,
+        status: OrderStatus.PENDING,
+      } as Order;
+      const orderId = (await this.orderRepository.save(order)).id;
+
+      await this.orderDressDetailsService.saveOrderDressDetails(orderId, body.dressDetails);
+      await this.orderAccessoriesDetailsService.saveOrderAccessoryDetails(
+        orderId,
+        body.accessoriesDetails,
+      );
+      return order;
+    }
   }
 
   async updateOrder(userId: string, id: string, updatedOrder: UOrderDto): Promise<Order> {
@@ -219,6 +262,7 @@ export class OrderService {
     existingOrder.address = updatedOrder.address;
     existingOrder.dueDate = updatedOrder.dueDate;
     existingOrder.returnDate = updatedOrder.returnDate;
+    existingOrder.isBuyBack = updatedOrder.isBuyBack;
 
     return await this.orderRepository.save(plainToInstance(Order, existingOrder));
   }
@@ -399,5 +443,56 @@ export class OrderService {
     existingOrder.status = status;
 
     return await this.orderRepository.save(plainToInstance(Order, existingOrder));
+  }
+
+  async checkOutOrder(userId: string, orderId: string): Promise<Order> {
+    if (!this.userOwnOrder(userId, orderId))
+      throw new ForbiddenException('Người dùng này không sở hữu đơn hàng này');
+
+    const order = await this.getOrderByIdV2(orderId);
+    if (!order || order.status !== OrderStatus.PENDING)
+      throw new NotFoundException('Đơn hàng đã hết hạn hoặc không tồn tại');
+    if (order.type === OrderType.SELL) {
+      //Luồng mua cần thanh toán 100%, sau đó lock lại ở ví của shop
+      if (!this.checkWalletBalanceIsEnough(userId, order.amount))
+        throw new BadRequestException('Không đủ số dư trong ví, vui lòng nạp tiền');
+      await this.walletService.transferFromWalletToWalletForSell(userId, order, order.amount);
+
+      order.status = OrderStatus.IN_PROCESS;
+      return await this.orderRepository.save(order);
+    } else {
+      //Luồng thuê cần thanh toán 150%, lock 100% ở ví của shop, lock 50% ở ví của khách
+      const rentAmount = (order.amount * 150) / 100;
+      if (!this.checkWalletBalanceIsEnough(userId, rentAmount))
+        throw new BadRequestException('Không đủ số dư trong ví, vui lòng nạp tiền');
+      await this.walletService.transferFromWalletToWalletForRent(userId, order, rentAmount);
+
+      order.status = OrderStatus.IN_PROCESS;
+      return await this.orderRepository.save(order);
+    }
+  }
+
+  private async userOwnOrder(userId: string, orderId: string): Promise<boolean> {
+    const order = await this.orderRepository.findOne({
+      where: {
+        id: orderId,
+        customer: { id: userId },
+      },
+    });
+    return !!order;
+  }
+
+  private async checkWalletBalanceIsEnough(userId: string, amount: number): Promise<boolean> {
+    const wallet = await this.walletService.getWalletByUserId(userId);
+    return wallet.availableBalance >= amount;
+  }
+
+  async getOrderByIdV2(id: string): Promise<Order> {
+    const order = await this.orderRepository.findOne({
+      where: { id },
+      relations: ['customer', 'shop'],
+    });
+    if (!order) throw new NotFoundException('Không tìm thấy đơn hàng nào phù hợp');
+    return order;
   }
 }

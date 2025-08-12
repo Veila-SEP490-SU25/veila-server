@@ -14,33 +14,30 @@ export class OrderDressDetailsService {
     private readonly dressService: DressService,
   ) {}
 
-  async saveOrderDressDetails(
-    orderId: string,
-    dressDetails: CUOrderDressDetailDto[],
-  ): Promise<void> {
-    const orderDressDetails = dressDetails.map((dressDetail) => ({
+  async saveOrderDressDetails(orderId: string, dressDetails: CUOrderDressDetailDto): Promise<void> {
+    const dress = await this.dressService.getDressForCustomer(dressDetails.dressId);
+
+    const orderDressDetail = {
       orderId,
-      dressId: dressDetail.dressId,
-      high: dressDetail.high,
-      weight: dressDetail.weight,
-      bust: dressDetail.bust,
-      waist: dressDetail.waist,
-      hip: dressDetail.hip,
-      armpit: dressDetail.armpit,
-      bicep: dressDetail.bicep,
-      neck: dressDetail.neck,
-      shoulderWidth: dressDetail.shoulderWidth,
-      sleeveLength: dressDetail.sleeveLength,
-      backLength: dressDetail.backLength,
-      lowerWaist: dressDetail.lowerWaist,
-      waistToFloor: dressDetail.waistToFloor,
-      description: dressDetail.description,
-      price: dressDetail.price,
-      isRated: dressDetail.is_rated,
-    }));
-    await this.orderDressDetailRepository.save(
-      plainToInstance(OrderDressDetail, orderDressDetails),
-    );
+      dressId: dressDetails.dressId,
+      high: dressDetails.high,
+      weight: dressDetails.weight,
+      bust: dressDetails.bust,
+      waist: dressDetails.waist,
+      hip: dressDetails.hip,
+      armpit: dressDetails.armpit,
+      bicep: dressDetails.bicep,
+      neck: dressDetails.neck,
+      shoulderWidth: dressDetails.shoulderWidth,
+      sleeveLength: dressDetails.sleeveLength,
+      backLength: dressDetails.backLength,
+      lowerWaist: dressDetails.lowerWaist,
+      waistToFloor: dressDetails.waistToFloor,
+      description: '',
+      price: dress.sellPrice,
+    };
+
+    await this.orderDressDetailRepository.save(plainToInstance(OrderDressDetail, orderDressDetail));
   }
 
   async updateOrderDressDetail(
@@ -69,8 +66,6 @@ export class OrderDressDetailsService {
     existingOrderDressDetail.backLength = dressDetail.backLength;
     existingOrderDressDetail.lowerWaist = dressDetail.lowerWaist;
     existingOrderDressDetail.waistToFloor = dressDetail.waistToFloor;
-    existingOrderDressDetail.description = dressDetail.description;
-    existingOrderDressDetail.price = dressDetail.price;
 
     await this.orderDressDetailRepository.save(existingOrderDressDetail);
   }

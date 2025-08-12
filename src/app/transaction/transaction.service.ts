@@ -1,8 +1,18 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { CUTransactionDto, DepositAndWithdrawTransactionDto, TransactionDto } from './transaction.dto';
-import { TransactionStatus, Transaction, User, TypeBalance, TransactionType } from '@/common/models';
+import {
+  CUTransactionDto,
+  DepositAndWithdrawTransactionDto,
+  TransactionDto,
+} from './transaction.dto';
+import {
+  TransactionStatus,
+  Transaction,
+  User,
+  TypeBalance,
+  TransactionType,
+} from '@/common/models';
 import { plainToInstance } from 'class-transformer';
 import { Filtering, getOrder, getWhere, Sorting } from '@/common/decorators';
 
@@ -15,7 +25,11 @@ export class TransactionService {
     // private readonly walletService: WalletService,
   ) {}
 
-  async saveDepositTransaction(user: User, walletId: string, transactionDetail: DepositAndWithdrawTransactionDto): Promise<void> {
+  async saveDepositTransaction(
+    user: User,
+    walletId: string,
+    transactionDetail: DepositAndWithdrawTransactionDto,
+  ): Promise<void> {
     const newTransaction = {
       walletId,
       from: user.firstName + ' ' + user.middleName + ' ' + user.lastName,
@@ -30,7 +44,11 @@ export class TransactionService {
     await this.transactionRepository.save(plainToInstance(Transaction, newTransaction));
   }
 
-  async saveWithdrawTransaction(user: User, walletId: string, transactionDetail: DepositAndWithdrawTransactionDto): Promise<void> {
+  async saveWithdrawTransaction(
+    user: User,
+    walletId: string,
+    transactionDetail: DepositAndWithdrawTransactionDto,
+  ): Promise<void> {
     const newTransaction = {
       walletId,
       from: user.firstName + ' ' + user.middleName + ' ' + user.lastName + ' Wallet',
@@ -41,6 +59,30 @@ export class TransactionService {
       type: TransactionType.WITHDRAW,
       status: TransactionStatus.PENDING,
       note: transactionDetail.note,
+    };
+    await this.transactionRepository.save(plainToInstance(Transaction, newTransaction));
+  }
+
+  async saveTransferTransaction(
+    fromUser: User,
+    toUser: User,
+    walletId: string,
+    amount: number,
+    type: TransactionType,
+  ): Promise<void> {
+    const fromUserName = fromUser.firstName + ' ' + fromUser.middleName + ' ' + fromUser.lastName;
+    const toUserName = toUser.firstName + ' ' + toUser.middleName + ' ' + toUser.lastName;
+
+    const newTransaction = {
+      walletId,
+      from: fromUserName + ' Wallet',
+      to: toUserName + ' Wallet',
+      fromTypeBalance: TypeBalance.AVAILABLE,
+      toTypeBalance: TypeBalance.LOCKED,
+      amount: amount,
+      type: type,
+      status: TransactionStatus.COMPLETED,
+      note: fromUserName + ' transfer to ' + toUserName,
     };
     await this.transactionRepository.save(plainToInstance(Transaction, newTransaction));
   }
