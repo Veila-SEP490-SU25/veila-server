@@ -37,7 +37,7 @@ export class WalletService {
     };
     const order = getOrder(sort);
 
-    const wallets = await this.walletRepository.find({
+    const [wallets, count] = await this.walletRepository.findAndCount({
       where,
       order,
       take,
@@ -45,7 +45,7 @@ export class WalletService {
       relations: ['user'],
     });
 
-    return [plainToInstance(WalletDto, wallets), wallets.length];
+    return [plainToInstance(WalletDto, wallets), count];
   }
 
   async getWalletByUserId(userId: string): Promise<WalletDto> {
@@ -92,7 +92,7 @@ export class WalletService {
     if (!wallet) throw new NotFoundException('Người dùng này chưa sở hữu ví điện tử');
 
     await this.transactionService.saveDepositTransaction(user, wallet.id, depositWallet);
-    wallet.availableBalance = wallet.availableBalance + depositWallet.amount;
+    wallet.availableBalance = Number(wallet.availableBalance) + Number(depositWallet.amount);
 
     await this.walletRepository.save(wallet);
     return wallet;
@@ -110,7 +110,7 @@ export class WalletService {
     const wallet = await this.findOneByUserId(userId);
     if (!wallet) throw new NotFoundException('Người dùng này chưa sở hữu ví điện tử');
 
-    if (wallet.availableBalance < withdrawWallet.amount)
+    if (Number(wallet.availableBalance) < Number(withdrawWallet.amount))
       throw new BadRequestException(
         'Số dư khả dụng trong tài khoản không đủ để thực hiện rút tiền',
       );
@@ -137,8 +137,8 @@ export class WalletService {
     const toUser = await this.userService.getUserById(order.shop.user.id);
     if (!toUser) throw new NotFoundException('Không tìm thấy người dùng');
 
-    fromWallet.availableBalance -= amount;
-    toWallet.lockedBalance += amount;
+    fromWallet.availableBalance = Number(fromWallet.availableBalance) - amount;
+    toWallet.lockedBalance = Number(toWallet.lockedBalance) + amount;
 
     await this.walletRepository.save(fromWallet);
     await this.walletRepository.save(toWallet);
@@ -147,6 +147,7 @@ export class WalletService {
       fromUser,
       toUser,
       fromWallet.id,
+      order.id,
       amount,
       TransactionType.TRANSFER,
     );
@@ -154,6 +155,7 @@ export class WalletService {
       fromUser,
       toUser,
       toWallet.id,
+      order.id,
       amount,
       TransactionType.RECEIVE,
     );
@@ -163,6 +165,7 @@ export class WalletService {
     userId: string,
     order: Order,
     amount: number,
+    deposit: number,
   ): Promise<void> {
     if (amount <= 0) {
       throw new BadRequestException('Số tiền phải lớn hơn 0');
@@ -177,9 +180,9 @@ export class WalletService {
     const toUser = await this.userService.getUserById(order.shop.user.id);
     if (!toUser) throw new NotFoundException('Không tìm thấy người dùng');
 
-    fromWallet.availableBalance -= amount;
-    fromWallet.lockedBalance += (amount * 1) / 3;
-    toWallet.lockedBalance += (amount * 2) / 3;
+    fromWallet.availableBalance = Number(fromWallet.availableBalance) - deposit;
+    fromWallet.lockedBalance = Number(fromWallet.lockedBalance) + amount;
+    toWallet.lockedBalance = Number(toWallet.lockedBalance) + deposit - amount;
 
     await this.walletRepository.save(fromWallet);
     await this.walletRepository.save(toWallet);
@@ -188,7 +191,8 @@ export class WalletService {
       fromUser,
       toUser,
       fromWallet.id,
-      (amount * 2) / 3,
+      order.id,
+      amount,
       TransactionType.TRANSFER,
     );
 
@@ -196,7 +200,8 @@ export class WalletService {
       fromUser,
       toUser,
       toWallet.id,
-      (amount * 2) / 3,
+      order.id,
+      amount,
       TransactionType.RECEIVE,
     );
 
@@ -204,7 +209,8 @@ export class WalletService {
       fromUser,
       fromUser,
       toWallet.id,
-      (amount * 1) / 3,
+      order.id,
+      deposit - amount,
       TransactionType.TRANSFER,
     );
   }

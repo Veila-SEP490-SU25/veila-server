@@ -167,7 +167,7 @@ export class OrderDto {
   })
   @IsNotEmpty()
   @IsString()
-  @Transform(({ obj: order }) => order.shop.name)
+  @Transform(({ obj: order }) => order.shop?.name ?? null)
   shopName: string;
 
   @Expose()

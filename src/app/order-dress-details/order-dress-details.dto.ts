@@ -81,17 +81,17 @@ export class OrderDressDetailDto {
 
   @Expose()
   @ApiProperty({ description: 'ID của đơn hàng', example: 'uuid-order-1' })
-  @Transform(({ obj: orderDressDetail }) => orderDressDetail.order.id)
+  @Transform(({ obj: orderDressDetail }) => orderDressDetail.order?.id ?? null)
   orderId: string;
 
   @Expose()
   @ApiProperty({ description: 'ID của váy cưới', example: 'uuid-dress-1' })
-  @Transform(({ obj: orderDressDetail }) => orderDressDetail.dress.id)
+  @Transform(({ obj: orderDressDetail }) => orderDressDetail.dress?.id ?? null)
   dressId: string;
 
   @Expose()
   @ApiProperty({ description: 'Tên của váy cưới', example: 'Váy cưới đẹp' })
-  @Transform(({ obj: orderDressDetail }) => orderDressDetail.dress.name)
+  @Transform(({ obj: orderDressDetail }) => orderDressDetail.dress?.name ?? null)
   dressName: string;
 
   @Expose()

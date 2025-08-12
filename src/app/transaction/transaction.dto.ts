@@ -108,7 +108,7 @@ export class DepositAndWithdrawTransactionDto {
 
   @ApiProperty({
     description: 'Ghi chú giao dịch nếu có',
-    example: 'Đơn hàng này đã yêu cầu hoàn tiền',
+    example: 'Nạp tiền vào ví điện tử',
     nullable: true,
   })
   note: string;
@@ -143,7 +143,7 @@ export class TransactionDto {
     nullable: true,
   })
   @IsString()
-  @Transform(({ obj: transaction }) => transaction.order.id)
+  @Transform(({ obj: transaction }) => transaction.order?.id ?? null)
   orderId: string;
 
   @Expose()
@@ -153,7 +153,7 @@ export class TransactionDto {
     nullable: true,
   })
   @IsString()
-  @Transform(({ obj: transaction }) => transaction.membership.id)
+  @Transform(({ obj: transaction }) => transaction.membership?.id ?? null)
   membershipId: string;
 
   @Expose()

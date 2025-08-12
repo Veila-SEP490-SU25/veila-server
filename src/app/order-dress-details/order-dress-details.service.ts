@@ -18,8 +18,8 @@ export class OrderDressDetailsService {
     const dress = await this.dressService.getDressForCustomer(dressDetails.dressId);
 
     const orderDressDetail = {
-      orderId,
-      dressId: dressDetails.dressId,
+      order: { id: orderId },
+      dress: { id: dressDetails.dressId },
       high: dressDetails.high,
       weight: dressDetails.weight,
       bust: dressDetails.bust,
@@ -34,7 +34,7 @@ export class OrderDressDetailsService {
       lowerWaist: dressDetails.lowerWaist,
       waistToFloor: dressDetails.waistToFloor,
       description: '',
-      price: dress.sellPrice,
+      price: Number(dress.sellPrice),
     };
 
     await this.orderDressDetailRepository.save(plainToInstance(OrderDressDetail, orderDressDetail));
@@ -94,5 +94,12 @@ export class OrderDressDetailsService {
     orderDressDetail: OrderDressDetail,
   ): Promise<OrderDressDetail> {
     return await this.orderDressDetailRepository.save(orderDressDetail);
+  }
+
+  async getOrderDressDetailByOrderId(orderId: string): Promise<OrderDressDetail | null> {
+    return await this.orderDressDetailRepository.findOne({
+      where: { order: { id: orderId } },
+      relations: ['order', 'dress'],
+    });
   }
 }
