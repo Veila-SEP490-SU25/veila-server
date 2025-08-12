@@ -7,9 +7,7 @@ export const UserId = createParamDecorator((_, ctx: ExecutionContext) => {
   return tokenPayload.id;
 });
 
-export const CurrentUser = createParamDecorator(
-  (_, ctx: ExecutionContext) => {
-    const request = ctx.switchToHttp().getRequest();
-    return request.user;
-  },
-);
+export const CurrentUser = createParamDecorator((_, ctx: ExecutionContext) => {
+  const request = ctx.switchToHttp().getRequest();
+  return request.user;
+});

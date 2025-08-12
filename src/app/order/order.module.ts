@@ -8,6 +8,8 @@ import { ShopModule } from '../shop/shop.module';
 import { OrderAccessoriesDetailsModule } from '../order-accessories-details';
 import { OrderDressDetailsModule } from '../order-dress-details';
 import { ComplaintModule } from '@/app/complaint';
+import { DressModule } from '../dress';
+import { WalletModule } from '../wallet';
 
 @Module({
   imports: [
@@ -17,6 +19,8 @@ import { ComplaintModule } from '@/app/complaint';
     OrderAccessoriesDetailsModule,
     OrderDressDetailsModule,
     ComplaintModule,
+    DressModule,
+    WalletModule,
   ],
   controllers: [OrderController],
   providers: [OrderService],

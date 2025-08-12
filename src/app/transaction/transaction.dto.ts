@@ -74,7 +74,7 @@ export class CUTransactionDto {
 
   @ApiProperty({
     description: 'Loại giao dịch',
-    example: TransactionType.PAYMENT,
+    example: TransactionType.TRANSFER,
     nullable: false,
   })
   @IsNotEmpty()
@@ -207,7 +207,7 @@ export class TransactionDto {
   @Expose()
   @ApiProperty({
     description: 'Loại giao dịch',
-    example: TransactionType.PAYMENT,
+    example: TransactionType.TRANSFER,
     nullable: false,
   })
   @IsNotEmpty()

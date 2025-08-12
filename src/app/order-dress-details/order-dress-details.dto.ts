@@ -1,6 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger/dist/decorators';
 import { Expose, Transform } from 'class-transformer';
-import { IsBoolean, IsNotEmpty, IsNumber, IsString } from 'class-validator';
+import { IsNotEmpty, IsNumber, IsString } from 'class-validator';
 
 export class CUOrderDressDetailDto {
   @ApiProperty({ description: 'ID của váy cưới', example: 'uuid-dress-1' })
@@ -72,19 +72,6 @@ export class CUOrderDressDetailDto {
   @IsNotEmpty()
   @IsNumber()
   waistToFloor: number;
-
-  @ApiProperty({ description: 'Mô tả về váy cưới', example: 'Váy cưới này rất đẹp' })
-  description: string | null;
-
-  @ApiProperty({ description: 'Giá của váy cưới', example: 200000 })
-  @IsNotEmpty()
-  @IsNumber()
-  price: number;
-
-  @ApiProperty({ description: 'Váy cưới đã được đánh giá hay chưa', example: true })
-  @IsNotEmpty()
-  @IsBoolean()
-  is_rated: boolean;
 }
 
 export class OrderDressDetailDto {

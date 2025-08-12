@@ -252,11 +252,11 @@ export class AuthService {
 
     //đã tồn tại user có email này
     if (user) {
-      const tokenResponse =  await this.loginByEmail(body.email);
+      const tokenResponse = await this.loginByEmail(body.email);
       return {
         accessToken: tokenResponse.accessToken,
         refreshToken: tokenResponse.refreshToken,
-      }
+      };
     }
 
     //user chưa tồn tại
@@ -294,7 +294,7 @@ export class AuthService {
       contract,
     } as User);
     await this.walletService.createWalletForUser(newUser.id);
-    
+
     return this.loginByEmail(body.email);
   }
 
@@ -320,11 +320,9 @@ export class AuthService {
     };
   }
 
-  private async splitVietnameseName(
-    fullname: string,
-  ) {
+  private async splitVietnameseName(fullname: string) {
     const parts = fullname.trim().split(/\s+/);
-    if(parts.length === 1) {
+    if (parts.length === 1) {
       return {
         firstName: parts[0],
         lastName: '',
@@ -336,6 +334,6 @@ export class AuthService {
       firstName: parts[0],
       lastName: parts[parts.length - 1],
       middleName: parts.slice(1, -1).join(' ') || '',
-    }
+    };
   }
 }
