@@ -1,11 +1,17 @@
 import { Milestone, MilestoneStatus, OrderStatus, TaskStatus } from '@/common/models';
-import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  forwardRef,
+  Inject,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { In, Repository } from 'typeorm';
 import { CreateMilestoneRequestDto, CUMilestoneDto, MilestoneDto } from './milestone.dto';
-import { Filtering, getOrder, Sorting } from '@/common/decorators';
+import { Filtering, getOrder, getWhere, Sorting } from '@/common/decorators';
 import { plainToInstance } from 'class-transformer';
-import { OrderService } from '../order';
+import { CreateMilestone, OrderService } from '../order';
 import { ShopService } from '../shop';
 import { TaskDto, TaskService } from '../task';
 
@@ -14,6 +20,7 @@ export class MilestoneService {
   constructor(
     @InjectRepository(Milestone)
     private readonly milestoneRepository: Repository<Milestone>,
+    @Inject(forwardRef(() => OrderService))
     private readonly orderService: OrderService,
     private readonly shopService: ShopService,
     private readonly taskService: TaskService,
@@ -77,7 +84,7 @@ export class MilestoneService {
       title: body.newMilestone.title,
       description: body.newMilestone.description,
       //ghi chú: index sẽ được đánh từ 1
-      index: existingMilestones.length + 1,
+      index: Number(existingMilestones.length) + 1,
       status: milestoneStatus,
       dueDate: body.newMilestone.dueDate,
     } as Milestone;
@@ -151,11 +158,8 @@ export class MilestoneService {
     }
 
     // Kiểm tra trạng thái hợp lệ
-    if (
-      existingTask.status !== TaskStatus.PENDING &&
-      existingTask.status !== TaskStatus.IN_PROGRESS
-    ) {
-      throw new BadRequestException('Công việc không ở trạng thái PENDING hoặc IN_PROGRESS');
+    if (existingTask.status !== TaskStatus.IN_PROGRESS) {
+      throw new BadRequestException('Công việc không ở trạng thái IN_PROGRESS');
     }
 
     // Chuyển task hiện tại thành COMPLETED
@@ -233,5 +237,65 @@ export class MilestoneService {
       },
     });
     return milestones;
+  }
+
+  async createMilestoneForOrderCustom(
+    orderId: string,
+    body: CreateMilestone,
+    milestoneIndex: number,
+  ): Promise<void> {
+    const newMilestone = await this.milestoneRepository.save({
+      order: { id: orderId },
+      title: body.title,
+      description: body.description,
+      dueDate: body.dueDate,
+      status: MilestoneStatus.PENDING,
+      index: milestoneIndex,
+    } as Milestone);
+    for (let index = 0; index < body.tasks.length; index++) {
+      await this.taskService.createTaskForOrderCustom(
+        newMilestone.id,
+        body.tasks[index],
+        index + 1,
+      );
+    }
+  }
+
+  async updateMilestoneStatusForOrderCustomAfterCheckout(orderId: string): Promise<void> {
+    const firstMilestone = await this.milestoneRepository.findOne({
+      where: { order: { id: orderId }, index: 1 },
+    });
+    if (!firstMilestone) throw new NotFoundException('Không tìm thấy mốc công việc');
+
+    firstMilestone.status = MilestoneStatus.IN_PROGRESS;
+    const updatedMilestone = await this.milestoneRepository.save(firstMilestone);
+    await this.taskService.updateTaskStatusForOrderCustomAfterCheckout(updatedMilestone.id);
+  }
+
+  async getOrderMilestones(
+    orderId: string,
+    take: number,
+    skip: number,
+    sort?: Sorting,
+    filter?: Filtering,
+  ): Promise<[Milestone[], number]> {
+    const dynamicFilter = getWhere(filter);
+    const where = {
+      ...dynamicFilter,
+      order: { id: orderId },
+    };
+    const order = getOrder(sort);
+
+    const [milestones, totalItems] = await this.milestoneRepository.findAndCount({
+      where,
+      order,
+      take,
+      skip,
+      relations: {
+        tasks: true,
+      },
+    });
+
+    return [milestones, totalItems];
   }
 }

@@ -5,7 +5,6 @@ import { ContractService } from '@/app/contract';
 import { DressService } from '@/app/dress';
 import { FeedbackService } from '@/app/feedback';
 import { MembershipService } from '@/app/membership';
-import { MilestoneService } from '@/app/milestone';
 import { OrderService } from '@/app/order';
 import { OrderAccessoriesDetailsService } from '@/app/order-accessories-details';
 import { OrderDressDetailsService } from '@/app/order-dress-details';
@@ -94,7 +93,6 @@ export class SeedingService implements OnModuleInit {
     private readonly orderService: OrderService,
     private readonly orderAccessoriesDetailsService: OrderAccessoriesDetailsService,
     private readonly orderDressDetailsService: OrderDressDetailsService,
-    private readonly milestoneService: MilestoneService,
     private readonly taskService: TaskService,
     private readonly transactionService: TransactionService,
     private readonly feedbackService: FeedbackService,
@@ -1250,7 +1248,7 @@ export class SeedingService implements OnModuleInit {
       isRated: true,
     } as OrderAccessoryDetail);
 
-    const milestone1 = await this.milestoneService.createMilestoneForSeeding({
+    const milestone1 = await this.orderService.createMilestoneForSeeding({
       order: newOrder,
       title: 'Chuẩn bị váy cưới',
       description: 'Chuẩn bị váy cưới cho khách hàng',
@@ -1283,7 +1281,7 @@ export class SeedingService implements OnModuleInit {
       dueDate: new Date(),
     } as Task);
 
-    const milestone2 = await this.milestoneService.createMilestoneForSeeding({
+    const milestone2 = await this.orderService.createMilestoneForSeeding({
       order: newOrder,
       title: 'Giao váy cưới',
       description: 'Giao váy cưới cho khách hàng',
@@ -1477,7 +1475,7 @@ export class SeedingService implements OnModuleInit {
       isRated: true,
     } as OrderAccessoryDetail);
 
-    const milestone1 = await this.milestoneService.createMilestoneForSeeding({
+    const milestone1 = await this.orderService.createMilestoneForSeeding({
       order: newOrder,
       title: 'Chuẩn bị váy cưới',
       description: 'Chuẩn bị váy cưới cho khách hàng',
@@ -1510,7 +1508,7 @@ export class SeedingService implements OnModuleInit {
       dueDate: new Date(),
     } as Task);
 
-    const milestone2 = await this.milestoneService.createMilestoneForSeeding({
+    const milestone2 = await this.orderService.createMilestoneForSeeding({
       order: newOrder,
       title: 'Giao váy cưới',
       description: 'Giao váy cưới cho khách hàng',
@@ -1535,7 +1533,7 @@ export class SeedingService implements OnModuleInit {
       dueDate: new Date(),
     } as Task);
 
-    const milestone3 = await this.milestoneService.createMilestoneForSeeding({
+    const milestone3 = await this.orderService.createMilestoneForSeeding({
       order: newOrder,
       title: 'Trả váy cưới',
       description: 'Khách hàng trả váy cưới sau khi sử dụng',
@@ -1838,7 +1836,7 @@ export class SeedingService implements OnModuleInit {
       isRated: true,
     } as OrderAccessoryDetail);
 
-    const milestone1 = await this.milestoneService.createMilestoneForSeeding({
+    const milestone1 = await this.orderService.createMilestoneForSeeding({
       order: newOrder,
       title: 'Chuẩn bị váy cưới',
       description: 'Chuẩn bị váy cưới cho khách hàng',
@@ -1871,7 +1869,7 @@ export class SeedingService implements OnModuleInit {
       dueDate: new Date(),
     } as Task);
 
-    const milestone2 = await this.milestoneService.createMilestoneForSeeding({
+    const milestone2 = await this.orderService.createMilestoneForSeeding({
       order: newOrder,
       title: 'Giao váy cưới',
       description: 'Giao váy cưới cho khách hàng',

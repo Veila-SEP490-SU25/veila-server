@@ -1,10 +1,11 @@
 import { OrderStatus } from './../../common/models/order/order.model';
 import { ItemResponse, ListResponse } from '@/common/base';
-import { Complaint, Order, UserRole } from '@/common/models';
+import { Complaint, Milestone, Order, OrderServiceDetail, UserRole } from '@/common/models';
 import { Body, Controller, Get, HttpStatus, Post, Put, Param, UseGuards } from '@nestjs/common';
 import {
   ApiBearerAuth,
   ApiBody,
+  ApiCreatedResponse,
   ApiExtraModels,
   ApiOkResponse,
   ApiOperation,
@@ -24,7 +25,13 @@ import {
   UserId,
 } from '@/common/decorators';
 import { AuthGuard, RolesGuard } from '@/common/guards';
-import { CreateOrderRequestDto, OrderDto, UOrderDto } from './order.dto';
+import {
+  CreateOrderForCustom,
+  CreateOrderRequestDto,
+  OrderDto,
+  ShopUpdateOrderForCustom,
+  UOrderDto,
+} from './order.dto';
 import { CUComplaintDto } from '@/app/complaint';
 import { OrderAccessoriesDetailDto } from '../order-accessories-details';
 import { OrderDressDetailDto } from '../order-dress-details';
@@ -32,7 +39,15 @@ import { OrderDressDetailDto } from '../order-dress-details';
 @Controller('orders')
 @ApiTags('Order Controller')
 @ApiBearerAuth()
-@ApiExtraModels(ItemResponse, ListResponse, OrderDto, Order, Complaint)
+@ApiExtraModels(
+  ItemResponse,
+  ListResponse,
+  OrderDto,
+  Order,
+  Complaint,
+  OrderServiceDetail,
+  Milestone,
+)
 export class OrderController {
   constructor(private readonly orderService: OrderService) {}
 
@@ -384,6 +399,23 @@ export class OrderController {
     };
   }
 
+  @Post('custom')
+  @UseGuards(AuthGuard)
+  @Roles(UserRole.CUSTOMER)
+  @ApiOperation({})
+  @ApiCreatedResponse({})
+  async createOrderForCustom(
+    @UserId() userId: string,
+    @Body() body: CreateOrderForCustom,
+  ): Promise<ItemResponse<Order>> {
+    const order = await this.orderService.createOrderForCustom(userId, body);
+    return {
+      message: 'Đơn hàng đã được tạo thành công',
+      statusCode: HttpStatus.CREATED,
+      item: order,
+    };
+  }
+
   @Put(':id')
   @UseGuards(AuthGuard, RolesGuard)
   @Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN, UserRole.STAFF, UserRole.CUSTOMER)
@@ -425,20 +457,17 @@ export class OrderController {
     };
   }
 
-  @Put(':id/:status')
-  @UseGuards(AuthGuard, RolesGuard)
-  @Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN, UserRole.STAFF, UserRole.SHOP)
+  @Put(':id/custom')
+  @UseGuards(AuthGuard)
+  @Roles(UserRole.SHOP)
   @ApiOperation({
-    summary: 'Cập nhật trạng thái đơn hàng',
+    summary: 'Cập nhật đơn hàng đặt may của cửa hàng',
     description: `
           **Hướng dẫn sử dụng:**
 
-          - Chỉ người dùng có quyền \`CUSTOMER\` không thể cập nhật trạng thái đơn hàng.
           - Truyền \`id\` của đơn hàng trên URL.
-          - Truyền dữ liệu cập nhật trên URL.
-          - Các trường bắt buộc: \`address\`, \`due_date\`, \`type\`.
-          - Nếu không tìm thấy đơn hang sẽ trả về lỗi.
-          - OrderStatus: PENDING, IN_PROCESS, COMPLETED, CANCELLED
+          - Truyền dữ liệu cập nhật trong body theo dạng JSON.
+          - Nếu không tìm thấy đơn hàng sẽ trả về lỗi.
           - Trả về thông tin chi tiết của đơn hàng đã cập nhật.
       `,
   })
@@ -448,20 +477,20 @@ export class OrderController {
         { $ref: getSchemaPath(ItemResponse) },
         {
           properties: {
-            item: { example: null, $ref: getSchemaPath(Order) },
+            item: { $ref: getSchemaPath(Order) },
           },
         },
       ],
     },
   })
-  async updateOrderStatus(
-    @UserId() userId: string,
+  async updateCustomOrderForShop(
     @Param('id') id: string,
-    @Param('status') status: OrderStatus,
+    @UserId() userId: string,
+    @Body() body: ShopUpdateOrderForCustom,
   ): Promise<ItemResponse<Order>> {
-    const order = await this.orderService.updateOrderStatus(userId, id, status);
+    const order = await this.orderService.shopUpdateOrderForCustom(id, userId, body);
     return {
-      message: 'Đơn hàng đã được cập nhật trạng thái thành công',
+      message: 'Cập nhật đơn hàng đặt may của cửa hàng thành công',
       statusCode: HttpStatus.OK,
       item: order,
     };
@@ -624,6 +653,122 @@ export class OrderController {
     };
   }
 
+  @Get(':id/order-service-details')
+  @UseGuards(AuthGuard)
+  @ApiOperation({
+    summary: 'Lấy chi tiết dịch vụ của đơn hàng',
+    description: `
+          **Hướng dẫn sử dụng:**
+
+          - Truyền \`id\` của đơn hàng trên URL.
+          - Nếu không tìm thấy đơn hàng sẽ trả về lỗi.
+          - Trả về chi tiết dịch vụ của đơn hàng.
+        `,
+  })
+  @ApiOkResponse({
+    schema: {
+      allOf: [
+        { $ref: getSchemaPath(ItemResponse) },
+        {
+          properties: {
+            item: { $ref: getSchemaPath(OrderServiceDetail) },
+          },
+        },
+      ],
+    },
+  })
+  async getOrderServiceDetails(@Param('id') id: string): Promise<ItemResponse<OrderServiceDetail>> {
+    const orderServiceDetail = await this.orderService.getOrderServiceDetail(id);
+    return {
+      message: 'Đây là đơn hàng đặt may của cửa hàng',
+      statusCode: HttpStatus.OK,
+      item: orderServiceDetail,
+    };
+  }
+
+  @Get(':id/milestones')
+  @UseGuards(AuthGuard)
+  @ApiOperation({
+    summary: 'Lấy danh sách milestone và các task của đơn hàng',
+    description: `
+          **Hướng dẫn sử dụng:**
+
+          - Truyền \`id\` của đơn hàng trên URL.
+          - Truyền các tham số phân trang, sắp xếp và lọc trong query.
+          - Nếu không tìm thấy đơn hàng sẽ trả về lỗi.
+          - Trả về danh sách milestone và các task của đơn hàng.
+          - Page bắt đầu từ 0
+          - Sort theo format: [tên_field]:[asc/desc]
+          - Các trường đang có thể sort: index
+          - Filter theo format: [tên_field]:[eq|neq|gt|gte|lt|lte|like|nlike|in|nin]:[keyword]; hoặc [tên_field]:[isnull|isnotnull]
+          - Các trường đang có thể filter: status
+    `,
+  })
+  @ApiQuery({
+    name: 'page',
+    required: false,
+    type: Number,
+    default: 0,
+    description: 'Trang hiện tại (bắt đầu từ 0)',
+  })
+  @ApiQuery({
+    name: 'size',
+    required: false,
+    type: Number,
+    default: 10,
+    description: 'Số lượng mỗi trang',
+  })
+  @ApiQuery({
+    name: 'sort',
+    required: false,
+    type: String,
+    description: 'Sắp xếp theo trường: ví dụ: index:asc',
+  })
+  @ApiQuery({
+    name: 'filter',
+    required: false,
+    type: String,
+    description: 'Lọc theo trường: ví dụ: status:PENDING',
+  })
+  @ApiOkResponse({
+    schema: {
+      allOf: [
+        { $ref: getSchemaPath(ListResponse) },
+        {
+          properties: {
+            items: { type: 'array', items: { $ref: getSchemaPath(Milestone) } },
+          },
+        },
+      ],
+    },
+  })
+  async getOrderMilestones(
+    @Param('id') orderId: string,
+    @PaginationParams() { page, size, limit, offset }: Pagination,
+    @SortingParams(['index']) sort: Sorting,
+    @FilteringParams(['status']) filter: Filtering,
+  ): Promise<ListResponse<Milestone>> {
+    const [milestones, totalItems] = await this.orderService.getOrderMilestones(
+      orderId,
+      limit,
+      offset,
+      sort,
+      filter,
+    );
+    const totalPages = Math.ceil(totalItems / size);
+    return {
+      message: 'Danh sách mốc thời gian của đơn hàng',
+      statusCode: HttpStatus.OK,
+      pageIndex: page,
+      pageSize: size,
+      totalItems,
+      totalPages,
+      hasNextPage: page + 1 < totalPages,
+      hasPrevPage: 0 > page,
+      items: milestones,
+    };
+  }
+
   @Get(':id/complaints/me')
   @UseGuards(AuthGuard)
   @ApiOperation({
@@ -761,6 +906,8 @@ export class OrderController {
       - Nếu tiền không đủ thì thông báo lỗi để customer đi nạp tiền.
       - Cần thanh toán 150% giá trị đơn hàng cho luồng thuê.
       - Cần thanh toán 100% đơn hàng cho luồng mua.
+      - Có thể thanh toán nhiều lần cho luồng custom.
+      - Chỉ quan tâm và  truyền \`amount\` trong body khi thanh toán cho luồng custom.
     `,
   })
   @ApiOkResponse({
@@ -777,11 +924,53 @@ export class OrderController {
   })
   async checkOutOrder(
     @UserId() userId: string,
-    @Param() orderId: string,
+    @Param('id') orderId: string,
   ): Promise<ItemResponse<Order>> {
     const order = await this.orderService.checkOutOrder(userId, orderId);
     return {
       message: 'Thanh toán đơn hàng thành công',
+      statusCode: HttpStatus.OK,
+      item: order,
+    };
+  }
+
+  @Put(':id/:status')
+  @UseGuards(AuthGuard, RolesGuard)
+  @Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN, UserRole.STAFF, UserRole.SHOP)
+  @ApiOperation({
+    summary: 'Cập nhật trạng thái đơn hàng',
+    description: `
+          **Hướng dẫn sử dụng:**
+
+          - Chỉ người dùng có quyền \`CUSTOMER\` không thể cập nhật trạng thái đơn hàng.
+          - Truyền \`id\` của đơn hàng trên URL.
+          - Truyền dữ liệu cập nhật trên URL.
+          - Các trường bắt buộc: \`address\`, \`due_date\`, \`type\`.
+          - Nếu không tìm thấy đơn hang sẽ trả về lỗi.
+          - OrderStatus: PENDING, IN_PROCESS, COMPLETED, CANCELLED
+          - Trả về thông tin chi tiết của đơn hàng đã cập nhật.
+      `,
+  })
+  @ApiOkResponse({
+    schema: {
+      allOf: [
+        { $ref: getSchemaPath(ItemResponse) },
+        {
+          properties: {
+            item: { example: null, $ref: getSchemaPath(Order) },
+          },
+        },
+      ],
+    },
+  })
+  async updateOrderStatus(
+    @UserId() userId: string,
+    @Param('id') id: string,
+    @Param('status') status: OrderStatus,
+  ): Promise<ItemResponse<Order>> {
+    const order = await this.orderService.updateOrderStatus(userId, id, status);
+    return {
+      message: 'Đơn hàng đã được cập nhật trạng thái thành công',
       statusCode: HttpStatus.OK,
       item: order,
     };

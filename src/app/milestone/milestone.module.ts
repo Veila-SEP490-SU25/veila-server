@@ -1,5 +1,5 @@
 import { Milestone } from '@/common/models';
-import { Module } from '@nestjs/common';
+import { forwardRef, Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { MilestoneService } from './milestone.service';
 import { OrderModule } from '../order';
@@ -8,7 +8,12 @@ import { ShopModule } from '../shop';
 import { TaskModule } from '../task';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Milestone]), OrderModule, ShopModule, TaskModule],
+  imports: [
+    TypeOrmModule.forFeature([Milestone]),
+    forwardRef(() => OrderModule),
+    ShopModule,
+    TaskModule,
+  ],
   controllers: [MilestoneController],
   providers: [MilestoneService],
   exports: [MilestoneService],

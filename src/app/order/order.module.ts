@@ -1,4 +1,4 @@
-import { Order } from '@/common/models';
+import { Order, OrderServiceDetail } from '@/common/models';
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { OrderController } from './order.controller';
@@ -10,10 +10,13 @@ import { OrderDressDetailsModule } from '../order-dress-details';
 import { ComplaintModule } from '@/app/complaint';
 import { DressModule } from '../dress';
 import { WalletModule } from '../wallet';
+import { ServiceModule } from '@/app/service';
+import { RequestModule } from '@/app/request';
+import { MilestoneModule } from '@/app/milestone';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([Order]),
+    TypeOrmModule.forFeature([Order, OrderServiceDetail]),
     UserModule,
     ShopModule,
     OrderAccessoriesDetailsModule,
@@ -21,6 +24,9 @@ import { WalletModule } from '../wallet';
     ComplaintModule,
     DressModule,
     WalletModule,
+    ServiceModule,
+    RequestModule,
+    MilestoneModule,
   ],
   controllers: [OrderController],
   providers: [OrderService],

@@ -1,5 +1,5 @@
 import { Filtering, getOrder, getWhere, Sorting } from '@/common/decorators';
-import { Order, TransactionType, Wallet } from '@/common/models';
+import { Order, Transaction, TransactionType, Wallet } from '@/common/models';
 import {
   BadRequestException,
   ForbiddenException,
@@ -232,5 +232,54 @@ export class WalletService {
       lockedBalance: 0,
     };
     return await this.walletRepository.save(wallet);
+  }
+
+  async getTransferTransactionsForCustomOrder(
+    userId: string,
+    orderId: string,
+  ): Promise<Transaction[]> {
+    return await this.transactionService.getTransferTransactionsForCustomOrder(userId, orderId);
+  }
+
+  async transferFromWalletToWalletForCustom(
+    userId: string,
+    order: Order,
+    amount: number,
+  ): Promise<void> {
+    const fromWallet = await this.getWalletForUser(userId);
+    const toWallet = await this.getWalletForUser(order.shop.user.id);
+
+    const fromUser = order.customer;
+    const toUser = order.shop.user;
+    await this.transactionService.saveTransferOrderTransaction(
+      fromUser,
+      toUser,
+      fromWallet.id,
+      order.id,
+      amount,
+      TransactionType.TRANSFER,
+    );
+
+    await this.transactionService.saveTransferOrderTransaction(
+      fromUser,
+      toUser,
+      toWallet.id,
+      order.id,
+      amount,
+      TransactionType.RECEIVE,
+    );
+
+    fromWallet.availableBalance = Number(fromWallet.availableBalance) - Number(amount);
+    toWallet.lockedBalance = Number(toWallet.lockedBalance) + Number(amount);
+    await this.walletRepository.save(fromWallet);
+    await this.walletRepository.save(toWallet);
+  }
+
+  async getWalletForUser(userId: string): Promise<Wallet> {
+    const wallet = await this.walletRepository.findOne({
+      where: { user: { id: userId } },
+    });
+    if (!wallet) throw new NotFoundException('Không tìm thấy ví');
+    return wallet;
   }
 }

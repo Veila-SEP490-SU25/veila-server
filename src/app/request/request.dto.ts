@@ -231,7 +231,7 @@ export class CURequestDto {
   })
   @IsString()
   @IsOptional()
-  specialElements: string | null;
+  specialElement: string | null;
 
   @ApiProperty({
     type: 'string',
@@ -251,7 +251,7 @@ export class CURequestDto {
     description: 'Trạng thái yêu cầu',
     example: RequestStatus.DRAFT,
   })
-  @IsEnum(() => RequestStatus)
+  @IsEnum(RequestStatus)
   status: RequestStatus;
 
   @ApiProperty({

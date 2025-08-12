@@ -51,7 +51,9 @@ export class RequestController {
 2. Yêu cầu sẽ được lưu trữ và trả về thông tin chi tiết của yêu cầu đã tạo.
 3. Đảm bảo rằng người dùng đã đăng nhập và có role CUSTOMER.
 4. Trả về mã trạng thái 201 (Created) nếu tạo thành công.
-5. Trả về thông tin yêu cầu đã tạo trong phần thân của phản hồi.`,
+5. Trả về thông tin yêu cầu đã tạo trong phần thân của phản hồi.
+6. Status bao gồm: DRAFT, SUBMIT
+`,
   })
   @ApiOkResponse({
     schema: {

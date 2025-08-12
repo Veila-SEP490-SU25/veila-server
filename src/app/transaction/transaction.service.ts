@@ -74,7 +74,7 @@ export class TransactionService {
     const toUserName = toUser.firstName + ' ' + toUser.middleName + ' ' + toUser.lastName;
 
     const newTransaction = {
-      walletId,
+      wallet: { id: walletId },
       from: fromUserName + ' Wallet',
       to: toUserName + ' Wallet',
       fromTypeBalance: TypeBalance.AVAILABLE,
@@ -83,7 +83,33 @@ export class TransactionService {
       type: type,
       status: TransactionStatus.COMPLETED,
       note: fromUserName + ' transfer to ' + toUserName,
-    };
+    } as Transaction;
+    await this.transactionRepository.save(plainToInstance(Transaction, newTransaction));
+  }
+
+  async saveTransferOrderTransaction(
+    fromUser: User,
+    toUser: User,
+    walletId: string,
+    orderId: string,
+    amount: number,
+    type: TransactionType,
+  ): Promise<void> {
+    const fromUserName = fromUser.firstName + ' ' + fromUser.middleName + ' ' + fromUser.lastName;
+    const toUserName = toUser.firstName + ' ' + toUser.middleName + ' ' + toUser.lastName;
+
+    const newTransaction = {
+      wallet: { id: walletId },
+      from: fromUserName + ' Wallet',
+      to: toUserName + ' Wallet',
+      fromTypeBalance: TypeBalance.AVAILABLE,
+      toTypeBalance: TypeBalance.LOCKED,
+      amount: amount,
+      type: type,
+      order: { id: orderId },
+      status: TransactionStatus.COMPLETED,
+      note: fromUserName + ' transfer to ' + toUserName,
+    } as Transaction;
     await this.transactionRepository.save(plainToInstance(Transaction, newTransaction));
   }
 
@@ -206,5 +232,19 @@ export class TransactionService {
 
     transaction.status = TransactionStatus.CANCELLED;
     return await this.transactionRepository.save(plainToInstance(Transaction, transaction));
+  }
+
+  async getTransferTransactionsForCustomOrder(
+    userId: string,
+    orderId: string,
+  ): Promise<Transaction[]> {
+    return await this.transactionRepository.find({
+      where: {
+        order: { id: orderId },
+        wallet: { user: { id: userId } },
+        type: TransactionType.TRANSFER,
+        status: TransactionStatus.COMPLETED,
+      },
+    });
   }
 }
