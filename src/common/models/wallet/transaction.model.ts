@@ -6,9 +6,8 @@ export enum TransactionType {
   DEPOSIT = 'deposit',
   WITHDRAW = 'withdraw',
   TRANSFER = 'transfer',
-  PAYMENT = 'payment',
+  RECEIVE = 'receive',
   REFUND = 'refund',
-  OTHER = 'other',
 }
 export enum TransactionStatus {
   PENDING = 'pending',
@@ -16,7 +15,6 @@ export enum TransactionStatus {
   FAILED = 'failed',
   CANCELLED = 'cancelled',
   REFUNDED = 'refunded',
-  DISPUTED = 'disputed',
 }
 export enum TypeBalance {
   AVAILABLE = 'available',
@@ -150,7 +148,7 @@ export class Transaction extends Base {
   @ApiProperty({
     enum: TransactionType,
     description: 'Loại giao dịch',
-    example: TransactionType.PAYMENT,
+    example: TransactionType.TRANSFER,
     required: true,
   })
   type: TransactionType;

@@ -26,11 +26,9 @@ export class OrderAccessoriesDetailsService {
       orderId,
       accessoryId: accessoriesDetail.accessoryId,
       quantity: accessoriesDetail.quantity,
-      description: accessoriesDetail.description,
       price:
         (await this.getAccessoryById(accessoriesDetail.accessoryId)).sellPrice *
         accessoriesDetail.quantity,
-      isRated: accessoriesDetail.is_rated,
     }));
     await this.orderAccessoryDetailRepository.save(
       plainToInstance(OrderAccessoryDetail, orderAccessoryDetails),
@@ -56,7 +54,6 @@ export class OrderAccessoriesDetailsService {
 
     existingOrderAccessoryDetail.accessory.id = accessoriesDetail.accessoryId;
     existingOrderAccessoryDetail.quantity = accessoriesDetail.quantity;
-    existingOrderAccessoryDetail.description = accessoriesDetail.description;
     existingOrderAccessoryDetail.price =
       (await this.getAccessoryById(accessoriesDetail.accessoryId)).sellPrice *
       accessoriesDetail.quantity;

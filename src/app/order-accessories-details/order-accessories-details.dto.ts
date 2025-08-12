@@ -1,6 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { Expose, Transform } from 'class-transformer';
-import { IsBoolean, IsNotEmpty, IsNumber, IsString } from 'class-validator';
+import { IsNotEmpty, IsNumber, IsString } from 'class-validator';
 
 export class CUOrderAccessoriesDetailDto {
   @ApiProperty({ description: 'ID của phụ kiện', example: 'accessory-uuid-1' })
@@ -12,14 +12,6 @@ export class CUOrderAccessoriesDetailDto {
   @IsNotEmpty()
   @IsNumber()
   quantity: number;
-
-  @ApiProperty({ description: 'Mô tả về phụ kiện', example: 'Phụ kiện này đẳng cấp' })
-  description: string | null;
-
-  @ApiProperty({ description: 'Phụ kiện đã được đánh giá hay chưa', example: true })
-  @IsNotEmpty()
-  @IsBoolean()
-  is_rated: boolean;
 }
 
 export class OrderAccessoriesDetailDto {

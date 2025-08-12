@@ -24,7 +24,7 @@ import {
   UserId,
 } from '@/common/decorators';
 import { AuthGuard, RolesGuard } from '@/common/guards';
-import { createOrderRequestDto, OrderDto, UOrderDto } from './order.dto';
+import { CreateOrderRequestDto, OrderDto, UOrderDto } from './order.dto';
 import { CUComplaintDto } from '@/app/complaint';
 import { OrderAccessoriesDetailDto } from '../order-accessories-details';
 import { OrderDressDetailDto } from '../order-dress-details';
@@ -348,15 +348,15 @@ export class OrderController {
   @UseGuards(AuthGuard)
   @Roles(UserRole.CUSTOMER)
   @ApiOperation({
-    summary: 'Tạo đơn hàng mới (cho loại mua - sell)',
+    summary: 'Tạo đơn hàng mới (for Sell and rent)',
     description: `
           **Hướng dẫn sử dụng:**
 
           - Chỉ người dùng có quyền \`CUSTOMER\` mới có thể tạo đơn hàng.
           - Truyền dữ liệu đơn hàng trong body theo dạng JSON.
-          - Các trường bắt buộc: \`shop_id\`, \`address\`, \`due_date\`,...
+          - Các trường bắt buộc:\`address\`, \`due_date\`,...
           - Trả về thông tin chi tiết của đơn hàng vừa tạo.
-          - OrderType: SELL
+          - OrderType: SELL, RENT
       `,
   })
   @ApiOkResponse({
@@ -371,12 +371,12 @@ export class OrderController {
       ],
     },
   })
-  @ApiBody({ type: createOrderRequestDto })
-  async createOrderForSell(
+  @ApiBody({ type: CreateOrderRequestDto })
+  async createOrderForSellAndRent(
     @UserId() userId: string,
-    @Body() body: createOrderRequestDto,
+    @Body() body: CreateOrderRequestDto,
   ): Promise<ItemResponse<Order>> {
-    const order = await this.orderService.createOrderForSell(userId, body);
+    const order = await this.orderService.createOrderForSellAndRent(userId, body);
     return {
       message: 'Đơn hàng đã được tạo thành công',
       statusCode: HttpStatus.CREATED,
@@ -744,6 +744,46 @@ export class OrderController {
       message: 'Khiếu nại đã được tạo thành công',
       statusCode: HttpStatus.CREATED,
       item: complaint,
+    };
+  }
+
+  @Put(':id/check-out')
+  @UseGuards(AuthGuard, RolesGuard)
+  @Roles(UserRole.CUSTOMER)
+  @ApiOperation({
+    summary: 'Thanh toán đơn hàng bằng ví điện tử',
+    description: `
+      **Hướng dẫn sử dụng:**
+
+      - Truyền \`id\` của đơn hàng trên URL.
+      - Nếu không tìm thấy đơn hàng thì trả về lỗi.
+      - Trả về chi tiết đơn hàng sau khi thanh toán xong.
+      - Nếu tiền không đủ thì thông báo lỗi để customer đi nạp tiền.
+      - Cần thanh toán 150% giá trị đơn hàng cho luồng thuê.
+      - Cần thanh toán 100% đơn hàng cho luồng mua.
+    `,
+  })
+  @ApiOkResponse({
+    schema: {
+      allOf: [
+        { $ref: getSchemaPath(ItemResponse) },
+        {
+          properties: {
+            item: { $ref: getSchemaPath(Order) },
+          },
+        },
+      ],
+    },
+  })
+  async checkOutOrder(
+    @UserId() userId: string,
+    @Param() orderId: string,
+  ): Promise<ItemResponse<Order>> {
+    const order = await this.orderService.checkOutOrder(userId, orderId);
+    return {
+      message: 'Thanh toán đơn hàng thành công',
+      statusCode: HttpStatus.OK,
+      item: order,
     };
   }
 }
