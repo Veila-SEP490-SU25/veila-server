@@ -5,7 +5,6 @@ import { ContractModule } from '@/app/contract';
 import { DressModule } from '@/app/dress';
 import { FeedbackModule } from '@/app/feedback';
 import { MembershipModule } from '@/app/membership';
-import { MilestoneModule } from '@/app/milestone';
 import { OrderModule } from '@/app/order';
 import { OrderAccessoriesDetailsModule } from '@/app/order-accessories-details';
 import { OrderDressDetailsModule } from '@/app/order-dress-details';
@@ -39,7 +38,6 @@ import { Module } from '@nestjs/common';
     OrderModule,
     OrderAccessoriesDetailsModule,
     OrderDressDetailsModule,
-    MilestoneModule,
     TaskModule,
     TransactionModule,
     FeedbackModule,

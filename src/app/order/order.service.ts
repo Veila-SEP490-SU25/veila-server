@@ -1,16 +1,32 @@
 import { ShopService } from './../shop/shop.service';
 import { Filtering, getOrder, getWhere, Sorting } from '@/common/decorators';
-import { Complaint, Order, OrderStatus, OrderType } from '@/common/models';
+import {
+  Complaint,
+  Milestone,
+  Order,
+  OrderServiceDetail,
+  OrderStatus,
+  OrderType,
+  RequestStatus,
+} from '@/common/models';
 import {
   BadRequestException,
   ForbiddenException,
   Inject,
   Injectable,
+  InternalServerErrorException,
+  MethodNotAllowedException,
   NotFoundException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { In, Repository } from 'typeorm';
-import { CreateOrderRequestDto, OrderDto, UOrderDto } from './order.dto';
+import {
+  CreateOrderForCustom,
+  CreateOrderRequestDto,
+  OrderDto,
+  ShopUpdateOrderForCustom,
+  UOrderDto,
+} from './order.dto';
 import { plainToInstance } from 'class-transformer';
 import { UserService } from '../user';
 import { OrderDressDetailDto, OrderDressDetailsService } from '../order-dress-details';
@@ -21,12 +37,17 @@ import {
 import { ComplaintService, CUComplaintDto } from '@/app/complaint';
 import { DressService } from '../dress';
 import { WalletService } from '../wallet';
+import { RequestService } from '@/app/request';
+import { ServiceService } from '@/app/service';
+import { MilestoneService } from '@/app/milestone';
 
 @Injectable()
 export class OrderService {
   constructor(
     @InjectRepository(Order)
     private readonly orderRepository: Repository<Order>,
+    @InjectRepository(OrderServiceDetail)
+    private readonly orderServiceDetailRepository: Repository<OrderServiceDetail>,
     private readonly userService: UserService,
     private readonly shopService: ShopService,
     private readonly orderDressDetailsService: OrderDressDetailsService,
@@ -35,7 +56,111 @@ export class OrderService {
     private readonly complaintService: ComplaintService,
     private readonly dressService: DressService,
     private readonly walletService: WalletService,
+    @Inject(RequestService)
+    private readonly requestService: RequestService,
+    @Inject(ServiceService)
+    private readonly serviceService: ServiceService,
+    @Inject(MilestoneService)
+    private readonly milestoneService: MilestoneService,
   ) {}
+
+  async getOrderMilestones(
+    orderId: string,
+    take: number,
+    skip: number,
+    sort?: Sorting,
+    filter?: Filtering,
+  ): Promise<[Milestone[], number]> {
+    return await this.milestoneService.getOrderMilestones(orderId, take, skip, sort, filter);
+  }
+
+  async shopUpdateOrderForCustom(
+    id: string,
+    userId: string,
+    body: ShopUpdateOrderForCustom,
+  ): Promise<Order> {
+    const order = await this.getCustomOrderForShop(id, userId);
+    await this.orderRepository.update(order.id, {
+      dueDate: body.dueDate,
+      amount: body.price,
+    });
+    if (!order.orderServiceDetail)
+      throw new InternalServerErrorException('Order service detail not found');
+    await this.orderServiceDetailRepository.update(order.orderServiceDetail.id, {
+      price: body.price,
+    });
+    for (let index = 0; index < body.milestones.length; index++) {
+      await this.milestoneService.createMilestoneForOrderCustom(
+        order.id,
+        body.milestones[index],
+        index + 1,
+      );
+    }
+    return await this.getCustomOrderForShop(id, userId);
+  }
+
+  async getCustomOrderForShop(id: string, userId: string): Promise<Order> {
+    const order = await this.orderRepository.findOne({
+      where: {
+        id,
+        shop: { user: { id: userId } },
+      },
+      relations: {
+        customer: true,
+        shop: true,
+        orderServiceDetail: {
+          request: true,
+          service: true,
+          updateOrderServiceDetails: true,
+        },
+        milestones: { tasks: true },
+      },
+    });
+    if (!order) throw new NotFoundException('Không tìm thấy đơn hàng này');
+    return order;
+  }
+
+  async getOrderServiceDetail(orderId: string): Promise<OrderServiceDetail> {
+    const orderServiceDetail = await this.orderServiceDetailRepository.findOne({
+      where: {
+        order: { id: orderId },
+      },
+      relations: {
+        request: true,
+        service: true,
+        updateOrderServiceDetails: true,
+      },
+    });
+    if (!orderServiceDetail) throw new NotFoundException('Không tìm thấy chi tiết đơn hàng');
+    return orderServiceDetail;
+  }
+
+  async createOrderForCustom(
+    userId: string,
+    { requestId, shopId, ...body }: CreateOrderForCustom,
+  ): Promise<Order> {
+    const user = await this.userService.getSelf(userId);
+    const request = await this.requestService.getRequestForOrderCustom(requestId);
+    const shop = await this.shopService.getShopForOrderCustom(shopId);
+    const service = await this.serviceService.getServiceForOrderCustom(shop.user.id);
+
+    await this.requestService.updateStatusRequestForOrderCustom(request.id, RequestStatus.ACCEPTED);
+
+    const newOrder = {
+      customer: user,
+      shop,
+      ...body,
+      dueDate: new Date(),
+      type: OrderType.CUSTOM,
+      status: OrderStatus.PENDING,
+      orderServiceDetail: {
+        request,
+        service,
+      },
+    } as Order;
+
+    return await this.orderRepository.save(newOrder);
+  }
 
   async getOrdersForAdmin(
     take: number,
@@ -119,7 +244,7 @@ export class OrderService {
     const dynamicFilter = getWhere(filter);
     const where = {
       ...dynamicFilter,
-      shop: { id: userId },
+      shop: { user: { id: userId } },
       status: In([
         OrderStatus.PENDING,
         OrderStatus.IN_PROCESS,
@@ -446,13 +571,17 @@ export class OrderService {
   }
 
   async checkOutOrder(userId: string, orderId: string): Promise<Order> {
-    if (!this.userOwnOrder(userId, orderId))
-      throw new ForbiddenException('Người dùng này không sở hữu đơn hàng này');
-
-    const order = await this.getOrderByIdV2(orderId);
-    if (!order || order.status !== OrderStatus.PENDING)
-      throw new NotFoundException('Đơn hàng đã hết hạn hoặc không tồn tại');
+    const order = await this.orderRepository.findOne({
+      where: { id: orderId, customer: { id: userId } },
+      relations: {
+        customer: true,
+        shop: { user: true },
+      },
+    });
+    if (!order) throw new NotFoundException('Không tìm thấy đơn hàng này');
     if (order.type === OrderType.SELL) {
+      if (order.status !== OrderStatus.PENDING)
+        throw new MethodNotAllowedException('Đơn hàng đã hết hạn');
       //Luồng mua cần thanh toán 100%, sau đó lock lại ở ví của shop
       if (!this.checkWalletBalanceIsEnough(userId, order.amount))
         throw new BadRequestException('Không đủ số dư trong ví, vui lòng nạp tiền');
@@ -460,7 +589,9 @@ export class OrderService {
 
       order.status = OrderStatus.IN_PROCESS;
       return await this.orderRepository.save(order);
-    } else {
+    } else if (order.type === OrderType.RENT) {
+      if (order.status !== OrderStatus.PENDING)
+        throw new MethodNotAllowedException('Đơn hàng đã hết hạn');
       //Luồng thuê cần thanh toán 150%, lock 100% ở ví của shop, lock 50% ở ví của khách
       const rentAmount = (order.amount * 150) / 100;
       if (!this.checkWalletBalanceIsEnough(userId, rentAmount))
@@ -469,17 +600,43 @@ export class OrderService {
 
       order.status = OrderStatus.IN_PROCESS;
       return await this.orderRepository.save(order);
+    } else {
+      if (order.status !== OrderStatus.PENDING)
+        throw new MethodNotAllowedException('Đơn hàng đã đang và đã thực hiện hoặc đã bị hủy');
+      //Luồng custom có thể thanh toán nhiều lần, lock lại ở ví của shop
+      const transactions = await this.walletService.getTransferTransactionsForCustomOrder(
+        userId,
+        order.id,
+      );
+      const customerWallet = await this.walletService.getWalletForUser(userId);
+      const amountPaid = transactions.reduce((total, transaction) => total + transaction.amount, 0);
+      if (amountPaid === order.amount)
+        throw new MethodNotAllowedException('Đơn hàng đã được thanh toán đủ');
+      const remainingAmount = Number(order.amount) - Number(amountPaid);
+      if (customerWallet.availableBalance < remainingAmount)
+        throw new BadRequestException('Không đủ số dư trong ví, vui lòng nạp tiền');
+      await this.walletService.transferFromWalletToWalletForCustom(userId, order, remainingAmount);
+
+      if (order.status === OrderStatus.PENDING)
+        await this.updateOrderCustomStatusAfterCheckout(order.id);
+      const updatedOrder = await this.orderRepository.findOne({
+        where: {
+          id: order.id,
+        },
+        relations: {
+          customer: true,
+          shop: true,
+          transaction: true,
+        },
+      });
+      if (!updatedOrder) throw new NotFoundException('Không tìm thấy đơn hàng nào phù hợp');
+      return updatedOrder;
     }
   }
 
-  private async userOwnOrder(userId: string, orderId: string): Promise<boolean> {
-    const order = await this.orderRepository.findOne({
-      where: {
-        id: orderId,
-        customer: { id: userId },
-      },
-    });
-    return !!order;
+  private async updateOrderCustomStatusAfterCheckout(orderId: string): Promise<void> {
+    await this.orderRepository.update(orderId, { status: OrderStatus.IN_PROCESS });
+    await this.milestoneService.updateMilestoneStatusForOrderCustomAfterCheckout(orderId);
   }
 
   private async checkWalletBalanceIsEnough(userId: string, amount: number): Promise<boolean> {
@@ -494,5 +651,9 @@ export class OrderService {
     });
     if (!order) throw new NotFoundException('Không tìm thấy đơn hàng nào phù hợp');
     return order;
+  }
+
+  async createMilestoneForSeeding(data: Milestone): Promise<Milestone> {
+    return await this.milestoneService.createMilestoneForSeeding(data);
   }
 }

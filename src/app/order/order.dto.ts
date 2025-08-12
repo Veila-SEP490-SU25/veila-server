@@ -7,6 +7,7 @@ import {
   IsDate,
   IsNotEmpty,
   IsNumber,
+  IsOptional,
   IsString,
   ValidateNested,
 } from 'class-validator';
@@ -46,6 +47,7 @@ export class COrderDto {
     nullable: false,
   })
   @IsNotEmpty()
+  @Type(() => Date)
   @IsDate()
   dueDate: Date;
 
@@ -54,6 +56,7 @@ export class COrderDto {
     example: '2024-01-15',
     nullable: true,
   })
+  @Type(() => Date)
   @IsDate()
   returnDate: Date | null;
 
@@ -109,6 +112,7 @@ export class UOrderDto {
     nullable: false,
   })
   @IsNotEmpty()
+  @Type(() => Date)
   @IsDate()
   dueDate: Date;
 
@@ -117,6 +121,7 @@ export class UOrderDto {
     example: '2024-01-15',
     nullable: true,
   })
+  @Type(() => Date)
   @IsDate()
   returnDate: Date | null;
 
@@ -129,6 +134,8 @@ export class UOrderDto {
   @IsBoolean()
   isBuyBack: boolean;
 }
+
+export class OrderCustomerNameDto {}
 
 export class OrderDto {
   @Expose()
@@ -149,7 +156,7 @@ export class OrderDto {
   })
   @IsNotEmpty()
   @IsString()
-  @Transform(({ obj: order }) => order.user.name)
+  @Transform(({ obj: order }) => order.customer.username)
   customerName: string;
 
   @Expose()
@@ -268,4 +275,160 @@ export class CreateOrderRequestDto {
   @ValidateNested({ each: true })
   @Type(() => CUOrderAccessoriesDetailDto)
   accessoriesDetails: CUOrderAccessoriesDetailDto[];
+}
+
+export class CreateOrderForCustom {
+  @ApiProperty({
+    description: 'Số điện thoại của khách hàng',
+    example: '0123456789',
+    nullable: false,
+  })
+  @IsNotEmpty()
+  @IsString()
+  phone: string;
+
+  @ApiProperty({
+    description: 'Email của khách hàng',
+    example: 'customer@example.com',
+    nullable: false,
+  })
+  @IsNotEmpty()
+  @IsString()
+  email: string;
+
+  @ApiProperty({
+    description: 'Địa chỉ giao hàng',
+    example: '123 Đường ABC, Quận X, TP Y',
+    nullable: false,
+  })
+  @IsNotEmpty()
+  @IsString()
+  address: string;
+
+  @ApiProperty({
+    description: 'ID yêu cầu',
+    example: 'request-uuid-123',
+    nullable: false,
+  })
+  @IsNotEmpty()
+  @IsString()
+  requestId: string;
+
+  @ApiProperty({
+    description: 'ID dịch vụ',
+    example: 'service-uuid-123',
+    nullable: false,
+  })
+  @IsNotEmpty()
+  @IsString()
+  shopId: string;
+}
+
+export class ShopUpdateOrderForCustom {
+  @ApiProperty({
+    description: 'Ngày giao hàng',
+    example: '2023-12-31',
+    nullable: false,
+  })
+  @IsNotEmpty()
+  @Type(() => Date)
+  @IsDate()
+  dueDate: Date;
+
+  @ApiProperty({
+    description: 'Giá trị của dịch vụ (VNĐ)',
+    example: 5000000,
+    nullable: false,
+  })
+  @IsNotEmpty()
+  @IsNumber()
+  price: number;
+
+  @ApiProperty({
+    description: 'Danh sách các mốc công việc',
+    type: () => [CreateMilestone],
+  })
+  @ValidateNested({ each: true })
+  @Type(() => CreateMilestone)
+  milestones: CreateMilestone[];
+}
+
+export class CreateMilestone {
+  @ApiProperty({
+    description: 'Tiêu đề mốc công việc',
+    example: 'Mốc công việc 1',
+    nullable: false,
+  })
+  @IsNotEmpty()
+  @IsString()
+  title: string;
+
+  @ApiProperty({
+    description: 'Mô tả mốc công việc',
+    example: 'Mô tả chi tiết mốc công việc 1',
+    nullable: true,
+  })
+  @IsString()
+  @IsOptional()
+  description: string | null;
+
+  @ApiProperty({
+    description: 'Ngày hết hạn mốc công việc',
+    example: '2023-12-31',
+    nullable: false,
+  })
+  @IsNotEmpty()
+  @Type(() => Date)
+  @IsDate()
+  dueDate: Date;
+
+  @ApiProperty({
+    description: 'Danh sách các công việc trong mốc',
+    type: () => [CreateTask],
+  })
+  @ValidateNested({ each: true })
+  @Type(() => CreateMilestone)
+  tasks: CreateTask[];
+}
+
+export class CreateTask {
+  @ApiProperty({
+    description: 'Tiêu đề công việc',
+    example: 'Công việc 1',
+    nullable: false,
+  })
+  @IsNotEmpty()
+  @IsString()
+  title: string;
+
+  @ApiProperty({
+    description: 'Mô tả công việc',
+    example: 'Mô tả chi tiết công việc 1',
+    nullable: true,
+  })
+  @IsString()
+  @IsOptional()
+  description: string | null;
+
+  @ApiProperty({
+    description: 'Ngày hết hạn công việc',
+    example: '2023-12-31',
+    nullable: false,
+  })
+  @IsNotEmpty()
+  @Type(() => Date)
+  @IsDate()
+  dueDate: Date;
+}
+
+export class PayAmountDto {
+  @ApiProperty({
+    type: 'number',
+    description: 'Số tiền cần thanh toán (VNĐ)',
+    example: 0,
+    nullable: true,
+  })
+  @IsNumber()
+  @IsOptional()
+  amount: number | null;
 }

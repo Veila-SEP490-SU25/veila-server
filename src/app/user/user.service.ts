@@ -246,4 +246,10 @@ export class UserService {
 
     await this.userRepository.save(user);
   }
+
+  async getSelf(id: string): Promise<User> {
+    const user = await this.getUserById(id);
+    if (!user) throw new NotFoundException('Không tìm thấy người dùng');
+    return user;
+  }
 }

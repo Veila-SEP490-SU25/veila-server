@@ -159,4 +159,15 @@ export class ServiceService {
       withDeleted: true,
     });
   }
+
+  async getServiceForOrderCustom(userId: string): Promise<Service> {
+    const service = await this.serviceRepository.findOne({
+      where: { user: { id: userId } },
+      relations: {
+        user: { shop: true },
+      },
+    });
+    if (!service) throw new NotFoundException(`Service with userId ${userId} not found`);
+    return service;
+  }
 }

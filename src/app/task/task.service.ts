@@ -5,6 +5,7 @@ import { Repository } from 'typeorm';
 import { CUTaskDto, TaskDto } from './task.dto';
 import { plainToInstance } from 'class-transformer';
 import { Filtering, getOrder, getWhere, Sorting } from '@/common/decorators';
+import { CreateTask } from '@/app/order';
 
 @Injectable()
 export class TaskService {
@@ -19,7 +20,7 @@ export class TaskService {
       title: newTask.title,
       description: newTask.description,
       // ghi chú: index sẽ được đánh từ 1
-      index: index + 1,
+      index: Number(index) + 1,
       status: index === 1 ? TaskStatus.IN_PROGRESS : TaskStatus.PENDING,
       dueDate: newTask.dueDate,
     }));
@@ -134,5 +135,32 @@ export class TaskService {
     });
     if (!task) throw new NotFoundException('Không tìm thấy công việc trong mốc công việc');
     return task;
+  }
+
+  async createTaskForOrderCustom(
+    milestoneId: string,
+    task: CreateTask,
+    taskIndex: number,
+  ): Promise<void> {
+    await this.taskRepository.save({
+      milestone: { id: milestoneId },
+      title: task.title,
+      description: task.description,
+      dueDate: task.dueDate,
+      status: TaskStatus.PENDING,
+      index: taskIndex,
+    });
+  }
+
+  async updateTaskStatusForOrderCustomAfterCheckout(milestoneId: string): Promise<void> {
+    const firstTask = await this.taskRepository.findOne({
+      where: { milestone: { id: milestoneId }, index: 1 },
+    });
+    if (!firstTask)
+      throw new NotFoundException('Không tìm thấy công việc đầu tiên trong mốc công việc');
+
+    firstTask.status = TaskStatus.IN_PROGRESS;
+
+    await this.taskRepository.save(firstTask);
   }
 }

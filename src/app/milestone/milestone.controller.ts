@@ -377,13 +377,21 @@ export class MilestoneController {
         { $ref: getSchemaPath(ItemResponse) },
         {
           properties: {
-            item: { example: null, $ref: getSchemaPath(TaskDto) },
+            item: { example: null },
           },
         },
       ],
     },
   })
-  async completeTask(@Param('id') id: string, @Param('taskId') taskId: string): Promise<void> {
+  async completeTask(
+    @Param('id') id: string,
+    @Param('taskId') taskId: string,
+  ): Promise<ItemResponse<null>> {
     await this.milestoneService.completeTask(id, taskId);
+    return {
+      message: 'Công việc đã được đánh dấu hoàn thành',
+      statusCode: HttpStatus.OK,
+      item: null,
+    };
   }
 }

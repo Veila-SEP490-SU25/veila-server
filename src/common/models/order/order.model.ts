@@ -196,21 +196,25 @@ export class Order extends Base {
 
   @OneToMany(() => OrderAccessoryDetail, (orderAccessoryDetail) => orderAccessoryDetail.order, {
     nullable: true,
+    cascade: true,
   })
   orderAccessoriesDetail: OrderAccessoryDetail[] | null;
 
   @OneToOne(() => OrderDressDetail, (orderDressDetail) => orderDressDetail.order, {
     nullable: true,
+    cascade: true,
   })
   orderDressDetail: OrderDressDetail | null;
 
   @OneToOne(() => OrderServiceDetail, (orderServiceDetail) => orderServiceDetail.order, {
     nullable: true,
+    cascade: true,
   })
   orderServiceDetail: OrderServiceDetail | null;
 
   @OneToMany(() => Transaction, (transaction) => transaction.order, {
     nullable: false,
+    cascade: true,
   })
   transaction: Transaction[];
 }

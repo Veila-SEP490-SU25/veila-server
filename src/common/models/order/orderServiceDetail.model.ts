@@ -69,6 +69,7 @@ export class OrderServiceDetail extends Base {
     (updateOrderServiceDetail) => updateOrderServiceDetail.orderServiceDetail,
     {
       nullable: true,
+      cascade: true,
     },
   )
   updateOrderServiceDetails: UpdateOrderServiceDetail[] | null;

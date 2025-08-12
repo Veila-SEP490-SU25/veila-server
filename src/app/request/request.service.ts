@@ -119,4 +119,16 @@ export class RequestService {
   async createRequestForSeeding(request: Request): Promise<Request> {
     return await this.requestRepository.save(request);
   }
+
+  async getRequestForOrderCustom(id: string): Promise<Request> {
+    const request = await this.requestRepository.findOne({
+      where: { id },
+    });
+    if (!request) throw new NotFoundException(`Request with id ${id} not found`);
+    return request;
+  }
+
+  async updateStatusRequestForOrderCustom(id: string, status: RequestStatus): Promise<void> {
+    await this.requestRepository.update(id, { status });
+  }
 }

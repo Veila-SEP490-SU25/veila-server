@@ -453,4 +453,13 @@ export class ShopService {
       withDeleted: true,
     });
   }
+
+  async getShopForOrderCustom(id: string): Promise<Shop> {
+    const shop = await this.shopRepository.findOne({
+      where: { id },
+      relations: { user: true },
+    });
+    if (!shop) throw new NotFoundException('Không tìm thấy cửa hàng');
+    return shop;
+  }
 }
