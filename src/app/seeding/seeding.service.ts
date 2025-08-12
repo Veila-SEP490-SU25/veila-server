@@ -1316,7 +1316,7 @@ export class SeedingService implements OnModuleInit {
       fromTypeBalance: TypeBalance.AVAILABLE,
       toTypeBalance: TypeBalance.LOCKED,
       amount: newOrder.amount,
-      type: TransactionType.PAYMENT,
+      type: TransactionType.TRANSFER,
       status: TransactionStatus.COMPLETED,
     } as Transaction);
     await this.transactionService.createTransactionForSeeding({
@@ -1327,7 +1327,7 @@ export class SeedingService implements OnModuleInit {
       fromTypeBalance: TypeBalance.AVAILABLE,
       toTypeBalance: TypeBalance.LOCKED,
       amount: newOrder.amount,
-      type: TransactionType.PAYMENT,
+      type: TransactionType.TRANSFER,
       status: TransactionStatus.COMPLETED,
     } as Transaction);
     await this.transactionService.createTransactionForSeeding({
@@ -1560,7 +1560,7 @@ export class SeedingService implements OnModuleInit {
       fromTypeBalance: TypeBalance.AVAILABLE,
       toTypeBalance: TypeBalance.LOCKED,
       amount: newOrder.amount,
-      type: TransactionType.PAYMENT,
+      type: TransactionType.TRANSFER,
       status: TransactionStatus.COMPLETED,
     } as Transaction);
     await this.transactionService.createTransactionForSeeding({
@@ -1582,7 +1582,7 @@ export class SeedingService implements OnModuleInit {
       fromTypeBalance: TypeBalance.AVAILABLE,
       toTypeBalance: TypeBalance.LOCKED,
       amount: newOrder.amount,
-      type: TransactionType.PAYMENT,
+      type: TransactionType.TRANSFER,
       status: TransactionStatus.COMPLETED,
     } as Transaction);
     await this.transactionService.createTransactionForSeeding({
@@ -1904,7 +1904,7 @@ export class SeedingService implements OnModuleInit {
       fromTypeBalance: TypeBalance.AVAILABLE,
       toTypeBalance: TypeBalance.LOCKED,
       amount: newOrder.amount,
-      type: TransactionType.PAYMENT,
+      type: TransactionType.TRANSFER,
       status: TransactionStatus.COMPLETED,
     } as Transaction);
     await this.transactionService.createTransactionForSeeding({
@@ -1915,7 +1915,7 @@ export class SeedingService implements OnModuleInit {
       fromTypeBalance: TypeBalance.AVAILABLE,
       toTypeBalance: TypeBalance.LOCKED,
       amount: newOrder.amount,
-      type: TransactionType.PAYMENT,
+      type: TransactionType.TRANSFER,
       status: TransactionStatus.COMPLETED,
     } as Transaction);
 

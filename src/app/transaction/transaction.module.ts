@@ -6,10 +6,7 @@ import { TransactionService } from './transaction.service';
 import { WalletModule } from '../wallet';
 
 @Module({
-  imports: [
-    TypeOrmModule.forFeature([Transaction, Wallet]),
-    forwardRef(() => WalletModule),
-  ],
+  imports: [TypeOrmModule.forFeature([Transaction, Wallet]), forwardRef(() => WalletModule)],
   controllers: [TransactionController],
   providers: [TransactionService],
   exports: [TransactionService],

@@ -1,5 +1,5 @@
 import { Filtering, getOrder, getWhere, Sorting } from '@/common/decorators';
-import { Wallet } from '@/common/models';
+import { Order, TransactionType, Wallet } from '@/common/models';
 import {
   BadRequestException,
   ForbiddenException,
@@ -79,7 +79,10 @@ export class WalletService {
     }
   }
 
-  async depositWallet(userId: string, depositWallet: DepositAndWithdrawTransactionDto): Promise<Wallet> {
+  async depositWallet(
+    userId: string,
+    depositWallet: DepositAndWithdrawTransactionDto,
+  ): Promise<Wallet> {
     const user = await this.userService.getUserById(userId);
     if (!user) throw new NotFoundException('Người dùng không tồn tại');
 
@@ -95,7 +98,10 @@ export class WalletService {
     return wallet;
   }
 
-  async withdrawWalletRequest(userId: string, withdrawWallet: DepositAndWithdrawTransactionDto): Promise<string> {
+  async withdrawWalletRequest(
+    userId: string,
+    withdrawWallet: DepositAndWithdrawTransactionDto,
+  ): Promise<string> {
     const user = await this.userService.getUserById(userId);
     if (!user) throw new NotFoundException('Người dùng không tồn tại');
 
@@ -111,6 +117,96 @@ export class WalletService {
     else await this.transactionService.saveWithdrawTransaction(user, wallet.id, withdrawWallet);
 
     return 'Yêu cầu rút tiền của bạn đã được tạo, xin vui lòng chờ hệ thống của chúng tôi xác nhận';
+  }
+
+  async transferFromWalletToWalletForSell(
+    userId: string,
+    order: Order,
+    amount: number,
+  ): Promise<void> {
+    if (amount <= 0) {
+      throw new BadRequestException('Số tiền phải lớn hơn 0');
+    }
+    const fromWallet = await this.getWalletByUserId(userId);
+    if (!fromWallet) throw new NotFoundException('Không tìm thấy ví hợp lệ');
+    const toWallet = await this.getWalletByUserId(order.shop.user.id);
+    if (!toWallet) throw new NotFoundException('Không tìm thấy ví hợp lệ');
+
+    const fromUser = await this.userService.getUserById(userId);
+    if (!fromUser) throw new NotFoundException('Không tìm thấy người dùng');
+    const toUser = await this.userService.getUserById(order.shop.user.id);
+    if (!toUser) throw new NotFoundException('Không tìm thấy người dùng');
+
+    fromWallet.availableBalance -= amount;
+    toWallet.lockedBalance += amount;
+
+    await this.walletRepository.save(fromWallet);
+    await this.walletRepository.save(toWallet);
+
+    await this.transactionService.saveTransferTransaction(
+      fromUser,
+      toUser,
+      fromWallet.id,
+      amount,
+      TransactionType.TRANSFER,
+    );
+    await this.transactionService.saveTransferTransaction(
+      fromUser,
+      toUser,
+      toWallet.id,
+      amount,
+      TransactionType.RECEIVE,
+    );
+  }
+
+  async transferFromWalletToWalletForRent(
+    userId: string,
+    order: Order,
+    amount: number,
+  ): Promise<void> {
+    if (amount <= 0) {
+      throw new BadRequestException('Số tiền phải lớn hơn 0');
+    }
+    const fromWallet = await this.getWalletByUserId(userId);
+    if (!fromWallet) throw new NotFoundException('Không tìm thấy ví hợp lệ');
+    const toWallet = await this.getWalletByUserId(order.shop.user.id);
+    if (!toWallet) throw new NotFoundException('Không tìm thấy ví hợp lệ');
+
+    const fromUser = await this.userService.getUserById(userId);
+    if (!fromUser) throw new NotFoundException('Không tìm thấy người dùng');
+    const toUser = await this.userService.getUserById(order.shop.user.id);
+    if (!toUser) throw new NotFoundException('Không tìm thấy người dùng');
+
+    fromWallet.availableBalance -= amount;
+    fromWallet.lockedBalance += (amount * 1) / 3;
+    toWallet.lockedBalance += (amount * 2) / 3;
+
+    await this.walletRepository.save(fromWallet);
+    await this.walletRepository.save(toWallet);
+
+    await this.transactionService.saveTransferTransaction(
+      fromUser,
+      toUser,
+      fromWallet.id,
+      (amount * 2) / 3,
+      TransactionType.TRANSFER,
+    );
+
+    await this.transactionService.saveTransferTransaction(
+      fromUser,
+      toUser,
+      toWallet.id,
+      (amount * 2) / 3,
+      TransactionType.RECEIVE,
+    );
+
+    await this.transactionService.saveTransferTransaction(
+      fromUser,
+      fromUser,
+      toWallet.id,
+      (amount * 1) / 3,
+      TransactionType.TRANSFER,
+    );
   }
 
   //Function for seeding data
