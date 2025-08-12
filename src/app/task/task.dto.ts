@@ -39,7 +39,7 @@ export class TaskDto {
 
   @Expose()
   @ApiProperty({ description: 'ID của mốc công việc', example: 'milestone-uuid-123' })
-  @Transform(({ obj: task }) => task.milestone.id)
+  @Transform(({ obj: task }) => task.milestone?.id ?? null)
   milestoneId: string;
 
   @Expose()

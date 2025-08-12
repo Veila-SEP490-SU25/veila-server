@@ -31,7 +31,7 @@ export class TransactionService {
     transactionDetail: DepositAndWithdrawTransactionDto,
   ): Promise<void> {
     const newTransaction = {
-      walletId,
+      wallet: { id: walletId },
       from: user.firstName + ' ' + user.middleName + ' ' + user.lastName,
       to: user.firstName + ' ' + user.middleName + ' ' + user.lastName + ' Wallet',
       fromTypeBalance: TypeBalance.AVAILABLE,
@@ -50,7 +50,7 @@ export class TransactionService {
     transactionDetail: DepositAndWithdrawTransactionDto,
   ): Promise<void> {
     const newTransaction = {
-      walletId,
+      wallet: { id: walletId },
       from: user.firstName + ' ' + user.middleName + ' ' + user.lastName + ' Wallet',
       to: user.firstName + ' ' + user.middleName + ' ' + user.lastName,
       fromTypeBalance: TypeBalance.AVAILABLE,
@@ -67,6 +67,7 @@ export class TransactionService {
     fromUser: User,
     toUser: User,
     walletId: string,
+    orderId: string,
     amount: number,
     type: TransactionType,
   ): Promise<void> {
@@ -74,7 +75,8 @@ export class TransactionService {
     const toUserName = toUser.firstName + ' ' + toUser.middleName + ' ' + toUser.lastName;
 
     const newTransaction = {
-      walletId,
+      wallet: { id: walletId },
+      order: { id: orderId },
       from: fromUserName + ' Wallet',
       to: toUserName + ' Wallet',
       fromTypeBalance: TypeBalance.AVAILABLE,
@@ -134,14 +136,15 @@ export class TransactionService {
     };
     const order = getOrder(sort);
 
-    const transactions = await this.transactionRepository.find({
+    const [transactions, count] = await this.transactionRepository.findAndCount({
       where,
       order,
       take,
       skip,
       relations: ['wallet', 'order', 'membership'],
     });
-    return [plainToInstance(TransactionDto, transactions), transactions.length];
+
+    return [plainToInstance(TransactionDto, transactions), count];
   }
 
   async getTransactionsForUser(
@@ -157,7 +160,8 @@ export class TransactionService {
       wallet: { id: walletId },
     };
     const order = getOrder(sort);
-    const transactions = await this.transactionRepository.find({
+
+    const [transactions, count] = await this.transactionRepository.findAndCount({
       where,
       order,
       take,
@@ -165,7 +169,7 @@ export class TransactionService {
       relations: ['wallet', 'order', 'membership'],
     });
 
-    return [plainToInstance(TransactionDto, transactions), transactions.length];
+    return [plainToInstance(TransactionDto, transactions), count];
   }
 
   async getTransactionById(id: string): Promise<TransactionDto> {

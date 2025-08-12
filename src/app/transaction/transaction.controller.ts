@@ -150,7 +150,7 @@ export class TransactionController {
     };
   }
 
-  @Get('my-transaction/:walletId')
+  @Get('my-transaction')
   @UseGuards(AuthGuard, RolesGuard)
   @Roles(UserRole.CUSTOMER, UserRole.SHOP)
   @ApiOperation({

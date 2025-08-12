@@ -28,7 +28,7 @@ import { DepositAndWithdrawTransactionDto } from '../transaction';
 @Controller('wallet')
 @ApiTags('Wallet Controller')
 @ApiBearerAuth()
-@ApiExtraModels(ItemResponse, ListResponse, WalletDto)
+@ApiExtraModels(ItemResponse, ListResponse, WalletDto, Wallet)
 export class WalletController {
   constructor(private readonly walletService: WalletService) {}
 
@@ -228,12 +228,9 @@ export class WalletController {
     description: `
             **Hướng dẫn sử dụng**
             
-            - Truyền id của ví điện tử trên URl.
             - Truyền dữ liệu trong body theo dạng JSON.
             - Nếu không tìm thấy ví thì trả về lỗi.
-            - TransactionType: DEPOSIT, WITHDRAW.
-            - TransactionStatus: PENDING, COMPLETED, FAILED, CANCELLED, REFUNDED.
-            - TypeBalance: available.
+            - TransactionType: WITHDRAW.
             - Trả về thông tin chi tiết đã cập nhật.
         `,
   })
@@ -243,7 +240,7 @@ export class WalletController {
         { $ref: getSchemaPath(ItemResponse) },
         {
           properties: {
-            item: { example: null, $ref: getSchemaPath(String) },
+            item: { type: 'string' },
           },
         },
       ],
