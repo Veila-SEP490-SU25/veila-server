@@ -213,6 +213,7 @@ export class ServiceController {
 - Gửi thông tin cập nhật ở phần Body.
 - Chỉ cập nhật dịch vụ thuộc về tài khoản shop đang đăng nhập.
 - Nếu không tìm thấy sẽ trả về lỗi.
+- Status gồm: AVAILABLE, UNAVAILABLE, DRAFT
 `,
   })
   @ApiOkResponse({

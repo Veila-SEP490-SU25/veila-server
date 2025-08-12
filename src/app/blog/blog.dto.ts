@@ -56,6 +56,10 @@ export class ListBlogDto {
   @Expose()
   @Type(() => ProductCategoryDto)
   category: ProductCategoryDto;
+
+  @Expose()
+  @ApiProperty({ description: 'Ngày tạo blog', example: '2023-01-01T00:00:00Z' })
+  createdAt: Date;
 }
 
 export class ItemBlogDto {
@@ -82,4 +86,8 @@ export class ItemBlogDto {
   @Expose()
   @Type(() => ProductCategoryDto)
   category: ProductCategoryDto;
+
+  @Expose()
+  @ApiProperty({ description: 'Ngày tạo blog', example: '2023-01-01T00:00:00Z' })
+  createdAt: Date;
 }

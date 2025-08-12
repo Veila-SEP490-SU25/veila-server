@@ -1,9 +1,15 @@
 import { ServiceStatus } from '@/common/models';
 import { ApiProperty } from '@nestjs/swagger';
-import { Expose, Transform, Type } from 'class-transformer';
+import { Expose, Type } from 'class-transformer';
 import { IsEnum, IsOptional, IsString } from 'class-validator';
 import { ProductUserDto } from '@/app/user/user.dto';
 import { ProductCategoryDto } from '@/app/category/category.dto';
+
+export class ServiceUsernameDto {
+  @Expose()
+  @ApiProperty({ description: 'Tên người dùng', example: 'customer123' })
+  username: string;
+}
 
 export class ServiceFeedbacksDto {
   @Expose()
@@ -12,8 +18,8 @@ export class ServiceFeedbacksDto {
 
   @Expose()
   @ApiProperty({ description: 'Tên người dùng đánh giá', example: 'customer123' })
-  @Transform(({ obj: feedback }) => feedback.customer.username)
-  username: string;
+  @Type(() => ServiceUsernameDto)
+  customer: ServiceUsernameDto;
 
   @Expose()
   @ApiProperty({ description: 'Nội dung đánh giá', example: 'Váy rất đẹp!' })
@@ -29,26 +35,42 @@ export class ServiceFeedbacksDto {
 }
 
 export class CUServiceDto {
-  @ApiProperty()
+  @ApiProperty({
+    description: 'ID danh mục dịch vụ',
+    example: 'category-uuid-123',
+  })
   @IsOptional()
   @IsString()
   categoryId: string | null;
 
-  @ApiProperty()
+  @ApiProperty({
+    description: 'Tên dịch vụ',
+    example: 'May váy cưới theo yêu cầu',
+  })
   @IsString()
   name: string;
 
-  @ApiProperty()
+  @ApiProperty({
+    description: 'Mô tả dịch vụ',
+    example: 'Dịch vụ may váy cưới theo yêu cầu',
+  })
   @IsOptional()
   @IsString()
   description: string | null;
 
-  @ApiProperty()
+  @ApiProperty({
+    description: 'Ảnh dịch vụ (nếu có)',
+    example: 'https://storage.veila.com/services/img123.jpg',
+  })
   @IsOptional()
   @IsString()
   images: string | null;
 
-  @ApiProperty()
+  @ApiProperty({
+    enum: ServiceStatus,
+    description: 'Trạng thái dịch vụ',
+    example: ServiceStatus.AVAILABLE,
+  })
   @IsEnum(ServiceStatus)
   status: ServiceStatus;
 }

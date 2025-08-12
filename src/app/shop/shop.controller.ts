@@ -145,8 +145,28 @@ export class ShopController {
   @Patch('me')
   @UseGuards(AuthGuard)
   @Roles(UserRole.SHOP)
-  @ApiOperation({})
-  @ApiOkResponse({})
+  @ApiOperation({
+    summary: 'Cập nhật thông tin profile shop',
+    description: `**Hướng dẫn sử dụng:**
+    - Truyền thông tin shop trong body.
+    - Chỉ dành cho người dùng có vai trò SHOP.
+    - Nếu cập nhật thành công, sẽ trả về thông báo và mã trạng thái OK (200).
+    - Nếu có lỗi, sẽ trả về mã trạng thái BAD_REQUEST (400) hoặc NOT_FOUND (404).
+    - Cần đảm bảo các trường bắt buộc được cung cấp.`,
+  })
+  @ApiOkResponse({
+    description: 'Cập nhật thông tin shop thành công',
+    schema: {
+      allOf: [
+        { $ref: getSchemaPath(ItemResponse) },
+        {
+          properties: {
+            item: { type: 'null' },
+          },
+        },
+      ],
+    },
+  })
   async updateShopProfile(
     @UserId() userId: string,
     @Body() body: UpdateShopDto,

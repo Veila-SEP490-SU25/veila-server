@@ -217,6 +217,9 @@ export class ShopService {
     const existingShop = await this.shopRepository.findOne({
       where,
       withDeleted: true,
+      relations: {
+        license: true,
+      },
     });
     if (!existingShop) throw new NotFoundException('Không tìm thấy cửa hàng phù hợp');
     return existingShop;
