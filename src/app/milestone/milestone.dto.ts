@@ -49,7 +49,7 @@ export class MilestoneDto {
 
   @Expose()
   @ApiProperty({ description: 'ID của đơn hàng', example: 'order-uuid-123' })
-  @Transform(({ obj: milestone }) => milestone.order.id)
+  @Transform(({ obj: milestone }) => milestone.order?.id ?? null)
   orderId: string;
 
   @Expose()

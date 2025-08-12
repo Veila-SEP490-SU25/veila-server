@@ -23,12 +23,12 @@ export class OrderAccessoriesDetailsService {
     accessoriesDetails: CUOrderAccessoriesDetailDto[],
   ): Promise<void> {
     const orderAccessoryDetails = accessoriesDetails.map(async (accessoriesDetail) => ({
-      orderId,
-      accessoryId: accessoriesDetail.accessoryId,
-      quantity: accessoriesDetail.quantity,
+      order: { id: orderId },
+      accessory: { id: accessoriesDetail.accessoryId },
+      quantity: Number(accessoriesDetail.quantity),
       price:
-        (await this.getAccessoryById(accessoriesDetail.accessoryId)).sellPrice *
-        accessoriesDetail.quantity,
+        Number((await this.getAccessoryById(accessoriesDetail.accessoryId)).sellPrice) *
+        Number(accessoriesDetail.quantity),
     }));
     await this.orderAccessoryDetailRepository.save(
       plainToInstance(OrderAccessoryDetail, orderAccessoryDetails),
@@ -112,5 +112,12 @@ export class OrderAccessoriesDetailsService {
       order,
     });
     return orderAccessoriesDetails;
+  }
+
+  async getOrderAccessoryDetailsByOrderId(orderId: string): Promise<OrderAccessoryDetail[]> {
+    return await this.orderAccessoryDetailRepository.find({
+      where: { order: { id: orderId } },
+      relations: ['order', 'accessory'],
+    });
   }
 }

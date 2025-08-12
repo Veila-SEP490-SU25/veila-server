@@ -178,9 +178,10 @@ export class OrderService {
         OrderStatus.CANCELLED,
       ]),
     };
+
     const order = getOrder(sort);
 
-    const orders = await this.orderRepository.find({
+    const [orders, count] = await this.orderRepository.findAndCount({
       where,
       order,
       take,
@@ -188,13 +189,7 @@ export class OrderService {
       relations: ['customer', 'shop'],
     });
 
-    return [plainToInstance(OrderDto, orders), orders.length];
-    // return await this.orderRepository.findAndCount({
-    //   where,
-    //   order,
-    //   take,
-    //   skip,
-    // });
+    return [plainToInstance(OrderDto, orders), count];
   }
 
   async getOrdersForCustomer(
@@ -215,8 +210,10 @@ export class OrderService {
         OrderStatus.CANCELLED,
       ]),
     };
+
     const order = getOrder(sort);
-    const orders = await this.orderRepository.find({
+
+    const [orders, count] = await this.orderRepository.findAndCount({
       where,
       order,
       take,
@@ -224,14 +221,7 @@ export class OrderService {
       relations: ['customer', 'shop'],
     });
 
-    return [plainToInstance(OrderDto, orders), orders.length];
-
-    // return await this.orderRepository.findAndCount({
-    //   where,
-    //   order,
-    //   take,
-    //   skip,
-    // });
+    return [plainToInstance(OrderDto, orders), count];
   }
 
   async getOrdersForShop(
@@ -252,9 +242,10 @@ export class OrderService {
         OrderStatus.CANCELLED,
       ]),
     };
+
     const order = getOrder(sort);
 
-    const orders = await this.orderRepository.find({
+    const [orders, count] = await this.orderRepository.findAndCount({
       where,
       order,
       take,
@@ -262,13 +253,7 @@ export class OrderService {
       relations: ['customer', 'shop'],
     });
 
-    return [plainToInstance(OrderDto, orders), orders.length];
-    // return await this.orderRepository.findAndCount({
-    //   where,
-    //   order,
-    //   take,
-    //   skip,
-    // });
+    return [plainToInstance(OrderDto, orders), count];
   }
 
   async getOrderById(id: string): Promise<OrderDto> {
@@ -297,7 +282,7 @@ export class OrderService {
       //Đây là luồng mua váy
 
       //tính tiền váy
-      const dressPrice = dress.sellPrice;
+      const dressPrice = Number(dress.sellPrice);
 
       //tính tiền phụ kiện
       let accessoriesPrice = 0;
@@ -306,7 +291,7 @@ export class OrderService {
           const item = await this.orderAccessoriesDetailsService.getAccessoryById(
             accessory.accessoryId,
           );
-          accessoriesPrice += item.sellPrice * accessory.quantity;
+          accessoriesPrice += Number(item.sellPrice) * Number(accessory.quantity);
         }),
       );
 
@@ -334,7 +319,7 @@ export class OrderService {
       //Đây là luồng thuê váy
 
       //tính tiền váy
-      const dressPrice = dress.rentalPrice;
+      const dressPrice = Number(dress.rentalPrice);
 
       //tính tiền phụ kiện
       let accessoriesPrice = 0;
@@ -343,7 +328,7 @@ export class OrderService {
           const item = await this.orderAccessoriesDetailsService.getAccessoryById(
             accessory.accessoryId,
           );
-          accessoriesPrice += item.rentalPrice * accessory.quantity;
+          accessoriesPrice += Number(item.rentalPrice) * Number(accessory.quantity);
         }),
       );
 
@@ -583,20 +568,29 @@ export class OrderService {
       if (order.status !== OrderStatus.PENDING)
         throw new MethodNotAllowedException('Đơn hàng đã hết hạn');
       //Luồng mua cần thanh toán 100%, sau đó lock lại ở ví của shop
-      if (!this.checkWalletBalanceIsEnough(userId, order.amount))
+      if (!this.checkWalletBalanceIsEnough(userId, Number(order.amount)))
         throw new BadRequestException('Không đủ số dư trong ví, vui lòng nạp tiền');
-      await this.walletService.transferFromWalletToWalletForSell(userId, order, order.amount);
+      await this.walletService.transferFromWalletToWalletForSell(
+        userId,
+        order,
+        Number(order.amount),
+      );
 
       order.status = OrderStatus.IN_PROCESS;
       return await this.orderRepository.save(order);
     } else if (order.type === OrderType.RENT) {
       if (order.status !== OrderStatus.PENDING)
         throw new MethodNotAllowedException('Đơn hàng đã hết hạn');
-      //Luồng thuê cần thanh toán 150%, lock 100% ở ví của shop, lock 50% ở ví của khách
-      const rentAmount = (order.amount * 150) / 100;
-      if (!this.checkWalletBalanceIsEnough(userId, rentAmount))
+      //Luồng thuê thanh toán như luồng mua, sau đó chuyển số tiền thuê qua cho shop dạng lock, số còn lại lock
+      const deposit = await this.calculateSellPriceForOrder(orderId);
+      if (!this.checkWalletBalanceIsEnough(userId, deposit))
         throw new BadRequestException('Không đủ số dư trong ví, vui lòng nạp tiền');
-      await this.walletService.transferFromWalletToWalletForRent(userId, order, rentAmount);
+      await this.walletService.transferFromWalletToWalletForRent(
+        userId,
+        order,
+        Number(order.amount),
+        deposit,
+      );
 
       order.status = OrderStatus.IN_PROCESS;
       return await this.orderRepository.save(order);
@@ -641,7 +635,7 @@ export class OrderService {
 
   private async checkWalletBalanceIsEnough(userId: string, amount: number): Promise<boolean> {
     const wallet = await this.walletService.getWalletByUserId(userId);
-    return wallet.availableBalance >= amount;
+    return Number(wallet.availableBalance) >= amount;
   }
 
   async getOrderByIdV2(id: string): Promise<Order> {
@@ -655,5 +649,25 @@ export class OrderService {
 
   async createMilestoneForSeeding(data: Milestone): Promise<Milestone> {
     return await this.milestoneService.createMilestoneForSeeding(data);
+  }
+
+  private async calculateSellPriceForOrder(orderId: string): Promise<number> {
+    const orderDressDetail =
+      await this.orderDressDetailsService.getOrderDressDetailByOrderId(orderId);
+    if (!orderDressDetail)
+      throw new NotFoundException('Không tìm thấy chi tiết váy cưới trong đơn hàng');
+    const orderAccessoryDetails =
+      await this.orderAccessoriesDetailsService.getOrderAccessoryDetailsByOrderId(orderId);
+    if (!orderAccessoryDetails)
+      throw new NotFoundException('Không tìm thấy chi tiết phụ kiện trong đơn hàng');
+    const dressPrice = Number(orderDressDetail.price);
+    let accessoriesPrice = 0;
+    await Promise.all(
+      orderAccessoryDetails.map(async (accessoryDetail) => {
+        accessoriesPrice += accessoryDetail.price;
+      }),
+    );
+
+    return dressPrice + accessoriesPrice;
   }
 }
