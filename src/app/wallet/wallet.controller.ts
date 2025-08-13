@@ -20,7 +20,7 @@ import {
   ApiTags,
   getSchemaPath,
 } from '@nestjs/swagger';
-import { DepositViaPayOSResponse, WalletDto } from './wallet.dto';
+import { DepositViaPayOSDto, DepositViaPayOSResponse, WalletDto } from './wallet.dto';
 import {
   Filtering,
   FilteringParams,
@@ -196,7 +196,7 @@ export class WalletController {
   })
   async depositWallet(
     @UserId() userId: string,
-    @Body() depositWallet: DepositAndWithdrawTransactionDto,
+    @Body() depositWallet: DepositViaPayOSDto,
   ): Promise<ItemResponse<DepositViaPayOSResponse>> {
     const paymentLink = await this.walletService.depositWallet(userId, depositWallet);
     return {
