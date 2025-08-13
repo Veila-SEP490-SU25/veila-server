@@ -44,7 +44,10 @@ export class WalletService {
       skip,
       relations: ['user'],
     });
-
+    for(const wallet of wallets) {
+      wallet.availableBalance = Number(wallet.availableBalance);
+      wallet.lockedBalance = Number(wallet.lockedBalance);
+    }
     return [plainToInstance(WalletDto, wallets), count];
   }
 
@@ -56,6 +59,9 @@ export class WalletService {
       relations: ['user'],
     });
     if (!wallet) throw new NotFoundException('Không tìm thấy ví điện tử của người dùng này');
+
+    wallet.availableBalance = Number(wallet.availableBalance);
+    wallet.lockedBalance = Number(wallet.lockedBalance);
     return plainToInstance(WalletDto, wallet);
   }
 
