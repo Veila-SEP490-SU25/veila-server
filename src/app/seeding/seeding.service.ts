@@ -59,8 +59,9 @@ import {
   UserRole,
   UserStatus,
   Wallet,
-  ComplaintStatus,
-  Complaint,
+  OrderServiceDetail,
+  // ComplaintStatus,
+  // Complaint,
 } from '@/common/models';
 import { Faker, faker, vi } from '@faker-js/faker';
 import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
@@ -73,6 +74,15 @@ export class SeedingService implements OnModuleInit {
   });
 
   private readonly customFaker: Faker;
+  private readonly customerEmail: string;
+  private readonly shop1Email: string;
+  private readonly shop2Email: string;
+  private readonly shop3Email: string;
+  private readonly shop4Email: string;
+  private readonly shop5Email: string;
+  private readonly superAdminEmail: string;
+  private readonly adminEmail: string;
+  private readonly systemOperatorEmail: string;
 
   constructor(
     private readonly configService: ConfigService,
@@ -101,38 +111,76 @@ export class SeedingService implements OnModuleInit {
     this.customFaker = new Faker({
       locale: vi,
     });
+
+    const customerEmail = this.configService.get<string>('SEED_CUSTOMER_EMAIL');
+    if (!customerEmail) {
+      this.logger.error('SEED_CUSTOMER_EMAIL is not set in the environment variables.');
+      throw new Error('SEED_CUSTOMER_EMAIL is not set in the environment variables.');
+    }
+    this.customerEmail = customerEmail;
+
+    const shop1Email = this.configService.get<string>('SEED_SHOP_1_EMAIL');
+    const shop2Email = this.configService.get<string>('SEED_SHOP_2_EMAIL');
+    const shop3Email = this.configService.get<string>('SEED_SHOP_3_EMAIL');
+    const shop4Email = this.configService.get<string>('SEED_SHOP_4_EMAIL');
+    const shop5Email = this.configService.get<string>('SEED_SHOP_5_EMAIL');
+    if (!shop1Email || !shop2Email || !shop3Email || !shop4Email || !shop5Email) {
+      this.logger.error('One or more shop emails are not set in the environment variables.');
+      throw new Error('One or more shop emails are not set in the environment variables.');
+    }
+    this.shop1Email = shop1Email;
+    this.shop2Email = shop2Email;
+    this.shop3Email = shop3Email;
+    this.shop4Email = shop4Email;
+    this.shop5Email = shop5Email;
+
+    const superAdminEmail = this.configService.get<string>('SEED_SUPER_ADMIN_EMAIL');
+    const adminEmail = this.configService.get<string>('SEED_ADMIN_EMAIL');
+    const systemOperatorEmail = this.configService.get<string>('SEED_SYSTEM_OPERATOR_EMAIL');
+
+    if (!superAdminEmail || !adminEmail || !systemOperatorEmail) {
+      this.logger.error(
+        'SEED_SUPER_ADMIN_EMAIL, SEED_ADMIN_EMAIL, or SEED_SYSTEM_OPERATOR_EMAIL is not set in the environment variables.',
+      );
+      throw new Error(
+        'SEED_SUPER_ADMIN_EMAIL, SEED_ADMIN_EMAIL, or SEED_SYSTEM_OPERATOR_EMAIL is not set in the environment variables.',
+      );
+    }
+    this.superAdminEmail = superAdminEmail;
+    this.adminEmail = adminEmail;
+    this.systemOperatorEmail = systemOperatorEmail;
   }
 
   async onModuleInit() {
     this.logger.log('Seeding module initialized. Starting seeding process...');
     Promise.all([await this.seedContracts(), await this.seedSubscriptions()])
       .then(async () => {
+        await this.seedSystemAccounts();
         await this.seedUsersRoleCustomer();
         await this.seedUsersRoleShop();
-        await this.seedSystemAccounts();
       })
       .then(async () => {
+        await this.seedWallets();
         await this.seedShops();
         await this.seedCategories();
-        await this.seedWallets();
       })
       .then(async () => {
+        await this.seedLicenses();
         await this.seedMemberships();
         await this.seedDresses();
         await this.seedServices();
         await this.seedAccessories();
         await this.seedBlogs();
-        await this.seedLicenses();
       })
       .then(async () => {
         await this.seedSubmitRequests();
         await this.seedSellOrders();
         await this.seedRentOrders();
-        await this.seedInProgressSellOrders();
+        await this.seedCustomOrders();
       })
       .then(async () => {
         await this.seedFeedbacks();
-        await this.seedComplaintsForOrder();
+        // await this.seedComplaintsForOrder();
       });
   }
 
@@ -296,7 +344,7 @@ export class SeedingService implements OnModuleInit {
     }
 
     const newContract = {
-      title: `Hợp đồng ${type}`,
+      title: `Điều khoản ${type}`,
       content,
       contractType: type,
       effectiveFrom: new Date(),
@@ -308,7 +356,7 @@ export class SeedingService implements OnModuleInit {
   }
 
   private async seedSubscriptions() {
-    const subscriptions = await this.subscriptionService.findAll();
+    const subscriptions = await this.subscriptionService.getAllForSeeding();
     if (subscriptions.length >= 3) {
       this.logger.log(`Enough data available for subscription. Skipping seeding`);
       return;
@@ -340,27 +388,21 @@ export class SeedingService implements OnModuleInit {
     const newSubscription = {
       name: `Gói ${duration} ngày`,
       description: `Gói dịch vụ kéo dài ${duration} ngày`,
+      images: this.customFaker.image.url(),
       duration,
-      amount: this.customFaker.number.int({ min: 1000, max: 10000 }),
+      amount: duration < 30 ? 10000 : duration < 365 ? 50000 : 100000,
     } as Subscription;
 
     await this.subscriptionService.create(newSubscription);
     this.logger.log(`Subscription of ${duration} days created successfully!`);
   }
 
-  private async seedUsersRoleShop() {
-    const customers = await this.userService.getAll();
-    if (customers.filter((c) => c.role === UserRole.SHOP).length >= 5) {
-      this.logger.log(`Enough data available for shop user. Skipping seeding`);
-      return;
-    }
+  private async seedSystemAccounts() {
     try {
       await Promise.all([
-        await this.seedAccounts('shop.1@veila.studio', UserRole.SHOP),
-        await this.seedAccounts('shop.2@veila.studio', UserRole.SHOP),
-        await this.seedAccounts('shop.3@veila.studio', UserRole.SHOP),
-        await this.seedAccounts('shop.4@veila.studio', UserRole.SHOP),
-        await this.seedAccounts('shop.5@veila.studio', UserRole.SHOP),
+        this.seedAccounts(this.superAdminEmail, UserRole.SUPER_ADMIN),
+        this.seedAccounts(this.adminEmail, UserRole.ADMIN),
+        this.seedAccounts(this.systemOperatorEmail, UserRole.STAFF),
       ]);
       this.logger.log('Seeding process completed successfully!');
     } catch (error) {
@@ -370,19 +412,13 @@ export class SeedingService implements OnModuleInit {
   }
 
   private async seedUsersRoleCustomer() {
-    const customers = await this.userService.getAll();
-    if (customers.filter((c) => c.role === UserRole.CUSTOMER).length >= 5) {
+    const customers = await this.userService.getAllForSeeding();
+    if (customers.filter((c) => c.role === UserRole.CUSTOMER).length >= 1) {
       this.logger.log(`Enough data available for customer user. Skipping seeding`);
       return;
     }
     try {
-      await Promise.all([
-        await this.seedAccounts('customer.1@veila.studio', UserRole.CUSTOMER),
-        await this.seedAccounts('customer.2@veila.studio', UserRole.CUSTOMER),
-        await this.seedAccounts('customer.3@veila.studio', UserRole.CUSTOMER),
-        await this.seedAccounts('customer.4@veila.studio', UserRole.CUSTOMER),
-        await this.seedAccounts('customer.5@veila.studio', UserRole.CUSTOMER),
-      ]);
+      await Promise.all([await this.seedAccounts(this.customerEmail, UserRole.CUSTOMER)]);
       this.logger.log('Seeding process completed successfully!');
     } catch (error) {
       this.logger.error('Seeding process failed.', error);
@@ -390,25 +426,19 @@ export class SeedingService implements OnModuleInit {
     }
   }
 
-  private async seedSystemAccounts() {
-    const superAdminEmail = this.configService.get<string>('SEED_SUPER_ADMIN_EMAIL');
-    const adminEmail = this.configService.get<string>('SEED_ADMIN_EMAIL');
-    const systemOperatorEmail = this.configService.get<string>('SEED_SYSTEM_OPERATOR_EMAIL');
-
-    if (!superAdminEmail || !adminEmail || !systemOperatorEmail) {
-      this.logger.error(
-        'SEED_SUPER_ADMIN_EMAIL, SEED_ADMIN_EMAIL, or SEED_SYSTEM_OPERATOR_EMAIL is not set in the environment variables.',
-      );
-      throw new Error(
-        'SEED_SUPER_ADMIN_EMAIL, SEED_ADMIN_EMAIL, or SEED_SYSTEM_OPERATOR_EMAIL is not set in the environment variables.',
-      );
+  private async seedUsersRoleShop() {
+    const customers = await this.userService.getAllForSeeding();
+    if (customers.filter((c) => c.role === UserRole.SHOP).length >= 5) {
+      this.logger.log(`Enough data available for shop user. Skipping seeding`);
+      return;
     }
-
     try {
       await Promise.all([
-        this.seedAccounts(superAdminEmail, UserRole.SUPER_ADMIN),
-        this.seedAccounts(adminEmail, UserRole.ADMIN),
-        this.seedAccounts(systemOperatorEmail, UserRole.STAFF),
+        await this.seedAccounts(this.shop1Email, UserRole.SHOP),
+        await this.seedAccounts(this.shop2Email, UserRole.SHOP),
+        await this.seedAccounts(this.shop3Email, UserRole.SHOP),
+        await this.seedAccounts(this.shop4Email, UserRole.SHOP),
+        await this.seedAccounts(this.shop5Email, UserRole.SHOP),
       ]);
       this.logger.log('Seeding process completed successfully!');
     } catch (error) {
@@ -471,10 +501,9 @@ export class SeedingService implements OnModuleInit {
 
     // Tạo user mới với thông tin đầy đủ
     const newUser = {
-      email,
       username: this.generateVietnameseUsername(fullName, role),
+      email,
       password: await this.passwordService.hashPassword(defaultPassword),
-      role,
       firstName,
       middleName,
       lastName,
@@ -486,9 +515,7 @@ export class SeedingService implements OnModuleInit {
             ? `+84${this.customFaker.string.numeric(1)}22${this.customFaker.string.numeric(6)}`
             : email.includes('staff')
               ? `+84${this.customFaker.string.numeric(1)}33${this.customFaker.string.numeric(6)}`
-              : email.includes('super.admin')
-                ? `+84${this.customFaker.string.numeric(1)}44${this.customFaker.string.numeric(6)}`
-                : null,
+              : `+84${this.customFaker.string.numeric(1)}44${this.customFaker.string.numeric(6)}`,
       address: this.customFaker.datatype.boolean()
         ? `${faker.location.streetAddress()}, ${faker.location.city()}`
         : null,
@@ -501,10 +528,11 @@ export class SeedingService implements OnModuleInit {
       coverUrl: this.customFaker.datatype.boolean()
         ? this.customFaker.image.url({ width: 1200, height: 400 })
         : null,
+      role,
       status: UserStatus.ACTIVE,
+      reputation: 100,
       isVerified: true,
       isIdentified: true,
-      images: null,
       contract,
     } as User;
 
@@ -512,6 +540,66 @@ export class SeedingService implements OnModuleInit {
     this.logger.log(
       `Account created successfully! Email: ${email}, Username: ${createdUser.username}, Role: ${role}`,
     );
+  }
+
+  private async seedWallets() {
+    const wallets = await this.walletService.getAllForSeeding();
+    if (wallets.length >= 9) {
+      this.logger.log(`Enough data available for wallet. Skipping seeding`);
+      return;
+    }
+
+    try {
+      Promise.all([
+        await this.seedWallet(this.superAdminEmail),
+        await this.seedWallet(this.adminEmail),
+        await this.seedWallet(this.systemOperatorEmail),
+        await this.seedWallet(this.customerEmail),
+        await this.seedWallet(this.shop1Email),
+        await this.seedWallet(this.shop2Email),
+        await this.seedWallet(this.shop3Email),
+        await this.seedWallet(this.shop4Email),
+        await this.seedWallet(this.shop5Email),
+      ]);
+      this.logger.log('Seeding process completed successfully!');
+    } catch (error) {
+      this.logger.error('Seeding wallets failed.', error);
+      throw new Error('Seeding wallets failed.');
+    }
+  }
+
+  private async seedWallet(email: string) {
+    this.logger.log(`Seeding wallet with email: ${email}`);
+    const bin = this.configService.get<string>('DEFAULT_BANK_BIN');
+    const bankNumber = this.configService.get<string>('DEFAULT_BANK_NUMBER');
+
+    if (!bin || !bankNumber) {
+      this.logger.error('DEFAULT_BANK_BIN is not set in the environment variables.');
+      throw new Error('DEFAULT_BANK_NUMBER is not set in the environment variables.');
+    }
+
+    const user = await this.userService.getByEmail(email);
+    if (!user) {
+      this.logger.warn(`User with email ${email} not found. Skipping seeding wallet.`);
+      return;
+    }
+
+    const existingWallet = await this.walletService.findOneByUserId(user.id);
+    if (existingWallet) {
+      this.logger.warn(`Wallet for user ${user.email} already exists. Skipping seeding.`);
+      return;
+    }
+
+    const newWallet = {
+      user,
+      availableBalance: 100000000,
+      lockedBalance: 100000000,
+      bin,
+      bankNumber,
+    } as Wallet;
+
+    await this.walletService.create(newWallet);
+    this.logger.log(`Wallet created successfully for user: ${user.email}`);
   }
 
   private async seedShops() {
@@ -522,11 +610,11 @@ export class SeedingService implements OnModuleInit {
     }
     try {
       Promise.all([
-        await this.seedShop(1),
-        await this.seedShop(2),
-        await this.seedShop(3),
-        await this.seedShop(4),
-        await this.seedShop(5),
+        await this.seedShop(this.shop1Email),
+        await this.seedShop(this.shop2Email),
+        await this.seedShop(this.shop3Email),
+        await this.seedShop(this.shop4Email),
+        await this.seedShop(this.shop5Email),
       ]);
       this.logger.log('Seeding process completed successfully!');
     } catch (error) {
@@ -535,10 +623,10 @@ export class SeedingService implements OnModuleInit {
     }
   }
 
-  private async seedShop(shopNumber: number) {
-    const user = await this.userService.getByEmail(`shop.${shopNumber}@veila.studio`);
+  private async seedShop(email: string) {
+    const user = await this.userService.getByEmail(email);
     if (!user) {
-      this.logger.warn(`User role Shop ${shopNumber} not exists. Skipping seeding shop.`);
+      this.logger.warn(`User role Shop ${email} not exists. Skipping seeding shop.`);
       return;
     }
     const contract = await this.contractService.findOne(ContractType.SHOP);
@@ -558,6 +646,7 @@ export class SeedingService implements OnModuleInit {
       logoUrl: this.customFaker.image.avatar(),
       coverUrl: this.customFaker.image.url(),
       status: ShopStatus.ACTIVE,
+      reputation: 100,
       isVerified: true,
       contract,
     } as Shop;
@@ -576,26 +665,26 @@ export class SeedingService implements OnModuleInit {
     }
     try {
       Promise.all([
-        await this.seedCategory(1, CategoryType.ACCESSORY),
-        await this.seedCategory(2, CategoryType.ACCESSORY),
-        await this.seedCategory(3, CategoryType.ACCESSORY),
-        await this.seedCategory(4, CategoryType.ACCESSORY),
-        await this.seedCategory(5, CategoryType.ACCESSORY),
-        await this.seedCategory(1, CategoryType.SERVICE),
-        await this.seedCategory(2, CategoryType.SERVICE),
-        await this.seedCategory(3, CategoryType.SERVICE),
-        await this.seedCategory(4, CategoryType.SERVICE),
-        await this.seedCategory(5, CategoryType.SERVICE),
-        await this.seedCategory(1, CategoryType.DRESS),
-        await this.seedCategory(2, CategoryType.DRESS),
-        await this.seedCategory(3, CategoryType.DRESS),
-        await this.seedCategory(4, CategoryType.DRESS),
-        await this.seedCategory(5, CategoryType.DRESS),
-        await this.seedCategory(1, CategoryType.BLOG),
-        await this.seedCategory(2, CategoryType.BLOG),
-        await this.seedCategory(3, CategoryType.BLOG),
-        await this.seedCategory(4, CategoryType.BLOG),
-        await this.seedCategory(5, CategoryType.BLOG),
+        await this.seedCategory(this.shop1Email, CategoryType.ACCESSORY),
+        await this.seedCategory(this.shop2Email, CategoryType.ACCESSORY),
+        await this.seedCategory(this.shop3Email, CategoryType.ACCESSORY),
+        await this.seedCategory(this.shop4Email, CategoryType.ACCESSORY),
+        await this.seedCategory(this.shop5Email, CategoryType.ACCESSORY),
+        await this.seedCategory(this.shop1Email, CategoryType.SERVICE),
+        await this.seedCategory(this.shop2Email, CategoryType.SERVICE),
+        await this.seedCategory(this.shop3Email, CategoryType.SERVICE),
+        await this.seedCategory(this.shop4Email, CategoryType.SERVICE),
+        await this.seedCategory(this.shop5Email, CategoryType.SERVICE),
+        await this.seedCategory(this.shop1Email, CategoryType.DRESS),
+        await this.seedCategory(this.shop2Email, CategoryType.DRESS),
+        await this.seedCategory(this.shop3Email, CategoryType.DRESS),
+        await this.seedCategory(this.shop4Email, CategoryType.DRESS),
+        await this.seedCategory(this.shop5Email, CategoryType.DRESS),
+        await this.seedCategory(this.shop1Email, CategoryType.BLOG),
+        await this.seedCategory(this.shop2Email, CategoryType.BLOG),
+        await this.seedCategory(this.shop3Email, CategoryType.BLOG),
+        await this.seedCategory(this.shop4Email, CategoryType.BLOG),
+        await this.seedCategory(this.shop5Email, CategoryType.BLOG),
       ]);
       this.logger.log('Seeding process completed successfully!');
     } catch (error) {
@@ -604,10 +693,10 @@ export class SeedingService implements OnModuleInit {
     }
   }
 
-  private async seedCategory(shopNumber: number, type: CategoryType) {
-    const user = await this.userService.getByEmail(`shop.${shopNumber}@veila.studio`);
+  private async seedCategory(email: string, type: CategoryType) {
+    const user = await this.userService.getByEmail(email);
     if (!user) {
-      this.logger.warn(`User role Shop ${shopNumber} not exists. Skipping seeding category.`);
+      this.logger.warn(`User role Shop ${email} not exists. Skipping seeding category.`);
       return;
     }
     this.logger.log(`Seeding category with email: ${user.email}`);
@@ -616,7 +705,6 @@ export class SeedingService implements OnModuleInit {
       user,
       type,
       name: type.toString().toLowerCase(),
-      description: type.toString(),
     } as Category;
 
     const createdCategory = await this.categoryService.create(newCategory);
@@ -625,59 +713,46 @@ export class SeedingService implements OnModuleInit {
     );
   }
 
-  private async seedWallets() {
-    const wallets = await this.walletService.findAll();
-    if (wallets.length >= 13) {
-      this.logger.log(`Enough data available for wallet. Skipping seeding`);
+  private async seedLicenses() {
+    const licenses = await this.shopService.getAllLicenses();
+    if (licenses.length >= 5) {
+      this.logger.log(`Enough data available for license. Skipping seeding`);
       return;
     }
-
     try {
       Promise.all([
-        await this.seedWallet('super.admin@veila.studio'),
-        await this.seedWallet('admin@veila.studio'),
-        await this.seedWallet('staff@veila.studio'),
-        await this.seedWallet('customer.1@veila.studio'),
-        await this.seedWallet('customer.2@veila.studio'),
-        await this.seedWallet('customer.3@veila.studio'),
-        await this.seedWallet('customer.4@veila.studio'),
-        await this.seedWallet('customer.5@veila.studio'),
-        await this.seedWallet('shop.1@veila.studio'),
-        await this.seedWallet('shop.2@veila.studio'),
-        await this.seedWallet('shop.3@veila.studio'),
-        await this.seedWallet('shop.4@veila.studio'),
-        await this.seedWallet('shop.5@veila.studio'),
+        await this.seedLicense(this.shop1Email),
+        await this.seedLicense(this.shop2Email),
+        await this.seedLicense(this.shop3Email),
+        await this.seedLicense(this.shop4Email),
+        await this.seedLicense(this.shop5Email),
       ]);
       this.logger.log('Seeding process completed successfully!');
     } catch (error) {
-      this.logger.error('Seeding wallets failed.', error);
-      throw new Error('Seeding wallets failed.');
+      this.logger.error('Seeding process failed.', error);
+      throw new Error('Seeding process failed.');
     }
   }
 
-  private async seedWallet(email: string) {
-    this.logger.log(`Seeding wallet with email: ${email}`);
-
-    const user = await this.userService.getByEmail(email);
-    if (!user) {
-      this.logger.warn(`User with email ${email} not found. Skipping seeding wallet.`);
+  private async seedLicense(email: string) {
+    const shop = await this.shopService.getByUserEmail(email);
+    if (!shop) {
+      this.logger.warn(`Shop with email ${email} not found. Skipping seeding license.`);
       return;
     }
-
-    const existingWallet = await this.walletService.findOneByUserId(user.id);
-    if (existingWallet) {
-      this.logger.warn(`Wallet for user ${user.email} already exists. Skipping seeding.`);
+    this.logger.log(`Seeding license for shop: ${shop.name}`);
+    const existingLicense = await this.shopService.getLicenseByShopId(shop.id);
+    if (existingLicense) {
+      this.logger.warn(`License for shop ${shop.name} already exists. Skipping seeding.`);
       return;
     }
-
-    const newWallet = {
-      user,
-      availableBalance: this.customFaker.number.float({ min: 1000, max: 10000, fractionDigits: 2 }),
-      lockedBalance: this.customFaker.number.float({ min: 0, max: 1000, fractionDigits: 2 }),
-    } as Wallet;
-
-    await this.walletService.create(newWallet);
-    this.logger.log(`Wallet created successfully for user: ${user.email}`);
+    const newLicense = {
+      shop,
+      images: this.customFaker.image.url({ width: 800, height: 600 }),
+      status: LicenseStatus.APPROVED,
+    } as License;
+    await this.shopService.createLicense(newLicense);
+    this.logger.log(`License created successfully for shop: ${shop.name}`);
   }
 
   private async seedMemberships() {
@@ -688,11 +763,11 @@ export class SeedingService implements OnModuleInit {
     }
     try {
       Promise.all([
-        await this.seedMembership(1, 30),
-        await this.seedMembership(2, 30),
-        await this.seedMembership(3, 7),
-        await this.seedMembership(4, 365),
-        await this.seedMembership(5, 7),
+        await this.seedMembership(this.shop1Email, 365),
+        await this.seedMembership(this.shop2Email, 30),
+        await this.seedMembership(this.shop3Email, 30),
+        await this.seedMembership(this.shop4Email, 7),
+        await this.seedMembership(this.shop5Email, 7),
       ]);
       this.logger.log('Seeding process completed successfully!');
     } catch (error) {
@@ -701,12 +776,12 @@ export class SeedingService implements OnModuleInit {
     }
   }
 
-  private async seedMembership(shopNumber: number, subscriptionDuration: number) {
-    this.logger.log(`Seeding membership for shop ${shopNumber}`);
+  private async seedMembership(email: string, subscriptionDuration: number) {
+    this.logger.log(`Seeding membership for shop ${email}`);
 
-    const shop = await this.shopService.getByUserEmail(`shop.${shopNumber}@veila.studio`);
+    const shop = await this.shopService.getShopByUserEmailForSeeding(email);
     if (!shop) {
-      this.logger.warn(`Shop with email ${shopNumber} not found. Skipping seeding membership.`);
+      this.logger.warn(`Shop with email ${email} not found. Skipping seeding membership.`);
       return;
     }
     const existingMembership = await this.membershipService.findOne(shop.id);
@@ -729,7 +804,23 @@ export class SeedingService implements OnModuleInit {
       endDate: this.customFaker.date.soon({ days: subscriptionDuration }),
       status: MembershipStatus.ACTIVE,
     } as Membership;
-    await this.membershipService.create(newMembership);
+    const createdMembership = await this.membershipService.createForSeeding(newMembership);
+    if (!shop.user.wallet) {
+      this.logger.warn(`Wallet for shop ${shop.name} not found. Skipping transaction creation.`);
+      return;
+    }
+    await this.transactionService.createMembershipTransactionForSeeding({
+      wallet: shop.user.wallet,
+      membership: createdMembership,
+      from: shop.name,
+      to: this.superAdminEmail,
+      fromTypeBalance: TypeBalance.AVAILABLE,
+      toTypeBalance: TypeBalance.AVAILABLE,
+      amount: subscription.amount,
+      type: TransactionType.TRANSFER,
+      status: TransactionStatus.COMPLETED,
+      note: `Seeding membership transaction for shop: ${shop.name}, Subscription Duration: ${subscriptionDuration} days`,
+    } as Transaction);
     this.logger.log(
       `Membership created successfully for shop: ${shop.name}, Subscription Duration: ${subscriptionDuration} days`,
     );
@@ -743,31 +834,31 @@ export class SeedingService implements OnModuleInit {
     }
     try {
       Promise.all([
-        await this.seedDress(1),
-        await this.seedDress(1),
-        await this.seedDress(1),
-        await this.seedDress(1),
-        await this.seedDress(1),
-        await this.seedDress(2),
-        await this.seedDress(2),
-        await this.seedDress(2),
-        await this.seedDress(2),
-        await this.seedDress(2),
-        await this.seedDress(3),
-        await this.seedDress(3),
-        await this.seedDress(3),
-        await this.seedDress(3),
-        await this.seedDress(3),
-        await this.seedDress(4),
-        await this.seedDress(4),
-        await this.seedDress(4),
-        await this.seedDress(4),
-        await this.seedDress(4),
-        await this.seedDress(5),
-        await this.seedDress(5),
-        await this.seedDress(5),
-        await this.seedDress(5),
-        await this.seedDress(5),
+        await this.seedDress(this.shop1Email),
+        await this.seedDress(this.shop2Email),
+        await this.seedDress(this.shop3Email),
+        await this.seedDress(this.shop4Email),
+        await this.seedDress(this.shop5Email),
+        await this.seedDress(this.shop1Email),
+        await this.seedDress(this.shop2Email),
+        await this.seedDress(this.shop3Email),
+        await this.seedDress(this.shop4Email),
+        await this.seedDress(this.shop5Email),
+        await this.seedDress(this.shop1Email),
+        await this.seedDress(this.shop2Email),
+        await this.seedDress(this.shop3Email),
+        await this.seedDress(this.shop4Email),
+        await this.seedDress(this.shop5Email),
+        await this.seedDress(this.shop1Email),
+        await this.seedDress(this.shop2Email),
+        await this.seedDress(this.shop3Email),
+        await this.seedDress(this.shop4Email),
+        await this.seedDress(this.shop5Email),
+        await this.seedDress(this.shop1Email),
+        await this.seedDress(this.shop2Email),
+        await this.seedDress(this.shop3Email),
+        await this.seedDress(this.shop4Email),
+        await this.seedDress(this.shop5Email),
       ]);
       this.logger.log('Seeding process completed successfully!');
     } catch (error) {
@@ -776,15 +867,15 @@ export class SeedingService implements OnModuleInit {
     }
   }
 
-  private async seedDress(shopNumber: number) {
-    const user = await this.userService.getByEmail(`shop.${shopNumber}@veila.studio`);
+  private async seedDress(email: string) {
+    const user = await this.userService.getByEmail(email);
     if (!user) {
-      this.logger.warn(`User role Shop ${shopNumber} not exists. Skipping seeding dress.`);
+      this.logger.warn(`User with email ${email} not exists. Skipping seeding dress.`);
       return;
     }
     const category = await this.categoryService.getOneByUserAndType(user.id, CategoryType.DRESS);
     if (!category) {
-      this.logger.warn(`User category ${shopNumber} not exists`);
+      this.logger.warn(`User category ${email} not exists`);
     }
 
     this.logger.log(`Seeding dress with email: ${user.email}`);
@@ -792,14 +883,15 @@ export class SeedingService implements OnModuleInit {
     const newDress = {
       user,
       category,
-      name: faker.commerce.productName(),
-      description: faker.commerce.productDescription(),
-      sellPrice: this.customFaker.number.float({ min: 100, max: 1000, fractionDigits: 2 }),
-      rentalPrice: this.customFaker.number.float({ min: 20, max: 200, fractionDigits: 2 }),
+      name: 'Váy cưới ' + faker.commerce.productAdjective(),
+      description: 'Mô tả váy cưới mới: ' + faker.commerce.productDescription(),
+      images: this.customFaker.image.url(),
+      sellPrice: this.customFaker.number.float({ min: 1000, max: 100000, fractionDigits: 2 }),
+      rentalPrice: this.customFaker.number.float({ min: 200, max: 20000, fractionDigits: 2 }),
       isSellable: true,
       isRentable: true,
-      ratingAverage: this.customFaker.number.float({ min: 3, max: 5, fractionDigits: 2 }),
-      ratingCount: this.customFaker.number.int({ min: 0, max: 100 }),
+      ratingAverage: 0,
+      ratingCount: 0,
       status: DressStatus.AVAILABLE,
     } as Dress;
 
@@ -817,11 +909,11 @@ export class SeedingService implements OnModuleInit {
     }
     try {
       Promise.all([
-        await this.seedService(1),
-        await this.seedService(2),
-        await this.seedService(3),
-        await this.seedService(4),
-        await this.seedService(5),
+        await this.seedService(this.shop1Email),
+        await this.seedService(this.shop2Email),
+        await this.seedService(this.shop3Email),
+        await this.seedService(this.shop4Email),
+        await this.seedService(this.shop5Email),
       ]);
       this.logger.log('Seeding process completed successfully!');
     } catch (error) {
@@ -830,15 +922,15 @@ export class SeedingService implements OnModuleInit {
     }
   }
 
-  private async seedService(shopNumber: number) {
-    const user = await this.userService.getByEmail(`shop.${shopNumber}@veila.studio`);
+  private async seedService(email: string) {
+    const user = await this.userService.getByEmail(email);
     if (!user) {
-      this.logger.warn(`User role Shop ${shopNumber} not exists. Skipping seeding service.`);
+      this.logger.warn(`User role ${email} not exists. Skipping seeding service.`);
       return;
     }
     const category = await this.categoryService.getOneByUserAndType(user.id, CategoryType.SERVICE);
     if (!category) {
-      this.logger.warn(`User category ${shopNumber} not exists`);
+      this.logger.warn(`User category ${email} not exists`);
     }
 
     this.logger.log(`Seeding service with email: ${user.email}`);
@@ -846,11 +938,13 @@ export class SeedingService implements OnModuleInit {
     const newService = {
       user,
       category,
-      name: 'Dịch vụ máy váy cưới mới',
-      description: 'Mô tả dịch vụ máy váy cưới mới',
+      name: 'Dịch vụ máy váy cưới mới của ' + user.email,
+      description:
+        'Mô tả dịch vụ máy váy cưới mới của ' + user.email + faker.commerce.productDescription(),
+      images: this.customFaker.image.url(),
       status: ServiceStatus.AVAILABLE,
-      ratingAverage: this.customFaker.number.float({ min: 3, max: 5, fractionDigits: 2 }),
-      ratingCount: this.customFaker.number.int({ min: 0, max: 100 }),
+      ratingAverage: 0,
+      ratingCount: 0,
     } as Service;
 
     const createService = await this.serviceService.create(newService);
@@ -867,31 +961,31 @@ export class SeedingService implements OnModuleInit {
     }
     try {
       Promise.all([
-        await this.seedAccessory(1),
-        await this.seedAccessory(1),
-        await this.seedAccessory(1),
-        await this.seedAccessory(1),
-        await this.seedAccessory(1),
-        await this.seedAccessory(2),
-        await this.seedAccessory(2),
-        await this.seedAccessory(2),
-        await this.seedAccessory(2),
-        await this.seedAccessory(2),
-        await this.seedAccessory(3),
-        await this.seedAccessory(3),
-        await this.seedAccessory(3),
-        await this.seedAccessory(3),
-        await this.seedAccessory(3),
-        await this.seedAccessory(4),
-        await this.seedAccessory(4),
-        await this.seedAccessory(4),
-        await this.seedAccessory(4),
-        await this.seedAccessory(4),
-        await this.seedAccessory(5),
-        await this.seedAccessory(5),
-        await this.seedAccessory(5),
-        await this.seedAccessory(5),
-        await this.seedAccessory(5),
+        await this.seedAccessory(this.shop1Email),
+        await this.seedAccessory(this.shop1Email),
+        await this.seedAccessory(this.shop1Email),
+        await this.seedAccessory(this.shop1Email),
+        await this.seedAccessory(this.shop1Email),
+        await this.seedAccessory(this.shop2Email),
+        await this.seedAccessory(this.shop2Email),
+        await this.seedAccessory(this.shop2Email),
+        await this.seedAccessory(this.shop2Email),
+        await this.seedAccessory(this.shop2Email),
+        await this.seedAccessory(this.shop3Email),
+        await this.seedAccessory(this.shop3Email),
+        await this.seedAccessory(this.shop3Email),
+        await this.seedAccessory(this.shop3Email),
+        await this.seedAccessory(this.shop3Email),
+        await this.seedAccessory(this.shop4Email),
+        await this.seedAccessory(this.shop4Email),
+        await this.seedAccessory(this.shop4Email),
+        await this.seedAccessory(this.shop4Email),
+        await this.seedAccessory(this.shop4Email),
+        await this.seedAccessory(this.shop5Email),
+        await this.seedAccessory(this.shop5Email),
+        await this.seedAccessory(this.shop5Email),
+        await this.seedAccessory(this.shop5Email),
+        await this.seedAccessory(this.shop5Email),
       ]);
       this.logger.log('Seeding process completed successfully!');
     } catch (error) {
@@ -900,10 +994,10 @@ export class SeedingService implements OnModuleInit {
     }
   }
 
-  private async seedAccessory(shopNumber: number) {
-    const user = await this.userService.getByEmail(`shop.${shopNumber}@veila.studio`);
+  private async seedAccessory(email: string) {
+    const user = await this.userService.getByEmail(email);
     if (!user) {
-      this.logger.warn(`User role Shop ${shopNumber} not exists. Skipping seeding accessory.`);
+      this.logger.warn(`User role ${email} not exists. Skipping seeding accessory.`);
       return;
     }
     const category = await this.categoryService.getOneByUserAndType(
@@ -911,7 +1005,7 @@ export class SeedingService implements OnModuleInit {
       CategoryType.ACCESSORY,
     );
     if (!category) {
-      this.logger.warn(`User category ${shopNumber} not exists`);
+      this.logger.warn(`User category ${email} not exists`);
     }
 
     this.logger.log(`Seeding accessory with email: ${user.email}`);
@@ -921,10 +1015,13 @@ export class SeedingService implements OnModuleInit {
       category,
       name: faker.commerce.productName(),
       description: faker.commerce.productDescription(),
+      images: this.customFaker.image.url(),
       sellPrice: this.customFaker.number.float({ min: 10, max: 200, fractionDigits: 2 }),
       rentalPrice: this.customFaker.number.float({ min: 2, max: 50, fractionDigits: 2 }),
       isSellable: true,
       isRentable: true,
+      ratingAverage: 0,
+      ratingCount: 0,
       status: AccessoryStatus.AVAILABLE,
     } as Accessory;
 
@@ -942,31 +1039,31 @@ export class SeedingService implements OnModuleInit {
     }
     try {
       Promise.all([
-        await this.seedBlog(1),
-        await this.seedBlog(1),
-        await this.seedBlog(1),
-        await this.seedBlog(1),
-        await this.seedBlog(1),
-        await this.seedBlog(2),
-        await this.seedBlog(2),
-        await this.seedBlog(2),
-        await this.seedBlog(2),
-        await this.seedBlog(2),
-        await this.seedBlog(3),
-        await this.seedBlog(3),
-        await this.seedBlog(3),
-        await this.seedBlog(3),
-        await this.seedBlog(3),
-        await this.seedBlog(4),
-        await this.seedBlog(4),
-        await this.seedBlog(4),
-        await this.seedBlog(4),
-        await this.seedBlog(4),
-        await this.seedBlog(5),
-        await this.seedBlog(5),
-        await this.seedBlog(5),
-        await this.seedBlog(5),
-        await this.seedBlog(5),
+        await this.seedBlog(this.shop1Email),
+        await this.seedBlog(this.shop1Email),
+        await this.seedBlog(this.shop1Email),
+        await this.seedBlog(this.shop1Email),
+        await this.seedBlog(this.shop1Email),
+        await this.seedBlog(this.shop2Email),
+        await this.seedBlog(this.shop2Email),
+        await this.seedBlog(this.shop2Email),
+        await this.seedBlog(this.shop2Email),
+        await this.seedBlog(this.shop2Email),
+        await this.seedBlog(this.shop3Email),
+        await this.seedBlog(this.shop3Email),
+        await this.seedBlog(this.shop3Email),
+        await this.seedBlog(this.shop3Email),
+        await this.seedBlog(this.shop3Email),
+        await this.seedBlog(this.shop4Email),
+        await this.seedBlog(this.shop4Email),
+        await this.seedBlog(this.shop4Email),
+        await this.seedBlog(this.shop4Email),
+        await this.seedBlog(this.shop4Email),
+        await this.seedBlog(this.shop5Email),
+        await this.seedBlog(this.shop5Email),
+        await this.seedBlog(this.shop5Email),
+        await this.seedBlog(this.shop5Email),
+        await this.seedBlog(this.shop5Email),
       ]);
       this.logger.log('Seeding process completed successfully!');
     } catch (error) {
@@ -975,15 +1072,15 @@ export class SeedingService implements OnModuleInit {
     }
   }
 
-  private async seedBlog(shopNumber: number) {
-    const user = await this.userService.getByEmail(`shop.${shopNumber}@veila.studio`);
+  private async seedBlog(email: string) {
+    const user = await this.userService.getByEmail(email);
     if (!user) {
-      this.logger.warn(`User role Shop ${shopNumber} not exists. Skipping seeding blog.`);
+      this.logger.warn(`User role ${email} not exists. Skipping seeding blog.`);
       return;
     }
     const category = await this.categoryService.getOneByUserAndType(user.id, CategoryType.BLOG);
     if (!category) {
-      this.logger.warn(`User category ${shopNumber} not exists`);
+      this.logger.warn(`User category ${email} not exists`);
     }
 
     this.logger.log(`Seeding blog with email: ${user.email}`);
@@ -992,7 +1089,8 @@ export class SeedingService implements OnModuleInit {
       user,
       category,
       title: this.customFaker.lorem.sentence(),
-      content: this.customFaker.lorem.paragraphs(2),
+      content: this.customFaker.lorem.paragraphs(20),
+      images: this.customFaker.image.url({ width: 800, height: 600 }),
       isVerified: true,
       status: BlogStatus.PUBLISHED,
     } as Blog;
@@ -1003,50 +1101,6 @@ export class SeedingService implements OnModuleInit {
     );
   }
 
-  private async seedLicenses() {
-    const licenses = await this.shopService.getAllLicenses();
-    if (licenses.length >= 5) {
-      this.logger.log(`Enough data available for license. Skipping seeding`);
-      return;
-    }
-    try {
-      Promise.all([
-        await this.seedLicense(1),
-        await this.seedLicense(2),
-        await this.seedLicense(3),
-        await this.seedLicense(4),
-        await this.seedLicense(5),
-      ]);
-      this.logger.log('Seeding process completed successfully!');
-    } catch (error) {
-      this.logger.error('Seeding process failed.', error);
-      throw new Error('Seeding process failed.');
-    }
-  }
-
-  private async seedLicense(shopNumber: number) {
-    const shop = await this.shopService.getByUserEmail(`shop.${shopNumber}@veila.studio`);
-    if (!shop) {
-      this.logger.warn(`Shop with email ${shopNumber} not found. Skipping seeding license.`);
-      return;
-    }
-    this.logger.log(`Seeding license for shop: ${shop.name}`);
-    const existingLicense = await this.shopService.getLicenseByShopId(shop.id);
-    if (existingLicense) {
-      this.logger.warn(`License for shop ${shop.name} already exists. Skipping seeding.`);
-      return;
-    }
-    const newLicense = {
-      shop,
-      status: LicenseStatus.APPROVED,
-      images: this.customFaker.datatype.boolean()
-        ? this.customFaker.image.url({ width: 800, height: 600 })
-        : null,
-    } as License;
-    await this.shopService.createLicense(newLicense);
-    this.logger.log(`License created successfully for shop: ${shop.name}`);
-  }
-
   private async seedSubmitRequests() {
     const requests = await this.requestService.getAllRequestsForSeeding();
     if (requests.length >= 5) {
@@ -1055,11 +1109,11 @@ export class SeedingService implements OnModuleInit {
     }
     try {
       Promise.all([
-        await this.seedSubmitRequest(1),
-        await this.seedSubmitRequest(2),
-        await this.seedSubmitRequest(3),
-        await this.seedSubmitRequest(4),
-        await this.seedSubmitRequest(5),
+        await this.seedSubmitRequest(this.customerEmail),
+        await this.seedSubmitRequest(this.customerEmail),
+        await this.seedSubmitRequest(this.customerEmail),
+        await this.seedSubmitRequest(this.customerEmail),
+        await this.seedSubmitRequest(this.customerEmail),
       ]);
     } catch (error) {
       this.logger.error('Seeding process failed.', error);
@@ -1067,21 +1121,21 @@ export class SeedingService implements OnModuleInit {
     }
   }
 
-  private async seedSubmitRequest(customerNumber: number) {
-    const customer = await this.userService.getByEmail(`customer.${customerNumber}@veila.studio`);
+  private async seedSubmitRequest(email: string) {
+    const customer = await this.userService.getByEmail(email);
     if (!customer) {
-      this.logger.warn(
-        `Customer with email customer.${customerNumber}@veila.studio not found. Skipping seeding submit request.`,
-      );
+      this.logger.warn(`Customer with email ${email} not found. Skipping seeding submit request.`);
       return;
     }
     this.logger.log(`Seeding submit request for customer: ${customer.email}`);
 
     const newRequest = {
       user: customer,
-      title: `May váy cưới cho khách hàng ${customerNumber}`,
-      description: `May váy cưới đẹp và sang trọng, giá thành từ 100 triệu đồng đổ lại.`,
-      high: this.customFaker.number.int({ min: 150, max: 200 }),
+      title: `May váy cưới cho ${customer.email} ` + this.customFaker.string.alphanumeric(5),
+      description:
+        `May váy cưới đẹp và sang trọng, giá thành từ 100 triệu đồng đổ lại. ` +
+        this.customFaker.lorem.paragraph(20),
+      height: this.customFaker.number.int({ min: 150, max: 200 }),
       weight: this.customFaker.number.int({ min: 40, max: 80 }),
       bust: this.customFaker.number.int({ min: 70, max: 100 }),
       waist: this.customFaker.number.int({ min: 60, max: 90 }),
@@ -1094,13 +1148,6 @@ export class SeedingService implements OnModuleInit {
       backLength: this.customFaker.number.int({ min: 30, max: 50 }),
       lowerWaist: this.customFaker.number.int({ min: 60, max: 90 }),
       waistToFloor: this.customFaker.number.int({ min: 80, max: 120 }),
-      dressStyle: 'A-line',
-      curtainNeckline: 'V-neck',
-      sleeveStyle: 'Long sleeve',
-      material: 'Silk',
-      color: 'White',
-      specialElement: 'Lace',
-      coverage: 'Full',
       status: RequestStatus.SUBMIT,
       isPrivate: false,
       images: this.customFaker.datatype.boolean()
@@ -1114,27 +1161,17 @@ export class SeedingService implements OnModuleInit {
 
   private async seedSellOrders() {
     const orders = await this.orderService.getAllTypeOrders(OrderType.SELL);
-    if (orders.length >= 15) {
+    if (orders.length >= 25) {
       this.logger.log(`Enough sell orders available. Skipping seeding.`);
       return;
     }
     try {
       Promise.all([
-        await this.seedSellOrder(1, 1),
-        await this.seedSellOrder(2, 1),
-        await this.seedSellOrder(3, 1),
-        await this.seedSellOrder(4, 1),
-        await this.seedSellOrder(5, 1),
-        await this.seedSellOrder(1, 2),
-        await this.seedSellOrder(2, 2),
-        await this.seedSellOrder(3, 2),
-        await this.seedSellOrder(4, 2),
-        await this.seedSellOrder(5, 2),
-        await this.seedSellOrder(1, 3),
-        await this.seedSellOrder(2, 3),
-        await this.seedSellOrder(3, 3),
-        await this.seedSellOrder(4, 3),
-        await this.seedSellOrder(5, 3),
+        await this.seedSellOrder(this.customerEmail, this.shop1Email),
+        await this.seedSellOrder(this.customerEmail, this.shop2Email),
+        await this.seedSellOrder(this.customerEmail, this.shop3Email),
+        await this.seedSellOrder(this.customerEmail, this.shop4Email),
+        await this.seedSellOrder(this.customerEmail, this.shop5Email),
       ]);
       this.logger.log('Seeding process completed successfully!');
     } catch (error) {
@@ -1143,12 +1180,10 @@ export class SeedingService implements OnModuleInit {
     }
   }
 
-  private async seedSellOrder(customerNumber: number, shopNumber: number) {
-    const customer = await this.userService.getByEmail(`customer.${customerNumber}@veila.studio`);
+  private async seedSellOrder(customerEmail: string, shopEmail: string) {
+    const customer = await this.userService.getByEmail(customerEmail);
     if (!customer) {
-      this.logger.warn(
-        `Customer with email customer.${customerNumber}@veila.studio not found. Skipping seeding.`,
-      );
+      this.logger.warn(`Customer with email ${customerEmail} not found. Skipping seeding.`);
       return;
     }
 
@@ -1160,11 +1195,9 @@ export class SeedingService implements OnModuleInit {
       return;
     }
 
-    const shopAccount = await this.userService.getByEmail(`shop.${shopNumber}@veila.studio`);
+    const shopAccount = await this.userService.getByEmail(shopEmail);
     if (!shopAccount) {
-      this.logger.warn(
-        `Shop with email shop.${shopNumber}@veila.studio not found. Skipping seeding.`,
-      );
+      this.logger.warn(`Shop with email ${shopEmail} not found. Skipping seeding.`);
       return;
     }
 
@@ -1184,184 +1217,187 @@ export class SeedingService implements OnModuleInit {
       return;
     }
 
-    const dress = await this.dressService.getOneDressByUserId(shopAccount.id);
-    if (!dress) {
+    const dresses = await this.dressService.getAllDressesByUserIdForSeeding(shopAccount.id);
+    if (dresses.length === 0) {
       this.logger.warn(
-        `No dress found for shop ${shopAccount.email}. Skipping seeding sell order.`,
+        `No dresses found for shop ${shopAccount.email}. Skipping seeding sell order.`,
       );
       return;
     }
 
-    const accessory = await this.accessoryService.getOneAccessoryByUserId(shopAccount.id);
-    if (!accessory) {
-      this.logger.warn(
-        `No accessory found for shop ${shopAccount.email}. Skipping seeding sell order.`,
+    for (const dress of dresses) {
+      const accessories = await this.accessoryService.getAllByUserIdForSeeding(shopAccount.id);
+      if (accessories.length === 0) {
+        this.logger.warn(
+          `No accessories found for shop ${shopAccount.email}. Skipping seeding sell order.`,
+        );
+        return;
+      }
+
+      this.logger.log(
+        `Seeding sell order for customer: ${customer.email}, shop: ${shopAccount.email}, dress: ${dress.name}`,
       );
-      return;
+
+      const newOrder = await this.orderService.createOrderForSeeding({
+        customer,
+        shop,
+        phone: customer.phone,
+        email: customer.email,
+        address: customer.address || `${faker.location.streetAddress()}, ${faker.location.city()}`,
+        dueDate: new Date(),
+        returnDate: null,
+        // Coerce all price parts to numbers to avoid NaN inserting into DB
+        amount:
+          Number(dress.sellPrice ?? 0) +
+          accessories.reduce((acc, curr) => acc + Number(curr?.sellPrice ?? 0), 0),
+        type: OrderType.SELL,
+        status: OrderStatus.COMPLETED,
+      } as Order);
+
+      await this.orderDressDetailsService.createOrderDressDetailForSeeding({
+        order: newOrder,
+        dress,
+        height: this.customFaker.number.int({ min: 150, max: 200 }),
+        weight: this.customFaker.number.int({ min: 40, max: 80 }),
+        bust: this.customFaker.number.int({ min: 70, max: 120 }),
+        waist: this.customFaker.number.int({ min: 60, max: 100 }),
+        hip: this.customFaker.number.int({ min: 80, max: 120 }),
+        armpit: this.customFaker.number.int({ min: 30, max: 50 }),
+        bicep: this.customFaker.number.int({ min: 30, max: 50 }),
+        neck: this.customFaker.number.int({ min: 30, max: 50 }),
+        shoulderWidth: this.customFaker.number.int({ min: 30, max: 50 }),
+        sleeveLength: this.customFaker.number.int({ min: 20, max: 60 }),
+        backLength: this.customFaker.number.int({ min: 30, max: 50 }),
+        lowerWaist: this.customFaker.number.int({ min: 30, max: 50 }),
+        waistToFloor: this.customFaker.number.int({ min: 30, max: 50 }),
+        description: 'Mô tả chi tiết về đơn hàng váy cưới',
+        // Ensure numeric price
+        price: Number(dress.sellPrice ?? 0),
+        isRated: false,
+      } as OrderDressDetail);
+
+      for (const accessory of accessories) {
+        await this.orderAccessoriesDetailsService.createOrderAccessoryDetailForSeeding({
+          order: newOrder,
+          accessory,
+          quantity: 1,
+          description: 'Mô tả chi tiết về đơn hàng phụ kiện',
+          // Ensure numeric price
+          price: Number(accessory.sellPrice ?? 0),
+          isRated: false,
+        } as OrderAccessoryDetail);
+      }
+
+      const milestone1 = await this.orderService.createMilestoneForSeeding({
+        order: newOrder,
+        title: 'Chuẩn bị váy cưới',
+        description: 'Chuẩn bị váy cưới cho khách hàng',
+        index: 1,
+        status: MilestoneStatus.COMPLETED,
+        dueDate: new Date(),
+      } as Milestone);
+      await this.taskService.createTaskForSeeding({
+        milestone: milestone1,
+        title: 'Chuẩn bị mẫu váy cưới',
+        description: 'Chuẩn bị mẫu váy cưới khách hàng đã chọn',
+        index: 1,
+        status: TaskStatus.COMPLETED,
+        dueDate: new Date(),
+      } as Task);
+      await this.taskService.createTaskForSeeding({
+        milestone: milestone1,
+        title: 'Điều chỉnh váy cưới',
+        description: 'Điều chỉnh số đo váy cưới theo yêu cầu khách hàng',
+        index: 2,
+        status: TaskStatus.COMPLETED,
+        dueDate: new Date(),
+      } as Task);
+      await this.taskService.createTaskForSeeding({
+        milestone: milestone1,
+        title: 'Kiểm tra váy cưới',
+        description: 'Kiểm tra chất lượng váy cưới trước khi giao cho khách hàng',
+        index: 3,
+        status: TaskStatus.COMPLETED,
+        dueDate: new Date(),
+      } as Task);
+
+      const milestone2 = await this.orderService.createMilestoneForSeeding({
+        order: newOrder,
+        title: 'Giao váy cưới',
+        description: 'Giao váy cưới cho khách hàng',
+        index: 2,
+        status: MilestoneStatus.COMPLETED,
+        dueDate: new Date(),
+      } as Milestone);
+      await this.taskService.createTaskForSeeding({
+        milestone: milestone2,
+        title: 'Đóng gói váy cưới',
+        description: 'Đóng gói váy cưới cho khách hàng',
+        index: 1,
+        status: TaskStatus.COMPLETED,
+        dueDate: new Date(),
+      } as Task);
+      await this.taskService.createTaskForSeeding({
+        milestone: milestone2,
+        title: 'Giao váy cưới',
+        description: 'Giao váy cưới cho khách hàng tại địa chỉ đã cung cấp',
+        index: 2,
+        status: TaskStatus.COMPLETED,
+        dueDate: new Date(),
+      } as Task);
+
+      await this.transactionService.createTransactionForSeeding({
+        wallet: customerWallet,
+        order: newOrder,
+        from: customer.username,
+        to: shopAccount.username,
+        fromTypeBalance: TypeBalance.AVAILABLE,
+        toTypeBalance: TypeBalance.LOCKED,
+        amount: newOrder.amount,
+        type: TransactionType.TRANSFER,
+        status: TransactionStatus.COMPLETED,
+      } as Transaction);
+      await this.transactionService.createTransactionForSeeding({
+        wallet: shopWallet,
+        order: newOrder,
+        from: customer.username,
+        to: shopAccount.username,
+        fromTypeBalance: TypeBalance.AVAILABLE,
+        toTypeBalance: TypeBalance.LOCKED,
+        amount: newOrder.amount,
+        type: TransactionType.TRANSFER,
+        status: TransactionStatus.COMPLETED,
+      } as Transaction);
+      await this.transactionService.createTransactionForSeeding({
+        wallet: shopWallet,
+        from: shopAccount.username,
+        to: shopAccount.username,
+        fromTypeBalance: TypeBalance.LOCKED,
+        toTypeBalance: TypeBalance.AVAILABLE,
+        amount: newOrder.amount,
+        type: TransactionType.TRANSFER,
+        status: TransactionStatus.COMPLETED,
+      } as Transaction);
+
+      this.logger.log(
+        `Sell order created successfully! Order ID: ${newOrder.id}, Customer: ${customer.email}, Shop: ${shopAccount.email}`,
+      );
     }
-
-    this.logger.log(
-      `Seeding sell order for customer: ${customer.email}, shop: ${shopAccount.email}`,
-    );
-
-    const newOrder = await this.orderService.createOrderForSeeding({
-      customer,
-      shop,
-      phone: customer.phone || `+84${this.customFaker.string.numeric({ length: 9 })}`,
-      email: customer.email,
-      address: customer.address || `${faker.location.streetAddress()}, ${faker.location.city()}`,
-      dueDate: new Date(),
-      returnDate: null,
-      isBuyBack: false,
-      amount: Number(dress.sellPrice) + Number(accessory.sellPrice),
-      type: OrderType.SELL,
-      status: OrderStatus.COMPLETED,
-    } as Order);
-
-    await this.orderDressDetailsService.createOrderDressDetailForSeeding({
-      order: newOrder,
-      dress,
-      high: this.customFaker.number.int({ min: 1, max: 5 }),
-      weight: this.customFaker.number.int({ min: 1, max: 20 }),
-      bust: this.customFaker.number.int({ min: 70, max: 120 }),
-      waist: this.customFaker.number.int({ min: 60, max: 100 }),
-      hip: this.customFaker.number.int({ min: 80, max: 120 }),
-      armpit: this.customFaker.number.int({ min: 30, max: 50 }),
-      bicep: this.customFaker.number.int({ min: 30, max: 50 }),
-      neck: this.customFaker.number.int({ min: 30, max: 50 }),
-      shoulderWidth: this.customFaker.number.int({ min: 30, max: 50 }),
-      sleeveLength: this.customFaker.number.int({ min: 20, max: 60 }),
-      backLength: this.customFaker.number.int({ min: 30, max: 50 }),
-      lowerWaist: this.customFaker.number.int({ min: 30, max: 50 }),
-      waistToFloor: this.customFaker.number.int({ min: 30, max: 50 }),
-      description: 'Mô tả chi tiết về đơn hàng váy cưới',
-      price: dress.sellPrice,
-      isRated: true,
-    } as OrderDressDetail);
-
-    await this.orderAccessoriesDetailsService.createOrderAccessoryDetailForSeeding({
-      order: newOrder,
-      accessory,
-      quantity: 1,
-      description: 'Mô tả chi tiết về đơn hàng phụ kiện',
-      price: accessory.sellPrice,
-      isRated: true,
-    } as OrderAccessoryDetail);
-
-    const milestone1 = await this.orderService.createMilestoneForSeeding({
-      order: newOrder,
-      title: 'Chuẩn bị váy cưới',
-      description: 'Chuẩn bị váy cưới cho khách hàng',
-      index: 1,
-      status: MilestoneStatus.COMPLETED,
-      dueDate: new Date(),
-    } as Milestone);
-    await this.taskService.createTaskForSeeding({
-      milestone: milestone1,
-      title: 'Chuẩn bị mẫu váy cưới',
-      description: 'Chuẩn bị mẫu váy cưới khách hàng đã chọn',
-      index: 1,
-      status: TaskStatus.COMPLETED,
-      dueDate: new Date(),
-    } as Task);
-    await this.taskService.createTaskForSeeding({
-      milestone: milestone1,
-      title: 'Điều chỉnh váy cưới',
-      description: 'Điều chỉnh số đo váy cưới theo yêu cầu khách hàng',
-      index: 2,
-      status: TaskStatus.COMPLETED,
-      dueDate: new Date(),
-    } as Task);
-    await this.taskService.createTaskForSeeding({
-      milestone: milestone1,
-      title: 'Kiểm tra váy cưới',
-      description: 'Kiểm tra chất lượng váy cưới trước khi giao cho khách hàng',
-      index: 3,
-      status: TaskStatus.COMPLETED,
-      dueDate: new Date(),
-    } as Task);
-
-    const milestone2 = await this.orderService.createMilestoneForSeeding({
-      order: newOrder,
-      title: 'Giao váy cưới',
-      description: 'Giao váy cưới cho khách hàng',
-      index: 2,
-      status: MilestoneStatus.COMPLETED,
-      dueDate: new Date(),
-    } as Milestone);
-    await this.taskService.createTaskForSeeding({
-      milestone: milestone2,
-      title: 'Đóng gói váy cưới',
-      description: 'Đóng gói váy cưới cho khách hàng',
-      index: 1,
-      status: TaskStatus.COMPLETED,
-      dueDate: new Date(),
-    } as Task);
-    await this.taskService.createTaskForSeeding({
-      milestone: milestone2,
-      title: 'Giao váy cưới',
-      description: 'Giao váy cưới cho khách hàng tại địa chỉ đã cung cấp',
-      index: 2,
-      status: TaskStatus.COMPLETED,
-      dueDate: new Date(),
-    } as Task);
-
-    await this.transactionService.createTransactionForSeeding({
-      wallet: customerWallet,
-      order: newOrder,
-      from: customer.username,
-      to: shopAccount.username,
-      fromTypeBalance: TypeBalance.AVAILABLE,
-      toTypeBalance: TypeBalance.LOCKED,
-      amount: newOrder.amount,
-      type: TransactionType.TRANSFER,
-      status: TransactionStatus.COMPLETED,
-    } as Transaction);
-    await this.transactionService.createTransactionForSeeding({
-      wallet: shopWallet,
-      order: newOrder,
-      from: customer.username,
-      to: shopAccount.username,
-      fromTypeBalance: TypeBalance.AVAILABLE,
-      toTypeBalance: TypeBalance.LOCKED,
-      amount: newOrder.amount,
-      type: TransactionType.TRANSFER,
-      status: TransactionStatus.COMPLETED,
-    } as Transaction);
-    await this.transactionService.createTransactionForSeeding({
-      wallet: shopWallet,
-      from: shopAccount.username,
-      to: shopAccount.username,
-      fromTypeBalance: TypeBalance.LOCKED,
-      toTypeBalance: TypeBalance.AVAILABLE,
-      amount: newOrder.amount,
-      type: TransactionType.TRANSFER,
-      status: TransactionStatus.COMPLETED,
-    } as Transaction);
-
-    this.logger.log(
-      `Sell order created successfully! Order ID: ${newOrder.id}, Customer: ${customer.email}, Shop: ${shopAccount.email}`,
-    );
   }
 
   private async seedRentOrders() {
     const orders = await this.orderService.getAllTypeOrders(OrderType.RENT);
-    if (orders.length >= 10) {
+    if (orders.length >= 25) {
       this.logger.log(`Enough rent orders available. Skipping seeding.`);
       return;
     }
     try {
       Promise.all([
-        await this.seedRentOrder(1, 4),
-        await this.seedRentOrder(2, 4),
-        await this.seedRentOrder(3, 4),
-        await this.seedRentOrder(4, 4),
-        await this.seedRentOrder(5, 4),
-        await this.seedRentOrder(1, 5),
-        await this.seedRentOrder(2, 5),
-        await this.seedRentOrder(3, 5),
-        await this.seedRentOrder(4, 5),
-        await this.seedRentOrder(5, 5),
+        await this.seedRentOrder(this.customerEmail, this.shop1Email),
+        await this.seedRentOrder(this.customerEmail, this.shop2Email),
+        await this.seedRentOrder(this.customerEmail, this.shop3Email),
+        await this.seedRentOrder(this.customerEmail, this.shop4Email),
+        await this.seedRentOrder(this.customerEmail, this.shop5Email),
       ]);
       this.logger.log('Seeding process completed successfully!');
     } catch (error) {
@@ -1370,11 +1406,11 @@ export class SeedingService implements OnModuleInit {
     }
   }
 
-  private async seedRentOrder(customerNumber: number, shopNumber: number) {
-    const customer = await this.userService.getByEmail(`customer.${customerNumber}@veila.studio`);
+  private async seedRentOrder(customerEmail: string, shopEmail: string) {
+    const customer = await this.userService.getByEmail(customerEmail);
     if (!customer) {
       this.logger.warn(
-        `Customer with email customer.${customerNumber}@veila.studio not found. Skipping rent order seeding.`,
+        `Customer with email ${customerEmail} not found. Skipping rent order seeding.`,
       );
       return;
     }
@@ -1387,11 +1423,9 @@ export class SeedingService implements OnModuleInit {
       return;
     }
 
-    const shopAccount = await this.userService.getByEmail(`shop.${shopNumber}@veila.studio`);
+    const shopAccount = await this.userService.getByEmail(shopEmail);
     if (!shopAccount) {
-      this.logger.warn(
-        `Shop with email shop.${shopNumber}@veila.studio not found. Skipping seeding rent order.`,
-      );
+      this.logger.warn(`Shop with email ${shopEmail} not found. Skipping seeding rent order.`);
       return;
     }
 
@@ -1411,69 +1445,305 @@ export class SeedingService implements OnModuleInit {
       return;
     }
 
-    const dress = await this.dressService.getOneDressByUserId(shopAccount.id);
-    if (!dress) {
+    const dresses = await this.dressService.getAllDressesByUserIdForSeeding(shopAccount.id);
+    if (dresses.length === 0) {
       this.logger.warn(
-        `No dress found for shop ${shopAccount.email}. Skipping seeding sell order.`,
+        `No dresses found for shop ${shopAccount.email}. Skipping seeding rent order.`,
       );
       return;
     }
 
-    const accessory = await this.accessoryService.getOneAccessoryByUserId(shopAccount.id);
-    if (!accessory) {
+    for (const dress of dresses) {
+      const accessories = await this.accessoryService.getAllByUserIdForSeeding(shopAccount.id);
+      if (accessories.length === 0) {
+        this.logger.warn(
+          `No accessories found for shop ${shopAccount.email}. Skipping seeding sell order.`,
+        );
+        return;
+      }
+
+      this.logger.log(
+        `Seeding sell order for customer: ${customer.email}, shop: ${shopAccount.email}, dress: ${dress.name}`,
+      );
+
+      const newOrder = await this.orderService.createOrderForSeeding({
+        customer,
+        shop,
+        phone: customer.phone,
+        email: customer.email,
+        address: customer.address || `${faker.location.streetAddress()}, ${faker.location.city()}`,
+        dueDate: new Date(),
+        returnDate: new Date(),
+        amount:
+          Number(dress.rentalPrice ?? 0) +
+          accessories.reduce((acc, curr) => acc + Number(curr?.rentalPrice ?? 0), 0),
+        type: OrderType.RENT,
+        status: OrderStatus.COMPLETED,
+      } as Order);
+
+      await this.orderDressDetailsService.createOrderDressDetailForSeeding({
+        order: newOrder,
+        dress,
+        height: this.customFaker.number.int({ min: 150, max: 200 }),
+        weight: this.customFaker.number.int({ min: 40, max: 80 }),
+        bust: this.customFaker.number.int({ min: 70, max: 120 }),
+        waist: this.customFaker.number.int({ min: 60, max: 100 }),
+        hip: this.customFaker.number.int({ min: 80, max: 120 }),
+        armpit: this.customFaker.number.int({ min: 30, max: 50 }),
+        bicep: this.customFaker.number.int({ min: 30, max: 50 }),
+        neck: this.customFaker.number.int({ min: 30, max: 50 }),
+        shoulderWidth: this.customFaker.number.int({ min: 30, max: 50 }),
+        sleeveLength: this.customFaker.number.int({ min: 20, max: 60 }),
+        backLength: this.customFaker.number.int({ min: 30, max: 50 }),
+        lowerWaist: this.customFaker.number.int({ min: 30, max: 50 }),
+        waistToFloor: this.customFaker.number.int({ min: 30, max: 50 }),
+        description: 'Mô tả chi tiết về đơn hàng váy cưới',
+        // For rent orders, use rental price and ensure numeric
+        price: Number(dress.rentalPrice ?? 0),
+        isRated: false,
+      } as OrderDressDetail);
+
+      for (const accessory of accessories) {
+        await this.orderAccessoriesDetailsService.createOrderAccessoryDetailForSeeding({
+          order: newOrder,
+          accessory,
+          quantity: 1,
+          description: 'Mô tả chi tiết về đơn hàng phụ kiện',
+          // For rent orders, use accessory rental price and ensure numeric
+          price: Number(accessory.rentalPrice ?? 0),
+          isRated: false,
+        } as OrderAccessoryDetail);
+      }
+      const milestone1 = await this.orderService.createMilestoneForSeeding({
+        order: newOrder,
+        title: 'Chuẩn bị váy cưới',
+        description: 'Chuẩn bị váy cưới cho khách hàng',
+        index: 1,
+        status: MilestoneStatus.COMPLETED,
+        dueDate: new Date(),
+      } as Milestone);
+      await this.taskService.createTaskForSeeding({
+        milestone: milestone1,
+        title: 'Chuẩn bị mẫu váy cưới',
+        description: 'Chuẩn bị mẫu váy cưới khách hàng đã chọn',
+        index: 1,
+        status: TaskStatus.COMPLETED,
+        dueDate: new Date(),
+      } as Task);
+      await this.taskService.createTaskForSeeding({
+        milestone: milestone1,
+        title: 'Điều chỉnh váy cưới',
+        description: 'Điều chỉnh số đo váy cưới theo yêu cầu khách hàng',
+        index: 2,
+        status: TaskStatus.COMPLETED,
+        dueDate: new Date(),
+      } as Task);
+      await this.taskService.createTaskForSeeding({
+        milestone: milestone1,
+        title: 'Kiểm tra váy cưới',
+        description: 'Kiểm tra chất lượng váy cưới trước khi giao cho khách hàng',
+        index: 3,
+        status: TaskStatus.COMPLETED,
+        dueDate: new Date(),
+      } as Task);
+
+      const milestone2 = await this.orderService.createMilestoneForSeeding({
+        order: newOrder,
+        title: 'Giao váy cưới',
+        description: 'Giao váy cưới cho khách hàng',
+        index: 2,
+        status: MilestoneStatus.COMPLETED,
+        dueDate: new Date(),
+      } as Milestone);
+      await this.taskService.createTaskForSeeding({
+        milestone: milestone2,
+        title: 'Đóng gói váy cưới',
+        description: 'Đóng gói váy cưới cho khách hàng',
+        index: 1,
+        status: TaskStatus.COMPLETED,
+        dueDate: new Date(),
+      } as Task);
+      await this.taskService.createTaskForSeeding({
+        milestone: milestone2,
+        title: 'Giao váy cưới',
+        description: 'Giao váy cưới cho khách hàng tại địa chỉ đã cung cấp',
+        index: 2,
+        status: TaskStatus.COMPLETED,
+        dueDate: new Date(),
+      } as Task);
+
+      const milestone3 = await this.orderService.createMilestoneForSeeding({
+        order: newOrder,
+        title: 'Trả váy cưới',
+        description: 'Khách hàng trả váy cưới sau khi sử dụng',
+        index: 3,
+        status: MilestoneStatus.COMPLETED,
+        dueDate: new Date(),
+      } as Milestone);
+      await this.taskService.createTaskForSeeding({
+        milestone: milestone3,
+        title: 'Kiểm tra tình trạng váy cưới',
+        description: 'Kiểm tra tình trạng váy cưới sau khi khách hàng trả lại',
+        index: 1,
+        status: TaskStatus.COMPLETED,
+        dueDate: new Date(),
+      } as Task);
+
+      await this.transactionService.createTransactionForSeeding({
+        wallet: customerWallet,
+        order: newOrder,
+        from: customer.username,
+        to: shopAccount.username,
+        fromTypeBalance: TypeBalance.AVAILABLE,
+        toTypeBalance: TypeBalance.LOCKED,
+        amount: newOrder.amount,
+        type: TransactionType.TRANSFER,
+        status: TransactionStatus.COMPLETED,
+      } as Transaction);
+      await this.transactionService.createTransactionForSeeding({
+        wallet: shopWallet,
+        order: newOrder,
+        from: customer.username,
+        to: shopAccount.username,
+        fromTypeBalance: TypeBalance.AVAILABLE,
+        toTypeBalance: TypeBalance.LOCKED,
+        amount: newOrder.amount,
+        type: TransactionType.TRANSFER,
+        status: TransactionStatus.COMPLETED,
+      } as Transaction);
+      await this.transactionService.createTransactionForSeeding({
+        wallet: shopWallet,
+        from: shopAccount.username,
+        to: shopAccount.username,
+        fromTypeBalance: TypeBalance.LOCKED,
+        toTypeBalance: TypeBalance.AVAILABLE,
+        amount: newOrder.amount,
+        type: TransactionType.TRANSFER,
+        status: TransactionStatus.COMPLETED,
+      } as Transaction);
+
+      this.logger.log(
+        `Rent order created successfully! Order ID: ${newOrder.id}, Customer: ${customer.email}, Shop: ${shopAccount.email}`,
+      );
+    }
+  }
+
+  private async seedCustomOrders() {
+    const orders = await this.orderService.getAllTypeOrders(OrderType.CUSTOM);
+    if (orders.length >= 5) {
+      this.logger.log(`Enough custom orders available. Skipping seeding.`);
+      return;
+    }
+    try {
+      await Promise.all([
+        this.seedCustomOrder(this.shop1Email),
+        this.seedCustomOrder(this.shop2Email),
+        this.seedCustomOrder(this.shop3Email),
+        this.seedCustomOrder(this.shop4Email),
+        this.seedCustomOrder(this.shop5Email),
+      ]);
+    } catch (error) {
+      this.logger.error('Seeding custom orders failed.', error);
+      throw new Error('Seeding custom orders failed.');
+    }
+  }
+
+  private async seedCustomOrder(shopEmail: string) {
+    const customer = await this.userService.getByEmail(this.customerEmail);
+    if (!customer) {
       this.logger.warn(
-        `No accessory found for shop ${shopAccount.email}. Skipping seeding sell order.`,
+        `Customer with email ${this.customerEmail} not found. Skipping rent order seeding.`,
       );
       return;
     }
 
+    const customerWallet = await this.walletService.findOneByUserId(customer.id);
+    if (!customerWallet) {
+      this.logger.warn(
+        `Wallet for customer ${customer.email} not found. Skipping seeding rent order.`,
+      );
+      return;
+    }
+
+    const shopAccount = await this.userService.getByEmail(shopEmail);
+    if (!shopAccount) {
+      this.logger.warn(`Shop with email ${shopEmail} not found. Skipping seeding rent order.`);
+      return;
+    }
+
+    const shopWallet = await this.walletService.findOneByUserId(shopAccount.id);
+    if (!shopWallet) {
+      this.logger.warn(
+        `Wallet for shop ${shopAccount.email} not found. Skipping seeding rent order.`,
+      );
+      return;
+    }
+
+    const shop = await this.shopService.getShopForSeeding(shopAccount.id);
+    if (!shop) {
+      this.logger.warn(
+        `Shop not found for user ${shopAccount.email}. Skipping seeding rent order.`,
+      );
+      return;
+    }
+
+    const service = await this.serviceService.getServiceByUserIdForSeeding(shopAccount.id);
+    if (!service) {
+      this.logger.warn(
+        `No services found for shop ${shopAccount.email}. Skipping seeding rent order.`,
+      );
+      return;
+    }
     this.logger.log(
-      `Seeding sell order for customer: ${customer.email}, shop: ${shopAccount.email}`,
+      `Seeding sell order for customer: ${customer.email}, shop: ${shopAccount.email}, service: ${service.name}`,
     );
+
+    const newRequest = await this.requestService.createRequestForSeeding({
+      user: customer,
+      title: `May váy cưới cho ${customer.email} ` + this.customFaker.string.alphanumeric(5),
+      description:
+        `May váy cưới đẹp và sang trọng, giá thành từ 100 triệu đồng đổ lại. ` +
+        this.customFaker.lorem.paragraph(20),
+      height: this.customFaker.number.int({ min: 150, max: 200 }),
+      weight: this.customFaker.number.int({ min: 40, max: 80 }),
+      bust: this.customFaker.number.int({ min: 70, max: 100 }),
+      waist: this.customFaker.number.int({ min: 60, max: 90 }),
+      hip: this.customFaker.number.int({ min: 80, max: 110 }),
+      armpit: this.customFaker.number.int({ min: 30, max: 50 }),
+      bicep: this.customFaker.number.int({ min: 20, max: 40 }),
+      neck: this.customFaker.number.int({ min: 30, max: 50 }),
+      shoulderWidth: this.customFaker.number.int({ min: 30, max: 50 }),
+      sleeveLength: this.customFaker.number.int({ min: 20, max: 40 }),
+      backLength: this.customFaker.number.int({ min: 30, max: 50 }),
+      lowerWaist: this.customFaker.number.int({ min: 60, max: 90 }),
+      waistToFloor: this.customFaker.number.int({ min: 80, max: 120 }),
+      status: RequestStatus.ACCEPTED,
+      isPrivate: false,
+      images: this.customFaker.datatype.boolean()
+        ? this.customFaker.image.url({ width: 800, height: 600 })
+        : '',
+    } as Request);
 
     const newOrder = await this.orderService.createOrderForSeeding({
       customer,
       shop,
-      phone: customer.phone || `+84${this.customFaker.string.numeric({ length: 9 })}`,
+      phone: customer.phone,
       email: customer.email,
       address: customer.address || `${faker.location.streetAddress()}, ${faker.location.city()}`,
       dueDate: new Date(),
-      returnDate: new Date(),
-      isBuyBack: false,
-      amount: Number(dress.rentalPrice) + Number(accessory.rentalPrice),
-      type: OrderType.RENT,
+      returnDate: null,
+      amount: this.customFaker.number.float({ min: 1000, max: 100000, fractionDigits: 2 }),
+      type: OrderType.CUSTOM,
       status: OrderStatus.COMPLETED,
     } as Order);
 
-    await this.orderDressDetailsService.createOrderDressDetailForSeeding({
+    await this.orderService.createOrderServiceDetailForSeeding({
       order: newOrder,
-      dress,
-      high: this.customFaker.number.int({ min: 1, max: 5 }),
-      weight: this.customFaker.number.int({ min: 1, max: 20 }),
-      bust: this.customFaker.number.int({ min: 70, max: 120 }),
-      waist: this.customFaker.number.int({ min: 60, max: 100 }),
-      hip: this.customFaker.number.int({ min: 80, max: 120 }),
-      armpit: this.customFaker.number.int({ min: 30, max: 50 }),
-      bicep: this.customFaker.number.int({ min: 30, max: 50 }),
-      neck: this.customFaker.number.int({ min: 30, max: 50 }),
-      shoulderWidth: this.customFaker.number.int({ min: 30, max: 50 }),
-      sleeveLength: this.customFaker.number.int({ min: 20, max: 60 }),
-      backLength: this.customFaker.number.int({ min: 30, max: 50 }),
-      lowerWaist: this.customFaker.number.int({ min: 30, max: 50 }),
-      waistToFloor: this.customFaker.number.int({ min: 30, max: 50 }),
-      description: 'Mô tả chi tiết về đơn hàng váy cưới',
-      price: dress.sellPrice,
-      isRated: true,
-    } as OrderDressDetail);
-
-    await this.orderAccessoriesDetailsService.createOrderAccessoryDetailForSeeding({
-      order: newOrder,
-      accessory,
-      quantity: 1,
-      description: 'Mô tả chi tiết về đơn hàng phụ kiện',
-      price: accessory.sellPrice,
-      isRated: true,
-    } as OrderAccessoryDetail);
+      request: newRequest,
+      service,
+      price: newOrder.amount,
+      isRated: false,
+    } as OrderServiceDetail);
 
     const milestone1 = await this.orderService.createMilestoneForSeeding({
       order: newOrder,
@@ -1533,23 +1803,6 @@ export class SeedingService implements OnModuleInit {
       dueDate: new Date(),
     } as Task);
 
-    const milestone3 = await this.orderService.createMilestoneForSeeding({
-      order: newOrder,
-      title: 'Trả váy cưới',
-      description: 'Khách hàng trả váy cưới sau khi sử dụng',
-      index: 3,
-      status: MilestoneStatus.COMPLETED,
-      dueDate: new Date(),
-    } as Milestone);
-    await this.taskService.createTaskForSeeding({
-      milestone: milestone3,
-      title: 'Kiểm tra tình trạng váy cưới',
-      description: 'Kiểm tra tình trạng váy cưới sau khi khách hàng trả lại',
-      index: 1,
-      status: TaskStatus.COMPLETED,
-      dueDate: new Date(),
-    } as Task);
-
     await this.transactionService.createTransactionForSeeding({
       wallet: customerWallet,
       order: newOrder,
@@ -1558,17 +1811,6 @@ export class SeedingService implements OnModuleInit {
       fromTypeBalance: TypeBalance.AVAILABLE,
       toTypeBalance: TypeBalance.LOCKED,
       amount: newOrder.amount,
-      type: TransactionType.TRANSFER,
-      status: TransactionStatus.COMPLETED,
-    } as Transaction);
-    await this.transactionService.createTransactionForSeeding({
-      wallet: customerWallet,
-      order: newOrder,
-      from: customer.username,
-      to: customer.username,
-      fromTypeBalance: TypeBalance.AVAILABLE,
-      toTypeBalance: TypeBalance.LOCKED,
-      amount: Number(newOrder.amount) * 0.5,
       type: TransactionType.TRANSFER,
       status: TransactionStatus.COMPLETED,
     } as Transaction);
@@ -1593,16 +1835,6 @@ export class SeedingService implements OnModuleInit {
       type: TransactionType.TRANSFER,
       status: TransactionStatus.COMPLETED,
     } as Transaction);
-    await this.transactionService.createTransactionForSeeding({
-      wallet: customerWallet,
-      from: customer.username,
-      to: customer.username,
-      fromTypeBalance: TypeBalance.LOCKED,
-      toTypeBalance: TypeBalance.AVAILABLE,
-      amount: Number(newOrder.amount) * 0.5,
-      type: TransactionType.REFUND,
-      status: TransactionStatus.COMPLETED,
-    } as Transaction);
 
     this.logger.log(
       `Rent order created successfully! Order ID: ${newOrder.id}, Customer: ${customer.email}, Shop: ${shopAccount.email}`,
@@ -1610,39 +1842,13 @@ export class SeedingService implements OnModuleInit {
   }
 
   private async seedFeedbacks() {
-    const feedbacks = await this.feedbackService.getAllFeedbacks();
-    if (feedbacks.length >= 50) {
+    const feedbacks = await this.feedbackService.getAllFeedbacksForSeeding();
+    if (feedbacks.length > 0) {
       this.logger.log(`Enough feedbacks available. Skipping seeding.`);
       return;
     }
     try {
-      Promise.all([
-        await this.seedFeedback(1, 1, OrderType.SELL),
-        await this.seedFeedback(2, 1, OrderType.SELL),
-        await this.seedFeedback(3, 1, OrderType.SELL),
-        await this.seedFeedback(4, 1, OrderType.SELL),
-        await this.seedFeedback(5, 1, OrderType.SELL),
-        await this.seedFeedback(1, 2, OrderType.SELL),
-        await this.seedFeedback(2, 2, OrderType.SELL),
-        await this.seedFeedback(3, 2, OrderType.SELL),
-        await this.seedFeedback(4, 2, OrderType.SELL),
-        await this.seedFeedback(5, 2, OrderType.SELL),
-        await this.seedFeedback(1, 3, OrderType.SELL),
-        await this.seedFeedback(2, 3, OrderType.SELL),
-        await this.seedFeedback(3, 3, OrderType.SELL),
-        await this.seedFeedback(4, 3, OrderType.SELL),
-        await this.seedFeedback(5, 3, OrderType.SELL),
-        await this.seedFeedback(1, 4, OrderType.RENT),
-        await this.seedFeedback(2, 4, OrderType.RENT),
-        await this.seedFeedback(3, 4, OrderType.RENT),
-        await this.seedFeedback(4, 4, OrderType.RENT),
-        await this.seedFeedback(5, 4, OrderType.RENT),
-        await this.seedFeedback(1, 5, OrderType.RENT),
-        await this.seedFeedback(2, 5, OrderType.RENT),
-        await this.seedFeedback(3, 5, OrderType.RENT),
-        await this.seedFeedback(4, 5, OrderType.RENT),
-        await this.seedFeedback(5, 5, OrderType.RENT),
-      ]);
+      Promise.all([await this.seedFeedback()]);
       this.logger.log('Seeding process completed successfully!');
     } catch (error) {
       this.logger.error('Seeding feedbacks failed.', error);
@@ -1650,348 +1856,190 @@ export class SeedingService implements OnModuleInit {
     }
   }
 
-  private async seedFeedback(customerNumber: number, shopNumber: number, type: OrderType) {
-    const customer = await this.userService.getByEmail(`customer.${customerNumber}@veila.studio`);
+  private async seedFeedback() {
+    const customer = await this.userService.getByEmail(this.customerEmail);
     if (!customer) {
       this.logger.warn(
-        `Customer with email customer.${customerNumber}@veila.studio not found. Skipping rent order seeding.`,
+        `Customer with email ${this.customerEmail} not found. Skipping rent order seeding.`,
       );
       return;
     }
-    const shopAccount = await this.userService.getByEmail(`shop.${shopNumber}@veila.studio`);
-    if (!shopAccount) {
-      this.logger.warn(
-        `Shop with email shop.${shopNumber}@veila.studio not found. Skipping feedback seeding.`,
-      );
-      return;
-    }
-    const shop = await this.shopService.getShopForSeeding(shopAccount.id);
-    if (!shop) {
-      this.logger.warn(`Shop not found for user ${shopAccount.email}. Skipping feedback seeding.`);
-      return;
-    }
-    const order = await this.orderService.getCompletedOrderForSeeding(customer.id, shop.id, type);
-    if (!order) {
-      this.logger.warn(
-        `Order not found for customer ${customer.id} and type ${type}. Skipping feedback seeding.`,
-      );
-      return;
-    }
-    this.logger.log(`Seeding feedback for customer: ${customer.email}, order ID: ${order.id}`);
-    const dress = order.orderDressDetail?.dress;
-    if (!dress) {
-      this.logger.warn(`No dress found for order ID ${order.id}. Skipping feedback seeding.`);
-      return;
-    }
-    const accessory = order.orderAccessoriesDetail?.[0].accessory;
-    if (!accessory) {
-      this.logger.warn(`No accessory found for order ID ${order.id}. Skipping feedback seeding.`);
-      return;
-    }
-    await this.feedbackService.createFeedbackForSeeding({
-      customer,
-      order,
-      dress,
-      content: this.customFaker.lorem.sentence(),
-      rating: this.customFaker.number.int({ min: 1, max: 5 }),
-    } as Feedback);
-    await this.feedbackService.createFeedbackForSeeding({
-      customer,
-      order,
-      accessory,
-      content: this.customFaker.lorem.sentence(),
-      rating: this.customFaker.number.int({ min: 1, max: 5 }),
-    } as Feedback);
-    this.logger.log(
-      `Feedback created successfully for customer: ${customer.email}, order ID: ${order.id}`,
-    );
-  }
-
-  private async seedInProgressSellOrders() {
-    const orders = await this.orderService.getAllOrdersForSeeding(
+    const sellOrders = await this.orderService.getAllOrdersForSeeding(
       OrderType.SELL,
-      OrderStatus.IN_PROCESS,
+      OrderStatus.COMPLETED,
     );
-    if (orders.length >= 5) {
-      this.logger.log(`Enough in-progress sell orders available. Skipping seeding.`);
-      return;
-    }
-    try {
-      Promise.all([
-        await this.seedInProgressSellOrder(1, 4),
-        await this.seedInProgressSellOrder(2, 4),
-        await this.seedInProgressSellOrder(3, 4),
-        await this.seedInProgressSellOrder(4, 4),
-        await this.seedInProgressSellOrder(5, 4),
-      ]);
-      this.logger.log('Seeding process completed successfully!');
-    } catch (error) {
-      this.logger.error('Seeding in-progress sell orders failed.', error);
-      throw new Error('Seeding in-progress sell orders failed.');
-    }
-  }
-
-  private async seedInProgressSellOrder(customerNumber: number, shopNumber: number) {
-    const customer = await this.userService.getByEmail(`customer.${customerNumber}@veila.studio`);
-    if (!customer) {
-      this.logger.warn(
-        `Customer with email customer.${customerNumber}@veila.studio not found. Skipping seeding.`,
-      );
-      return;
-    }
-
-    const customerWallet = await this.walletService.findOneByUserId(customer.id);
-    if (!customerWallet) {
-      this.logger.warn(
-        `Wallet for customer ${customer.email} not found. Skipping seeding sell order.`,
-      );
-      return;
-    }
-
-    const shopAccount = await this.userService.getByEmail(`shop.${shopNumber}@veila.studio`);
-    if (!shopAccount) {
-      this.logger.warn(
-        `Shop with email shop.${shopNumber}@veila.studio not found. Skipping seeding.`,
-      );
-      return;
-    }
-
-    const shopWallet = await this.walletService.findOneByUserId(shopAccount.id);
-    if (!shopWallet) {
-      this.logger.warn(
-        `Wallet for shop ${shopAccount.email} not found. Skipping seeding sell order.`,
-      );
-      return;
-    }
-
-    const shop = await this.shopService.getShopForSeeding(shopAccount.id);
-    if (!shop) {
-      this.logger.warn(
-        `Shop not found for user ${shopAccount.email}. Skipping seeding sell order.`,
-      );
-      return;
-    }
-
-    const dress = await this.dressService.getOneDressByUserId(shopAccount.id);
-    if (!dress) {
-      this.logger.warn(
-        `No dress found for shop ${shopAccount.email}. Skipping seeding sell order.`,
-      );
-      return;
-    }
-
-    const accessory = await this.accessoryService.getOneAccessoryByUserId(shopAccount.id);
-    if (!accessory) {
-      this.logger.warn(
-        `No accessory found for shop ${shopAccount.email}. Skipping seeding sell order.`,
-      );
-      return;
-    }
-
-    this.logger.log(
-      `Seeding sell order for customer: ${customer.email}, shop: ${shopAccount.email}`,
-    );
-
-    const newOrder = await this.orderService.createOrderForSeeding({
-      customer,
-      shop,
-      phone: customer.phone || `+84${this.customFaker.string.numeric({ length: 9 })}`,
-      email: customer.email,
-      address: customer.address || `${faker.location.streetAddress()}, ${faker.location.city()}`,
-      dueDate: new Date(),
-      returnDate: null,
-      isBuyBack: false,
-      amount: Number(dress.sellPrice) + Number(accessory.sellPrice),
-      type: OrderType.SELL,
-      status: OrderStatus.IN_PROCESS,
-    } as Order);
-
-    await this.orderDressDetailsService.createOrderDressDetailForSeeding({
-      order: newOrder,
-      dress,
-      high: this.customFaker.number.int({ min: 1, max: 5 }),
-      weight: this.customFaker.number.int({ min: 1, max: 20 }),
-      bust: this.customFaker.number.int({ min: 70, max: 120 }),
-      waist: this.customFaker.number.int({ min: 60, max: 100 }),
-      hip: this.customFaker.number.int({ min: 80, max: 120 }),
-      armpit: this.customFaker.number.int({ min: 30, max: 50 }),
-      bicep: this.customFaker.number.int({ min: 30, max: 50 }),
-      neck: this.customFaker.number.int({ min: 30, max: 50 }),
-      shoulderWidth: this.customFaker.number.int({ min: 30, max: 50 }),
-      sleeveLength: this.customFaker.number.int({ min: 20, max: 60 }),
-      backLength: this.customFaker.number.int({ min: 30, max: 50 }),
-      lowerWaist: this.customFaker.number.int({ min: 30, max: 50 }),
-      waistToFloor: this.customFaker.number.int({ min: 30, max: 50 }),
-      description: 'Mô tả chi tiết về đơn hàng váy cưới',
-      price: dress.sellPrice,
-      isRated: true,
-    } as OrderDressDetail);
-
-    await this.orderAccessoriesDetailsService.createOrderAccessoryDetailForSeeding({
-      order: newOrder,
-      accessory,
-      quantity: 1,
-      description: 'Mô tả chi tiết về đơn hàng phụ kiện',
-      price: accessory.sellPrice,
-      isRated: true,
-    } as OrderAccessoryDetail);
-
-    const milestone1 = await this.orderService.createMilestoneForSeeding({
-      order: newOrder,
-      title: 'Chuẩn bị váy cưới',
-      description: 'Chuẩn bị váy cưới cho khách hàng',
-      index: 1,
-      status: MilestoneStatus.IN_PROGRESS,
-      dueDate: new Date(),
-    } as Milestone);
-    await this.taskService.createTaskForSeeding({
-      milestone: milestone1,
-      title: 'Chuẩn bị mẫu váy cưới',
-      description: 'Chuẩn bị mẫu váy cưới khách hàng đã chọn',
-      index: 1,
-      status: TaskStatus.IN_PROGRESS,
-      dueDate: new Date(),
-    } as Task);
-    await this.taskService.createTaskForSeeding({
-      milestone: milestone1,
-      title: 'Điều chỉnh váy cưới',
-      description: 'Điều chỉnh số đo váy cưới theo yêu cầu khách hàng',
-      index: 2,
-      status: TaskStatus.PENDING,
-      dueDate: new Date(),
-    } as Task);
-    await this.taskService.createTaskForSeeding({
-      milestone: milestone1,
-      title: 'Kiểm tra váy cưới',
-      description: 'Kiểm tra chất lượng váy cưới trước khi giao cho khách hàng',
-      index: 3,
-      status: TaskStatus.PENDING,
-      dueDate: new Date(),
-    } as Task);
-
-    const milestone2 = await this.orderService.createMilestoneForSeeding({
-      order: newOrder,
-      title: 'Giao váy cưới',
-      description: 'Giao váy cưới cho khách hàng',
-      index: 2,
-      status: MilestoneStatus.PENDING,
-      dueDate: new Date(),
-    } as Milestone);
-    await this.taskService.createTaskForSeeding({
-      milestone: milestone2,
-      title: 'Đóng gói váy cưới',
-      description: 'Đóng gói váy cưới cho khách hàng',
-      index: 1,
-      status: TaskStatus.PENDING,
-      dueDate: new Date(),
-    } as Task);
-    await this.taskService.createTaskForSeeding({
-      milestone: milestone2,
-      title: 'Giao váy cưới',
-      description: 'Giao váy cưới cho khách hàng tại địa chỉ đã cung cấp',
-      index: 2,
-      status: TaskStatus.PENDING,
-      dueDate: new Date(),
-    } as Task);
-
-    await this.transactionService.createTransactionForSeeding({
-      wallet: customerWallet,
-      order: newOrder,
-      from: customer.username,
-      to: shopAccount.username,
-      fromTypeBalance: TypeBalance.AVAILABLE,
-      toTypeBalance: TypeBalance.LOCKED,
-      amount: newOrder.amount,
-      type: TransactionType.TRANSFER,
-      status: TransactionStatus.COMPLETED,
-    } as Transaction);
-    await this.transactionService.createTransactionForSeeding({
-      wallet: shopWallet,
-      order: newOrder,
-      from: customer.username,
-      to: shopAccount.username,
-      fromTypeBalance: TypeBalance.AVAILABLE,
-      toTypeBalance: TypeBalance.LOCKED,
-      amount: newOrder.amount,
-      type: TransactionType.TRANSFER,
-      status: TransactionStatus.COMPLETED,
-    } as Transaction);
-
-    this.logger.log(
-      `Sell order created successfully! Order ID: ${newOrder.id}, Customer: ${customer.email}, Shop: ${shopAccount.email}`,
-    );
-  }
-
-  private async seedComplaintsForOrder() {
-    const complaints = await this.orderService.getAllComplaintsForSeeding();
-    if (complaints.length >= 10) {
-      this.logger.log(`Enough complaints available. Skipping seeding.`);
-      return;
-    }
-    try {
-      await Promise.all([
-        await this.seedComplaintForOrder(1, 1, OrderType.SELL, ComplaintStatus.DRAFT),
-        await this.seedComplaintForOrder(2, 2, OrderType.SELL, ComplaintStatus.IN_PROGRESS),
-        await this.seedComplaintForOrder(3, 3, OrderType.SELL, ComplaintStatus.APPROVED),
-        await this.seedComplaintForOrder(4, 4, OrderType.RENT, ComplaintStatus.REJECTED),
-        await this.seedComplaintForOrder(5, 5, OrderType.RENT, ComplaintStatus.IN_PROGRESS),
-        await this.seedComplaintForOrder(1, 4, OrderType.RENT, ComplaintStatus.IN_PROGRESS),
-        await this.seedComplaintForOrder(2, 3, OrderType.SELL, ComplaintStatus.APPROVED),
-        await this.seedComplaintForOrder(3, 5, OrderType.RENT, ComplaintStatus.IN_PROGRESS),
-        await this.seedComplaintForOrder(4, 2, OrderType.SELL, ComplaintStatus.REJECTED),
-        await this.seedComplaintForOrder(5, 1, OrderType.SELL, ComplaintStatus.DRAFT),
-      ]);
-      this.logger.log('Seeding process completed successfully!');
-    } catch (error) {
-      this.logger.error('Seeding complaints failed.', error);
-      throw new Error('Seeding complaints failed.');
-    }
-  }
-
-  private async seedComplaintForOrder(
-    customerNumber: number,
-    shopNumber: number,
-    type: OrderType,
-    status: ComplaintStatus,
-  ) {
-    const customer = await this.userService.getByEmail(`customer.${customerNumber}@veila.studio`);
-    if (!customer) {
-      this.logger.warn(`Customer with email customer.${customerNumber}@veila.studio not found.`);
-      return;
-    }
-
-    const shop = await this.userService.getByEmail(`shop.${shopNumber}@veila.studio`);
-    if (!shop) {
-      this.logger.warn(`Shop with email shop.${shopNumber}@veila.studio not found.`);
-      return;
-    }
-
-    const order = await this.orderService.getOrderForSeedingComplaint(customer.id, shop.id, type);
-    if (!order) {
-      this.logger.warn(`Order not found for customer ${customer.id} and shop ${shop.id}.`);
-      return;
-    }
-
-    if (type === OrderType.RENT) {
-      const newComplaint = {
-        sender: { id: this.customFaker.datatype.boolean() ? customer.id : shop.id },
+    for (const order of sellOrders) {
+      if (!order.orderDressDetail || !order.orderAccessoriesDetail) {
+        this.logger.warn(
+          `Order ${order.id} does not have complete details. Skipping feedback seeding.`,
+        );
+        return;
+      }
+      const newDressFeedback = {
+        customer,
         order,
-        title: `Complaint for order ${order.id}`,
-        description: this.customFaker.lorem.sentence(),
-        images: this.customFaker.image.avatar(),
-        status,
-      } as Complaint;
-      await this.orderService.createComplaintForSeeding(newComplaint);
-    } else {
-      const newComplaint = {
-        sender: { id: customer.id },
+        dress: order.orderDressDetail.dress,
+        content: this.customFaker.lorem.sentence(),
+        rating: this.customFaker.number.int({ min: 1, max: 5 }),
+        images: this.customFaker.datatype.boolean()
+          ? this.customFaker.image.url({ width: 800, height: 600 })
+          : null,
+      } as Feedback;
+      await this.feedbackService.createFeedbackForSeeding(newDressFeedback);
+      await this.orderService.updateOrderDressDetailForSeedingFeedback(order.orderDressDetail.id);
+      for (const accessory of order.orderAccessoriesDetail) {
+        const newAccessoryFeedback = {
+          customer,
+          order,
+          accessory: accessory.accessory,
+          content: this.customFaker.lorem.sentence(),
+          rating: this.customFaker.number.int({ min: 1, max: 5 }),
+          images: this.customFaker.datatype.boolean()
+            ? this.customFaker.image.url({ width: 800, height: 600 })
+            : null,
+        } as Feedback;
+        await this.feedbackService.createFeedbackForSeeding(newAccessoryFeedback);
+        await this.orderService.updateOrderAccessoryDetailForSeedingFeedback(accessory.id);
+      }
+    }
+
+    const rentalOrders = await this.orderService.getAllOrdersForSeeding(
+      OrderType.RENT,
+      OrderStatus.COMPLETED,
+    );
+    for (const order of rentalOrders) {
+      if (!order.orderDressDetail || !order.orderAccessoriesDetail) {
+        this.logger.warn(
+          `Order ${order.id} does not have complete details. Skipping feedback seeding.`,
+        );
+        return;
+      }
+      const newDressFeedback = {
+        customer,
         order,
-        title: `Complaint for order ${order.id}`,
-        description: this.customFaker.lorem.sentence(),
-        images: this.customFaker.image.avatar(),
-        status,
-      } as Complaint;
-      await this.orderService.createComplaintForSeeding(newComplaint);
+        dress: order.orderDressDetail.dress,
+        content: this.customFaker.lorem.sentence(),
+        rating: this.customFaker.number.int({ min: 1, max: 5 }),
+        images: this.customFaker.datatype.boolean()
+          ? this.customFaker.image.url({ width: 800, height: 600 })
+          : null,
+      } as Feedback;
+      await this.feedbackService.createFeedbackForSeeding(newDressFeedback);
+      await this.orderService.updateOrderDressDetailForSeedingFeedback(order.orderDressDetail.id);
+      for (const accessory of order.orderAccessoriesDetail) {
+        const newAccessoryFeedback = {
+          customer,
+          order,
+          accessory: accessory.accessory,
+          content: this.customFaker.lorem.sentence(),
+          rating: this.customFaker.number.int({ min: 1, max: 5 }),
+          images: this.customFaker.datatype.boolean()
+            ? this.customFaker.image.url({ width: 800, height: 600 })
+            : null,
+        } as Feedback;
+        await this.feedbackService.createFeedbackForSeeding(newAccessoryFeedback);
+        await this.orderService.updateOrderAccessoryDetailForSeedingFeedback(accessory.id);
+      }
+    }
+
+    const customOrders = await this.orderService.getAllOrdersForSeeding(
+      OrderType.CUSTOM,
+      OrderStatus.COMPLETED,
+    );
+    for (const order of customOrders) {
+      if (!order.orderServiceDetail) {
+        this.logger.warn(
+          `Order ${order.id} does not have service details. Skipping feedback seeding.`,
+        );
+        return;
+      }
+      const newServiceFeedback = {
+        customer,
+        order,
+        service: order.orderServiceDetail.service,
+        content: this.customFaker.lorem.sentence(),
+        rating: this.customFaker.number.int({ min: 1, max: 5 }),
+        images: this.customFaker.datatype.boolean()
+          ? this.customFaker.image.url({ width: 800, height: 600 })
+          : null,
+      } as Feedback;
+      await this.feedbackService.createFeedbackForSeeding(newServiceFeedback);
+      await this.orderService.updateOrderServiceDetailForSeedingFeedback(
+        order.orderServiceDetail.id,
+      );
     }
   }
+
+  // private async seedComplaintsForOrder() {
+  //   const complaints = await this.orderService.getAllComplaintsForSeeding();
+  //   if (complaints.length >= 10) {
+  //     this.logger.log(`Enough complaints available. Skipping seeding.`);
+  //     return;
+  //   }
+  //   try {
+  //     await Promise.all([
+  //       await this.seedComplaintForOrder(1, 1, OrderType.SELL, ComplaintStatus.DRAFT),
+  //       await this.seedComplaintForOrder(2, 2, OrderType.SELL, ComplaintStatus.IN_PROGRESS),
+  //       await this.seedComplaintForOrder(3, 3, OrderType.SELL, ComplaintStatus.APPROVED),
+  //       await this.seedComplaintForOrder(4, 4, OrderType.RENT, ComplaintStatus.REJECTED),
+  //       await this.seedComplaintForOrder(5, 5, OrderType.RENT, ComplaintStatus.IN_PROGRESS),
+  //       await this.seedComplaintForOrder(1, 4, OrderType.RENT, ComplaintStatus.IN_PROGRESS),
+  //       await this.seedComplaintForOrder(2, 3, OrderType.SELL, ComplaintStatus.APPROVED),
+  //       await this.seedComplaintForOrder(3, 5, OrderType.RENT, ComplaintStatus.IN_PROGRESS),
+  //       await this.seedComplaintForOrder(4, 2, OrderType.SELL, ComplaintStatus.REJECTED),
+  //       await this.seedComplaintForOrder(5, 1, OrderType.SELL, ComplaintStatus.DRAFT),
+  //     ]);
+  //     this.logger.log('Seeding process completed successfully!');
+  //   } catch (error) {
+  //     this.logger.error('Seeding complaints failed.', error);
+  //     throw new Error('Seeding complaints failed.');
+  //   }
+  // }
+
+  // private async seedComplaintForOrder(
+  //   customerNumber: number,
+  //   shopNumber: number,
+  //   type: OrderType,
+  //   status: ComplaintStatus,
+  // ) {
+  //   const customer = await this.userService.getByEmail(`customer.${customerNumber}@veila.studio`);
+  //   if (!customer) {
+  //     this.logger.warn(`Customer with email customer.${customerNumber}@veila.studio not found.`);
+  //     return;
+  //   }
+
+  //   const shop = await this.userService.getByEmail(`shop.${shopNumber}@veila.studio`);
+  //   if (!shop) {
+  //     this.logger.warn(`Shop with email shop.${shopNumber}@veila.studio not found.`);
+  //     return;
+  //   }
+
+  //   const order = await this.orderService.getOrderForSeedingComplaint(customer.id, shop.id, type);
+  //   if (!order) {
+  //     this.logger.warn(`Order not found for customer ${customer.id} and shop ${shop.id}.`);
+  //     return;
+  //   }
+
+  //   if (type === OrderType.RENT) {
+  //     const newComplaint = {
+  //       sender: { id: this.customFaker.datatype.boolean() ? customer.id : shop.id },
+  //       order,
+  //       title: `Complaint for order ${order.id}`,
+  //       description: this.customFaker.lorem.sentence(),
+  //       images: this.customFaker.image.avatar(),
+  //       status,
+  //     } as Complaint;
+  //     await this.orderService.createComplaintForSeeding(newComplaint);
+  //   } else {
+  //     const newComplaint = {
+  //       sender: { id: customer.id },
+  //       order,
+  //       title: `Complaint for order ${order.id}`,
+  //       description: this.customFaker.lorem.sentence(),
+  //       images: this.customFaker.image.avatar(),
+  //       status,
+  //     } as Complaint;
+  //     await this.orderService.createComplaintForSeeding(newComplaint);
+  //   }
+  // }
 }

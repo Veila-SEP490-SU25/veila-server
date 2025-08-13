@@ -3,7 +3,6 @@ import { ApiProperty } from '@nestjs/swagger';
 import { Expose, Transform, Type } from 'class-transformer';
 import {
   IsArray,
-  IsBoolean,
   IsDate,
   IsNotEmpty,
   IsNumber,
@@ -61,16 +60,6 @@ export class COrderDto {
   returnDate: Date | null;
 
   @ApiProperty({
-    description: 'Cửa hàng có mua lại váy cưới sau khi may cho khách không',
-    example: true,
-    nullable: false,
-    default: false,
-  })
-  @IsNotEmpty()
-  @IsBoolean()
-  isBuyBack: boolean;
-
-  @ApiProperty({
     description: 'Đây là loại mua hay thuê váy cưới',
     example: OrderType.SELL,
     nullable: false,
@@ -124,15 +113,6 @@ export class UOrderDto {
   @Type(() => Date)
   @IsDate()
   returnDate: Date | null;
-
-  @ApiProperty({
-    description: 'Cửa hàng có mua lại váy cưới sau khi may cho khách không',
-    example: true,
-    nullable: false,
-    default: false,
-  })
-  @IsBoolean()
-  isBuyBack: boolean;
 }
 
 export class OrderCustomerNameDto {}
@@ -217,16 +197,6 @@ export class OrderDto {
   })
   @IsDate()
   returnDate: Date | null;
-
-  @Expose()
-  @ApiProperty({
-    description: 'Cửa hàng có mua lại váy cưới sau khi may cho khách không',
-    example: 'true',
-    nullable: false,
-  })
-  @IsNotEmpty()
-  @IsBoolean()
-  isBuyBack: boolean;
 
   @Expose()
   @ApiProperty({

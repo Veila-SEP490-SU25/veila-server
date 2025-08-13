@@ -15,6 +15,7 @@ import {
 } from '@/common/models';
 import { plainToInstance } from 'class-transformer';
 import { Filtering, getOrder, getWhere, Sorting } from '@/common/decorators';
+import { DepositViaPayOSDto } from '../wallet';
 
 @Injectable()
 export class TransactionService {
@@ -28,8 +29,8 @@ export class TransactionService {
   async saveDepositTransaction(
     user: User,
     walletId: string,
-    transactionDetail: DepositAndWithdrawTransactionDto,
-  ): Promise<void> {
+    transactionDetail: DepositViaPayOSDto,
+  ): Promise<string> {
     const newTransaction = {
       wallet: { id: walletId },
       from: user.firstName + ' ' + user.middleName + ' ' + user.lastName,
@@ -41,7 +42,7 @@ export class TransactionService {
       status: TransactionStatus.PENDING,
       note: transactionDetail.note,
     };
-    await this.transactionRepository.save(plainToInstance(Transaction, newTransaction));
+    return (await this.transactionRepository.save(plainToInstance(Transaction, newTransaction))).id;
   }
 
   async saveWithdrawTransaction(
@@ -250,5 +251,26 @@ export class TransactionService {
         status: TransactionStatus.COMPLETED,
       },
     });
+  }
+
+  async createMembershipTransactionForSeeding(transaction: Transaction): Promise<Transaction> {
+    return await this.transactionRepository.save(transaction);
+  }
+
+  async fineTransactionByOrderCode(orderCode: number): Promise<Transaction> {
+    const transaction = await this.transactionRepository.findOne({
+      where: {
+        note: orderCode.toString(),
+      },
+    });
+
+    if (!transaction) throw new NotFoundException('Không tìm thấy giao dịch phù hợp');
+    return transaction;
+  }
+
+  async updateTransactionByOrderCode(orderCode: number, status: TransactionStatus): Promise<void> {
+    const transaction = await this.fineTransactionByOrderCode(orderCode);
+    transaction.status = status;
+    await this.transactionRepository.save(transaction);
   }
 }

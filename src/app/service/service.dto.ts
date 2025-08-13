@@ -7,8 +7,16 @@ import { ProductCategoryDto } from '@/app/category/category.dto';
 
 export class ServiceUsernameDto {
   @Expose()
+  @ApiProperty({ description: 'ID người dùng', example: 'uuid-user-1' })
+  id: string;
+
+  @Expose()
   @ApiProperty({ description: 'Tên người dùng', example: 'customer123' })
   username: string;
+
+  @Expose()
+  @ApiProperty({ description: 'Ảnh người dùng', example: 'https://...' })
+  avatar: string | null;
 }
 
 export class ServiceFeedbacksDto {

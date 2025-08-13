@@ -20,7 +20,7 @@ export class OrderDressDetailsService {
     const orderDressDetail = {
       order: { id: orderId },
       dress: { id: dressDetails.dressId },
-      high: dressDetails.high,
+      height: dressDetails.height,
       weight: dressDetails.weight,
       bust: dressDetails.bust,
       waist: dressDetails.waist,
@@ -35,7 +35,7 @@ export class OrderDressDetailsService {
       waistToFloor: dressDetails.waistToFloor,
       description: '',
       price: Number(dress.sellPrice),
-    };
+    } as OrderDressDetail;
 
     await this.orderDressDetailRepository.save(plainToInstance(OrderDressDetail, orderDressDetail));
   }
@@ -53,7 +53,7 @@ export class OrderDressDetailsService {
     if (!boolean) throw new NotFoundException('Không tìm thấy váy này trong shop');
 
     existingOrderDressDetail.dress.id = dressDetail.dressId;
-    existingOrderDressDetail.high = dressDetail.high;
+    existingOrderDressDetail.height = dressDetail.height;
     existingOrderDressDetail.weight = dressDetail.weight;
     existingOrderDressDetail.bust = dressDetail.bust;
     existingOrderDressDetail.waist = dressDetail.waist;
@@ -101,5 +101,9 @@ export class OrderDressDetailsService {
       where: { order: { id: orderId } },
       relations: ['order', 'dress'],
     });
+  }
+
+  async updateOrderDressDetailForSeedingFeedback(id: string): Promise<void> {
+    await this.orderDressDetailRepository.update(id, { isRated: true });
   }
 }

@@ -65,7 +65,7 @@ export class Request extends Base {
     description: 'Chiều cao của cô dâu (cm)',
     example: '170',
   })
-  high: number | null;
+  height: number | null;
 
   @Column({
     type: 'integer',
@@ -236,123 +236,18 @@ export class Request extends Base {
   waistToFloor: number | null;
 
   @Column({
-    type: 'varchar',
-    length: 200,
+    name: 'images',
+    type: 'text',
     nullable: true,
-    comment: 'Kiểu dáng váy',
-    charset: 'utf8mb4',
-    collation: 'utf8mb4_unicode_ci',
   })
   @ApiProperty({
     type: 'string',
-    maxLength: 200,
+    format: 'text',
     nullable: true,
-    description: 'Kiểu dáng váy',
-    example: 'Váy ngắn hoặc vạt trước ngắn vạt sau dài.',
+    description: "Chuỗi hình ảnh, cách nhau bằng dấu ','",
+    example: 'https://veila.images/1,https://veila.images/2',
   })
-  dressStyle: string | null;
-
-  @Column({
-    type: 'varchar',
-    length: 200,
-    nullable: true,
-    comment: 'Dạng cổ váy',
-    charset: 'utf8mb4',
-    collation: 'utf8mb4_unicode_ci',
-  })
-  @ApiProperty({
-    type: 'string',
-    maxLength: 200,
-    nullable: true,
-    description: 'Dạng cổ váy',
-    example: 'Cổ tim, cổ tròn, cổ thuyền, cổ yếm, cúp ngực',
-  })
-  curtainNeckline: string | null;
-
-  @Column({
-    type: 'varchar',
-    length: 200,
-    nullable: true,
-    comment: 'Dạng tay váy',
-    charset: 'utf8mb4',
-    collation: 'utf8mb4_unicode_ci',
-  })
-  @ApiProperty({
-    type: 'string',
-    maxLength: 200,
-    nullable: true,
-    description: 'Dạng tay váy',
-    example: 'Không tay, hai dây, tay trần, tay ngắn',
-  })
-  sleeveStyle: string | null;
-
-  @Column({
-    type: 'varchar',
-    length: 200,
-    nullable: true,
-    comment: 'Chất liệu',
-    charset: 'utf8mb4',
-    collation: 'utf8mb4_unicode_ci',
-  })
-  @ApiProperty({
-    type: 'string',
-    maxLength: 200,
-    nullable: true,
-    description: 'Chất liệu',
-    example: 'Kim sa, Đính kết pha lê/ngọc trai',
-  })
-  material: string | null;
-
-  @Column({
-    type: 'varchar',
-    length: 200,
-    nullable: true,
-    comment: 'Màu sắc',
-    charset: 'utf8mb4',
-    collation: 'utf8mb4_unicode_ci',
-  })
-  @ApiProperty({
-    type: 'string',
-    maxLength: 200,
-    nullable: true,
-    description: 'Màu sắc',
-    example: 'Trắng tinh, trắng ngà (ivory), kem',
-  })
-  color: string | null;
-
-  @Column({
-    type: 'varchar',
-    length: 200,
-    nullable: true,
-    comment: 'Yếu tố đặc biệt',
-    charset: 'utf8mb4',
-    collation: 'utf8mb4_unicode_ci',
-  })
-  @ApiProperty({
-    type: 'string',
-    maxLength: 200,
-    nullable: true,
-    description: 'Yếu tố đặc biệt',
-    example: 'Đuôi váy dài hay ngắn, có chi tiết xẻ tà',
-  })
-  specialElement: string | null;
-
-  @Column({
-    type: 'varchar',
-    length: 200,
-    nullable: true,
-    comment: 'Độ che phủ',
-    charset: 'utf8mb4',
-    collation: 'utf8mb4_unicode_ci',
-  })
-  @ApiProperty({
-    type: 'string',
-    maxLength: 200,
-    nullable: true,
-    description: 'Độ che phủ',
-    example: 'Mức độ hở lưng, xẻ ngực',
-  })
-  coverage: string | null;
+  images: string | null;
 
   @Column({
     type: 'enum',

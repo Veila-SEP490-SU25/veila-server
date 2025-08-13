@@ -45,7 +45,7 @@ export class CURequestDto {
   })
   @IsNumber()
   @IsOptional()
-  high: number | null;
+  height: number | null;
 
   @ApiProperty({
     type: 'number',
@@ -166,83 +166,6 @@ export class CURequestDto {
   @IsNumber()
   @IsOptional()
   waistToFloor: number | null;
-
-  @ApiProperty({
-    type: 'string',
-    maxLength: 200,
-    nullable: true,
-    description: 'Kiểu dáng váy',
-    example: 'Váy ngắn hoặc vạt trước ngắn vạt sau dài.',
-  })
-  @IsString()
-  @IsOptional()
-  dressStyle: string | null;
-
-  @ApiProperty({
-    type: 'string',
-    maxLength: 200,
-    nullable: true,
-    description: 'Dạng cổ váy',
-    example: 'Cổ tim, cổ tròn, cổ thuyền, cổ yếm, cúp ngực',
-  })
-  @IsString()
-  @IsOptional()
-  curtainNeckline: string | null;
-
-  @ApiProperty({
-    type: 'string',
-    maxLength: 200,
-    nullable: true,
-    description: 'Dạng tay váy',
-    example: 'Không tay, hai dây, tay trần, tay ngắn',
-  })
-  @IsString()
-  @IsOptional()
-  sleeveStyle: string | null;
-
-  @ApiProperty({
-    type: 'string',
-    maxLength: 200,
-    nullable: true,
-    description: 'Chất liệu',
-    example: 'Kim sa, Đính kết pha lê/ngọc trai',
-  })
-  @IsString()
-  @IsOptional()
-  material: string | null;
-
-  @ApiProperty({
-    type: 'string',
-    maxLength: 200,
-    nullable: true,
-    description: 'Màu sắc',
-    example: 'Trắng tinh, trắng ngà (ivory), kem',
-  })
-  @IsString()
-  @IsOptional()
-  color: string | null;
-
-  @ApiProperty({
-    type: 'string',
-    maxLength: 200,
-    nullable: true,
-    description: 'Các yếu tố đặc biệt',
-    example: 'Đính kết pha lê, hoa văn 3D',
-  })
-  @IsString()
-  @IsOptional()
-  specialElement: string | null;
-
-  @ApiProperty({
-    type: 'string',
-    maxLength: 200,
-    nullable: true,
-    description: 'Độ che phủ',
-    example: 'Mức độ hở lưng, xẻ ngực',
-  })
-  @IsString()
-  @IsOptional()
-  coverage: string | null;
 
   @ApiProperty({
     enum: RequestStatus,

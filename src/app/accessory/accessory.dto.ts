@@ -7,8 +7,19 @@ import { IsBoolean, IsEnum, IsNumber, IsOptional, IsString } from 'class-validat
 
 export class AccesoryUsernameDto {
   @Expose()
+  @ApiProperty({ description: 'ID người dùng', example: 'uuid-user-1' })
+  id: string;
+
+  @Expose()
   @ApiProperty({ description: 'Tên người dùng', example: 'customer123' })
   username: string;
+
+  @Expose()
+  @ApiProperty({
+    description: 'URL avatar của người dùng',
+    example: 'https://veila.images/avatars/1',
+  })
+  avatarUrl: string | null;
 }
 
 export class AccesoryFeedbacksDto {

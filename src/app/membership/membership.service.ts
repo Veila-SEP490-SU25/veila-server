@@ -23,8 +23,8 @@ export class MembershipService {
     });
   }
 
-  async create(membership: Membership): Promise<void> {
-    await this.membershipRepository.save(membership);
+  async createForSeeding(membership: Membership): Promise<Membership> {
+    return await this.membershipRepository.save(membership);
   }
 
   async registerMembership(shopId: string, subscriptionId: string): Promise<void> {
@@ -51,11 +51,10 @@ export class MembershipService {
     const newMembership = this.membershipRepository.create({
       shop: { id: shopId },
       subscription,
-      images: subscription.images,
       startDate,
       endDate,
       status: MembershipStatus.ACTIVE,
-    });
+    } as Membership);
     await this.membershipRepository.save(newMembership);
   }
 }

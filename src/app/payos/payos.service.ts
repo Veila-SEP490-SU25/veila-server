@@ -5,6 +5,7 @@ import {
   CheckoutRequestType,
   CheckoutResponseDataType,
   PaymentLinkDataType,
+  WebhookType,
 } from '@payos/node/lib/type';
 
 @Injectable()
@@ -29,5 +30,29 @@ export class PayosService {
 
   async getPaymentLinkInformation(orderId: string | number): Promise<PaymentLinkDataType> {
     return await this.payOS.getPaymentLinkInformation(orderId);
+  }
+
+  verifyWebhook(rawBody: WebhookType) {
+    return this.payOS.verifyPaymentWebhookData(rawBody);
+  }
+
+  buildCheckoutRequest(input: {
+    orderCode: number;
+    amount: number;
+    description: string;
+    returnUrl?: string;
+    cancelUrl?: string;
+    buyerName?: string;
+    expiredAt?: number;
+  }): CheckoutRequestType {
+    return {
+      orderCode: input.orderCode,
+      amount: input.amount,
+      description: input.description,
+      returnUrl: input.returnUrl ?? (this.configService.get<string>('PAYOS_RETURN_URL') as string),
+      cancelUrl: input.cancelUrl ?? (this.configService.get<string>('PAYOS_CANCEL_URL') as string),
+      buyerName: input.buyerName,
+      expiredAt: input.expiredAt,
+    } as CheckoutRequestType;
   }
 }

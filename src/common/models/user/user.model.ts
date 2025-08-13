@@ -1,7 +1,7 @@
 import { Column, Entity, JoinColumn, ManyToOne, OneToOne } from 'typeorm';
 import { Exclude } from 'class-transformer';
 import { ApiProperty, ApiHideProperty } from '@nestjs/swagger';
-import { Base, Contract, Shop } from '@/common/models';
+import { Base, Contract, Shop, Wallet } from '@/common/models';
 
 export enum UserRole {
   SUPER_ADMIN = 'SUPER_ADMIN',
@@ -300,4 +300,10 @@ export class User extends Base {
     foreignKeyConstraintName: 'fk_user_contract',
   })
   contract: Contract;
+
+  @OneToOne(() => Wallet, (wallet) => wallet.user, {
+    nullable: true,
+    cascade: true,
+  })
+  wallet: Wallet | null;
 }
