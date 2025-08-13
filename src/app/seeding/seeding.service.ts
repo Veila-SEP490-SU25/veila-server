@@ -515,9 +515,7 @@ export class SeedingService implements OnModuleInit {
             ? `+84${this.customFaker.string.numeric(1)}22${this.customFaker.string.numeric(6)}`
             : email.includes('staff')
               ? `+84${this.customFaker.string.numeric(1)}33${this.customFaker.string.numeric(6)}`
-              : email.includes('super.admin')
-                ? `+84${this.customFaker.string.numeric(1)}44${this.customFaker.string.numeric(6)}`
-                : null,
+              : `+84${this.customFaker.string.numeric(1)}44${this.customFaker.string.numeric(6)}`,
       address: this.customFaker.datatype.boolean()
         ? `${faker.location.streetAddress()}, ${faker.location.city()}`
         : null,
@@ -1243,9 +1241,7 @@ export class SeedingService implements OnModuleInit {
       const newOrder = await this.orderService.createOrderForSeeding({
         customer,
         shop,
-        phone:
-          customer.phone ||
-          `+84${this.customFaker.string.numeric(1)}00${customer.email.charAt(9)}${this.customFaker.string.numeric(5)}`,
+        phone: customer.phone,
         email: customer.email,
         address: customer.address || `${faker.location.streetAddress()}, ${faker.location.city()}`,
         dueDate: new Date(),
@@ -1473,9 +1469,7 @@ export class SeedingService implements OnModuleInit {
       const newOrder = await this.orderService.createOrderForSeeding({
         customer,
         shop,
-        phone:
-          customer.phone ||
-          `+84${this.customFaker.string.numeric(1)}00${customer.email.charAt(9)}${this.customFaker.string.numeric(5)}`,
+        phone: customer.phone,
         email: customer.email,
         address: customer.address || `${faker.location.streetAddress()}, ${faker.location.city()}`,
         dueDate: new Date(),
@@ -1704,7 +1698,7 @@ export class SeedingService implements OnModuleInit {
       `Seeding sell order for customer: ${customer.email}, shop: ${shopAccount.email}, service: ${service.name}`,
     );
 
-    const newRequest = {
+    const newRequest = await this.requestService.createRequestForSeeding({
       user: customer,
       title: `May váy cưới cho ${customer.email} ` + this.customFaker.string.alphanumeric(5),
       description:
@@ -1728,14 +1722,12 @@ export class SeedingService implements OnModuleInit {
       images: this.customFaker.datatype.boolean()
         ? this.customFaker.image.url({ width: 800, height: 600 })
         : '',
-    } as Request;
+    } as Request);
 
     const newOrder = await this.orderService.createOrderForSeeding({
       customer,
       shop,
-      phone:
-        customer.phone ||
-        `+84${this.customFaker.string.numeric(1)}00${customer.email.charAt(9)}${this.customFaker.string.numeric(5)}`,
+      phone: customer.phone,
       email: customer.email,
       address: customer.address || `${faker.location.streetAddress()}, ${faker.location.city()}`,
       dueDate: new Date(),
