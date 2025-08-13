@@ -10,10 +10,12 @@ import {
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { WalletDto } from './wallet.dto';
+import { DepositViaPayOSDto, DepositViaPayOSResponse, WalletDto } from './wallet.dto';
 import { plainToInstance } from 'class-transformer';
 import { UserService } from '../user';
 import { DepositAndWithdrawTransactionDto, TransactionService } from '../transaction';
+import { PayosService } from '../payos/payos.service';
+import { ConfigService } from '@nestjs/config';
 
 @Injectable()
 export class WalletService {
@@ -23,6 +25,8 @@ export class WalletService {
     private readonly userService: UserService,
     @Inject(forwardRef(() => TransactionService))
     private readonly transactionService: TransactionService,
+    private readonly payosService: PayosService,
+    private readonly configService: ConfigService,
   ) {}
 
   async getWalletsForAdmin(
@@ -44,7 +48,7 @@ export class WalletService {
       skip,
       relations: ['user'],
     });
-    for(const wallet of wallets) {
+    for (const wallet of wallets) {
       wallet.availableBalance = Number(wallet.availableBalance);
       wallet.lockedBalance = Number(wallet.lockedBalance);
     }
@@ -87,8 +91,8 @@ export class WalletService {
 
   async depositWallet(
     userId: string,
-    depositWallet: DepositAndWithdrawTransactionDto,
-  ): Promise<Wallet> {
+    depositWallet: DepositViaPayOSDto,
+  ): Promise<DepositViaPayOSResponse> {
     const user = await this.userService.getUserById(userId);
     if (!user) throw new NotFoundException('Người dùng không tồn tại');
 
@@ -97,11 +101,43 @@ export class WalletService {
     const wallet = await this.findOneByUserId(userId);
     if (!wallet) throw new NotFoundException('Người dùng này chưa sở hữu ví điện tử');
 
-    await this.transactionService.saveDepositTransaction(user, wallet.id, depositWallet);
-    wallet.availableBalance = Number(wallet.availableBalance) + Number(depositWallet.amount);
+    //Tạo orderCode (payOS yêu cầu số và unique)
+    const now = Date.now().toString();
+    const tail10 = Number(now.slice(-10));
+    const random2 = Math.floor(Math.random() * 90) + 10;
+    const orderCode = Number(`${tail10}${random2}`);
 
-    await this.walletRepository.save(wallet);
-    return wallet;
+    depositWallet.note = orderCode.toString();
+
+    //Lưu giao dịch ở trạng thái Pending, chưa cộng tiền
+    const pendingTransactionId = await this.transactionService.saveDepositTransaction(
+      user,
+      wallet.id,
+      depositWallet,
+    );
+
+    //Tạo request Payos
+    const request = this.payosService.buildCheckoutRequest({
+      orderCode,
+      amount: depositWallet.amount,
+      description: 'Nạp tiền',
+      returnUrl: depositWallet.returnUrl ?? this.configService.get<string>('PAYOS_RETURN_URL'),
+      cancelUrl: depositWallet.cancelUrl ?? this.configService.get<string>('PAYOS_CANCEL_URL'),
+      buyerName: user.firstName + ' ' + user.middleName + ' ' + user.lastName,
+      expiredAt: Math.floor(Date.now() / 1000) + 15 * 60,
+    });
+
+    //Tạo link thanh toán
+    const paymentLink = await this.payosService.createPaymentLink(request);
+
+    const response = new DepositViaPayOSResponse();
+    response.transactionId = pendingTransactionId;
+    response.orderCode = orderCode;
+    response.checkoutUrl = paymentLink.checkoutUrl;
+    response.qrCode = paymentLink.qrCode;
+    response.expiredAt = paymentLink.expiredAt ?? 0;
+
+    return response;
   }
 
   async withdrawWalletRequest(

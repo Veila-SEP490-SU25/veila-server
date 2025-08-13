@@ -1,6 +1,14 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { Expose, Transform } from 'class-transformer';
-import { IsNotEmpty, IsNumber, IsString } from 'class-validator';
+import {
+  IsInt,
+  IsNotEmpty,
+  IsNumber,
+  IsOptional,
+  IsPositive,
+  IsString,
+  MaxLength,
+} from 'class-validator';
 
 export class CUWalletDto {
   @ApiProperty({
@@ -80,4 +88,79 @@ export class WalletDto {
   @IsNotEmpty()
   @IsNumber()
   lockedBalance: number;
+}
+
+export class DepositViaPayOSDto {
+  @ApiProperty({ example: 150000, description: 'Số tiền muốn nạp (VND)' })
+  @IsInt()
+  @IsPositive()
+  amount: number;
+
+  @ApiProperty({ example: 'Nạp tiền vào ví', required: false })
+  @IsOptional()
+  @IsString()
+  @MaxLength(255)
+  note?: string;
+
+  @ApiProperty({ required: false, description: 'URL trả về sau thanh toán (override)' })
+  @IsOptional()
+  @IsString()
+  returnUrl?: string;
+
+  @ApiProperty({ required: false, description: 'URL hủy thanh toán (override)' })
+  @IsOptional()
+  @IsString()
+  cancelUrl?: string;
+}
+
+export class DepositViaPayOSResponse {
+  @Expose()
+  @ApiProperty({
+    description: 'ID của giao dịch',
+    example: 'transaction-uuid-123',
+    nullable: false,
+  })
+  @IsNotEmpty()
+  @IsString()
+  transactionId: string;
+
+  @Expose()
+  @ApiProperty({
+    description: 'Code của PayOS',
+    example: 123456789,
+    nullable: false,
+  })
+  @IsNotEmpty()
+  @IsNumber()
+  orderCode: number;
+
+  @Expose()
+  @ApiProperty({
+    description: 'URL người dùng truy cập để trả tiền',
+    example: 'http://acbxyz.com',
+    nullable: false,
+  })
+  @IsNotEmpty()
+  @IsString()
+  checkoutUrl: string;
+
+  @Expose()
+  @ApiProperty({
+    description: 'QR code',
+    example: 'abcdefghiklmn',
+    nullable: false,
+  })
+  @IsNotEmpty()
+  @IsString()
+  qrCode: string;
+
+  @Expose()
+  @ApiProperty({
+    description: 'Thời gian hết hạn',
+    example: 123456789,
+    nullable: false,
+  })
+  @IsNotEmpty()
+  @IsString()
+  expiredAt: number;
 }
