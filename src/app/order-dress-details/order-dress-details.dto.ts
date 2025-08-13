@@ -11,7 +11,7 @@ export class CUOrderDressDetailDto {
   @ApiProperty({ description: 'Chiều cao của cô dâu', example: 165 })
   @IsNotEmpty()
   @IsNumber()
-  high: number;
+  height: number;
 
   @ApiProperty({ description: 'Cân nặng của cô dâu', example: 50 })
   @IsNotEmpty()
@@ -96,7 +96,7 @@ export class OrderDressDetailDto {
 
   @Expose()
   @ApiProperty({ description: 'Chiều cao của cô dâu', example: 165 })
-  high: number;
+  height: number;
 
   @Expose()
   @ApiProperty({ description: 'Cân nặng của cô dâu', example: 50 })

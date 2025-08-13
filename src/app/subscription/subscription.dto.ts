@@ -4,53 +4,67 @@ import { IsNumber, IsOptional, IsString } from 'class-validator';
 
 export class ListSubscriptionDto {
   @Expose()
-  @ApiProperty({})
+  @ApiProperty({ description: 'ID gói thành viên', example: 'uuid-subscription-1' })
   id: string;
 
   @Expose()
-  @ApiProperty({})
+  @ApiProperty({ description: 'Tên gói thành viên', example: 'Gói thành viên 1 năm Ultimate' })
   name: string;
 
   @Expose()
-  @ApiProperty({})
+  @ApiProperty({
+    description: 'Mô tả gói thành viên',
+    example: 'Gói cung cấp dịch vụ 1 năm, tiết kiệm 20% chi phí theo tháng',
+  })
   description: string;
 
   @Expose()
-  @ApiProperty({})
+  @ApiProperty({
+    description: 'Ảnh gói thành viên',
+    example: 'https://example.com/image.jpg',
+    nullable: true,
+  })
   images: string | null;
 
   @Expose()
-  @ApiProperty({})
+  @ApiProperty({ description: 'Thời gian hiệu lực của gói (ngày)', example: 365 })
   duration: number;
 
   @Expose()
-  @ApiProperty({})
+  @ApiProperty({ description: 'Số tiền của gói thành viên', example: 1200000 })
   amount: number;
 }
 
 export class ItemSubscriptionDto {
   @Expose()
-  @ApiProperty({})
+  @ApiProperty({ description: 'ID gói thành viên', example: 'uuid-subscription-1' })
   id: string;
 
   @Expose()
-  @ApiProperty({})
+  @ApiProperty({ description: 'Tên gói thành viên', example: 'Gói thành viên 1 năm Ultimate' })
   name: string;
 
   @Expose()
-  @ApiProperty({})
+  @ApiProperty({
+    description: 'Mô tả gói thành viên',
+    example: 'Gói cung cấp dịch vụ 1 năm, tiết kiệm 20% chi phí theo tháng',
+  })
   description: string;
 
   @Expose()
-  @ApiProperty({})
+  @ApiProperty({
+    description: 'Ảnh gói thành viên',
+    example: 'https://example.com/image.jpg',
+    nullable: true,
+  })
   images: string | null;
 
   @Expose()
-  @ApiProperty({})
+  @ApiProperty({ description: 'Thời gian hiệu lực của gói (ngày)', example: 365 })
   duration: number;
 
   @Expose()
-  @ApiProperty({})
+  @ApiProperty({ description: 'Số tiền của gói thành viên', example: 1200000 })
   amount: number;
 }
 

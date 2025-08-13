@@ -5,3 +5,4 @@ export * from '@/common/models/wallet';
 export * from '@/common/models/product';
 export * from '@/common/models/feedback';
 export * from '@/common/models/order';
+export * from '@/common/models/notification';

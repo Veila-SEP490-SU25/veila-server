@@ -40,24 +40,6 @@ export class Category extends Base {
   name: string;
 
   @Column({
-    name: 'description',
-    type: 'varchar',
-    length: 255,
-    nullable: false,
-    comment: 'Mô tả ngắn gọn về danh mục sản phẩm',
-    charset: 'utf8mb4',
-    collation: 'utf8mb4_unicode_ci',
-  })
-  @ApiProperty({
-    type: 'string',
-    description: 'Mô tả ngắn gọn về danh mục sản phẩm (tối đa 255 ký tự)',
-    example: 'Những mẫu đầm dự tiệc sang trọng và thanh lịch',
-    maxLength: 255,
-    nullable: true,
-  })
-  description: string | null;
-
-  @Column({
     name: 'type',
     type: 'enum',
     enum: CategoryType,

@@ -402,8 +402,29 @@ export class OrderController {
   @Post('custom')
   @UseGuards(AuthGuard)
   @Roles(UserRole.CUSTOMER)
-  @ApiOperation({})
-  @ApiCreatedResponse({})
+  @ApiOperation({
+    summary: 'Tạo đơn hàng đặt may (Custom Order)',
+    description: `
+          **Hướng dẫn sử dụng:**
+
+          - Chỉ người dùng có quyền \`CUSTOMER\` mới có thể tạo đơn hàng đặt may.
+          - Truyền dữ liệu đơn hàng trong body theo dạng JSON.
+          - Trả về thông tin chi tiết của đơn hàng vừa tạo.
+          - OrderType: CUSTOM
+      `,
+  })
+  @ApiCreatedResponse({
+    schema: {
+      allOf: [
+        { $ref: getSchemaPath(ItemResponse) },
+        {
+          properties: {
+            item: { $ref: getSchemaPath(Order) },
+          },
+        },
+      ],
+    },
+  })
   async createOrderForCustom(
     @UserId() userId: string,
     @Body() body: CreateOrderForCustom,

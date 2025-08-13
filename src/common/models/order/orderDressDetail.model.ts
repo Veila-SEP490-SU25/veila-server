@@ -35,7 +35,7 @@ export class OrderDressDetail extends Base {
     description: 'Chiều cao của cô dâu (cm)',
     example: '170',
   })
-  high: number | null;
+  height: number | null;
 
   @Column({
     type: 'integer',

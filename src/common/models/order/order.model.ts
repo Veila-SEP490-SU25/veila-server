@@ -127,22 +127,6 @@ export class Order extends Base {
   returnDate: Date | null;
 
   @Column({
-    name: 'is_buy_back',
-    type: 'boolean',
-    nullable: false,
-    default: false,
-    comment: 'Cửa hàng có mua lại váy cưới sau khi may cho khách không',
-  })
-  @ApiProperty({
-    type: 'boolean',
-    default: false,
-    nullable: false,
-    description: 'Cửa hàng có mua lại váy cưới sau khi may cho khách không',
-    example: false,
-  })
-  isBuyBack: boolean;
-
-  @Column({
     type: 'decimal',
     precision: 12,
     scale: 2,

@@ -251,4 +251,8 @@ export class TransactionService {
       },
     });
   }
+
+  async createMembershipTransactionForSeeding(transaction: Transaction): Promise<Transaction> {
+    return await this.transactionRepository.save(transaction);
+  }
 }

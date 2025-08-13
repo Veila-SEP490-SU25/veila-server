@@ -170,4 +170,11 @@ export class ServiceService {
     if (!service) throw new NotFoundException(`Service with userId ${userId} not found`);
     return service;
   }
+
+  async getServiceByUserIdForSeeding(userId: string): Promise<Service | null> {
+    return await this.serviceRepository.findOne({
+      where: { user: { id: userId } },
+      withDeleted: true,
+    });
+  }
 }

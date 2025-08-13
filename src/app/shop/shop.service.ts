@@ -454,6 +454,18 @@ export class ShopService {
     });
   }
 
+  async getShopByUserEmailForSeeding(email: string): Promise<Shop | null> {
+    return await this.shopRepository.findOne({
+      where: { user: { email } },
+      relations: {
+        user: {
+          wallet: true,
+        },
+      },
+      withDeleted: true,
+    });
+  }
+
   async getShopForOrderCustom(id: string): Promise<Shop> {
     const shop = await this.shopRepository.findOne({
       where: { id },
