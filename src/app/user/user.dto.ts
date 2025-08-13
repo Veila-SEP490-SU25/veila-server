@@ -183,15 +183,6 @@ export class UpdateProfile {
   @IsString()
   @IsOptional()
   coverUrl: string | null;
-
-  @ApiProperty({
-    required: false,
-    description: 'Ảnh đại diện của người dùng',
-    type: 'string',
-  })
-  @IsOptional()
-  @IsString()
-  images: string | null;
 }
 
 export class UserContactDto {

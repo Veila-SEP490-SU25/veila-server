@@ -101,7 +101,7 @@ export class SubscriptionService {
     return subscription;
   }
 
-  async findAll(): Promise<Subscription[]> {
+  async getAllForSeeding(): Promise<Subscription[]> {
     return this.subscriptionRepository.find({ withDeleted: true });
   }
 

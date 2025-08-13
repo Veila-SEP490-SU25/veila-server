@@ -120,4 +120,8 @@ export class OrderAccessoriesDetailsService {
       relations: ['order', 'accessory'],
     });
   }
+
+  async updateOrderAccessoryDetailForSeedingFeedback(id: string): Promise<void> {
+    await this.orderAccessoryDetailRepository.update(id, { isRated: true });
+  }
 }

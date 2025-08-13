@@ -1,10 +1,10 @@
-import { Column, Entity, JoinColumn, ManyToOne } from 'typeorm';
+import { Column, Entity, JoinColumn, OneToOne } from 'typeorm';
 import { Base, User } from '@/common/models';
 import { ApiProperty } from '@nestjs/swagger';
 
 @Entity('wallets')
 export class Wallet extends Base {
-  @ManyToOne(() => User, {
+  @OneToOne(() => User, {
     nullable: false,
     onDelete: 'CASCADE',
   })
@@ -55,4 +55,28 @@ export class Wallet extends Base {
     default: 0,
   })
   lockedBalance: number;
+
+  @Column({
+    type: 'varchar',
+    length: 6,
+    nullable: true,
+  })
+  @ApiProperty({
+    type: 'string',
+    nullable: true,
+    description: 'Mã BIN định danh ngân hàng',
+  })
+  bin: string | null;
+
+  @Column({
+    type: 'varchar',
+    length: 20,
+    nullable: true,
+  })
+  @ApiProperty({
+    type: 'string',
+    nullable: true,
+    description: 'Số tài khoản ngân hàng',
+  })
+  bankNumber: string | null;
 }

@@ -1,4 +1,4 @@
-import { Column, Entity, JoinColumn, ManyToOne, OneToMany } from 'typeorm';
+import { Column, Entity, JoinColumn, OneToMany, OneToOne } from 'typeorm';
 import { Base, Category, Feedback, User } from '@/common/models';
 import { ApiProperty } from '@nestjs/swagger';
 
@@ -10,7 +10,7 @@ export enum ServiceStatus {
 
 @Entity('services')
 export class Service extends Base {
-  @ManyToOne(() => User, {
+  @OneToOne(() => User, {
     nullable: false,
     onDelete: 'CASCADE',
   })
@@ -20,7 +20,7 @@ export class Service extends Base {
   })
   user: User;
 
-  @ManyToOne(() => Category, {
+  @OneToOne(() => Category, {
     nullable: true,
     onDelete: 'SET NULL',
   })
@@ -64,6 +64,20 @@ export class Service extends Base {
     example: 'Cửa hàng cung cấp dịch vụ cho thuê váy cưới',
   })
   description: string | null;
+
+  @Column({
+    name: 'images',
+    type: 'text',
+    nullable: true,
+  })
+  @ApiProperty({
+    type: 'string',
+    format: 'text',
+    nullable: true,
+    description: "Chuỗi hình ảnh, cách nhau bằng dấu ','",
+    example: 'https://veila.images/1,https://veila.images/2',
+  })
+  images: string | null;
 
   @Column({
     name: 'rating_average',

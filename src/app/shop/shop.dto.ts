@@ -67,16 +67,6 @@ export class UpdateShopDto {
   @IsString({ message: 'URL ảnh bìa phải là chuỗi.' })
   @IsOptional()
   coverUrl: string | null;
-
-  @ApiProperty({
-    description: 'Danh sách URL ảnh của shop',
-    example:
-      'https://storage.veila.com/shops/image1.jpg, https://storage.veila.com/shops/image2.jpg',
-    nullable: true,
-  })
-  @IsString({ message: 'Danh sách ảnh phải là chuỗi.' })
-  @IsOptional()
-  images: string | null;
 }
 
 export class ReviewShopDto {
@@ -245,10 +235,6 @@ export class ListShopDto {
     nullable: true,
   })
   coverUrl: string | null;
-
-  @Expose()
-  @ApiProperty({ description: 'Ảnh tổng hợp của shop (nếu có)', example: null, nullable: true })
-  images: string | null;
 }
 
 export class ItemShopDto {
@@ -279,10 +265,6 @@ export class ItemShopDto {
     nullable: true,
   })
   description: string | null;
-
-  @Expose()
-  @ApiProperty({ description: 'Ảnh tổng hợp của shop (nếu có)', example: null, nullable: true })
-  images: string | null;
 
   @Expose()
   @ApiProperty({

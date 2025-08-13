@@ -22,6 +22,20 @@ export class License extends Base {
   shop: Shop;
 
   @Column({
+    name: 'images',
+    type: 'text',
+    nullable: true,
+  })
+  @ApiProperty({
+    type: 'string',
+    format: 'text',
+    nullable: true,
+    description: "Chuỗi hình ảnh, cách nhau bằng dấu ','",
+    example: 'https://veila.images/1,https://veila.images/2',
+  })
+  images: string | null;
+
+  @Column({
     name: 'status',
     type: 'enum',
     enum: LicenseStatus,

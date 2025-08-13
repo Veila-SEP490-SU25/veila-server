@@ -62,37 +62,40 @@ export class FeedbackOrderDto {
 
 export class LogoUserDto {
   @Expose()
-  @ApiProperty()
+  @ApiProperty({ description: 'ID người dùng', example: 'uuid-user-1' })
   id: string;
 
   @Expose()
-  @ApiProperty()
+  @ApiProperty({ description: 'Tên người dùng', example: 'customer123' })
   username: string;
 
   @Expose()
-  @ApiProperty()
+  @ApiProperty({
+    description: 'URL avatar của người dùng',
+    example: 'https://veila.images/avatars/1',
+  })
   avatarUrl: string | null;
 }
 
 export class ItemFeedbackDto {
   @Expose()
-  @ApiProperty()
+  @ApiProperty({ description: 'ID phản hồi', example: 'uuid-feedback-1' })
   id: string;
 
   @Expose()
-  @ApiProperty()
+  @ApiProperty({ description: 'Nội dung phản hồi', example: 'Váy rất đẹp!' })
   content: string;
 
   @Expose()
-  @ApiProperty()
+  @ApiProperty({ description: 'Điểm đánh giá', example: 4.5 })
   rating: number;
 
   @Expose()
-  @ApiProperty()
+  @ApiProperty({ description: 'Ảnh feedback (nếu có)', example: 'https://...' })
   images: string | null;
 
   @Expose()
-  @ApiProperty()
+  @ApiProperty({ description: 'Thời gian tạo phản hồi', example: '2023-01-01T00:00:00Z' })
   createdAt: Date;
 
   @Expose()

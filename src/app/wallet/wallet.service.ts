@@ -222,7 +222,7 @@ export class WalletService {
   }
 
   //Function for seeding data
-  async findAll(): Promise<Wallet[]> {
+  async getAllForSeeding(): Promise<Wallet[]> {
     return this.walletRepository.find({ withDeleted: true });
   }
 

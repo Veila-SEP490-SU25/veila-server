@@ -372,7 +372,6 @@ export class OrderService {
     existingOrder.address = updatedOrder.address;
     existingOrder.dueDate = updatedOrder.dueDate;
     existingOrder.returnDate = updatedOrder.returnDate;
-    existingOrder.isBuyBack = updatedOrder.isBuyBack;
 
     return await this.orderRepository.save(plainToInstance(Order, existingOrder));
   }
@@ -413,11 +412,40 @@ export class OrderService {
     return await this.orderRepository.find({
       where: { type, status },
       withDeleted: true,
+      relations: {
+        orderAccessoriesDetail: { accessory: true },
+        orderDressDetail: { dress: true },
+        orderServiceDetail: { service: true },
+      },
     });
+  }
+
+  async updateOrderDressDetailForSeedingFeedback(orderDressDetailId: string): Promise<void> {
+    await this.orderDressDetailsService.updateOrderDressDetailForSeedingFeedback(
+      orderDressDetailId,
+    );
+  }
+
+  async updateOrderServiceDetailForSeedingFeedback(orderServiceDetailId: string): Promise<void> {
+    await this.orderServiceDetailRepository.update(orderServiceDetailId, { isRated: true });
+  }
+
+  async updateOrderAccessoryDetailForSeedingFeedback(
+    orderAccessoryDetailId: string,
+  ): Promise<void> {
+    await this.orderAccessoriesDetailsService.updateOrderAccessoryDetailForSeedingFeedback(
+      orderAccessoryDetailId,
+    );
   }
 
   async createOrderForSeeding(order: Order): Promise<Order> {
     return await this.orderRepository.save(order);
+  }
+
+  async createOrderServiceDetailForSeeding(
+    orderServiceDetail: OrderServiceDetail,
+  ): Promise<OrderServiceDetail> {
+    return await this.orderServiceDetailRepository.save(orderServiceDetail);
   }
 
   async getCompletedOrderForSeeding(

@@ -104,7 +104,7 @@ export class FeedbackService {
     return feedback;
   }
 
-  async getAllFeedbacks(): Promise<Feedback[]> {
+  async getAllFeedbacksForSeeding(): Promise<Feedback[]> {
     return await this.feedbackRepository.find({
       withDeleted: true,
     });

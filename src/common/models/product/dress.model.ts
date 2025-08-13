@@ -66,6 +66,20 @@ export class Dress extends Base {
   description: string | null;
 
   @Column({
+    name: 'images',
+    type: 'text',
+    nullable: true,
+  })
+  @ApiProperty({
+    type: 'string',
+    format: 'text',
+    nullable: true,
+    description: "Chuỗi hình ảnh, cách nhau bằng dấu ','",
+    example: 'https://veila.images/1,https://veila.images/2',
+  })
+  images: string | null;
+
+  @Column({
     name: 'sell_price',
     type: 'decimal',
     precision: 10,

@@ -218,7 +218,7 @@ export class UserService {
     await this.userRepository.restore(id);
   }
 
-  async getAll(): Promise<User[]> {
+  async getAllForSeeding(): Promise<User[]> {
     return this.userRepository.find({ withDeleted: true });
   }
 

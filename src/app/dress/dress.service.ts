@@ -161,8 +161,8 @@ export class DressService {
     });
   }
 
-  async getOneDressByUserId(userId: string): Promise<Dress | null> {
-    return await this.dressRepository.findOne({
+  async getAllDressesByUserIdForSeeding(userId: string): Promise<Dress[]> {
+    return await this.dressRepository.find({
       where: { user: { id: userId } },
       withDeleted: true,
     });

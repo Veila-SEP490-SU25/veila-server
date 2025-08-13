@@ -154,4 +154,11 @@ export class AccessoryService {
     if (!accessory) throw new NotFoundException('Không tìm thấy phụ kiện');
     return accessory;
   }
+
+  async getAllByUserIdForSeeding(userId: string): Promise<Accessory[]> {
+    return await this.accessoryRepository.find({
+      where: { user: { id: userId } },
+      withDeleted: true,
+    });
+  }
 }
