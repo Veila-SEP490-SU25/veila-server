@@ -22,17 +22,20 @@ export class OrderAccessoriesDetailsService {
     orderId: string,
     accessoriesDetails: CUOrderAccessoriesDetailDto[],
   ): Promise<void> {
-    const orderAccessoryDetails = accessoriesDetails.map(async (accessoriesDetail) => ({
-      order: { id: orderId },
-      accessory: { id: accessoriesDetail.accessoryId },
-      quantity: Number(accessoriesDetail.quantity),
-      price:
-        Number((await this.getAccessoryById(accessoriesDetail.accessoryId)).sellPrice) *
-        Number(accessoriesDetail.quantity),
-    }));
-    await this.orderAccessoryDetailRepository.save(
-      plainToInstance(OrderAccessoryDetail, orderAccessoryDetails),
+    // Resolve async computations within map; otherwise you'll pass an array of Promises to save()
+    const orderAccessoryDetails = await Promise.all(
+      accessoriesDetails.map(async (detail) => {
+        const accessory = await this.getAccessoryById(detail.accessoryId);
+        return this.orderAccessoryDetailRepository.create({
+          order: { id: orderId },
+          accessory: { id: detail.accessoryId },
+          quantity: Number(detail.quantity),
+          price: Number(accessory.sellPrice ?? 0) * Number(detail.quantity ?? 0),
+        } as OrderAccessoryDetail);
+      }),
     );
+
+    await this.orderAccessoryDetailRepository.save(orderAccessoryDetails);
   }
 
   async updateOrderAccessoryDetail(
