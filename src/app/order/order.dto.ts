@@ -56,6 +56,7 @@ export class COrderDto {
     nullable: true,
   })
   @Type(() => Date)
+  @IsOptional()
   @IsDate()
   returnDate: Date | null;
 
@@ -111,6 +112,7 @@ export class UOrderDto {
     nullable: true,
   })
   @Type(() => Date)
+  @IsOptional()
   @IsDate()
   returnDate: Date | null;
 }

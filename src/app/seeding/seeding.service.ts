@@ -181,6 +181,9 @@ export class SeedingService implements OnModuleInit {
       .then(async () => {
         await this.seedFeedbacks();
         // await this.seedComplaintsForOrder();
+      })
+      .then(async () => {
+        await this.seedUpdateRating();
       });
   }
 
@@ -1922,7 +1925,7 @@ export class SeedingService implements OnModuleInit {
         this.logger.warn(
           `Order ${order.id} does not have complete details. Skipping feedback seeding.`,
         );
-        return;
+        continue;
       }
       const newDressFeedback = {
         customer,
@@ -1961,7 +1964,7 @@ export class SeedingService implements OnModuleInit {
         this.logger.warn(
           `Order ${order.id} does not have complete details. Skipping feedback seeding.`,
         );
-        return;
+        continue;
       }
       const newDressFeedback = {
         customer,
@@ -2016,6 +2019,39 @@ export class SeedingService implements OnModuleInit {
       await this.orderService.updateOrderServiceDetailForSeedingFeedback(
         order.orderServiceDetail.id,
       );
+    }
+  }
+
+  private async seedUpdateRating() {
+    const dresses = await this.dressService.getAll();
+    for (const dress of dresses) {
+      if (dress.ratingCount === 0) {
+        try {
+          await this.dressService.updateDressRatingForSeedingFeedback(dress.id);
+        } catch (error) {
+          this.logger.error(`Failed to update rating for dress ${dress.id}`, error);
+        }
+      }
+    }
+    const accessories = await this.accessoryService.getAll();
+    for (const accessory of accessories) {
+      if (accessory.ratingCount === 0) {
+        try {
+          await this.accessoryService.updateAccessoryRatingForSeedingFeedback(accessory.id);
+        } catch (error) {
+          this.logger.error(`Failed to update rating for accessory ${accessory.id}`, error);
+        }
+      }
+    }
+    const services = await this.serviceService.getAll();
+    for (const service of services) {
+      if (service.ratingCount === 0) {
+        try {
+          await this.serviceService.updateServiceRatingForSeedingFeedback(service.id);
+        } catch (error) {
+          this.logger.error(`Failed to update rating for service ${service.id}`, error);
+        }
+      }
     }
   }
 
