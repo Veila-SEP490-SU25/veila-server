@@ -319,13 +319,18 @@ export class ShopService {
     const existingShop = await this.shopRepository.findOne({
       where: { id },
       withDeleted: true,
-      relations: { license: true },
+      relations: { license: true, user: true },
     });
-    if (!existingShop) throw new NotFoundException('Không tìm thấy cửa hàng phù hợp');
-    if (!existingShop.license)
+
+    if (!existingShop) {
+      throw new NotFoundException('Không tìm thấy cửa hàng phù hợp');
+    }
+    if (!existingShop.license) {
       throw new NotFoundException('Không tìm thấy giấy phép kinh doanh của cửa hàng');
-    if (existingShop.status !== ShopStatus.PENDING)
+    }
+    if (existingShop.status !== ShopStatus.PENDING) {
       throw new BadRequestException('Cửa hàng không ở trạng thái chờ duyệt');
+    }
 
     if (isApproved) {
       await this.shopRepository.update(existingShop.id, {
@@ -337,9 +342,11 @@ export class ShopService {
         status: LicenseStatus.APPROVED,
       });
 
-      await this.userRepository.update({ shop: existingShop }, { role: UserRole.SHOP });
+      await this.userRepository.update({ id: existingShop.user.id }, { role: UserRole.SHOP });
 
-      const subscription = await this.subscriptionRepository.findOne({ where: { duration: 7 } });
+      const subscription = await this.subscriptionRepository.findOne({
+        where: { duration: 7 },
+      });
       if (!subscription) {
         throw new NotFoundException('Không tìm thấy gói đăng ký phù hợp');
       }

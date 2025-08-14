@@ -96,7 +96,8 @@ export class CUTransactionDto {
   note: string;
 }
 
-export class DepositAndWithdrawTransactionDto {
+export class WithdrawTransactionDto {
+  @Expose()
   @ApiProperty({
     description: 'Số tiền giao dịch (VNĐ)',
     example: 200000,
@@ -106,12 +107,33 @@ export class DepositAndWithdrawTransactionDto {
   @IsNumber()
   amount: number;
 
+  @Expose()
   @ApiProperty({
     description: 'Ghi chú giao dịch nếu có',
-    example: 'Nạp tiền vào ví điện tử',
+    example: 'Rút tiền từ ví điện tử',
     nullable: true,
   })
   note: string;
+
+  @Expose()
+  @ApiProperty({
+    type: 'string',
+    nullable: false,
+    description: 'Mã BIN định danh ngân hàng',
+  })
+  @IsNotEmpty()
+  @IsString()
+  bin: string;
+
+  @Expose()
+  @ApiProperty({
+    type: 'string',
+    nullable: false,
+    description: 'Số tài khoản ngân hàng',
+  })
+  @IsNotEmpty()
+  @IsString()
+  bankNumber: string;
 }
 
 export class TransactionDto {

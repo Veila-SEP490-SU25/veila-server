@@ -186,7 +186,7 @@ export class SeedingService implements OnModuleInit {
 
   private async seedContracts() {
     const contracts = await this.contractService.findAll();
-    if (contracts.length >= 2) {
+    if (contracts.length >= 3) {
       this.logger.log(`Enough data available for contract. Skipping seeding`);
       return;
     }
@@ -323,9 +323,53 @@ export class SeedingService implements OnModuleInit {
 - Điều khoản có hiệu lực từ ngày khách hàng đồng ý
 - Veila có quyền cập nhật điều khoản với thông báo trước 30 ngày
 - Khách hàng tiếp tục sử dụng dịch vụ đồng nghĩa với việc chấp nhận điều khoản mới`;
+
+      const platformContractContent = `
+# Giới thiệu Nền tảng Veila - Wedding Dress Platform
+
+## 1. Thông tin chung
+- **Tên nền tảng**: Veila Platform
+- **Slogan**: Kết nối cô dâu, chú rể với những chiếc váy cưới đẹp nhất
+- **Mô tả**: Veila là nền tảng cung cấp và kết nối các nhà cung cấp váy cưới với khách hàng trên toàn quốc, giúp tiết kiệm thời gian, chi phí và mang lại trải nghiệm cưới hoàn hảo.
+- **Website**: https://veila.studio/
+- **Năm thành lập**: 2025
+
+## 2. Sứ mệnh và Tầm nhìn
+- **Sứ mệnh**: Mang đến trải nghiệm cưới hoàn hảo thông qua công nghệ và dịch vụ chất lượng.
+- **Tầm nhìn**: Trở thành nền tảng váy cưới hàng đầu Việt Nam.
+- **Giá trị cốt lõi**:
+  1. Chất lượng
+  2. Tin cậy
+  3. Sáng tạo
+
+## 3. Thông tin liên hệ
+- **Email**: veila.studio.mail@gmail.com
+
+- **Điện thoại**: +84 967 475 325
+- **Địa chỉ**: Quận 9, TP. Hồ Chí Minh, Việt Nam
+
+## 5. Hỗ trợ khách hàng
+- **Thời gian hỗ trợ**: 24/7 mọi ngày trong tuần
+`;
       Promise.all([
-        await this.seedContract(ContractType.CUSTOMER, customerContractContent),
-        await this.seedContract(ContractType.SHOP, shopContractContent),
+        await this.seedContract(
+          ContractType.CUSTOMER,
+          customerContractContent,
+          `Điều khoản CUSTOMER`,
+          new Date(),
+        ),
+        await this.seedContract(
+          ContractType.SHOP,
+          shopContractContent,
+          `Điều khoản SHOP`,
+          new Date(),
+        ),
+        await this.seedContract(
+          ContractType.PLATFORM,
+          platformContractContent,
+          'Veila - Wedding Dress Platform',
+          new Date('2025-05-12'),
+        ),
       ]);
       this.logger.log('Seeding process completed successfully!');
     } catch (error) {
@@ -334,7 +378,12 @@ export class SeedingService implements OnModuleInit {
     }
   }
 
-  private async seedContract(type: ContractType, content: string) {
+  private async seedContract(
+    type: ContractType,
+    content: string,
+    title: string,
+    effectiveFrom: Date,
+  ) {
     this.logger.log(`Seeding contract with type: ${type}`);
 
     const existingContract = await this.contractService.findOne(type);
@@ -344,10 +393,10 @@ export class SeedingService implements OnModuleInit {
     }
 
     const newContract = {
-      title: `Điều khoản ${type}`,
+      title,
       content,
       contractType: type,
-      effectiveFrom: new Date(),
+      effectiveFrom,
       status: ContractStatus.ACTIVE,
     } as Contract;
 

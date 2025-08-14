@@ -1,11 +1,12 @@
 import { ItemResponse, ListResponse } from '@/common/base';
 import {
-  BadRequestException,
+  // BadRequestException,
   Body,
   Controller,
   Get,
   HttpCode,
   HttpStatus,
+  NotFoundException,
   Post,
   Put,
   UseGuards,
@@ -20,7 +21,7 @@ import {
   ApiTags,
   getSchemaPath,
 } from '@nestjs/swagger';
-import { DepositViaPayOSDto, DepositViaPayOSResponse, WalletDto } from './wallet.dto';
+import { DepositViaPayOSDto, DepositViaPayOSResponse, WalletDto, WebhookDto } from './wallet.dto';
 import {
   Filtering,
   FilteringParams,
@@ -34,11 +35,11 @@ import {
 import { TransactionStatus, UserRole, Wallet } from '@/common/models';
 import { WalletService } from './wallet.service';
 import { AuthGuard, RolesGuard } from '@/common/guards';
-import { DepositAndWithdrawTransactionDto, TransactionService } from '../transaction';
+import { WithdrawTransactionDto, TransactionService } from '../transaction';
 import { PayosService } from '../payos/payos.service';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { WebhookType } from '@payos/node/lib/type';
+// import { WebhookType } from '@payos/node/lib/type';
 
 @Controller('wallets')
 @ApiTags('Wallet Controller')
@@ -234,7 +235,7 @@ export class WalletController {
   })
   async withdrawWalletRequest(
     @UserId() userId: string,
-    @Body() withdrawWallet: DepositAndWithdrawTransactionDto,
+    @Body() withdrawWallet: WithdrawTransactionDto,
   ): Promise<ItemResponse<string>> {
     const wallet = await this.walletService.withdrawWalletRequest(userId, withdrawWallet);
     return {
@@ -244,7 +245,7 @@ export class WalletController {
     };
   }
 
-  @Post()
+  @Post('payment/webhook')
   @HttpCode(200)
   @ApiOperation({
     summary: 'Xử lý webhook nạp tiền từ PayOS',
@@ -262,72 +263,121 @@ export class WalletController {
   `,
   })
   @ApiBody({
-    description: 'Payload webhook do PayOS gửi về',
+    type: WebhookDto,
+    description: 'Webhook payload from PayOS',
     required: true,
-    schema: {
-      example: {
-        code: '00',
-        desc: 'Success',
-        success: true,
-        data: {
-          orderCode: 123456789,
-          amount: 100000,
-          description: 'Nạp tiền vào ví',
-          accountNumber: '1234567890',
-          reference: 'Ref12345',
-          transactionDateTime: '2025-08-13T14:30:00+07:00',
-          currency: 'VND',
-          paymentLinkId: 'pl_abc123',
-          code: 'PAID',
-          desc: 'Thanh toán thành công',
-          counterAccountBankId: 'VCB',
-          counterAccountBankName: 'Vietcombank',
-          counterAccountName: 'Nguyen Van A',
-          counterAccountNumber: '0123456789',
+    examples: {
+      completed: {
+        summary: 'Payment completed',
+        value: {
+          transactionId: 'transaction-uuid-123',
+          status: 'COMPLETED',
         },
-        signature: 'abcxyz1234567890',
+      },
+      failed: {
+        summary: 'Payment failed',
+        value: {
+          transactionId: 'transaction-uuid-123',
+          status: 'FAILED',
+        },
+      },
+      cancelled: {
+        summary: 'Payment cancelled',
+        value: {
+          transactionId: 'transaction-uuid-123',
+          status: 'CANCELLED',
+        },
       },
     },
   })
-  async handleWebhook(@Body() body: WebhookType) {
-    // Xác thực chữ ký
-    const verified = this.payosService.verifyWebhook(body);
-    if (!verified) {
-      throw new BadRequestException('Invalid signature');
-    }
+  // @ApiBody({
+  //   description: 'Payload webhook do PayOS gửi về',
+  //   required: true,
+  //   schema: {
+  //     example: {
+  //       code: '00',
+  //       desc: 'Success',
+  //       success: true,
+  //       data: {
+  //         orderCode: 123456789,
+  //         amount: 100000,
+  //         description: 'Nạp tiền vào ví',
+  //         accountNumber: '1234567890',
+  //         reference: 'Ref12345',
+  //         transactionDateTime: '2025-08-13T14:30:00+07:00',
+  //         currency: 'VND',
+  //         paymentLinkId: 'pl_abc123',
+  //         code: 'PAID',
+  //         desc: 'Thanh toán thành công',
+  //         counterAccountBankId: 'VCB',
+  //         counterAccountBankName: 'Vietcombank',
+  //         counterAccountName: 'Nguyen Van A',
+  //         counterAccountNumber: '0123456789',
+  //       },
+  //       signature: 'abcxyz1234567890',
+  //     },
+  //   },
+  // })
+  async handleWebhook(@Body() body: WebhookDto) {
+    //WebhookType
+    // // Xác thực chữ ký
+    // const verified = this.payosService.verifyWebhook(body);
+    // if (!verified) {
+    //   throw new BadRequestException('Invalid signature');
+    // }
 
-    // Đọc dữ liệu từ PayOS
-    const data = body?.data;
-    if (!data || typeof data.orderCode === 'undefined') {
-      throw new BadRequestException('Missing orderCode');
-    }
+    // // Đọc dữ liệu từ PayOS
+    // const data = body?.data;
+    // if (!data || typeof data.orderCode === 'undefined') {
+    //   throw new BadRequestException('Missing orderCode');
+    // }
 
-    const orderCode = Number(data.orderCode);
-    const status = String(data.code || '').toUpperCase();
+    // const orderCode = Number(data.orderCode);
+    // const status = String(data.code || '').toUpperCase();
 
-    // Tìm transaction qua orderCode
-    const transaction = await this.transactionService.fineTransactionByOrderCode(orderCode);
+    // // Tìm transaction qua orderCode
+    // const transaction = await this.transactionService.fineTransactionByOrderCode(orderCode);
 
-    // Xử lý theo trạng thái
-    if (status === 'PAID') {
-      await this.transactionService.updateTransactionByOrderCode(
-        orderCode,
-        TransactionStatus.COMPLETED,
-      );
+    //Tìm transaction bằng transactionId
+    const transaction = await this.transactionService.getTransactionById(body.transactionId);
+    if (!transaction) throw new NotFoundException('Không tìm thấy giao dịch');
 
-      // Cộng tiền vào ví
-      const wallet = await this.walletRepo.findOne({ where: { id: transaction.wallet.id } });
+    if (body.status === TransactionStatus.COMPLETED) {
+      await this.transactionService.updateTransactionStatus(transaction.id, body.status);
+      const wallet = await this.walletRepo.findOne({ where: { id: transaction.walletId } });
       if (wallet) {
         wallet.availableBalance = Number(wallet.availableBalance) + Number(transaction.amount);
         await this.walletRepo.save(wallet);
       }
-    } else if (status === 'CANCELLED' || status === 'FAILED') {
-      await this.transactionService.updateTransactionByOrderCode(
-        orderCode,
-        status === 'FAILED' ? TransactionStatus.FAILED : TransactionStatus.CANCELLED,
-      );
+    } else if (
+      body.status === TransactionStatus.CANCELLED ||
+      body.status === TransactionStatus.FAILED
+    ) {
+      await this.transactionService.updateTransactionStatus(transaction.id, body.status);
     }
 
-    return { message: 'OK' };
+    return {
+      message: 'OK',
+    };
+    // // Xử lý theo trạng thái
+    // if (status === 'PAID') {
+    //   await this.transactionService.updateTransactionByOrderCode(
+    //     orderCode,
+    //     TransactionStatus.COMPLETED,
+    //   );
+    //   // Cộng tiền vào ví
+    //   const wallet = await this.walletRepo.findOne({ where: { id: transaction.wallet.id } });
+    //   if (wallet) {
+    //     wallet.availableBalance = Number(wallet.availableBalance) + Number(transaction.amount);
+    //     await this.walletRepo.save(wallet);
+    //   }
+    // } else if (status === 'CANCELLED' || status === 'FAILED') {
+    //   await this.transactionService.updateTransactionByOrderCode(
+    //     orderCode,
+    //     status === 'FAILED' ? TransactionStatus.FAILED : TransactionStatus.CANCELLED,
+    //   );
+    // }
+
+    // return { message: 'OK' };
   }
 }
