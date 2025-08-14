@@ -22,7 +22,7 @@ import {
   getSchemaPath,
 } from '@nestjs/swagger';
 import { BlogService } from './blog.service';
-import { AuthGuard } from '@/common/guards';
+import { AuthGuard, RolesGuard } from '@/common/guards';
 import {
   Filtering,
   FilteringParams,
@@ -42,6 +42,87 @@ import { plainToInstance } from 'class-transformer';
 @ApiExtraModels(ItemResponse, ListResponse, Blog, ListBlogDto, ItemBlogDto)
 export class BlogController {
   constructor(private readonly blogService: BlogService) {}
+
+  @Get('staff')
+  @UseGuards(AuthGuard, RolesGuard)
+  @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.STAFF)
+  @ApiOperation({
+    summary: 'Lấy danh sách tất cả blog cho staff',
+    description: `
+**Hướng dẫn sử dụng:**
+
+- Trả về danh sách tất cả blog (bao gồm cả đã xóa mềm).
+- Hỗ trợ phân trang, sắp xếp, lọc.
+- Page bắt đầu từ 0
+- Sort theo format: [tên_field]:[asc/desc]
+- Các trường đang có thể sort: title
+- Filter theo format: [tên_field]:[eq|neq|gt|gte|lt|lte|like|nlike|in|nin]:[keyword]; hoặc [tên_field]:[isnull|isnotnull]
+- Các trường đang có thể filter: title, status
+`,
+  })
+  @ApiQuery({
+    name: 'page',
+    required: false,
+    type: Number,
+    default: 0,
+    description: 'Trang hiện tại (bắt đầu từ 0)',
+  })
+  @ApiQuery({
+    name: 'size',
+    required: false,
+    type: Number,
+    default: 10,
+    description: 'Số lượng mỗi trang',
+  })
+  @ApiQuery({
+    name: 'sort',
+    required: false,
+    type: String,
+    description: 'Sắp xếp theo trường, ví dụ: :asc',
+  })
+  @ApiQuery({
+    name: 'filter',
+    required: false,
+    type: String,
+    description: 'Lọc theo trường, ví dụ: :like:',
+  })
+  @ApiOkResponse({
+    schema: {
+      allOf: [
+        { $ref: getSchemaPath(ListResponse) },
+        {
+          properties: {
+            item: { $ref: getSchemaPath(Blog) },
+          },
+        },
+      ],
+    },
+  })
+  async getBlogsForStaff(
+    @PaginationParams() { page, size, limit, offset }: Pagination,
+    @SortingParams(['title']) sort?: Sorting,
+    @FilteringParams(['title', 'status']) filter?: Filtering,
+  ): Promise<ListResponse<Blog>> {
+    const [blogs, totalItems] = await this.blogService.getBlogsForStaff(
+      limit,
+      offset,
+      sort,
+      filter,
+    );
+    const totalPages = Math.ceil(totalItems / size);
+
+    return {
+      message: 'Đây là danh sách các bài blog của bạn',
+      statusCode: HttpStatus.OK,
+      pageIndex: page,
+      pageSize: size,
+      totalItems,
+      totalPages,
+      hasNextPage: page + 1 < totalPages,
+      hasPrevPage: 0 < page,
+      items: blogs,
+    };
+  }
 
   @Get('me')
   @UseGuards(AuthGuard)
@@ -198,6 +279,40 @@ export class BlogController {
     return {
       message: 'Tạo thành công',
       statusCode: HttpStatus.CREATED,
+      item: blog,
+    };
+  }
+
+  @Put(':id/verify')
+  @UseGuards(AuthGuard, RolesGuard)
+  @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.STAFF)
+  @ApiOperation({
+    summary: 'Xác minh blog của chủ shop',
+    description: `
+**Hướng dẫn sử dụng:**
+- Truyền \`id\` của blog trên URL.
+- Chỉ xác minh blog của chủ shop.
+- Nếu không tìm thấy sẽ trả về lỗi.
+- Trả về thông tin blog đã xác minh.
+`,
+  })
+  @ApiOkResponse({
+    schema: {
+      allOf: [
+        { $ref: getSchemaPath(ItemResponse) },
+        {
+          properties: {
+            item: { $ref: getSchemaPath(Blog) },
+          },
+        },
+      ],
+    },
+  })
+  async verifyBlog(@Param('id') id: string): Promise<ItemResponse<Blog>> {
+    const blog = await this.blogService.verifyBlog(id);
+    return {
+      message: 'Xác minh thành công',
+      statusCode: HttpStatus.OK,
       item: blog,
     };
   }

@@ -78,6 +78,29 @@ export class BlogService {
     });
   }
 
+  async getBlogsForStaff(
+    take: number,
+    skip: number,
+    sort?: Sorting,
+    filter?: Filtering,
+  ): Promise<[Blog[], number]> {
+    const dynamicFilter = getWhere(filter);
+    const where = {
+      ...dynamicFilter,
+    };
+    const order = getOrder(sort);
+    return await this.blogRepository.findAndCount({
+      where,
+      order,
+      take,
+      skip,
+      withDeleted: true,
+      relations: {
+        category: true,
+      },
+    });
+  }
+
   async getBlogForOwner(userId: string, id: string): Promise<Blog> {
     const where = {
       user: { id: userId },
@@ -152,5 +175,17 @@ export class BlogService {
       where: { id, user: { id: userId } },
       withDeleted: true,
     });
+  }
+
+  async verifyBlog(id: string): Promise<Blog> {
+    const blog = await this.blogRepository.findOneBy({
+      id,
+      status: BlogStatus.PUBLISHED,
+      isVerified: false,
+    });
+    if (!blog) throw new NotFoundException('Không tìm thấy bài blog phù hợp');
+    blog.isVerified = true;
+    await this.blogRepository.save(blog);
+    return blog;
   }
 }
