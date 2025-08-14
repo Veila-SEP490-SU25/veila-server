@@ -71,4 +71,32 @@ export class ContractController {
       item: contract,
     };
   }
+
+  @Get('platform')
+  @ApiOperation({
+    summary: 'Get Platform Information',
+    description: 'Lấy ra thông tin cơ bản của nền tảng',
+  })
+  @ApiOkResponse({
+    schema: {
+      allOf: [
+        { $ref: getSchemaPath(ItemResponse) },
+        {
+          properties: {
+            item: {
+              $ref: getSchemaPath(Contract),
+            },
+          },
+        },
+      ],
+    },
+  })
+  async getPlatformContract(): Promise<ItemResponse<Contract>> {
+    const contract = await this.contractService.findAvailableContract(ContractType.PLATFORM);
+    return {
+      message: 'Lấy thông tin cơ bản của nền tảng thành công',
+      statusCode: HttpStatus.OK,
+      item: contract,
+    };
+  }
 }

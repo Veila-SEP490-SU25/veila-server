@@ -996,4 +996,42 @@ export class OrderController {
       item: order,
     };
   }
+
+  @Put(':id/cancel')
+  @UseGuards(AuthGuard, RolesGuard)
+  @Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN, UserRole.STAFF, UserRole.CUSTOMER)
+  @ApiOperation({
+    summary: 'Hủy đơn hàng (dành cho khách hàng, chỉ khi đơn hàng đang ở trạng thái PENDING)',
+    description: `
+          **Hướng dẫn sử dụng:**
+
+          - Chỉ người dùng có quyền \`CUSTOMER\` có thể hủy đơn hàng (khi đơn đang PENDING).
+          - Truyền \`id\` của đơn hàng trên URL.
+          - Nếu không tìm thấy đơn hang sẽ trả về lỗi.
+          - Trả về thông tin chi tiết của đơn hàng đã hủy.
+      `,
+  })
+  @ApiOkResponse({
+    schema: {
+      allOf: [
+        { $ref: getSchemaPath(ItemResponse) },
+        {
+          properties: {
+            item: { example: null, $ref: getSchemaPath(Order) },
+          },
+        },
+      ],
+    },
+  })
+  async cancelOrder(
+    @UserId() userId: string,
+    @Param('id') id: string,
+  ): Promise<ItemResponse<Order>> {
+    const order = await this.orderService.cancelOrder(userId, id);
+    return {
+      message: 'Đơn hàng đã được hủy thành công',
+      statusCode: HttpStatus.OK,
+      item: order,
+    };
+  }
 }

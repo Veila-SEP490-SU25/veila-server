@@ -698,4 +698,24 @@ export class OrderService {
 
     return dressPrice + accessoriesPrice;
   }
+
+  async cancelOrder(
+    userId: string, 
+    id: string,
+  ):Promise<Order> {
+    const existingOrder = await this.getOrderById(id);
+
+    if (!existingOrder || existingOrder.status === OrderStatus.CANCELLED)
+      throw new NotFoundException('Không tìm thấy đơn hàng này');
+
+    if( existingOrder.status !== OrderStatus.PENDING)
+      throw new MethodNotAllowedException('Đơn hàng không thể hủy ở trạng thái này')
+
+    const user = await this.userService.getUserById(userId);
+    if (!user) throw new NotFoundException('Người dùng này không tồn tại');
+
+    existingOrder.status = OrderStatus.CANCELLED;
+
+    return await this.orderRepository.save(plainToInstance(Order, existingOrder));
+  }
 }

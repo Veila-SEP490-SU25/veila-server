@@ -1,3 +1,4 @@
+import { TransactionStatus } from '@/common/models';
 import { ApiProperty } from '@nestjs/swagger';
 import { Expose, Transform } from 'class-transformer';
 import {
@@ -88,6 +89,25 @@ export class WalletDto {
   @IsNotEmpty()
   @IsNumber()
   lockedBalance: number;
+
+  @Expose()
+  @ApiProperty({
+    description: 'Mã BIN định danh ngân hàng',
+    example: 'abcxyz123',
+    nullable: true,
+  })
+  @IsString()
+  bin: string | null;
+
+  @Expose()
+  @ApiProperty({
+    description: 'Số tài khoản ngân hàng',
+    example: '1234567890',
+    nullable: true,
+  })
+  @IsString()
+  @MaxLength(20)
+  bankAccountNumber: string | null;
 }
 
 export class DepositViaPayOSDto {
@@ -163,4 +183,25 @@ export class DepositViaPayOSResponse {
   @IsNotEmpty()
   @IsString()
   expiredAt: number;
+}
+
+export class WebhookDto {
+  @Expose()
+  @ApiProperty({
+    description: 'Id của transaction',
+    example: 'transaction-uuid-123',
+    nullable: false,
+  })
+  @IsNotEmpty()
+  @IsString()
+  transactionId: string;
+
+  @Expose()
+  @ApiProperty({
+    description: 'Trạng thái đơn hàng (thành công/thất bại/hủy)',
+    example: TransactionStatus.COMPLETED,
+    nullable: false,
+  })
+  @IsNotEmpty()
+  status: TransactionStatus;
 }

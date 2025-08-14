@@ -241,7 +241,12 @@ export class UserService {
     const user = await this.getUserById(userId);
     if (!user) throw new NotFoundException('Không tìm thấy người dùng');
 
-    user.phone = body.phone;
+    const phone = body.phone.trim();
+
+    //chuyển từ 0xxxxxxxxx -> +84xxxxxxxxx
+    if (phone.startsWith('0')) {
+      user.phone = '+84' + phone.slice(1);
+    }
     user.isIdentified = true;
 
     await this.userRepository.save(user);

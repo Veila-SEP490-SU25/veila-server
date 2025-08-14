@@ -5,6 +5,7 @@ import { ApiProperty } from '@nestjs/swagger';
 export enum ContractType {
   SHOP = 'SHOP',
   CUSTOMER = 'CUSTOMER',
+  PLATFORM = 'PLATFORM',
 }
 
 export enum ContractStatus {

@@ -1,11 +1,7 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import {
-  CUTransactionDto,
-  DepositAndWithdrawTransactionDto,
-  TransactionDto,
-} from './transaction.dto';
+import { CUTransactionDto, WithdrawTransactionDto, TransactionDto } from './transaction.dto';
 import {
   TransactionStatus,
   Transaction,
@@ -48,7 +44,7 @@ export class TransactionService {
   async saveWithdrawTransaction(
     user: User,
     walletId: string,
-    transactionDetail: DepositAndWithdrawTransactionDto,
+    transactionDetail: WithdrawTransactionDto,
   ): Promise<void> {
     const newTransaction = {
       wallet: { id: walletId },

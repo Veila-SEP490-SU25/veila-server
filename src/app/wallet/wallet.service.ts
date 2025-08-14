@@ -13,7 +13,7 @@ import { Repository } from 'typeorm';
 import { DepositViaPayOSDto, DepositViaPayOSResponse, WalletDto } from './wallet.dto';
 import { plainToInstance } from 'class-transformer';
 import { UserService } from '../user';
-import { DepositAndWithdrawTransactionDto, TransactionService } from '../transaction';
+import { WithdrawTransactionDto, TransactionService } from '../transaction';
 import { PayosService } from '../payos/payos.service';
 import { ConfigService } from '@nestjs/config';
 
@@ -142,7 +142,7 @@ export class WalletService {
 
   async withdrawWalletRequest(
     userId: string,
-    withdrawWallet: DepositAndWithdrawTransactionDto,
+    withdrawWallet: WithdrawTransactionDto,
   ): Promise<string> {
     const user = await this.userService.getUserById(userId);
     if (!user) throw new NotFoundException('Người dùng không tồn tại');
@@ -152,12 +152,20 @@ export class WalletService {
     const wallet = await this.findOneByUserId(userId);
     if (!wallet) throw new NotFoundException('Người dùng này chưa sở hữu ví điện tử');
 
+    wallet.bin = withdrawWallet.bin;
+    wallet.bankNumber = withdrawWallet.bankNumber;
+
     if (Number(wallet.availableBalance) < Number(withdrawWallet.amount))
       throw new BadRequestException(
         'Số dư khả dụng trong tài khoản không đủ để thực hiện rút tiền',
       );
-    else await this.transactionService.saveWithdrawTransaction(user, wallet.id, withdrawWallet);
+    else {
+      wallet.availableBalance = Number(wallet.availableBalance) - withdrawWallet.amount;
+      wallet.lockedBalance = Number(wallet.lockedBalance) + withdrawWallet.amount;
+      await this.transactionService.saveWithdrawTransaction(user, wallet.id, withdrawWallet);
+    }
 
+    await this.walletRepository.save(wallet);
     return 'Yêu cầu rút tiền của bạn đã được tạo, xin vui lòng chờ hệ thống của chúng tôi xác nhận';
   }
 
