@@ -274,7 +274,7 @@ export class OrderService {
 
     const dress = await this.dressService.getDressForCustomer(body.dressDetails.dressId);
 
-    const shop = await this.shopService.getShopByUserId(dress.id);
+    const shop = dress.user.shop;
     if (!shop) throw new NotFoundException('Không tìm thấy cửa hàng');
 
     //xác định là luồng mua hay thuê dựa trên type

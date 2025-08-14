@@ -161,4 +161,20 @@ export class AccessoryService {
       withDeleted: true,
     });
   }
+
+  async updateAccessoryRatingForSeedingFeedback(id: string): Promise<void> {
+    const accessory = await this.accessoryRepository.findOne({
+      where: { id },
+      relations: { feedbacks: true },
+    });
+    if (!accessory) throw new NotFoundException('Không tìm thấy phụ kiện này');
+
+  const feedbacks = accessory.feedbacks ?? [];
+  const ratingCount = feedbacks.length;
+  const totalRating = feedbacks.reduce((acc, feedback) => acc + Number(feedback.rating ?? 0), 0);
+  accessory.ratingAverage = ratingCount > 0 ? Number(totalRating) / Number(ratingCount) : 0;
+  accessory.ratingCount = Number(ratingCount);
+
+    await this.accessoryRepository.save(accessory);
+  }
 }
