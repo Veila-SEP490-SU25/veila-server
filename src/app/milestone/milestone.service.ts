@@ -72,27 +72,32 @@ export class MilestoneService {
   }
 
   async createMilestone(userId: string, body: CreateMilestoneRequestDto): Promise<Milestone> {
-    let milestoneStatus = MilestoneStatus.PENDING;
-
+    // Kiểm tra quyền sở hữu order
     await this.validateOwnerOfOrder(userId, body.newMilestone.orderId);
 
+    // Lấy danh sách milestone hiện có
     const existingMilestones = await this.getAllMilestonesForOrder(body.newMilestone.orderId);
-    if (existingMilestones.length === 0) milestoneStatus = MilestoneStatus.IN_PROGRESS;
 
-    const milestone = {
+    // Xác định trạng thái milestone mới
+    const milestoneStatus =
+      existingMilestones.length === 0 ? MilestoneStatus.IN_PROGRESS : MilestoneStatus.PENDING;
+
+    // Tạo entity milestone
+    const milestoneEntity = this.milestoneRepository.create({
       order: { id: body.newMilestone.orderId },
       title: body.newMilestone.title,
       description: body.newMilestone.description,
-      //ghi chú: index sẽ được đánh từ 1
-      index: Number(existingMilestones.length) + 1,
+      index: existingMilestones.length + 1,
       status: milestoneStatus,
       dueDate: body.newMilestone.dueDate,
-    } as Milestone;
+    });
 
-    const milestoneId = (await this.milestoneRepository.save(milestone)).id;
-    await this.taskService.saveTask(milestoneId, body.tasks);
+    const savedMilestone = await this.milestoneRepository.save(milestoneEntity);
 
-    return milestone;
+    // Lưu tasks cho milestone
+    await this.taskService.saveTask(savedMilestone.id, body.tasks, savedMilestone.index);
+
+    return savedMilestone;
   }
 
   async updateMilestone(
@@ -137,10 +142,11 @@ export class MilestoneService {
     if (!shop) throw new NotFoundException('Người dùng này chưa có cửa hàng nào');
 
     const orders = await this.orderService.getOrderByShopId(shop.id);
-    if (!orders)
+    if (!orders || orders.length === 0) {
       throw new NotFoundException(
-        'Không tìm thấy đơn hàng đang chờ, đang thực hiện của người dùng này',
+        'Không tìm thấy đơn hàng đang chờ hoặc đang thực hiện của người dùng này',
       );
+    }
 
     const matchedOrder = orders.find((order) => order.id === orderId);
     if (!matchedOrder) throw new NotFoundException('Đơn hàng cần tạo milestone không tồn tại');
