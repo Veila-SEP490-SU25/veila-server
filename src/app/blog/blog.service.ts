@@ -1,5 +1,5 @@
 import { Filtering, getOrder, getWhere, Sorting } from '@/common/decorators';
-import { Blog, BlogStatus, Category, ShopStatus } from '@/common/models';
+import { Blog, BlogStatus, Category, ShopStatus, UserRole } from '@/common/models';
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
@@ -12,45 +12,78 @@ export class BlogService {
     @InjectRepository(Category) private readonly categoryRepository: Repository<Category>,
   ) {}
 
-  async getBlogsForCustomer(
+  async getBlogs(
+    currentRole: UserRole,
     take: number,
     skip: number,
     sort?: Sorting,
     filter?: Filtering,
   ): Promise<[Blog[], number]> {
-    const dynamicFilter = getWhere(filter);
-    const where = {
-      ...dynamicFilter,
-      isVerified: true,
-      status: BlogStatus.PUBLISHED,
-      user: { shop: { status: ShopStatus.ACTIVE } },
-    };
-    const order = getOrder(sort);
-    return await this.blogRepository.findAndCount({
-      where,
-      order,
-      take,
-      skip,
-      relations: {
-        user: { shop: true },
-        category: true,
-      },
-    });
+    if (!currentRole || currentRole === UserRole.CUSTOMER) {
+      const dynamicFilter = getWhere(filter);
+      const where = {
+        ...dynamicFilter,
+        isVerified: true,
+        status: BlogStatus.PUBLISHED,
+        user: { shop: { status: ShopStatus.ACTIVE } },
+      };
+      const order = getOrder(sort);
+      return await this.blogRepository.findAndCount({
+        where,
+        order,
+        take,
+        skip,
+        relations: {
+          user: { shop: true },
+          category: true,
+        },
+      });
+    } else {
+      const dynamicFilter = getWhere(filter);
+      const where = {
+        ...dynamicFilter,
+      };
+      const order = getOrder(sort);
+      return await this.blogRepository.findAndCount({
+        where,
+        order,
+        take,
+        skip,
+        withDeleted: true,
+        relations: {
+          user: { shop: true },
+          category: true,
+        },
+      });
+    }
   }
 
-  async getBlogForCustomer(id: string): Promise<Blog> {
-    const where = {
-      id,
-      status: BlogStatus.PUBLISHED,
-      isVerified: true,
-      user: { shop: { status: ShopStatus.ACTIVE } },
-    };
-    const blog = await this.blogRepository.findOne({
-      where,
-      relations: { category: true, user: { shop: true } },
-    });
-    if (!blog) throw new NotFoundException('Không tìm thấy bài blog phù hợp');
-    return blog;
+  async getBlog(currentRole: UserRole, id: string): Promise<Blog> {
+    if (!currentRole || currentRole === UserRole.CUSTOMER) {
+      const where = {
+        id,
+        status: BlogStatus.PUBLISHED,
+        isVerified: true,
+        user: { shop: { status: ShopStatus.ACTIVE } },
+      };
+      const blog = await this.blogRepository.findOne({
+        where,
+        relations: { category: true, user: { shop: true } },
+      });
+      if (!blog) throw new NotFoundException('Không tìm thấy bài blog phù hợp');
+      return blog;
+    } else {
+      const where = {
+        id,
+      };
+      const blog = await this.blogRepository.findOne({
+        where,
+        withDeleted: true,
+        relations: { category: true, user: { shop: true } },
+      });
+      if (!blog) throw new NotFoundException('Không tìm thấy bài blog phù hợp');
+      return blog;
+    }
   }
 
   async getBlogsForOwner(
@@ -64,29 +97,6 @@ export class BlogService {
     const where = {
       ...dynamicFilter,
       user: { id: userId },
-    };
-    const order = getOrder(sort);
-    return await this.blogRepository.findAndCount({
-      where,
-      order,
-      take,
-      skip,
-      withDeleted: true,
-      relations: {
-        category: true,
-      },
-    });
-  }
-
-  async getBlogsForStaff(
-    take: number,
-    skip: number,
-    sort?: Sorting,
-    filter?: Filtering,
-  ): Promise<[Blog[], number]> {
-    const dynamicFilter = getWhere(filter);
-    const where = {
-      ...dynamicFilter,
     };
     const order = getOrder(sort);
     return await this.blogRepository.findAndCount({

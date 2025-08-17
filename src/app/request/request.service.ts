@@ -3,7 +3,7 @@ import { Filtering, getOrder, getWhere, Sorting } from '@/common/decorators';
 import { Request, RequestStatus } from '@/common/models';
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Not, Repository } from 'typeorm';
 
 @Injectable()
 export class RequestService {
@@ -95,11 +95,11 @@ export class RequestService {
     });
   }
 
-  async getRequestForShop(id: string): Promise<Request> {
+  async getRequest(id: string): Promise<Request> {
     const request = await this.requestRepository.findOne({
       where: {
         id,
-        status: RequestStatus.SUBMIT,
+        status: Not(RequestStatus.DRAFT),
       },
       relations: { user: true },
     });

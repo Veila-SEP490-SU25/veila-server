@@ -15,6 +15,7 @@ import {
 } from '@nestjs/swagger';
 import { OrderService } from '@/app/order/order.service';
 import {
+  CurrentRole,
   Filtering,
   FilteringParams,
   Pagination,
@@ -52,10 +53,9 @@ export class OrderController {
   constructor(private readonly orderService: OrderService) {}
 
   @Get()
-  @UseGuards(AuthGuard, RolesGuard)
-  @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.STAFF)
+  @UseGuards(AuthGuard)
   @ApiOperation({
-    summary: 'Lấy danh sách đơn hàng với phân trang, sắp xếp và lọc (Super Admin/Admin/Staff)',
+    summary: 'Lấy danh sách đơn hàng với phân trang, sắp xếp và lọc',
     description: `
         **Hướng dẫn sử dụng:**
 
@@ -63,7 +63,7 @@ export class OrderController {
         - Hỗ trợ phân trang, sắp xếp, lọc.
         - Page bắt đầu từ 0
         - Sort theo format: [tên_field]:[asc/desc]
-        - Các trường đang có thể sort: due_date, amount
+        - Các trường đang có thể sort: due_date, amount, status
         - Filter theo format: [tên_field]:[eq|neq|gt|gte|lt|lte|like|nlike|in|nin]:[keyword]; hoặc [tên_field]:[isnull|isnotnull]
         - Các trường đang có thể filter: customer_id, shop_id, phone, email address, due_date, return_date, amount, type, status`,
   })
@@ -105,9 +105,11 @@ export class OrderController {
       ],
     },
   })
-  async getAllOrdersForAdmin(
+  async getAllOrders(
+    @UserId() userId: string,
+    @CurrentRole() currentRole: UserRole,
     @PaginationParams() { page, size, limit, offset }: Pagination,
-    @SortingParams(['due_date', 'amount']) sort?: Sorting,
+    @SortingParams(['due_date', 'amount', 'status']) sort?: Sorting,
     @FilteringParams([
       'customer_id',
       'shop_id',
@@ -122,7 +124,9 @@ export class OrderController {
     ])
     filter?: Filtering,
   ): Promise<ListResponse<OrderDto>> {
-    const [orders, totalItems] = await this.orderService.getOrdersForAdmin(
+    const [orders, totalItems] = await this.orderService.getOrders(
+      userId,
+      currentRole,
       limit,
       offset,
       sort,
@@ -131,190 +135,6 @@ export class OrderController {
     const totalPages = Math.ceil(totalItems / limit);
     return {
       message: 'Đây là danh sách tất cả đơn hàng',
-      statusCode: HttpStatus.OK,
-      pageIndex: page,
-      pageSize: size,
-      totalItems,
-      totalPages,
-      hasNextPage: page + 1 < totalPages,
-      hasPrevPage: 0 > page,
-      items: orders,
-    };
-  }
-
-  @Get('/customer')
-  @UseGuards(AuthGuard, RolesGuard)
-  @Roles(UserRole.CUSTOMER)
-  @ApiOperation({
-    summary: 'Lấy danh sách đơn hàng của khách hàng (Customer only)',
-    description: `
-        **Hướng dẫn sử dụng:**
-
-        - Trả về danh sách đơn hàng đã/đang được thực hiện của khách hàng hiện tại.
-        - Hỗ trợ phân trang, sắp xếp, lọc.
-        - Page bắt đầu từ 0
-        - Sort theo format: [tên_field]:[asc/desc]
-        - Các trường đang có thể sort: due_date, amount
-        - Filter theo format: [tên_field]:[eq|neq|gt|gte|lt|lte|like|nlike|in|nin]:[keyword]; hoặc [tên_field]:[isnull|isnotnull]
-        - Các trường đang có thể filter: customer_id, shop_id, phone, email address, due_date, return_date, amount, type, status`,
-  })
-  @ApiQuery({
-    name: 'page',
-    required: false,
-    type: Number,
-    default: 0,
-    description: 'Trang hiện tại (bắt đầu từ 0)',
-  })
-  @ApiQuery({
-    name: 'size',
-    required: false,
-    type: Number,
-    default: 10,
-    description: 'Số lượng mỗi trang',
-  })
-  @ApiQuery({
-    name: 'sort',
-    required: false,
-    type: String,
-    description: 'Sắp xếp theo trường: ví dụ: due_date:asc',
-  })
-  @ApiQuery({
-    name: 'filter',
-    required: false,
-    type: String,
-    description: 'Lọc theo trường: ví dụ: status:PENDING',
-  })
-  @ApiOkResponse({
-    schema: {
-      allOf: [
-        { $ref: getSchemaPath(ListResponse) },
-        {
-          properties: {
-            items: { $ref: getSchemaPath(OrderDto) },
-          },
-        },
-      ],
-    },
-  })
-  async getOrdersForCustomer(
-    @UserId() userId: string,
-    @PaginationParams() { page, size, limit, offset }: Pagination,
-    @SortingParams(['due_date', 'amount']) sort?: Sorting,
-    @FilteringParams([
-      'shop_id',
-      'phone',
-      'email',
-      'address',
-      'due_date',
-      'return_date',
-      'amount',
-      'type',
-      'status',
-    ])
-    filter?: Filtering,
-  ): Promise<ListResponse<OrderDto>> {
-    const [orders, totalItems] = await this.orderService.getOrdersForCustomer(
-      userId,
-      limit,
-      offset,
-      sort,
-      filter,
-    );
-    const totalPages = Math.ceil(totalItems / limit);
-    return {
-      message: 'Đây là danh sách tất cả đơn hàng của khách hàng',
-      statusCode: HttpStatus.OK,
-      pageIndex: page,
-      pageSize: size,
-      totalItems,
-      totalPages,
-      hasNextPage: page + 1 < totalPages,
-      hasPrevPage: 0 > page,
-      items: orders,
-    };
-  }
-
-  @Get('/shop')
-  @UseGuards(AuthGuard, RolesGuard)
-  @Roles(UserRole.SHOP)
-  @ApiOperation({
-    summary: 'Lấy danh sách đơn hàng của cửa hàng (Shop only)',
-    description: `
-        **Hướng dẫn sử dụng:**
-
-        - Trả về danh sách đơn hàng đã/đang được thực hiện của cửa hàng hiện tại.
-        - Hỗ trợ phân trang, sắp xếp, lọc.
-        - Page bắt đầu từ 0
-        - Sort theo format: [tên_field]:[asc/desc]
-        - Các trường đang có thể sort: due_date, amount
-        - Filter theo format: [tên_field]:[eq|neq|gt|gte|lt|lte|like|nlike|in|nin]:[keyword]; hoặc [tên_field]:[isnull|isnotnull]
-        - Các trường đang có thể filter: customer_id, shop_id, phone, email address, due_date, return_date, amount, type, status`,
-  })
-  @ApiQuery({
-    name: 'page',
-    required: false,
-    type: Number,
-    default: 0,
-    description: 'Trang hiện tại (bắt đầu từ 0)',
-  })
-  @ApiQuery({
-    name: 'size',
-    required: false,
-    type: Number,
-    default: 10,
-    description: 'Số lượng mỗi trang',
-  })
-  @ApiQuery({
-    name: 'sort',
-    required: false,
-    type: String,
-    description: 'Sắp xếp theo trường: ví dụ: due_date:asc',
-  })
-  @ApiQuery({
-    name: 'filter',
-    required: false,
-    type: String,
-    description: 'Lọc theo trường: ví dụ: status:PENDING',
-  })
-  @ApiOkResponse({
-    schema: {
-      allOf: [
-        { $ref: getSchemaPath(ListResponse) },
-        {
-          properties: {
-            items: { $ref: getSchemaPath(OrderDto) },
-          },
-        },
-      ],
-    },
-  })
-  async getOrdersForShop(
-    @UserId() userId: string,
-    @PaginationParams() { page, size, limit, offset }: Pagination,
-    @SortingParams(['due_date', 'amount']) sort?: Sorting,
-    @FilteringParams([
-      'customer_id',
-      'phone',
-      'email',
-      'address',
-      'due_date',
-      'return_date',
-      'amount',
-      'type',
-      'status',
-    ])
-    filter?: Filtering,
-  ): Promise<ListResponse<OrderDto>> {
-    const [orders, totalItems] = await this.orderService.getOrdersForShop(
-      userId,
-      limit,
-      offset,
-      sort,
-      filter,
-    );
-    const totalPages = Math.ceil(totalItems / limit);
-    return {
-      message: 'Đây là danh sách tất cả đơn hàng của cửa hàng',
       statusCode: HttpStatus.OK,
       pageIndex: page,
       pageSize: size,

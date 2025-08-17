@@ -169,11 +169,11 @@ export class AccessoryService {
     });
     if (!accessory) throw new NotFoundException('Không tìm thấy phụ kiện này');
 
-  const feedbacks = accessory.feedbacks ?? [];
-  const ratingCount = feedbacks.length;
-  const totalRating = feedbacks.reduce((acc, feedback) => acc + Number(feedback.rating ?? 0), 0);
-  accessory.ratingAverage = ratingCount > 0 ? Number(totalRating) / Number(ratingCount) : 0;
-  accessory.ratingCount = Number(ratingCount);
+    const feedbacks = accessory.feedbacks ?? [];
+    const ratingCount = feedbacks.length;
+    const totalRating = feedbacks.reduce((acc, feedback) => acc + Number(feedback.rating ?? 0), 0);
+    accessory.ratingAverage = ratingCount > 0 ? Number(totalRating) / Number(ratingCount) : 0;
+    accessory.ratingCount = Number(ratingCount);
 
     await this.accessoryRepository.save(accessory);
   }

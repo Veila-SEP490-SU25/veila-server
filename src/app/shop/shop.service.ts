@@ -60,37 +60,67 @@ export class ShopService {
     await this.shopRepository.update(existingShop.id, { ...body });
   }
 
-  async getShopsForCustomer(
+  async getShops(
+    currentRole: UserRole,
     take: number,
     skip: number,
     sort?: Sorting,
     filter?: Filtering,
   ): Promise<[Shop[], number]> {
-    const dynamicFilter = getWhere(filter);
-    const where = {
-      ...dynamicFilter,
-      status: ShopStatus.ACTIVE,
-      isVerified: true,
-    };
-    const order = getOrder(sort);
+    if (!currentRole || currentRole === UserRole.CUSTOMER || currentRole === UserRole.SHOP) {
+      const dynamicFilter = getWhere(filter);
+      const where = {
+        ...dynamicFilter,
+        status: ShopStatus.ACTIVE,
+        isVerified: true,
+      };
+      const order = getOrder(sort);
 
-    return await this.shopRepository.findAndCount({
-      where,
-      order,
-      take,
-      skip,
-    });
+      return await this.shopRepository.findAndCount({
+        where,
+        order,
+        take,
+        skip,
+      });
+    } else {
+      const dynamicFilter = getWhere(filter);
+      const where = {
+        ...dynamicFilter,
+      };
+      const order = getOrder(sort);
+      return await this.shopRepository.findAndCount({
+        where,
+        order,
+        take,
+        skip,
+        withDeleted: true,
+      });
+    }
   }
 
-  async getShopForCustomer(id: string): Promise<Shop> {
-    const where = {
-      id,
-      status: ShopStatus.ACTIVE,
-      isVerified: true,
-    };
-    const existingShop = await this.shopRepository.findOneBy(where);
-    if (!existingShop) throw new NotFoundException('Không tìm thấy cửa hàng phù hợp');
-    return existingShop;
+  async getShop(currentRole: UserRole, id: string): Promise<Shop> {
+    if (!currentRole || currentRole === UserRole.CUSTOMER || currentRole === UserRole.SHOP) {
+      const where = {
+        id,
+        status: ShopStatus.ACTIVE,
+        isVerified: true,
+      };
+      const existingShop = await this.shopRepository.findOneBy(where);
+      if (!existingShop) throw new NotFoundException('Không tìm thấy cửa hàng phù hợp');
+      return existingShop;
+    } else {
+      const existingShop = await this.shopRepository.findOne({
+        where: { id },
+        withDeleted: true,
+        relations: {
+          user: true,
+          license: true,
+          memberships: true,
+        },
+      });
+      if (!existingShop) throw new NotFoundException('Không tìm thấy cửa hàng phù hợp');
+      return existingShop;
+    }
   }
 
   async getDressesForCustomer(
@@ -279,40 +309,6 @@ export class ShopService {
       images: licenseImages,
       status: LicenseStatus.RESUBMIT,
     });
-  }
-
-  async getShopsForStaff(
-    take: number,
-    skip: number,
-    sort?: Sorting,
-    filter?: Filtering,
-  ): Promise<[Shop[], number]> {
-    const dynamicFilter = getWhere(filter);
-    const where = {
-      ...dynamicFilter,
-    };
-    const order = getOrder(sort);
-    return await this.shopRepository.findAndCount({
-      where,
-      order,
-      take,
-      skip,
-      withDeleted: true,
-    });
-  }
-
-  async getShopForStaff(id: string): Promise<Shop> {
-    const existingShop = await this.shopRepository.findOne({
-      where: { id },
-      withDeleted: true,
-      relations: {
-        user: true,
-        license: true,
-        memberships: true,
-      },
-    });
-    if (!existingShop) throw new NotFoundException('Không tìm thấy cửa hàng phù hợp');
-    return existingShop;
   }
 
   async reviewShopRegister(id: string, { isApproved, rejectReason }: ReviewShopDto): Promise<void> {

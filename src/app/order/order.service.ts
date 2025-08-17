@@ -8,6 +8,7 @@ import {
   OrderStatus,
   OrderType,
   RequestStatus,
+  UserRole,
 } from '@/common/models';
 import {
   BadRequestException,
@@ -19,7 +20,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { In, Repository } from 'typeorm';
+import { Repository } from 'typeorm';
 import {
   CreateOrderForCustom,
   CreateOrderRequestDto,
@@ -162,98 +163,68 @@ export class OrderService {
     return await this.orderRepository.save(newOrder);
   }
 
-  async getOrdersForAdmin(
-    take: number,
-    skip: number,
-    sort?: Sorting,
-    filter?: Filtering,
-  ): Promise<[OrderDto[], number]> {
-    const dynamicFilter = getWhere(filter);
-    const where = {
-      ...dynamicFilter,
-      status: In([
-        OrderStatus.PENDING,
-        OrderStatus.IN_PROCESS,
-        OrderStatus.COMPLETED,
-        OrderStatus.CANCELLED,
-      ]),
-    };
-
-    const order = getOrder(sort);
-
-    const [orders, count] = await this.orderRepository.findAndCount({
-      where,
-      order,
-      take,
-      skip,
-      relations: ['customer', 'shop'],
-    });
-
-    return [plainToInstance(OrderDto, orders), count];
-  }
-
-  async getOrdersForCustomer(
+  async getOrders(
     userId: string,
+    currentRole: UserRole,
     take: number,
     skip: number,
     sort?: Sorting,
     filter?: Filtering,
   ): Promise<[OrderDto[], number]> {
-    const dynamicFilter = getWhere(filter);
-    const where = {
-      ...dynamicFilter,
-      customer: { id: userId },
-      status: In([
-        OrderStatus.PENDING,
-        OrderStatus.IN_PROCESS,
-        OrderStatus.COMPLETED,
-        OrderStatus.CANCELLED,
-      ]),
-    };
+    if (currentRole === UserRole.CUSTOMER) {
+      const dynamicFilter = getWhere(filter);
+      const where = {
+        ...dynamicFilter,
+        customer: { id: userId },
+      };
 
-    const order = getOrder(sort);
+      const order = getOrder(sort);
 
-    const [orders, count] = await this.orderRepository.findAndCount({
-      where,
-      order,
-      take,
-      skip,
-      relations: ['customer', 'shop'],
-    });
+      const [orders, count] = await this.orderRepository.findAndCount({
+        where,
+        order,
+        take,
+        skip,
+        relations: ['customer', 'shop'],
+      });
 
-    return [plainToInstance(OrderDto, orders), count];
-  }
+      return [plainToInstance(OrderDto, orders), count];
+    } else if (currentRole === UserRole.SHOP) {
+      const dynamicFilter = getWhere(filter);
+      const where = {
+        ...dynamicFilter,
+        shop: { user: { id: userId } },
+      };
 
-  async getOrdersForShop(
-    userId: string,
-    take: number,
-    skip: number,
-    sort?: Sorting,
-    filter?: Filtering,
-  ): Promise<[OrderDto[], number]> {
-    const dynamicFilter = getWhere(filter);
-    const where = {
-      ...dynamicFilter,
-      shop: { user: { id: userId } },
-      status: In([
-        OrderStatus.PENDING,
-        OrderStatus.IN_PROCESS,
-        OrderStatus.COMPLETED,
-        OrderStatus.CANCELLED,
-      ]),
-    };
+      const order = getOrder(sort);
 
-    const order = getOrder(sort);
+      const [orders, count] = await this.orderRepository.findAndCount({
+        where,
+        order,
+        take,
+        skip,
+        relations: ['customer', 'shop'],
+      });
 
-    const [orders, count] = await this.orderRepository.findAndCount({
-      where,
-      order,
-      take,
-      skip,
-      relations: ['customer', 'shop'],
-    });
+      return [plainToInstance(OrderDto, orders), count];
+    } else {
+      const dynamicFilter = getWhere(filter);
+      const where = {
+        ...dynamicFilter,
+      };
 
-    return [plainToInstance(OrderDto, orders), count];
+      const order = getOrder(sort);
+
+      const [orders, count] = await this.orderRepository.findAndCount({
+        where,
+        order,
+        take,
+        skip,
+        relations: ['customer', 'shop'],
+      });
+
+      return [plainToInstance(OrderDto, orders), count];
+    }
   }
 
   async getOrderById(id: string): Promise<OrderDto> {
