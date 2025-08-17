@@ -178,18 +178,18 @@ export class ServiceService {
     });
   }
 
-  async updateServiceRatingForSeedingFeedback(id:string): Promise<void> {
+  async updateServiceRatingForSeedingFeedback(id: string): Promise<void> {
     const service = await this.serviceRepository.findOne({
       where: { id },
       relations: { feedbacks: true },
     });
     if (!service) throw new NotFoundException('Không tìm thấy dịch vụ này');
 
-  const feedbacks = service.feedbacks ?? [];
-  const ratingCount = feedbacks.length;
-  const totalRating = feedbacks.reduce((acc, feedback) => acc + Number(feedback.rating ?? 0), 0);
-  service.ratingAverage = ratingCount > 0 ? Number(totalRating) / Number(ratingCount) : 0;
-  service.ratingCount = ratingCount;
+    const feedbacks = service.feedbacks ?? [];
+    const ratingCount = feedbacks.length;
+    const totalRating = feedbacks.reduce((acc, feedback) => acc + Number(feedback.rating ?? 0), 0);
+    service.ratingAverage = ratingCount > 0 ? Number(totalRating) / Number(ratingCount) : 0;
+    service.ratingCount = ratingCount;
 
     await this.serviceRepository.save(service);
   }

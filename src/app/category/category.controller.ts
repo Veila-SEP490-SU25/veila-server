@@ -11,7 +11,7 @@ import {
   Put,
 } from '@nestjs/common';
 import { CategoryService } from '@/app/category/category.service';
-import { CUCategoryDto, ItemCategoryDto } from '@/app/category/category.dto';
+import { CUCategoryDto, ItemCategoryDto, ListBlogOfCategoryDto } from '@/app/category/category.dto';
 import {
   ApiBearerAuth,
   ApiExtraModels,
@@ -36,7 +36,6 @@ import {
 } from '@/common/decorators';
 import { ListDressDto } from '@/app/dress';
 import { ListServiceDto } from '@/app/service';
-import { ListBlogDto } from '@/app/blog';
 import { ListAccessoryDto } from '@/app/accessory';
 import { plainToInstance } from 'class-transformer';
 
@@ -50,7 +49,7 @@ import { plainToInstance } from 'class-transformer';
   ItemCategoryDto,
   ListDressDto,
   ListServiceDto,
-  ListBlogDto,
+  ListBlogOfCategoryDto,
   ListAccessoryDto,
 )
 export class CategoryController {
@@ -589,7 +588,7 @@ export class CategoryController {
         { $ref: getSchemaPath(ListResponse) },
         {
           properties: {
-            item: { $ref: getSchemaPath(ListBlogDto) },
+            item: { $ref: getSchemaPath(ListBlogOfCategoryDto) },
           },
         },
       ],
@@ -600,7 +599,7 @@ export class CategoryController {
     @PaginationParams() { page, size, limit, offset }: Pagination,
     @SortingParams(['title']) sort?: Sorting,
     @FilteringParams(['title']) filter?: Filtering,
-  ): Promise<ListResponse<ListBlogDto>> {
+  ): Promise<ListResponse<ListBlogOfCategoryDto>> {
     const [blogs, totalItems] = await this.categoryService.findBlogsForCustomer(
       id,
       limit,
@@ -609,7 +608,7 @@ export class CategoryController {
       filter,
     );
     const totalPages = Math.ceil(totalItems / size);
-    const dtos = plainToInstance(ListBlogDto, blogs, { excludeExtraneousValues: true });
+    const dtos = plainToInstance(ListBlogOfCategoryDto, blogs, { excludeExtraneousValues: true });
     return {
       message: 'Đây là danh sách các bài blog khả dụng',
       statusCode: HttpStatus.OK,

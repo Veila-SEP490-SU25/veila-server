@@ -167,16 +167,19 @@ export class DressService {
       withDeleted: true,
     });
   }
-  
-  async updateDressRatingForSeedingFeedback(id:string): Promise<void> {
-  const dress = await this.dressRepository.findOne({ where: { id }, relations: { feedbacks: true } });
+
+  async updateDressRatingForSeedingFeedback(id: string): Promise<void> {
+    const dress = await this.dressRepository.findOne({
+      where: { id },
+      relations: { feedbacks: true },
+    });
     if (!dress) throw new NotFoundException('Không tìm thấy váy cưới này');
 
-  const feedbacks = dress.feedbacks ?? [];
-  const ratingCount = feedbacks.length;
-  const totalRating = feedbacks.reduce((sum, feedback) => sum + Number(feedback.rating ?? 0), 0);
-  const ratingAverage = ratingCount > 0 ? Number(totalRating) / Number(ratingCount) : 0;
+    const feedbacks = dress.feedbacks ?? [];
+    const ratingCount = feedbacks.length;
+    const totalRating = feedbacks.reduce((sum, feedback) => sum + Number(feedback.rating ?? 0), 0);
+    const ratingAverage = ratingCount > 0 ? Number(totalRating) / Number(ratingCount) : 0;
 
-  await this.dressRepository.update({ id }, { ratingAverage, ratingCount } as Dress);
+    await this.dressRepository.update({ id }, { ratingAverage, ratingCount } as Dress);
   }
 }

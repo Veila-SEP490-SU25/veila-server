@@ -60,6 +60,44 @@ export class ListBlogDto {
   @Expose()
   @ApiProperty({ description: 'Ngày tạo blog', example: '2023-01-01T00:00:00Z' })
   createdAt: Date;
+
+  @Expose()
+  @ApiProperty({
+    type: 'boolean',
+    description: 'Trạng thái xác minh của blog',
+    example: true,
+    default: false,
+    nullable: false,
+  })
+  isVerified: boolean;
+
+  @Expose()
+  @ApiProperty({
+    enum: BlogStatus,
+    description: 'Trạng thái của blog',
+    example: BlogStatus.DRAFT,
+    default: BlogStatus.DRAFT,
+    nullable: false,
+  })
+  status: BlogStatus;
+
+  @Expose()
+  @ApiProperty({
+    type: 'string',
+    format: 'date-time',
+    example: '2023-10-01T12:00:00Z',
+    description: 'The date when the record was last updated.',
+  })
+  updatedAt: Date;
+
+  @Expose()
+  @ApiProperty({
+    type: 'string',
+    format: 'date-time',
+    example: '2023-10-01T12:00:00Z',
+    description: 'The date when the record was deleted. Null if not deleted.',
+  })
+  deletedAt: Date | null;
 }
 
 export class ItemBlogDto {
@@ -90,4 +128,42 @@ export class ItemBlogDto {
   @Expose()
   @ApiProperty({ description: 'Ngày tạo blog', example: '2023-01-01T00:00:00Z' })
   createdAt: Date;
+
+  @Expose()
+  @ApiProperty({
+    type: 'boolean',
+    description: 'Trạng thái xác minh của blog',
+    example: true,
+    default: false,
+    nullable: false,
+  })
+  isVerified: boolean;
+
+  @Expose()
+  @ApiProperty({
+    enum: BlogStatus,
+    description: 'Trạng thái của blog',
+    example: BlogStatus.DRAFT,
+    default: BlogStatus.DRAFT,
+    nullable: false,
+  })
+  status: BlogStatus;
+
+  @Expose()
+  @ApiProperty({
+    type: 'string',
+    format: 'date-time',
+    example: '2023-10-01T12:00:00Z',
+    description: 'The date when the record was last updated.',
+  })
+  updatedAt: Date;
+
+  @Expose()
+  @ApiProperty({
+    type: 'string',
+    format: 'date-time',
+    example: '2023-10-01T12:00:00Z',
+    description: 'The date when the record was deleted. Null if not deleted.',
+  })
+  deletedAt: Date | null;
 }

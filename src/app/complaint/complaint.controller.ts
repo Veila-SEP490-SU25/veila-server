@@ -32,7 +32,7 @@ import {
 export class ComplaintController {
   constructor(private readonly complaintService: ComplaintService) {}
 
-  @Get('staff')
+  @Get()
   @UseGuards(AuthGuard)
   @Roles(UserRole.STAFF, UserRole.ADMIN, UserRole.SUPER_ADMIN)
   @ApiOperation({
@@ -115,7 +115,7 @@ export class ComplaintController {
     };
   }
 
-  @Get(':id/staff')
+  @Get(':id')
   @UseGuards(AuthGuard)
   @Roles(UserRole.STAFF, UserRole.ADMIN, UserRole.SUPER_ADMIN)
   @ApiOperation({
@@ -148,7 +148,7 @@ export class ComplaintController {
     };
   }
 
-  @Put(':id/review/staff')
+  @Put(':id/review')
   @UseGuards(AuthGuard)
   @Roles(UserRole.STAFF, UserRole.ADMIN, UserRole.SUPER_ADMIN)
   @ApiOperation({

@@ -275,7 +275,7 @@ export class RequestController {
     };
   }
 
-  @Get('shop')
+  @Get()
   @UseGuards(AuthGuard)
   @Roles(UserRole.SHOP)
   @ApiOperation({
@@ -357,9 +357,9 @@ export class RequestController {
     };
   }
 
-  @Get(':id/shop')
+  @Get(':id')
   @UseGuards(AuthGuard)
-  @Roles(UserRole.SHOP)
+  @Roles(UserRole.SHOP, UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.STAFF)
   @ApiOperation({
     summary: 'Shop lấy thông tin yêu cầu',
     description: `Hướng dẫn:
@@ -383,8 +383,8 @@ export class RequestController {
       ],
     },
   })
-  async getRequestForShop(@Param('id') id: string): Promise<ItemResponse<Request>> {
-    const request = await this.requestService.getRequestForShop(id);
+  async getRequest(@Param('id') id: string): Promise<ItemResponse<Request>> {
+    const request = await this.requestService.getRequest(id);
     return {
       message: 'Request retrieved successfully',
       statusCode: HttpStatus.OK,
