@@ -14,16 +14,20 @@ export class TaskService {
     private readonly taskRepository: Repository<Task>,
   ) {}
 
-  async saveTask(milestoneId: string, newTasks: CUTaskDto[]): Promise<void> {
+  async saveTask(
+    milestoneId: string,
+    newTasks: CUTaskDto[],
+    milestoneIndex: number,
+  ): Promise<void> {
     const tasks = newTasks.map((newTask, index) => ({
-      milestoneId,
+      milestone: { id: milestoneId },
       title: newTask.title,
       description: newTask.description,
-      // ghi chú: index sẽ được đánh từ 1
-      index: Number(index) + 1,
-      status: index === 1 ? TaskStatus.IN_PROGRESS : TaskStatus.PENDING,
+      index: index + 1, // đánh số từ 1
+      status: index === 0 && milestoneIndex === 1 ? TaskStatus.IN_PROGRESS : TaskStatus.PENDING, // task đầu tiên của milestone đầu tiên là IN_PROGRESS
       dueDate: newTask.dueDate,
     }));
+
     await this.taskRepository.save(plainToInstance(Task, tasks));
   }
 
