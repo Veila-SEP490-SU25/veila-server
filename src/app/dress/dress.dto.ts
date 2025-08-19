@@ -101,6 +101,91 @@ export class CUDressDto {
   @IsOptional()
   @IsString()
   images: string | null;
+
+  @ApiProperty({
+    type: 'number',
+    nullable: true,
+    description: 'Vòng ngực (cm)',
+    example: '90',
+  })
+  @IsOptional()
+  @IsNumber()
+  bust: number | null;
+
+  @ApiProperty({
+    type: 'number',
+    nullable: true,
+    description: 'Vòng eo (cm)',
+    example: '60',
+  })
+  @IsOptional()
+  @IsNumber()
+  waist: number | null;
+
+  @ApiProperty({
+    type: 'number',
+    nullable: true,
+    description: 'Vòng mông (cm)',
+    example: '80',
+  })
+  @IsOptional()
+  @IsNumber()
+  hip: number | null;
+
+  @ApiProperty({
+    type: 'string',
+    description: 'Chất liệu (tối đa 50 ký tự)',
+    example: 'Cotton',
+    maxLength: 50,
+    nullable: true,
+  })
+  @IsOptional()
+  @IsString()
+  material: string | null;
+
+  @ApiProperty({
+    type: 'string',
+    description: 'Màu sắc (tối đa 50 ký tự)',
+    example: 'Đỏ',
+    maxLength: 50,
+    nullable: true,
+  })
+  @IsOptional()
+  @IsString()
+  color: string | null;
+
+  @ApiProperty({
+    type: 'string',
+    description: 'Độ dài (tối đa 50 ký tự)',
+    example: 'Dài',
+    maxLength: 50,
+    nullable: true,
+  })
+  @IsOptional()
+  @IsString()
+  length: string | null;
+
+  @ApiProperty({
+    type: 'string',
+    description: 'Cổ (tối đa 50 ký tự)',
+    example: 'Cổ tròn',
+    maxLength: 50,
+    nullable: true,
+  })
+  @IsOptional()
+  @IsString()
+  neckline: string | null;
+
+  @ApiProperty({
+    type: 'string',
+    description: 'Tay (tối đa 50 ký tự)',
+    example: 'Tay ngắn',
+    maxLength: 50,
+    nullable: true,
+  })
+  @IsOptional()
+  @IsString()
+  sleeve: string | null;
 }
 
 export class ListDressDto {
@@ -183,6 +268,83 @@ export class ItemDressDto {
     nullable: true,
   })
   images: string | null;
+
+  @Expose()
+  @ApiProperty({
+    type: 'number',
+    nullable: true,
+    description: 'Vòng ngực (cm)',
+    example: '90',
+  })
+  bust: number | null;
+
+  @Expose()
+  @ApiProperty({
+    type: 'number',
+    nullable: true,
+    description: 'Vòng eo (cm)',
+    example: '60',
+  })
+  waist: number | null;
+
+  @Expose()
+  @ApiProperty({
+    type: 'number',
+    nullable: true,
+    description: 'Vòng mông (cm)',
+    example: '80',
+  })
+  hip: number | null;
+
+  @Expose()
+  @ApiProperty({
+    type: 'string',
+    description: 'Chất liệu (tối đa 50 ký tự)',
+    example: 'Cotton',
+    maxLength: 50,
+    nullable: true,
+  })
+  material: string | null;
+
+  @Expose()
+  @ApiProperty({
+    type: 'string',
+    description: 'Màu sắc (tối đa 50 ký tự)',
+    example: 'Đỏ',
+    maxLength: 50,
+    nullable: true,
+  })
+  color: string | null;
+
+  @Expose()
+  @ApiProperty({
+    type: 'string',
+    description: 'Độ dài (tối đa 50 ký tự)',
+    example: 'Dài',
+    maxLength: 50,
+    nullable: true,
+  })
+  length: string | null;
+
+  @Expose()
+  @ApiProperty({
+    type: 'string',
+    description: 'Cổ (tối đa 50 ký tự)',
+    example: 'Cổ tròn',
+    maxLength: 50,
+    nullable: true,
+  })
+  neckline: string | null;
+
+  @Expose()
+  @ApiProperty({
+    type: 'string',
+    description: 'Tay (tối đa 50 ký tự)',
+    example: 'Tay ngắn',
+    maxLength: 50,
+    nullable: true,
+  })
+  sleeve: string | null;
 
   @Expose()
   @ApiProperty({ description: 'Điểm đánh giá trung bình', example: 4.8 })

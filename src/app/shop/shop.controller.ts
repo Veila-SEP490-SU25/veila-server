@@ -3,6 +3,7 @@ import { Shop, UserRole } from '@/common/models';
 import {
   Body,
   Controller,
+  Delete,
   Get,
   HttpStatus,
   Param,
@@ -67,6 +68,162 @@ import { plainToInstance } from 'class-transformer';
 )
 export class ShopController {
   constructor(private readonly shopService: ShopService) {}
+
+  @Get('favorites')
+  @UseGuards(AuthGuard)
+  @ApiOperation({
+    summary: 'Lấy danh sách shop yêu thích',
+    description: `
+**Hướng dẫn sử dụng:**
+- Trả về danh sách các shop đang hoạt động (ACTIVE).
+- Hỗ trợ phân trang, sắp xếp, lọc:
+  - \`page\`: Số trang (bắt đầu từ 0)
+  - \`size\`: Số lượng mỗi trang
+  - \`sort\`: Ví dụ: name:asc
+  - \`filter\`: Ví dụ: name:like:veila
+- Chỉ trả về các shop có trạng thái ACTIVE.
+- Page bắt đầu từ 0
+- Sort theo format: [tên_field]:[asc/desc]
+- Các trường đang có thể sort: name, status, isVerified
+- Filter theo format: [tên_field]:[eq|neq|gt|gte|lt|lte|like|nlike|in|nin]:[keyword]; hoặc [tên_field]:[isnull|isnotnull]
+- Các trường đang có thể filter: name, status, isVerified
+`,
+  })
+  @ApiQuery({
+    name: 'page',
+    required: false,
+    type: Number,
+    default: 0,
+    description: 'Trang hiện tại (bắt đầu từ 0)',
+  })
+  @ApiQuery({
+    name: 'size',
+    required: false,
+    type: Number,
+    default: 10,
+    description: 'Số lượng mỗi trang',
+  })
+  @ApiQuery({
+    name: 'sort',
+    required: false,
+    type: String,
+    description: 'Sắp xếp theo trường, ví dụ: name:asc',
+  })
+  @ApiQuery({
+    name: 'filter',
+    required: false,
+    type: String,
+    description: 'Lọc theo trường, ví dụ: name:like:veila',
+  })
+  @ApiOkResponse({
+    schema: {
+      allOf: [
+        { $ref: getSchemaPath(ListResponse) },
+        {
+          properties: {
+            item: { $ref: getSchemaPath(ListShopDto) },
+          },
+        },
+      ],
+    },
+  })
+  async getFavorite(
+    @UserId() userId: string,
+    @PaginationParams() { page, size, limit, offset }: Pagination,
+    @SortingParams(['name', 'status', 'isVerified']) sort?: Sorting,
+    @FilteringParams(['name', 'status', 'isVerified']) filter?: Filtering,
+  ): Promise<ListResponse<ListShopDto>> {
+    const [shops, totalItems] = await this.shopService.getFavorite(
+      userId,
+      limit,
+      offset,
+      sort,
+      filter,
+    );
+    const totalPages = Math.ceil(totalItems / size);
+    const dtos = plainToInstance(ListShopDto, shops, { excludeExtraneousValues: true });
+    return {
+      message: 'Đây là danh sách các shop khả dụng',
+      statusCode: HttpStatus.OK,
+      pageIndex: page,
+      pageSize: size,
+      totalItems,
+      totalPages,
+      hasNextPage: page + 1 < totalPages,
+      hasPrevPage: 0 < page,
+      items: dtos,
+    };
+  }
+
+  @Post(':id/favorites')
+  @UseGuards(AuthGuard)
+  @ApiOperation({
+    summary: 'Thêm shop vào danh sách yêu thích',
+    description: `
+**Hướng dẫn sử dụng:**
+
+- Truyền \`id\` của shop trên URL.
+- Nếu shop không tồn tại hoặc không khả dụng, sẽ trả về lỗi.
+`,
+  })
+  @ApiOkResponse({
+    schema: {
+      allOf: [
+        { $ref: getSchemaPath(ItemResponse) },
+        {
+          properties: {
+            item: { example: null },
+          },
+        },
+      ],
+    },
+  })
+  async addFavorite(
+    @UserId() userId: string,
+    @Param('id') id: string,
+  ): Promise<ItemResponse<null>> {
+    await this.shopService.addFavorite(userId, id);
+    return {
+      message: 'Đã thêm shop vào danh sách yêu thích',
+      statusCode: HttpStatus.OK,
+      item: null,
+    };
+  }
+
+  @Delete(':id/favorites')
+  @UseGuards(AuthGuard)
+  @ApiOperation({
+    summary: 'Xóa shop khỏi danh sách yêu thích',
+    description: `
+**Hướng dẫn sử dụng:**
+
+- Truyền \`id\` của shop trên URL.
+- Nếu shop không tồn tại hoặc không khả dụng, sẽ trả về lỗi.
+`,
+  })
+  @ApiOkResponse({
+    schema: {
+      allOf: [
+        { $ref: getSchemaPath(ItemResponse) },
+        {
+          properties: {
+            item: { example: null },
+          },
+        },
+      ],
+    },
+  })
+  async removeFavorite(
+    @UserId() userId: string,
+    @Param('id') id: string,
+  ): Promise<ItemResponse<null>> {
+    await this.shopService.removeFavorite(userId, id);
+    return {
+      message: 'Đã xóa shop khỏi danh sách yêu thích',
+      statusCode: HttpStatus.OK,
+      item: null,
+    };
+  }
 
   @Post('me')
   @UseGuards(AuthGuard)
