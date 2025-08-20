@@ -12,7 +12,7 @@ import { TaskModule } from '../task';
     TypeOrmModule.forFeature([Milestone]),
     forwardRef(() => OrderModule),
     ShopModule,
-    TaskModule,
+    forwardRef(() => TaskModule),
   ],
   controllers: [MilestoneController],
   providers: [MilestoneService],
