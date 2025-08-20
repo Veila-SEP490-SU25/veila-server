@@ -10,12 +10,11 @@ import {
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { DepositViaPayOSDto, DepositViaPayOSResponse, WalletDto } from './wallet.dto';
+import { DepositViaPayOSDto, DepositViaPayOSResponse, UpdateBankDto, WalletDto } from './wallet.dto';
 import { plainToInstance } from 'class-transformer';
 import { UserService } from '../user';
 import { WithdrawTransactionDto, TransactionService } from '../transaction';
 import { PayosService } from '../payos/payos.service';
-import { ConfigService } from '@nestjs/config';
 
 @Injectable()
 export class WalletService {
@@ -26,7 +25,6 @@ export class WalletService {
     @Inject(forwardRef(() => TransactionService))
     private readonly transactionService: TransactionService,
     private readonly payosService: PayosService,
-    private readonly configService: ConfigService,
   ) {}
 
   async getWalletsForAdmin(
@@ -48,6 +46,7 @@ export class WalletService {
       skip,
       relations: ['user'],
     });
+    //ép kiểu số
     for (const wallet of wallets) {
       wallet.availableBalance = Number(wallet.availableBalance);
       wallet.lockedBalance = Number(wallet.lockedBalance);
@@ -64,29 +63,10 @@ export class WalletService {
     });
     if (!wallet) throw new NotFoundException('Không tìm thấy ví điện tử của người dùng này');
 
+    //ép kiểu số
     wallet.availableBalance = Number(wallet.availableBalance);
     wallet.lockedBalance = Number(wallet.lockedBalance);
     return plainToInstance(WalletDto, wallet);
-  }
-
-  async createWallet(userId: string): Promise<Wallet> {
-    const user = await this.userService.getUserById(userId);
-    if (!user) throw new NotFoundException('Người dùng này không tồn tại');
-
-    if (!user.isIdentified) throw new NotFoundException('Người dùng chưa định danh');
-
-    const wallet = await this.getWalletByUserId(userId);
-    if (!wallet) throw new NotFoundException('Mỗi người dùng chỉ được phép mở một ví điện tử');
-    else {
-      const wallet = {
-        user: { id: userId },
-        availableBalance: 0,
-        lockedBalance: 0,
-      } as Wallet;
-
-      await this.walletRepository.save(wallet);
-      return wallet;
-    }
   }
 
   async depositWallet(
@@ -121,8 +101,6 @@ export class WalletService {
       orderCode,
       amount: depositWallet.amount,
       description: 'Nạp tiền',
-      returnUrl: depositWallet.returnUrl ?? this.configService.get<string>('PAYOS_RETURN_URL'),
-      cancelUrl: depositWallet.cancelUrl ?? this.configService.get<string>('PAYOS_CANCEL_URL'),
       buyerName: user.firstName + ' ' + user.middleName + ' ' + user.lastName,
       expiredAt: Math.floor(Date.now() / 1000) + 15 * 60,
     });
@@ -152,13 +130,11 @@ export class WalletService {
     const wallet = await this.findOneByUserId(userId);
     if (!wallet) throw new NotFoundException('Người dùng này chưa sở hữu ví điện tử');
 
-    wallet.bin = withdrawWallet.bin;
-    wallet.bankNumber = withdrawWallet.bankNumber;
+    if(wallet.bin === null || wallet.bankNumber === null)
+      throw new BadRequestException('Vui lòng cập nhật số tài khoản ngân hàng thụ hưởng');
 
     if (Number(wallet.availableBalance) < Number(withdrawWallet.amount))
-      throw new BadRequestException(
-        'Số dư khả dụng trong tài khoản không đủ để thực hiện rút tiền',
-      );
+      throw new BadRequestException('Số dư khả dụng trong tài khoản không đủ để thực hiện rút tiền');
     else {
       wallet.availableBalance = Number(wallet.availableBalance) - withdrawWallet.amount;
       wallet.lockedBalance = Number(wallet.lockedBalance) + withdrawWallet.amount;
@@ -337,5 +313,74 @@ export class WalletService {
     });
     if (!wallet) throw new NotFoundException('Không tìm thấy ví');
     return wallet;
+  }
+
+  async getWalletById(id: string): Promise<Wallet> {
+     const wallet = await this.walletRepository.findOne({
+      where: { id },
+      relations: ['user'],
+     });
+     if(!wallet)
+      throw new NotFoundException('Không tìm thấy ví điện tử');
+     return wallet;
+  }
+
+  async saveWalletBalance(
+    wallet: Wallet,
+    amount: number,
+  ): Promise<void> {
+    await this.walletRepository
+      .createQueryBuilder()
+      .update(Wallet)
+      .set({ availableBalance: () => `available_balance + ${amount}` })
+      .where("id = :id", { id: wallet.id })
+      .execute();
+  }
+
+  async saveWalletBalanceV2(
+    wallet: Wallet,
+    amount: number,
+  ): Promise<void> {
+    await this.walletRepository
+      .createQueryBuilder()
+      .update(Wallet)
+      .set({ lockedBalance: () => `locked_balance - ${amount}` })
+      .where("id = :id", { id: wallet.id })
+      .execute();
+  }
+
+  async saveWalletBalanceV3(
+    wallet: Wallet,
+    amount: number,
+  ): Promise<void> {
+    await this.walletRepository
+      .createQueryBuilder()
+      .update(Wallet)
+      .set({ 
+        lockedBalance: () => `locked_balance - ${amount}`,
+        availableBalance: () => `available_balance + ${amount}`, 
+      })
+      .where("id = :id", { id: wallet.id })
+      .execute();
+  }
+
+  async updateBankInformation(
+    userId: string, 
+    body: UpdateBankDto,
+  ):Promise<Wallet> {
+    const existingWallet = await this.walletRepository.findOne({
+      where: {
+        user: { id: userId },
+      },
+      relations: ['user'],
+    });
+
+    if(!existingWallet)
+      throw new NotFoundException('Không tìm thấy ví điện tử');
+
+    existingWallet.bin = body.bin;
+    existingWallet.bankNumber = body.bankNumber;
+
+    return await this.walletRepository.save(existingWallet);
   }
 }

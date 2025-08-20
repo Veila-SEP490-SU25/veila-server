@@ -1,5 +1,5 @@
 import { Order, OrderServiceDetail } from '@/common/models';
-import { Module } from '@nestjs/common';
+import { forwardRef, Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { OrderController } from './order.controller';
 import { OrderService } from './order.service';
@@ -26,7 +26,7 @@ import { MilestoneModule } from '@/app/milestone';
     WalletModule,
     ServiceModule,
     RequestModule,
-    MilestoneModule,
+    forwardRef(() => MilestoneModule),
   ],
   controllers: [OrderController],
   providers: [OrderService],

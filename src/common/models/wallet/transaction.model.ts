@@ -3,23 +3,26 @@ import { Base, Membership, Order, Wallet } from '@/common/models';
 import { ApiProperty } from '@nestjs/swagger';
 
 export enum TransactionType {
-  DEPOSIT = 'deposit',
-  WITHDRAW = 'withdraw',
-  TRANSFER = 'transfer',
-  RECEIVE = 'receive',
-  REFUND = 'refund',
+  DEPOSIT = 'DEPOSIT',
+  WITHDRAW = 'WITHDRAW',
+  TRANSFER = 'TRANSFER',
+  RECEIVE = 'RECEIVE',
+  REFUND = 'REFUND',
 }
+
 export enum TransactionStatus {
-  PENDING = 'pending',
-  COMPLETED = 'completed',
-  FAILED = 'failed',
-  CANCELLED = 'cancelled',
-  REFUNDED = 'refunded',
+  PENDING = 'PENDING',
+  COMPLETED = 'COMPLETED',
+  FAILED = 'FAILED',
+  CANCELLED = 'CANCELLED',
+  REFUNDED = 'REFUNDED',
 }
+
 export enum TypeBalance {
-  AVAILABLE = 'available',
-  LOCKED = 'locked',
+  AVAILABLE = 'AVAILABLE',
+  LOCKED = 'LOCKED',
 }
+
 
 @Entity('transactions')
 export class Transaction extends Base {

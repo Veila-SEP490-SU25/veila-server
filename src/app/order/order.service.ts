@@ -285,6 +285,8 @@ export class OrderService {
         orderId,
         body.accessoriesDetails,
       );
+      await this.milestoneService.createMilestone(orderId, body.newOrder.type);
+
       return order;
     } else {
       //Đây là luồng thuê váy
@@ -323,6 +325,8 @@ export class OrderService {
         orderId,
         body.accessoriesDetails,
       );
+      await this.milestoneService.createMilestone(orderId, body.newOrder.type);
+
       return order;
     }
   }
@@ -337,6 +341,9 @@ export class OrderService {
 
     const user = await this.userService.getUserById(userId);
     if (!user) throw new NotFoundException('Người dùng này không tồn tại');
+
+    if(!this.validateOwnerOfOrder(userId, id))
+      throw new ForbiddenException('Người dùng không sở hữu đơn hàng này');
 
     existingOrder.phone = updatedOrder.phone;
     existingOrder.email = updatedOrder.email;
@@ -355,6 +362,9 @@ export class OrderService {
 
     const user = await this.userService.getUserById(userId);
     if (!user) throw new NotFoundException('Người dùng này không tồn tại');
+
+    if(!this.validateOwnerOfOrder(userId, id))
+      throw new ForbiddenException('Người dùng không sở hữu đơn hàng này');
 
     existingOrder.status = status;
 
@@ -576,6 +586,7 @@ export class OrderService {
       );
 
       order.status = OrderStatus.IN_PROCESS;
+      await this.milestoneService.startFirstMilestoneAndTask(orderId);
       return await this.orderRepository.save(order);
     } else if (order.type === OrderType.RENT) {
       if (order.status !== OrderStatus.PENDING)
@@ -592,6 +603,7 @@ export class OrderService {
       );
 
       order.status = OrderStatus.IN_PROCESS;
+      await this.milestoneService.startFirstMilestoneAndTask(orderId);
       return await this.orderRepository.save(order);
     } else {
       if (order.status !== OrderStatus.PENDING)
@@ -685,5 +697,20 @@ export class OrderService {
     existingOrder.status = OrderStatus.CANCELLED;
 
     return await this.orderRepository.save(plainToInstance(Order, existingOrder));
+  }
+
+  private async validateOwnerOfOrder(userId: string, orderId: string): Promise<void> {
+    const shop = await this.shopService.getShopByUserId(userId);
+    if (!shop) throw new NotFoundException('Người dùng này chưa có cửa hàng nào');
+
+    const orders = await this.getOrderByShopId(shop.id);
+    if (!orders || orders.length === 0) {
+      throw new NotFoundException(
+        'Không tìm thấy đơn hàng đang chờ hoặc đang thực hiện của người dùng này',
+      );
+    }
+
+    const matchedOrder = orders.find((order) => order.id === orderId);
+    if (!matchedOrder) throw new NotFoundException('Đơn hàng không tồn tại');
   }
 }
