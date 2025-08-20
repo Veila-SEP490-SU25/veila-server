@@ -248,4 +248,12 @@ export class UserService {
     if (!user) throw new NotFoundException('Không tìm thấy người dùng');
     return user;
   }
+
+  async updateFavDresses(id: string, favDresses: string[] | null): Promise<void> {
+    await this.userRepository.update(id, { favDresses } as User);
+  }
+
+  async updateFavShops(id: string, favShops: string[] | null): Promise<void> {
+    await this.userRepository.update(id, { favShops } as User);
+  }
 }

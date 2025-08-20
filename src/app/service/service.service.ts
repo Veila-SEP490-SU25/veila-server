@@ -193,4 +193,20 @@ export class ServiceService {
 
     await this.serviceRepository.save(service);
   }
+
+  async updateRating(
+    id: string,
+    rating: number,
+    ratingCount: number,
+    ratingAverage: number,
+  ): Promise<void> {
+    const ratingTotal = Number(ratingAverage) * Number(ratingCount);
+    const newRatingCount = Number(ratingCount) + 1;
+    const newRatingAverage = (ratingTotal + Number(rating)) / newRatingCount;
+
+    await this.serviceRepository.update(id, {
+      ratingCount: newRatingCount,
+      ratingAverage: newRatingAverage,
+    });
+  }
 }
