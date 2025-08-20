@@ -6,7 +6,6 @@ import {
   Get,
   HttpCode,
   HttpStatus,
-  NotFoundException,
   Post,
   Put,
   UseGuards,
@@ -21,7 +20,13 @@ import {
   ApiTags,
   getSchemaPath,
 } from '@nestjs/swagger';
-import { DepositViaPayOSDto, DepositViaPayOSResponse, WalletDto, WebhookDto } from './wallet.dto';
+import {
+  DepositViaPayOSDto,
+  DepositViaPayOSResponse,
+  UpdateBankDto,
+  WalletDto,
+  WebhookDto,
+} from './wallet.dto';
 import {
   Filtering,
   FilteringParams,
@@ -36,10 +41,6 @@ import { TransactionStatus, UserRole, Wallet } from '@/common/models';
 import { WalletService } from './wallet.service';
 import { AuthGuard, RolesGuard } from '@/common/guards';
 import { WithdrawTransactionDto, TransactionService } from '../transaction';
-import { PayosService } from '../payos/payos.service';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
-// import { WebhookType } from '@payos/node/lib/type';
 
 @Controller('wallets')
 @ApiTags('Wallet Controller')
@@ -48,17 +49,15 @@ import { Repository } from 'typeorm';
 export class WalletController {
   constructor(
     private readonly walletService: WalletService,
-    private readonly payosService: PayosService,
     private readonly transactionService: TransactionService,
-    @InjectRepository(Wallet)
-    private readonly walletRepo: Repository<Wallet>,
   ) {}
 
   @Get()
   @UseGuards(AuthGuard, RolesGuard)
   @Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN, UserRole.STAFF)
   @ApiOperation({
-    summary: 'Lấy danh sách tất cả các ví điện tử với phân trang, sắp xếp và lọc',
+    summary:
+      'Lấy danh sách tất cả các ví điện tử với phân trang, sắp xếp và lọc (dành cho quản trị viên)',
     description: `
             **Hướng dẫn sử dụng:**
 
@@ -110,8 +109,8 @@ export class WalletController {
   })
   async getAllWalletsForAdmin(
     @PaginationParams() { page, size, limit, offset }: Pagination,
-    @SortingParams(['available_balance', 'locked_balance']) sort?: Sorting,
-    @FilteringParams(['user_id', 'available_balance', 'locked_balance'])
+    @SortingParams(['available_balance', 'locked_balance', 'bin', 'bank_number']) sort?: Sorting,
+    @FilteringParams(['user_id', 'available_balance', 'locked_balance', 'bin', 'bank_number'])
     filter?: Filtering,
   ): Promise<ListResponse<WalletDto>> {
     const [wallets, totalItems] = await this.walletService.getWalletsForAdmin(
@@ -135,7 +134,8 @@ export class WalletController {
   }
 
   @Get('my-wallet')
-  @UseGuards(AuthGuard)
+  @UseGuards(AuthGuard, RolesGuard)
+  @Roles(UserRole.CUSTOMER, UserRole.SHOP)
   @ApiOperation({
     summary: 'Lấy chi tiết Ví điện tử',
     description: `
@@ -166,6 +166,8 @@ export class WalletController {
     };
   }
 
+  @Post('my-wallet')
+  @UseGuards(AuthGuard)
   @Put('/deposit')
   @UseGuards(AuthGuard)
   @Roles(UserRole.CUSTOMER, UserRole.SHOP)
@@ -245,6 +247,43 @@ export class WalletController {
     };
   }
 
+  @Put('update-bank-information')
+  @UseGuards(AuthGuard, RolesGuard)
+  @Roles(UserRole.CUSTOMER, UserRole.SHOP)
+  @ApiOperation({
+    summary: 'Cập nhật thông tin chuyển khoản cho ví điện tử',
+    description: `
+            **Hướng dẫn sử dụng**
+            
+            - Truyền dữ liệu trong body theo dạng JSON.
+            - Nếu không tìm thấy ví thì trả về lỗi.
+            - Trả về thông tin chi tiết của ví điện tử đã cập nhật.
+        `,
+  })
+  @ApiOkResponse({
+    schema: {
+      allOf: [
+        { $ref: getSchemaPath(ItemResponse) },
+        {
+          properties: {
+            item: { $ref: getSchemaPath(Wallet) },
+          },
+        },
+      ],
+    },
+  })
+  async updateBankInformation(
+    @UserId() userId: string,
+    @Body() body: UpdateBankDto,
+  ): Promise<ItemResponse<Wallet>> {
+    const wallet = await this.walletService.updateBankInformation(userId, body);
+    return {
+      message: 'Cập nhật thông tin ngân hàng cho ví điện tử thành công',
+      statusCode: HttpStatus.OK,
+      item: wallet,
+    };
+  }
+
   @Post('payment/webhook')
   @HttpCode(200)
   @ApiOperation({
@@ -252,13 +291,11 @@ export class WalletController {
     description: `
     **Hướng dẫn sử dụng**
 
-    - Đây là API để PayOS gọi khi có thay đổi trạng thái thanh toán.
-    - FE KHÔNG cần gọi API này trực tiếp (PayOS sẽ POST vào).
-    - Tuy nhiên, bạn có thể dùng để test webhook bằng cách gửi body JSON đúng định dạng.
+    - Đây là API để gọi khi có thay đổi trạng thái thanh toán.
 
     **Quy trình**
-    1. PayOS gửi webhook → Backend nhận → Xác thực chữ ký → Cập nhật trạng thái giao dịch.
-    2. Nếu thanh toán thành công (PAID) → cộng tiền vào ví.
+    1. PayOS gửi link thành công/thất bại → Frontend nhận → gửi JSON.
+    2. Nếu thanh toán thành công (COMPLETED) → cộng tiền vào ví.
     3. Nếu thất bại / hủy → cập nhật trạng thái FAILED / CANCELLED, không cộng tiền.
   `,
   })
@@ -290,94 +327,15 @@ export class WalletController {
       },
     },
   })
-  // @ApiBody({
-  //   description: 'Payload webhook do PayOS gửi về',
-  //   required: true,
-  //   schema: {
-  //     example: {
-  //       code: '00',
-  //       desc: 'Success',
-  //       success: true,
-  //       data: {
-  //         orderCode: 123456789,
-  //         amount: 100000,
-  //         description: 'Nạp tiền vào ví',
-  //         accountNumber: '1234567890',
-  //         reference: 'Ref12345',
-  //         transactionDateTime: '2025-08-13T14:30:00+07:00',
-  //         currency: 'VND',
-  //         paymentLinkId: 'pl_abc123',
-  //         code: 'PAID',
-  //         desc: 'Thanh toán thành công',
-  //         counterAccountBankId: 'VCB',
-  //         counterAccountBankName: 'Vietcombank',
-  //         counterAccountName: 'Nguyen Van A',
-  //         counterAccountNumber: '0123456789',
-  //       },
-  //       signature: 'abcxyz1234567890',
-  //     },
-  //   },
-  // })
   async handleWebhook(@Body() body: WebhookDto) {
-    //WebhookType
-    // // Xác thực chữ ký
-    // const verified = this.payosService.verifyWebhook(body);
-    // if (!verified) {
-    //   throw new BadRequestException('Invalid signature');
-    // }
-
-    // // Đọc dữ liệu từ PayOS
-    // const data = body?.data;
-    // if (!data || typeof data.orderCode === 'undefined') {
-    //   throw new BadRequestException('Missing orderCode');
-    // }
-
-    // const orderCode = Number(data.orderCode);
-    // const status = String(data.code || '').toUpperCase();
-
-    // // Tìm transaction qua orderCode
-    // const transaction = await this.transactionService.fineTransactionByOrderCode(orderCode);
-
-    //Tìm transaction bằng transactionId
-    const transaction = await this.transactionService.getTransactionById(body.transactionId);
-    if (!transaction) throw new NotFoundException('Không tìm thấy giao dịch');
-
+    const updatedTransaction = await this.transactionService.updateTransactionStatus(
+      body.transactionId,
+      body.status,
+    );
     if (body.status === TransactionStatus.COMPLETED) {
-      await this.transactionService.updateTransactionStatus(transaction.id, body.status);
-      const wallet = await this.walletRepo.findOne({ where: { id: transaction.walletId } });
-      if (wallet) {
-        wallet.availableBalance = Number(wallet.availableBalance) + Number(transaction.amount);
-        await this.walletRepo.save(wallet);
-      }
-    } else if (
-      body.status === TransactionStatus.CANCELLED ||
-      body.status === TransactionStatus.FAILED
-    ) {
-      await this.transactionService.updateTransactionStatus(transaction.id, body.status);
+      const wallet = await this.walletService.getWalletById(updatedTransaction.wallet.id);
+      await this.walletService.saveWalletBalance(wallet, updatedTransaction.amount);
     }
-
-    return {
-      message: 'OK',
-    };
-    // // Xử lý theo trạng thái
-    // if (status === 'PAID') {
-    //   await this.transactionService.updateTransactionByOrderCode(
-    //     orderCode,
-    //     TransactionStatus.COMPLETED,
-    //   );
-    //   // Cộng tiền vào ví
-    //   const wallet = await this.walletRepo.findOne({ where: { id: transaction.wallet.id } });
-    //   if (wallet) {
-    //     wallet.availableBalance = Number(wallet.availableBalance) + Number(transaction.amount);
-    //     await this.walletRepo.save(wallet);
-    //   }
-    // } else if (status === 'CANCELLED' || status === 'FAILED') {
-    //   await this.transactionService.updateTransactionByOrderCode(
-    //     orderCode,
-    //     status === 'FAILED' ? TransactionStatus.FAILED : TransactionStatus.CANCELLED,
-    //   );
-    // }
-
-    // return { message: 'OK' };
+    return { message: 'OK' };
   }
 }

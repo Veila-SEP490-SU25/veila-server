@@ -114,26 +114,6 @@ export class WithdrawTransactionDto {
     nullable: true,
   })
   note: string;
-
-  @Expose()
-  @ApiProperty({
-    type: 'string',
-    nullable: false,
-    description: 'Mã BIN định danh ngân hàng',
-  })
-  @IsNotEmpty()
-  @IsString()
-  bin: string;
-
-  @Expose()
-  @ApiProperty({
-    type: 'string',
-    nullable: false,
-    description: 'Số tài khoản ngân hàng',
-  })
-  @IsNotEmpty()
-  @IsString()
-  bankNumber: string;
 }
 
 export class TransactionDto {

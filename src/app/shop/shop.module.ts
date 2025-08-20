@@ -15,6 +15,7 @@ import { ShopController } from '@/app/shop/shop.controller';
 import { ShopService } from '@/app/shop/shop.service';
 import { MembershipModule } from '@/app/membership';
 import { ContractModule } from '@/app/contract';
+import { UserModule } from '@/app/user';
 
 @Module({
   imports: [
@@ -31,6 +32,7 @@ import { ContractModule } from '@/app/contract';
     ]),
     MembershipModule,
     ContractModule,
+    UserModule,
   ],
   controllers: [ShopController],
   providers: [ShopService],

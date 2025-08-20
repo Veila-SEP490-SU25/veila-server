@@ -3,8 +3,11 @@ import { MilestoneService } from './milestone.service';
 import {
   Body,
   Controller,
+  Delete,
+  forwardRef,
   Get,
   HttpStatus,
+  Inject,
   Param,
   Post,
   Put,
@@ -31,16 +34,20 @@ import {
   SortingParams,
   UserId,
 } from '@/common/decorators';
-import { CreateMilestoneRequestDto, CUMilestoneDto, MilestoneDto } from './milestone.dto';
-import { Milestone, MilestoneStatus, UserRole } from '@/common/models';
-import { TaskDto } from '@/app/task';
+import { CUMilestoneDtoV2, MilestoneDto } from './milestone.dto';
+import { Milestone, MilestoneStatus, Task, UserRole } from '@/common/models';
+import { CUTaskDto, TaskDto, TaskService } from '@/app/task';
 
 @Controller('milestones')
 @ApiTags('Milestone Controller')
 @ApiBearerAuth()
-@ApiExtraModels(ItemResponse, ListResponse, MilestoneDto, Milestone, TaskDto)
+@ApiExtraModels(ItemResponse, ListResponse, MilestoneDto, Milestone, TaskDto, Task)
 export class MilestoneController {
-  constructor(private readonly milestoneService: MilestoneService) {}
+  constructor(
+    private readonly milestoneService: MilestoneService,
+    @Inject(forwardRef(() => TaskService))
+    private readonly taskService: TaskService,
+  ) {}
 
   @Get()
   @UseGuards(AuthGuard)
@@ -93,15 +100,12 @@ export class MilestoneController {
 
   @Get(':id')
   @UseGuards(AuthGuard)
-  @Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN, UserRole.STAFF, UserRole.SHOP, UserRole.CUSTOMER)
   @ApiOperation({
-    summary: 'Lấy chi tiết mốc công việc với sắp xếp tăng dần (All role trừ guest)',
+    summary: 'Lấy chi tiết mốc công việc (All role trừ guest)',
     description: `
             **Hướng dẫn sử dụng:**
             
             - Trả về chi tiết mốc công việc theo id (tất cả các trạng thái)
-            - Hỗ trợ sắp xếp theo index tăng dần
-            - Sort theo format (theo trường index): [tên_field]:[asc/desc]
         `,
   })
   @ApiOkResponse({
@@ -120,6 +124,84 @@ export class MilestoneController {
     const milestone = await this.milestoneService.getMilestoneById(id);
     return {
       message: 'Đây là thông tin chi tiết mốc công việc',
+      statusCode: HttpStatus.OK,
+      item: milestone,
+    };
+  }
+
+  @Put(':id')
+  @UseGuards(AuthGuard, RolesGuard)
+  @Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN, UserRole.STAFF, UserRole.SHOP)
+  @ApiOperation({
+    summary: 'Cập nhật thông tin deadline của mốc công việc',
+    description: `
+            **Hướng dẫn sử dụng:**
+            
+            - Truyền id trên url.
+            - Truyền thông tin cập nhật trong body dưới dạng JSON.
+            - Trả về chi tiết mốc công việc theo id (tất cả các trạng thái).
+        `,
+  })
+  @ApiOkResponse({
+    schema: {
+      allOf: [
+        { $ref: getSchemaPath(ItemResponse) },
+        {
+          properties: {
+            items: { $ref: getSchemaPath(Milestone) },
+          },
+        },
+      ],
+    },
+  })
+  async updateDeadlineMilestoneById(
+    @UserId() userId: string,
+    @Param('id') id: string,
+    @Body() body: CUMilestoneDtoV2,
+  ): Promise<ItemResponse<Milestone>> {
+    const milestone = await this.milestoneService.updateDeadlineMilestoneById(userId, id, body);
+    return {
+      message: 'Đây là thông tin chi tiết mốc công việc vừa cập nhật',
+      statusCode: HttpStatus.OK,
+      item: milestone,
+    };
+  }
+
+  @Put(':id/:status')
+  @UseGuards(AuthGuard, RolesGuard)
+  @Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN, UserRole.STAFF, UserRole.SHOP)
+  @ApiOperation({
+    summary: 'Cập nhật trạng thái mốc công việc',
+    description: `
+            **Hướng dẫn sử dụng:**
+
+            - Truyền \`id\` của mốc công việc trên URL.
+            - Truyền trạng thái cập nhật mốc công việc trên URL.
+            - Nếu không tìm thấy mốc công việc sẽ trả về lỗi.
+            - OrderStatus: PENDING, IN_PROGRESS, COMPLETED, CANCELLED
+            - Trả về thông tin chi tiết của mốc công việc đã cập nhật.
+        `,
+  })
+  @ApiOkResponse({
+    schema: {
+      allOf: [
+        { $ref: getSchemaPath(ItemResponse) },
+        {
+          properties: {
+            item: { example: null, $ref: getSchemaPath(Milestone) },
+          },
+        },
+      ],
+    },
+  })
+  async updateMilestoneStatus(
+    @UserId() userId: string,
+    @Param('id') id: string,
+    @Param('status') status: MilestoneStatus,
+  ): Promise<ItemResponse<Milestone>> {
+    const milestone = await this.milestoneService.updateMilestoneStatus(userId, id, status);
+    return {
+      message: 'Mốc công việc đã được cập nhật trạng thái thành công',
       statusCode: HttpStatus.OK,
       item: milestone,
     };
@@ -205,6 +287,43 @@ export class MilestoneController {
     };
   }
 
+  @Post(':id/tasks')
+  @UseGuards(AuthGuard, RolesGuard)
+  @Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN, UserRole.STAFF, UserRole.SHOP)
+  @ApiOperation({
+    summary: 'Tạo mới công việc theo mốc công việc',
+    description: `
+            **Hướng dẫn sử dụng:**
+            
+            - Truyền dữ liệu trong body dưới dạng JSON.
+            - Trả về công việc theo mốc công việc vừa được tạo.
+        `,
+  })
+  @ApiOkResponse({
+    schema: {
+      allOf: [
+        { $ref: getSchemaPath(ItemResponse) },
+        {
+          properties: {
+            items: { $ref: getSchemaPath(Task) },
+          },
+        },
+      ],
+    },
+  })
+  async createTaskForMilestone(
+    @UserId() userId: string,
+    @Param('id') id: string,
+    @Body() body: CUTaskDto,
+  ): Promise<ItemResponse<Task>> {
+    const task = await this.taskService.createTaskForMilestone(userId, id, body);
+    return {
+      message: 'Công việc theo mốc công việc vừa được tạo',
+      statusCode: HttpStatus.OK,
+      item: task,
+    };
+  }
+
   @Get(':id/tasks/:taskId')
   @UseGuards(AuthGuard)
   @ApiOperation({
@@ -239,127 +358,120 @@ export class MilestoneController {
     };
   }
 
-  @Post()
-  @UseGuards(AuthGuard, RolesGuard)
-  @Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN, UserRole.SHOP)
-  @ApiOperation({
-    summary: 'Tạo mốc công việc mới',
-    description: `
-            **Hướng dẫn sử dụng:**
-
-            - Chỉ có \`SHOP\` (không tính Admin) mới có thể tạo mốc công việc.
-            -Truyền dữ liệu mốc công việc trong body theo dạng JSON.
-            - Các trường bắt buộc: order_id, title, description, status,...
-            - Trả về thông tin chi tiết của mốc công việc vừa tạo.
-            - MilestoneStatus: PENDING
-        `,
-  })
-  @ApiOkResponse({
-    schema: {
-      allOf: [
-        { $ref: getSchemaPath(ItemResponse) },
-        {
-          properties: {
-            item: { $ref: getSchemaPath(Milestone) },
-          },
-        },
-      ],
-    },
-  })
-  async createMilestone(
-    @UserId() userId: string,
-    @Body() body: CreateMilestoneRequestDto,
-  ): Promise<ItemResponse<Milestone>> {
-    const milestone = await this.milestoneService.createMilestone(userId, body);
-    return {
-      message: 'Mốc công việc được tạo thành công',
-      statusCode: HttpStatus.CREATED,
-      item: milestone,
-    };
-  }
-
-  @Put(':id')
-  @UseGuards(AuthGuard, RolesGuard)
-  @Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN, UserRole.STAFF, UserRole.SHOP)
-  @ApiOperation({
-    summary: 'Cập nhật thông tin mốc công việc',
-    description: `
-            **Hướng dẫn sử dụng:**
-
-            - Truyền \`id\` của mốc công việc trên URL.
-            - Truyền dữ liệu cập nhật trong body theo dạng JSON.
-            - Các trường bắt buộc: \`due_date\`....
-            - Nếu không tìm thấy mốc công việc sẽ trả về lỗi.
-            - MilestoneStatus: PENDING, IN_PROGRESS, COMPLETED, CANCELLED
-            - Trả về thông tin chi tiết của mốc công việc đã cập nhật.
-        `,
-  })
-  @ApiOkResponse({
-    schema: {
-      allOf: [
-        { $ref: getSchemaPath(ItemResponse) },
-        {
-          properties: {
-            item: { example: null, $ref: getSchemaPath(Milestone) },
-          },
-        },
-      ],
-    },
-  })
-  async updateMilestone(
-    @UserId() userId: string,
-    @Param('id') id: string,
-    @Body() updateMilestone: CUMilestoneDto,
-  ): Promise<ItemResponse<Milestone>> {
-    const milestone = await this.milestoneService.updateMilestone(userId, id, updateMilestone);
-    return {
-      message: 'Mốc công việc đã được cập nhật',
-      statusCode: HttpStatus.OK,
-      item: milestone,
-    };
-  }
-
-  @Put(':id/:status')
-  @UseGuards(AuthGuard, RolesGuard)
-  @Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN, UserRole.STAFF, UserRole.SHOP)
-  @ApiOperation({
-    summary: 'Cập nhật trạng thái mốc công việc',
-    description: `
-            **Hướng dẫn sử dụng:**
-
-            - Truyền \`id\` của mốc công việc trên URL.
-            - Truyền trạng thái cập nhật mốc công việc trên URL.
-            - Nếu không tìm thấy mốc công việc sẽ trả về lỗi.
-            - OrderStatus: PENDING, IN_PROGRESS, COMPLETED, CANCELLED
-            - Trả về thông tin chi tiết của mốc công việc đã cập nhật.
-        `,
-  })
-  @ApiOkResponse({
-    schema: {
-      allOf: [
-        { $ref: getSchemaPath(ItemResponse) },
-        {
-          properties: {
-            item: { example: null, $ref: getSchemaPath(Milestone) },
-          },
-        },
-      ],
-    },
-  })
-  async updateMilestoneStatus(
-    @UserId() userId: string,
-    @Param('id') id: string,
-    @Param('status') status: MilestoneStatus,
-  ): Promise<ItemResponse<Milestone>> {
-    const milestone = await this.milestoneService.updateMilestoneStatus(userId, id, status);
-    return {
-      message: 'Mốc công việc đã được cập nhật trạng thái thành công',
-      statusCode: HttpStatus.OK,
-      item: milestone,
-    };
-  }
-
   @Put(':id/tasks/:taskId')
+  @UseGuards(AuthGuard, RolesGuard)
+  @Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN, UserRole.STAFF, UserRole.SHOP)
+  @ApiOperation({
+    summary: 'Cập nhật thông tin cho công việc trong mốc công việc',
+    description: `
+            **Hướng dẫn sử dụng:** 
+            - Truyền \`id\` của mốc công việc và \`taskId\` của công việc trên URL.
+            - Truyền dữ liệu dưới dạng JSON trong body.
+            - Nếu không tìm thấy công việc sẽ trả về lỗi.
+            - Trả về thông tin chi tiết của công việc đã cập nhật.
+        `,
+  })
+  @ApiOkResponse({
+    schema: {
+      allOf: [
+        { $ref: getSchemaPath(ItemResponse) },
+        {
+          properties: {
+            item: { example: null },
+          },
+        },
+      ],
+    },
+  })
+  async updateTask(
+    @UserId() userId: string,
+    @Param('id') id: string,
+    @Param('taskId') taskId: string,
+    @Body() body: CUTaskDto,
+  ): Promise<ItemResponse<null>> {
+    await this.taskService.updateTask(userId, id, taskId, body);
+    return {
+      message: 'Công việc đã được cập nhật thành công',
+      statusCode: HttpStatus.OK,
+      item: null,
+    };
+  }
+
+  @Delete(':id/tasks/:taskId')
+  @UseGuards(AuthGuard, RolesGuard)
+  @Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN, UserRole.STAFF, UserRole.SHOP)
+  @ApiOperation({
+    summary: 'Xóa công việc trong mốc công việc',
+    description: `
+            **Hướng dẫn sử dụng:** 
+            - Truyền \`id\` của mốc công việc và \`taskId\` của công việc trên URL.
+            - Nếu không tìm thấy công việc sẽ trả về lỗi.
+            - Trả về thông tin chi tiết của công việc đã xóa.
+        `,
+  })
+  @ApiOkResponse({
+    schema: {
+      allOf: [
+        { $ref: getSchemaPath(ItemResponse) },
+        {
+          properties: {
+            item: { example: null },
+          },
+        },
+      ],
+    },
+  })
+  async deleteTask(
+    @UserId() userId: string,
+    @Param('id') id: string,
+    @Param('taskId') taskId: string,
+  ): Promise<ItemResponse<null>> {
+    await this.taskService.deleteTask(userId, id, taskId);
+    return {
+      message: 'Công việc đã được xóa thành công',
+      statusCode: HttpStatus.OK,
+      item: null,
+    };
+  }
+
+  @Put(':id/tasks/:taskId/cancelled')
+  @UseGuards(AuthGuard, RolesGuard)
+  @Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN, UserRole.STAFF, UserRole.SHOP)
+  @ApiOperation({
+    summary: 'Hủy công việc trong mốc công việc',
+    description: `
+            **Hướng dẫn sử dụng:** 
+            - Truyền \`id\` của mốc công việc và \`taskId\` của công việc trên URL.
+            - Nếu không tìm thấy công việc sẽ trả về lỗi.
+            - Trả về thông tin chi tiết của công việc đã cập nhật.
+        `,
+  })
+  @ApiOkResponse({
+    schema: {
+      allOf: [
+        { $ref: getSchemaPath(ItemResponse) },
+        {
+          properties: {
+            item: { example: null },
+          },
+        },
+      ],
+    },
+  })
+  async cancelTask(
+    @UserId() userId: string,
+    @Param('id') id: string,
+    @Param('taskId') taskId: string,
+  ): Promise<ItemResponse<null>> {
+    await this.taskService.cancelTask(userId, id, taskId);
+    return {
+      message: 'Công việc đã được cập nhật thành công',
+      statusCode: HttpStatus.OK,
+      item: null,
+    };
+  }
+
+  @Put(':id/tasks/:taskId/completed')
   @UseGuards(AuthGuard, RolesGuard)
   @Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN, UserRole.STAFF, UserRole.SHOP)
   @ApiOperation({

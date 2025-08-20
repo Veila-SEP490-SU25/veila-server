@@ -177,4 +177,20 @@ export class AccessoryService {
 
     await this.accessoryRepository.save(accessory);
   }
+
+  async updateRating(
+    id: string,
+    rating: number,
+    ratingCount: number,
+    ratingAverage: number,
+  ): Promise<void> {
+    const ratingTotal = Number(ratingAverage) * Number(ratingCount);
+    const newRatingCount = Number(ratingCount) + 1;
+    const newRatingAverage = (ratingTotal + Number(rating)) / newRatingCount;
+
+    await this.accessoryRepository.update(id, {
+      ratingCount: newRatingCount,
+      ratingAverage: newRatingAverage,
+    });
+  }
 }

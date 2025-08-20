@@ -43,6 +43,171 @@ import { plainToInstance } from 'class-transformer';
 export class DressController {
   constructor(private readonly dressService: DressService) {}
 
+  @Get('favorites')
+  @UseGuards(AuthGuard)
+  @ApiOperation({
+    summary: 'Lấy danh sách váy cưới yêu thích của khách hàng',
+    description: `
+**Hướng dẫn sử dụng:**
+
+- Trả về danh sách các váy cưới đang ở trạng thái AVAILABLE.
+- Hỗ trợ phân trang, sắp xếp, lọc:
+  - \`page\`: Số trang (bắt đầu từ 0)
+  - \`size\`: Số lượng mỗi trang
+  - \`sort\`: Ví dụ: name:asc
+  - \`filter\`: Ví dụ: name:like:áo
+- Chỉ trả về váy cưới khả dụng cho khách hàng.
+- Page bắt đầu từ 0
+- Sort theo format: [tên_field]:[asc/desc]
+- Các trường đang có thể sort: name, sellPrice, rentalPrice, ratingAverage
+- Filter theo format: [tên_field]:[eq|neq|gt|gte|lt|lte|like|nlike|in|nin]:[keyword]; hoặc [tên_field]:[isnull|isnotnull]
+- Các trường đang có thể filter: name, sellPrice, rentalPrice, isSellable, isRentable, ratingAverage
+`,
+  })
+  @ApiQuery({
+    name: 'page',
+    required: false,
+    type: Number,
+    default: 0,
+    description: 'Trang hiện tại (bắt đầu từ 0)',
+  })
+  @ApiQuery({
+    name: 'size',
+    required: false,
+    type: Number,
+    default: 10,
+    description: 'Số lượng mỗi trang',
+  })
+  @ApiQuery({
+    name: 'sort',
+    required: false,
+    type: String,
+    description: 'Sắp xếp theo trường, ví dụ: name:asc',
+  })
+  @ApiQuery({
+    name: 'filter',
+    required: false,
+    type: String,
+    description: 'Lọc theo trường, ví dụ: name:like:áo',
+  })
+  @ApiOkResponse({
+    schema: {
+      allOf: [
+        { $ref: getSchemaPath(ListResponse) },
+        {
+          properties: {
+            item: { $ref: getSchemaPath(ListDressDto) },
+          },
+        },
+      ],
+    },
+  })
+  async getFavorite(
+    @UserId() userId: string,
+    @PaginationParams() { page, size, limit, offset }: Pagination,
+    @SortingParams(['name', 'sellPrice', 'rentalPrice', 'ratingAverage']) sort?: Sorting,
+    @FilteringParams([
+      'name',
+      'sellPrice',
+      'rentalPrice',
+      'ratingAverage',
+      'isSellable',
+      'isRentable',
+    ])
+    filter?: Filtering,
+  ): Promise<ListResponse<ListDressDto>> {
+    const [dresses, totalItems] = await this.dressService.getFavorite(
+      userId,
+      limit,
+      offset,
+      sort,
+      filter,
+    );
+    const totalPages = Math.ceil(totalItems / size);
+    const dtos = plainToInstance(ListDressDto, dresses, { excludeExtraneousValues: true });
+    return {
+      message: 'Đây là danh sách váy cưới yêu thích của bạn',
+      statusCode: HttpStatus.OK,
+      pageIndex: page,
+      pageSize: size,
+      totalItems,
+      totalPages,
+      hasNextPage: page + 1 < totalPages,
+      hasPrevPage: 0 < page,
+      items: dtos,
+    };
+  }
+
+  @Post(':id/favorites')
+  @UseGuards(AuthGuard)
+  @ApiOperation({
+    summary: 'Thêm váy cưới vào danh sách yêu thích',
+    description: `
+**Hướng dẫn sử dụng:**
+
+- Truyền \`id\` của váy cưới trên URL.
+- Nếu váy cưới không tồn tại hoặc không khả dụng, sẽ trả về lỗi.
+`,
+  })
+  @ApiOkResponse({
+    schema: {
+      allOf: [
+        { $ref: getSchemaPath(ItemResponse) },
+        {
+          properties: {
+            item: { example: null },
+          },
+        },
+      ],
+    },
+  })
+  async addFavorite(
+    @UserId() userId: string,
+    @Param('id') id: string,
+  ): Promise<ItemResponse<null>> {
+    await this.dressService.addFavorite(userId, id);
+    return {
+      message: 'Đã thêm váy cưới vào danh sách yêu thích',
+      statusCode: HttpStatus.OK,
+      item: null,
+    };
+  }
+
+  @Delete(':id/favorites')
+  @UseGuards(AuthGuard)
+  @ApiOperation({
+    summary: 'Xóa váy cưới khỏi danh sách yêu thích',
+    description: `
+**Hướng dẫn sử dụng:**
+
+- Truyền \`id\` của váy cưới trên URL.
+- Nếu váy cưới không tồn tại hoặc không khả dụng, sẽ trả về lỗi.
+`,
+  })
+  @ApiOkResponse({
+    schema: {
+      allOf: [
+        { $ref: getSchemaPath(ItemResponse) },
+        {
+          properties: {
+            item: { example: null },
+          },
+        },
+      ],
+    },
+  })
+  async removeFavorite(
+    @UserId() userId: string,
+    @Param('id') id: string,
+  ): Promise<ItemResponse<null>> {
+    await this.dressService.removeFavorite(userId, id);
+    return {
+      message: 'Đã xóa váy cưới khỏi danh sách yêu thích',
+      statusCode: HttpStatus.OK,
+      item: null,
+    };
+  }
+
   @Get('/me')
   @UseGuards(AuthGuard)
   @Roles(UserRole.SHOP)

@@ -35,7 +35,6 @@ import { MilestoneModule } from './milestone';
 import { SingleModule } from '@/app/single';
 import { TransactionModule } from './transaction';
 import { RequestModule } from '@/app/request';
-import { UpdateRequestModule } from '@/app/update-request';
 
 @Module({
   imports: [
@@ -88,7 +87,6 @@ import { UpdateRequestModule } from '@/app/update-request';
     MilestoneModule,
     SingleModule,
     TransactionModule,
-    UpdateRequestModule,
     RequestModule,
   ],
   controllers: [AppController],

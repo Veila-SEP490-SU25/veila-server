@@ -2,6 +2,7 @@ import { TransactionStatus } from '@/common/models';
 import { ApiProperty } from '@nestjs/swagger';
 import { Expose, Transform } from 'class-transformer';
 import {
+  IsEnum,
   IsInt,
   IsNotEmpty,
   IsNumber,
@@ -57,13 +58,24 @@ export class WalletDto {
 
   @Expose()
   @ApiProperty({
+    description: 'ID của chủ sở hữu ví',
+    example: 'user-uuid-123',
+    nullable: false,
+  })
+  @IsNotEmpty()
+  @IsString()
+  @Transform(({ obj: wallet }) => wallet.user.id)
+  userId: string;
+
+  @Expose()
+  @ApiProperty({
     description: 'Tên của người dùng',
     example: 'user-name-123',
     nullable: false,
   })
   @IsNotEmpty()
   @IsString()
-  @Transform(({ obj: wallet }) => wallet.user.name)
+  @Transform(({ obj: wallet }) => wallet.user.username)
   userName: string;
 
   @Expose()
@@ -107,7 +119,7 @@ export class WalletDto {
   })
   @IsString()
   @MaxLength(20)
-  bankAccountNumber: string | null;
+  bankNumber: string | null;
 }
 
 export class DepositViaPayOSDto {
@@ -121,16 +133,6 @@ export class DepositViaPayOSDto {
   @IsString()
   @MaxLength(255)
   note?: string;
-
-  @ApiProperty({ required: false, description: 'URL trả về sau thanh toán (override)' })
-  @IsOptional()
-  @IsString()
-  returnUrl?: string;
-
-  @ApiProperty({ required: false, description: 'URL hủy thanh toán (override)' })
-  @IsOptional()
-  @IsString()
-  cancelUrl?: string;
 }
 
 export class DepositViaPayOSResponse {
@@ -203,5 +205,28 @@ export class WebhookDto {
     nullable: false,
   })
   @IsNotEmpty()
+  @IsEnum(TransactionStatus)
+  // @Transform(({ value }) => value?.toUpperCase())
   status: TransactionStatus;
+}
+export class UpdateBankDto {
+  @Expose()
+  @ApiProperty({
+    description: 'Mã BIN định danh ngân hàng',
+    example: '987654',
+    nullable: false,
+  })
+  @IsNotEmpty()
+  @IsString()
+  bin: string;
+
+  @Expose()
+  @ApiProperty({
+    description: 'Số tài khoản ngân hàng',
+    example: '106874755472',
+    nullable: false,
+  })
+  @IsNotEmpty()
+  @IsString()
+  bankNumber: string;
 }

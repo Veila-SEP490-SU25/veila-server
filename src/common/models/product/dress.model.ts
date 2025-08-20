@@ -80,6 +80,123 @@ export class Dress extends Base {
   images: string | null;
 
   @Column({
+    type: 'integer',
+    unsigned: true,
+    nullable: true,
+    comment: 'Vòng ngực',
+  })
+  @ApiProperty({
+    type: 'number',
+    nullable: true,
+    description: 'Vòng ngực (cm)',
+    example: '90',
+  })
+  bust: number | null;
+
+  @Column({
+    type: 'integer',
+    unsigned: true,
+    nullable: true,
+    comment: 'Vòng eo',
+  })
+  @ApiProperty({
+    type: 'number',
+    nullable: true,
+    description: 'Vòng eo (cm)',
+    example: '60',
+  })
+  waist: number | null;
+
+  @Column({
+    type: 'integer',
+    unsigned: true,
+    nullable: true,
+    comment: 'Vòng mông',
+  })
+  @ApiProperty({
+    type: 'number',
+    nullable: true,
+    description: 'Vòng mông (cm)',
+    example: '80',
+  })
+  hip: number | null;
+
+  @Column({
+    type: 'varchar',
+    length: 50,
+    nullable: true,
+    comment: 'Chất liệu',
+  })
+  @ApiProperty({
+    type: 'string',
+    description: 'Chất liệu (tối đa 50 ký tự)',
+    example: 'Cotton',
+    maxLength: 50,
+    nullable: true,
+  })
+  material: string | null;
+
+  @Column({
+    type: 'varchar',
+    length: 50,
+    nullable: true,
+    comment: 'Màu sắc',
+  })
+  @ApiProperty({
+    type: 'string',
+    description: 'Màu sắc (tối đa 50 ký tự)',
+    example: 'Đỏ',
+    maxLength: 50,
+    nullable: true,
+  })
+  color: string | null;
+
+  @Column({
+    type: 'varchar',
+    length: 50,
+    nullable: true,
+    comment: 'Độ dài',
+  })
+  @ApiProperty({
+    type: 'string',
+    description: 'Độ dài (tối đa 50 ký tự)',
+    example: 'Dài',
+    maxLength: 50,
+    nullable: true,
+  })
+  length: string | null;
+
+  @Column({
+    type: 'varchar',
+    length: 50,
+    nullable: true,
+    comment: 'Cổ',
+  })
+  @ApiProperty({
+    type: 'string',
+    description: 'Cổ (tối đa 50 ký tự)',
+    example: 'Cổ tròn',
+    maxLength: 50,
+    nullable: true,
+  })
+  neckline: string | null;
+
+  @Column({
+    type: 'varchar',
+    length: 50,
+    nullable: true,
+    comment: 'Tay',
+  })
+  @ApiProperty({
+    type: 'string',
+    description: 'Tay (tối đa 50 ký tự)',
+    example: 'Tay ngắn',
+    maxLength: 50,
+    nullable: true,
+  })
+  sleeve: string | null;
+
+  @Column({
     name: 'sell_price',
     type: 'decimal',
     precision: 10,

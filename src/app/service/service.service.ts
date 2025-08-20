@@ -162,7 +162,10 @@ export class ServiceService {
 
   async getServiceForOrderCustom(userId: string): Promise<Service> {
     const service = await this.serviceRepository.findOne({
-      where: { user: { id: userId } },
+      where: {
+        user: { id: userId },
+        status: ServiceStatus.AVAILABLE,
+      },
       relations: {
         user: { shop: true },
       },
@@ -192,5 +195,21 @@ export class ServiceService {
     service.ratingCount = ratingCount;
 
     await this.serviceRepository.save(service);
+  }
+
+  async updateRating(
+    id: string,
+    rating: number,
+    ratingCount: number,
+    ratingAverage: number,
+  ): Promise<void> {
+    const ratingTotal = Number(ratingAverage) * Number(ratingCount);
+    const newRatingCount = Number(ratingCount) + 1;
+    const newRatingAverage = (ratingTotal + Number(rating)) / newRatingCount;
+
+    await this.serviceRepository.update(id, {
+      ratingCount: newRatingCount,
+      ratingAverage: newRatingAverage,
+    });
   }
 }

@@ -26,13 +26,7 @@ import {
   UserId,
 } from '@/common/decorators';
 import { AuthGuard, RolesGuard } from '@/common/guards';
-import {
-  CreateOrderForCustom,
-  CreateOrderRequestDto,
-  OrderDto,
-  ShopUpdateOrderForCustom,
-  UOrderDto,
-} from './order.dto';
+import { CreateOrderForCustom, CreateOrderRequestDto, OrderDto, UOrderDto } from './order.dto';
 import { CUComplaintDto } from '@/app/complaint';
 import { OrderAccessoriesDetailDto } from '../order-accessories-details';
 import { OrderDressDetailDto } from '../order-dress-details';
@@ -293,45 +287,6 @@ export class OrderController {
     const order = await this.orderService.updateOrder(userId, id, updatedOrder);
     return {
       message: 'Đơn hàng đã được cập nhật thành công',
-      statusCode: HttpStatus.OK,
-      item: order,
-    };
-  }
-
-  @Put(':id/custom')
-  @UseGuards(AuthGuard)
-  @Roles(UserRole.SHOP)
-  @ApiOperation({
-    summary: 'Cập nhật đơn hàng đặt may của cửa hàng',
-    description: `
-          **Hướng dẫn sử dụng:**
-
-          - Truyền \`id\` của đơn hàng trên URL.
-          - Truyền dữ liệu cập nhật trong body theo dạng JSON.
-          - Nếu không tìm thấy đơn hàng sẽ trả về lỗi.
-          - Trả về thông tin chi tiết của đơn hàng đã cập nhật.
-      `,
-  })
-  @ApiOkResponse({
-    schema: {
-      allOf: [
-        { $ref: getSchemaPath(ItemResponse) },
-        {
-          properties: {
-            item: { $ref: getSchemaPath(Order) },
-          },
-        },
-      ],
-    },
-  })
-  async updateCustomOrderForShop(
-    @Param('id') id: string,
-    @UserId() userId: string,
-    @Body() body: ShopUpdateOrderForCustom,
-  ): Promise<ItemResponse<Order>> {
-    const order = await this.orderService.shopUpdateOrderForCustom(id, userId, body);
-    return {
-      message: 'Cập nhật đơn hàng đặt may của cửa hàng thành công',
       statusCode: HttpStatus.OK,
       item: order,
     };

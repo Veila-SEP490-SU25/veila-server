@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { forwardRef, Inject, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { CUTransactionDto, WithdrawTransactionDto, TransactionDto } from './transaction.dto';
@@ -11,15 +11,15 @@ import {
 } from '@/common/models';
 import { plainToInstance } from 'class-transformer';
 import { Filtering, getOrder, getWhere, Sorting } from '@/common/decorators';
-import { DepositViaPayOSDto } from '../wallet';
+import { DepositViaPayOSDto, WalletService } from '../wallet';
 
 @Injectable()
 export class TransactionService {
   constructor(
     @InjectRepository(Transaction)
     private readonly transactionRepository: Repository<Transaction>,
-    // @Inject(forwardRef(() => WalletService))
-    // private readonly walletService: WalletService,
+    @Inject(forwardRef(() => WalletService))
+    private readonly walletService: WalletService,
   ) {}
 
   async saveDepositTransaction(
@@ -134,7 +134,6 @@ export class TransactionService {
 
   async updateTransactionStatus(id: string, status: TransactionStatus): Promise<Transaction> {
     const existingTransaction = await this.getTransactionById(id);
-
     if (
       !existingTransaction ||
       existingTransaction.status === TransactionStatus.CANCELLED ||
@@ -217,8 +216,10 @@ export class TransactionService {
     if (transaction.status !== TransactionStatus.PENDING)
       throw new NotFoundException('Giao dịch rút tiền này đã được xử lý hoặc không còn hiệu lực');
 
-    transaction.status = TransactionStatus.COMPLETED;
-    return await this.transactionRepository.save(plainToInstance(Transaction, transaction));
+    const wallet = await this.walletService.getWalletById(transaction.walletId);
+    await this.walletService.saveWalletBalanceV2(wallet, transaction.amount);
+
+    return await this.updateTransactionStatus(id, TransactionStatus.COMPLETED);
   }
 
   async cancelWithdrawRequest(id: string): Promise<Transaction> {
@@ -231,8 +232,9 @@ export class TransactionService {
     if (transaction.status !== TransactionStatus.PENDING)
       throw new NotFoundException('Giao dịch rút tiền này đã được xử lý hoặc không còn hiệu lực');
 
-    transaction.status = TransactionStatus.CANCELLED;
-    return await this.transactionRepository.save(plainToInstance(Transaction, transaction));
+    const wallet = await this.walletService.getWalletById(transaction.walletId);
+    await this.walletService.saveWalletBalanceV3(wallet, transaction.amount);
+    return await this.updateTransactionStatus(id, TransactionStatus.CANCELLED);
   }
 
   async getTransferTransactionsForCustomOrder(

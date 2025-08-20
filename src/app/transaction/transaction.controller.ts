@@ -291,6 +291,74 @@ export class TransactionController {
     };
   }
 
+  @Put(':id/approve-withdraw')
+  @UseGuards(AuthGuard, RolesGuard)
+  @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.STAFF)
+  @ApiOperation({
+    summary: 'Duyệt yêu cầu rút tiền',
+    description: `
+            **Hướng dẫn sử dụng:**
+      
+            - Truyền \`id\` của giao dịch yêu cầu rút tiền trên URL.
+            - Nếu không tìm thấy giao dịch sẽ trả về lỗi.
+            - Trả về thông tin chi tiết của giao dịch đã cập nhật.
+        `,
+  })
+  @ApiOkResponse({
+    schema: {
+      allOf: [
+        { $ref: getSchemaPath(ItemResponse) },
+        {
+          properties: {
+            item: { example: null, $ref: getSchemaPath(Transaction) },
+          },
+        },
+      ],
+    },
+  })
+  async approveWithdrawRequest(@Param('id') id: string): Promise<ItemResponse<Transaction>> {
+    const transaction = await this.transactionService.approveWithdrawRequest(id);
+    return {
+      message: 'Yêu cầu rút tiền đã được duyệt thành công',
+      statusCode: HttpStatus.OK,
+      item: transaction,
+    };
+  }
+
+  @Put(':id/cancel-withdraw')
+  @UseGuards(AuthGuard, RolesGuard)
+  @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.STAFF)
+  @ApiOperation({
+    summary: 'Từ chối yêu cầu rút tiền',
+    description: `
+            **Hướng dẫn sử dụng:**
+      
+            - Truyền \`id\` của giao dịch yêu cầu rút tiền trên URL.
+            - Nếu không tìm thấy giao dịch sẽ trả về lỗi.
+            - Trả về thông tin chi tiết của giao dịch đã cập nhật.
+        `,
+  })
+  @ApiOkResponse({
+    schema: {
+      allOf: [
+        { $ref: getSchemaPath(ItemResponse) },
+        {
+          properties: {
+            item: { example: null, $ref: getSchemaPath(Transaction) },
+          },
+        },
+      ],
+    },
+  })
+  async cancelWithdrawRequest(@Param('id') id: string): Promise<ItemResponse<Transaction>> {
+    const transaction = await this.transactionService.cancelWithdrawRequest(id);
+    return {
+      message: 'Yêu cầu rút tiền đã bị từ chối',
+      statusCode: HttpStatus.OK,
+      item: transaction,
+    };
+  }
+
   @Put(':id/:status')
   @UseGuards(AuthGuard)
   @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.STAFF)
@@ -325,74 +393,6 @@ export class TransactionController {
     const transaction = await this.transactionService.updateTransactionStatus(id, status);
     return {
       message: 'Giao dịch đã được cập nhật trạng thái thành công',
-      statusCode: HttpStatus.OK,
-      item: transaction,
-    };
-  }
-
-  @Put('approve-withdraw/:id')
-  @UseGuards(AuthGuard, RolesGuard)
-  @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.STAFF)
-  @ApiOperation({
-    summary: 'Duyệt yêu cầu rút tiền',
-    description: `
-            **Hướng dẫn sử dụng:**
-      
-            - Truyền \`id\` của giao dịch yêu cầu rút tiền trên URL.
-            - Nếu không tìm thấy giao dịch sẽ trả về lỗi.
-            - Trả về thông tin chi tiết của giao dịch đã cập nhật.
-        `,
-  })
-  @ApiOkResponse({
-    schema: {
-      allOf: [
-        { $ref: getSchemaPath(ItemResponse) },
-        {
-          properties: {
-            item: { example: null, $ref: getSchemaPath(Transaction) },
-          },
-        },
-      ],
-    },
-  })
-  async approveWithdrawRequest(@Param('id') id: string): Promise<ItemResponse<Transaction>> {
-    const transaction = await this.transactionService.approveWithdrawRequest(id);
-    return {
-      message: 'Yêu cầu rút tiền đã được duyệt thành công',
-      statusCode: HttpStatus.OK,
-      item: transaction,
-    };
-  }
-
-  @Put('cancel-withdraw/:id')
-  @UseGuards(AuthGuard, RolesGuard)
-  @Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN, UserRole.STAFF)
-  @ApiOperation({
-    summary: 'Từ chối yêu cầu rút tiền',
-    description: `
-            **Hướng dẫn sử dụng:**
-      
-            - Truyền \`id\` của giao dịch yêu cầu rút tiền trên URL.
-            - Nếu không tìm thấy giao dịch sẽ trả về lỗi.
-            - Trả về thông tin chi tiết của giao dịch đã cập nhật.
-        `,
-  })
-  @ApiOkResponse({
-    schema: {
-      allOf: [
-        { $ref: getSchemaPath(ItemResponse) },
-        {
-          properties: {
-            item: { example: null, $ref: getSchemaPath(Transaction) },
-          },
-        },
-      ],
-    },
-  })
-  async cancelWithdrawRequest(@Param('id') id: string): Promise<ItemResponse<Transaction>> {
-    const transaction = await this.transactionService.cancelWithdrawRequest(id);
-    return {
-      message: 'Yêu cầu rút tiền đã bị từ chối',
       statusCode: HttpStatus.OK,
       item: transaction,
     };

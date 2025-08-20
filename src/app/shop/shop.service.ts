@@ -7,6 +7,7 @@ import {
   ShopContactDto,
   UpdateShopDto,
 } from '@/app/shop/shop.dto';
+import { UserService } from '@/app/user';
 import { Filtering, getOrder, getWhere, Sorting } from '@/common/decorators';
 import {
   Accessory,
@@ -31,6 +32,7 @@ import {
 import {
   BadRequestException,
   ForbiddenException,
+  Inject,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
@@ -53,6 +55,8 @@ export class ShopService {
     private readonly subscriptionRepository: Repository<Subscription>,
     private readonly membershipService: MembershipService,
     private readonly contractService: ContractService,
+    @Inject(UserService)
+    private readonly userService: UserService,
   ) {}
 
   async updateShopProfile(userId: string, body: UpdateShopDto): Promise<void> {
@@ -471,10 +475,67 @@ export class ShopService {
 
   async getShopForOrderCustom(id: string): Promise<Shop> {
     const shop = await this.shopRepository.findOne({
-      where: { id },
+      where: {
+        id,
+        status: ShopStatus.ACTIVE,
+        isVerified: true,
+      },
       relations: { user: true },
     });
     if (!shop) throw new NotFoundException('Không tìm thấy cửa hàng');
     return shop;
+  }
+
+  async addFavorite(userId: string, id: string): Promise<void> {
+    const shop = await this.shopRepository.findOne({
+      where: {
+        id,
+        status: ShopStatus.ACTIVE,
+        isVerified: true,
+      },
+    });
+    if (!shop) throw new NotFoundException('Không tìm thấy cửa hàng');
+
+    const user = await this.userService.getSelf(userId);
+    let favShops = user.favShops;
+    if (!favShops) favShops = [];
+    if (favShops.includes(shop.id)) return; // Already a favorite
+    favShops.push(shop.id);
+    await this.userService.updateFavShops(userId, favShops);
+  }
+
+  async removeFavorite(userId: string, id: string): Promise<void> {
+    const user = await this.userService.getSelf(userId);
+    let favShops = user.favShops;
+    if (!favShops) return; // No favorites to remove
+    favShops = favShops.filter((shopId) => shopId !== id);
+    await this.userService.updateFavShops(userId, favShops);
+  }
+
+  async getFavorite(
+    userId: string,
+    take: number,
+    skip: number,
+    sort?: Sorting,
+    filter?: Filtering,
+  ): Promise<[Shop[], number]> {
+    const user = await this.userService.getSelf(userId);
+    if (!user.favShops || user.favShops.length === 0) {
+      return [[], 0];
+    }
+    const dynamicFilter = getWhere(filter);
+    const where = {
+      ...dynamicFilter,
+      id: In(user.favShops),
+      status: ShopStatus.ACTIVE,
+      isVerified: true,
+    };
+    const order = getOrder(sort);
+    return await this.shopRepository.findAndCount({
+      where,
+      order,
+      take,
+      skip,
+    });
   }
 }

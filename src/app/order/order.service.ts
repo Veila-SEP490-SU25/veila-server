@@ -3,11 +3,13 @@ import { Filtering, getOrder, getWhere, Sorting } from '@/common/decorators';
 import {
   Complaint,
   Milestone,
+  MilestoneStatus,
   Order,
   OrderServiceDetail,
   OrderStatus,
   OrderType,
   RequestStatus,
+  UpdateOrderServiceDetail,
   UserRole,
 } from '@/common/models';
 import {
@@ -21,13 +23,7 @@ import {
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import {
-  CreateOrderForCustom,
-  CreateOrderRequestDto,
-  OrderDto,
-  ShopUpdateOrderForCustom,
-  UOrderDto,
-} from './order.dto';
+import { CreateOrderForCustom, CreateOrderRequestDto, OrderDto, UOrderDto } from './order.dto';
 import { plainToInstance } from 'class-transformer';
 import { UserService } from '../user';
 import { OrderDressDetailDto, OrderDressDetailsService } from '../order-dress-details';
@@ -49,6 +45,8 @@ export class OrderService {
     private readonly orderRepository: Repository<Order>,
     @InjectRepository(OrderServiceDetail)
     private readonly orderServiceDetailRepository: Repository<OrderServiceDetail>,
+    @InjectRepository(UpdateOrderServiceDetail)
+    private readonly updateOrderServiceDetailRepository: Repository<UpdateOrderServiceDetail>,
     private readonly userService: UserService,
     private readonly shopService: ShopService,
     private readonly orderDressDetailsService: OrderDressDetailsService,
@@ -73,31 +71,6 @@ export class OrderService {
     filter?: Filtering,
   ): Promise<[Milestone[], number]> {
     return await this.milestoneService.getOrderMilestones(orderId, take, skip, sort, filter);
-  }
-
-  async shopUpdateOrderForCustom(
-    id: string,
-    userId: string,
-    body: ShopUpdateOrderForCustom,
-  ): Promise<Order> {
-    const order = await this.getCustomOrderForShop(id, userId);
-    await this.orderRepository.update(order.id, {
-      dueDate: body.dueDate,
-      amount: body.price,
-    });
-    if (!order.orderServiceDetail)
-      throw new InternalServerErrorException('Order service detail not found');
-    await this.orderServiceDetailRepository.update(order.orderServiceDetail.id, {
-      price: body.price,
-    });
-    for (let index = 0; index < body.milestones.length; index++) {
-      await this.milestoneService.createMilestoneForOrderCustom(
-        order.id,
-        body.milestones[index],
-        index + 1,
-      );
-    }
-    return await this.getCustomOrderForShop(id, userId);
   }
 
   async getCustomOrderForShop(id: string, userId: string): Promise<Order> {
@@ -160,7 +133,11 @@ export class OrderService {
       },
     } as Order;
 
-    return await this.orderRepository.save(newOrder);
+    const createdOrder = await this.orderRepository.save(newOrder);
+
+    await this.milestoneService.createMilestone(createdOrder.id, OrderType.CUSTOM);
+
+    return createdOrder;
   }
 
   async getOrders(
@@ -285,6 +262,8 @@ export class OrderService {
         orderId,
         body.accessoriesDetails,
       );
+      await this.milestoneService.createMilestone(orderId, body.newOrder.type);
+
       return order;
     } else {
       //Đây là luồng thuê váy
@@ -323,26 +302,38 @@ export class OrderService {
         orderId,
         body.accessoriesDetails,
       );
+      await this.milestoneService.createMilestone(orderId, body.newOrder.type);
+
       return order;
     }
   }
 
   async updateOrder(userId: string, id: string, updatedOrder: UOrderDto): Promise<Order> {
-    const existingOrder = await this.getOrderById(id);
+    const existingOrder = await this.orderRepository.findOne({
+      where: {
+        id,
+        shop: { user: { id: userId } },
+      },
+    });
+    if (!existingOrder) throw new NotFoundException('Không tìm thấy đơn hàng này');
 
     if (existingOrder.status !== OrderStatus.PENDING)
       throw new BadRequestException('Đơn hàng đang trong quá trình thực hiện');
-
-    if (!existingOrder) throw new NotFoundException('Không tìm thấy đơn hàng này');
-
-    const user = await this.userService.getUserById(userId);
-    if (!user) throw new NotFoundException('Người dùng này không tồn tại');
 
     existingOrder.phone = updatedOrder.phone;
     existingOrder.email = updatedOrder.email;
     existingOrder.address = updatedOrder.address;
     existingOrder.dueDate = updatedOrder.dueDate;
-    existingOrder.returnDate = updatedOrder.returnDate;
+
+    if (existingOrder.type === OrderType.CUSTOM) {
+      existingOrder.amount = updatedOrder.price ?? 0;
+      if (!existingOrder.orderServiceDetail)
+        throw new InternalServerErrorException('Order service detail not found');
+      await this.orderServiceDetailRepository.update(existingOrder.orderServiceDetail.id, {
+        price: updatedOrder.price ?? 0,
+      });
+    } else if (existingOrder.type === OrderType.RENT)
+      existingOrder.returnDate = updatedOrder.returnDate;
 
     return await this.orderRepository.save(plainToInstance(Order, existingOrder));
   }
@@ -355,6 +346,9 @@ export class OrderService {
 
     const user = await this.userService.getUserById(userId);
     if (!user) throw new NotFoundException('Người dùng này không tồn tại');
+
+    if (!this.validateOwnerOfOrder(userId, id))
+      throw new ForbiddenException('Người dùng không sở hữu đơn hàng này');
 
     existingOrder.status = status;
 
@@ -576,6 +570,7 @@ export class OrderService {
       );
 
       order.status = OrderStatus.IN_PROCESS;
+      await this.milestoneService.startFirstMilestoneAndTask(orderId);
       return await this.orderRepository.save(order);
     } else if (order.type === OrderType.RENT) {
       if (order.status !== OrderStatus.PENDING)
@@ -592,6 +587,7 @@ export class OrderService {
       );
 
       order.status = OrderStatus.IN_PROCESS;
+      await this.milestoneService.startFirstMilestoneAndTask(orderId);
       return await this.orderRepository.save(order);
     } else {
       if (order.status !== OrderStatus.PENDING)
@@ -610,8 +606,7 @@ export class OrderService {
         throw new BadRequestException('Không đủ số dư trong ví, vui lòng nạp tiền');
       await this.walletService.transferFromWalletToWalletForCustom(userId, order, remainingAmount);
 
-      if (order.status === OrderStatus.PENDING)
-        await this.updateOrderCustomStatusAfterCheckout(order.id);
+      await this.updateOrderCustomStatusAfterCheckout(order.id);
       const updatedOrder = await this.orderRepository.findOne({
         where: {
           id: order.id,
@@ -685,5 +680,69 @@ export class OrderService {
     existingOrder.status = OrderStatus.CANCELLED;
 
     return await this.orderRepository.save(plainToInstance(Order, existingOrder));
+  }
+
+  private async validateOwnerOfOrder(userId: string, orderId: string): Promise<void> {
+    const shop = await this.shopService.getShopByUserId(userId);
+    if (!shop) throw new NotFoundException('Người dùng này chưa có cửa hàng nào');
+
+    const orders = await this.getOrderByShopId(shop.id);
+    if (!orders || orders.length === 0) {
+      throw new NotFoundException(
+        'Không tìm thấy đơn hàng đang chờ hoặc đang thực hiện của người dùng này',
+      );
+    }
+
+    const matchedOrder = orders.find((order) => order.id === orderId);
+    if (!matchedOrder) throw new NotFoundException('Đơn hàng không tồn tại');
+  }
+
+  async getOrderByRequestId(requestId: string): Promise<Order> {
+    const orderServiceDetail = await this.orderServiceDetailRepository.findOne({
+      where: {
+        request: { id: requestId },
+      },
+      relations: {
+        order: true,
+      },
+    });
+    if (!orderServiceDetail) throw new NotFoundException('Không tìm thấy chi tiết đơn hàng');
+    return orderServiceDetail.order;
+  }
+
+  async getOrderServiceDetailByRequestId(requestId: string): Promise<OrderServiceDetail> {
+    const orderServiceDetail = await this.orderServiceDetailRepository.findOne({
+      where: {
+        request: { id: requestId },
+      },
+      relations: {
+        order: { shop: { user: true } },
+      },
+    });
+    if (!orderServiceDetail)
+      throw new NotFoundException('Không tìm thấy chi tiết dịch vụ đơn hàng');
+    return orderServiceDetail;
+  }
+
+  async updateOrderStatusForUpdateRequest(id: string, status: OrderStatus): Promise<void> {
+    await this.orderRepository.update(id, { status });
+    if (status === OrderStatus.PENDING)
+      await this.milestoneService.updateMilestoneStatusForUpdateRequest(
+        id,
+        MilestoneStatus.PENDING,
+      );
+    else if (status === OrderStatus.IN_PROCESS)
+      await this.milestoneService.updateMilestoneStatusForUpdateRequest(
+        id,
+        MilestoneStatus.IN_PROGRESS,
+      );
+  }
+
+  async createUpdateOrderServiceDetail(body: UpdateOrderServiceDetail): Promise<void> {
+    await this.updateOrderServiceDetailRepository.save(body);
+  }
+
+  async updateOrderAmount(id: string, amount: number): Promise<void> {
+    await this.orderRepository.update(id, { amount });
   }
 }
