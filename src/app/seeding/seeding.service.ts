@@ -13,7 +13,6 @@ import { RequestService } from '@/app/request';
 import { ServiceService } from '@/app/service';
 import { ShopService } from '@/app/shop';
 import { SubscriptionService } from '@/app/subscription';
-import { UpdateRequestService } from '@/app/update-request';
 import { TaskService } from '@/app/task';
 import { TransactionService } from '@/app/transaction';
 import { UserService } from '@/app/user';
@@ -99,7 +98,6 @@ export class SeedingService implements OnModuleInit {
     private readonly walletService: WalletService,
     private readonly membershipService: MembershipService,
     private readonly requestService: RequestService,
-    private readonly updateRequestService: UpdateRequestService,
     private readonly orderService: OrderService,
     private readonly orderAccessoriesDetailsService: OrderAccessoriesDetailsService,
     private readonly orderDressDetailsService: OrderDressDetailsService,

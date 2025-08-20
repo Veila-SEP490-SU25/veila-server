@@ -12,7 +12,7 @@ import { In, Repository } from 'typeorm';
 import { CUMilestoneDtoV2, MilestoneDto } from './milestone.dto';
 import { Filtering, getOrder, getWhere, Sorting } from '@/common/decorators';
 import { plainToInstance } from 'class-transformer';
-import { CreateMilestone, OrderService } from '../order';
+import { OrderService } from '../order';
 import { ShopService } from '../shop';
 import { TaskDto, TaskService } from '../task';
 
@@ -34,21 +34,61 @@ export class MilestoneService {
 
     if (orderType === OrderType.SELL) {
       milestonesData.push(
-        { title: "Chuẩn bị váy", description: "Cửa hàng đang chuẩn bị và kiểm tra chất lượng váy cưới" },
-        { title: "Sẵn sàng bàn giao", description: "Váy đã sẵn sàng để giao cho đơn vị vận chuyển hoặc nhận trực tiếp tại cửa hàng" },
-        { title: "Đang giao hàng", description: "Váy đang được vận chuyển đến địa chỉ của bạn" },
-        { title: "Đã nhận hàng", description: "Bạn đã nhận váy cưới và xác nhận tình trạng sản phẩm" },
-        { title: "Hoàn tất đơn hàng", description: "Quy trình mua hàng đã hoàn thành" },
+        {
+          title: 'Chuẩn bị váy',
+          description: 'Cửa hàng đang chuẩn bị và kiểm tra chất lượng váy cưới',
+        },
+        {
+          title: 'Sẵn sàng bàn giao',
+          description:
+            'Váy đã sẵn sàng để giao cho đơn vị vận chuyển hoặc nhận trực tiếp tại cửa hàng',
+        },
+        { title: 'Đang giao hàng', description: 'Váy đang được vận chuyển đến địa chỉ của bạn' },
+        {
+          title: 'Đã nhận hàng',
+          description: 'Bạn đã nhận váy cưới và xác nhận tình trạng sản phẩm',
+        },
+        { title: 'Hoàn tất đơn hàng', description: 'Quy trình mua hàng đã hoàn thành' },
       );
     } else if (orderType === OrderType.RENT) {
       milestonesData.push(
-        { title: "Chuẩn bị váy", description: "Cửa hàng đang chuẩn bị và kiểm tra chất lượng váy cưới" },
-        { title: "Sẵn sàng bàn giao", description: "Váy đã sẵn sàng để giao cho đơn vị vận chuyển hoặc nhận trực tiếp tại cửa hàng" },
-        { title: "Đang giao hàng", description: "Váy đang được vận chuyển đến địa chỉ của bạn" },
-        { title: "Hoàn tất đơn hàng", description: "Quy trình mua hàng đã hoàn thành" },
-        { title: "Khách hàng đang sử dụng", description: "Bạn đang giữ và sử dụng váy trong thời gian thuê" },
-        { title: "Hoàn trả váy", description: "Bạn đã gửi trả váy hoặc bàn giao lại cho cửa hàng" },
-        { title: "Hoàn tất đơn hàng", description: "Quy trình mua hàng đã hoàn thành" },
+        {
+          title: 'Chuẩn bị váy',
+          description: 'Cửa hàng đang chuẩn bị và kiểm tra chất lượng váy cưới',
+        },
+        {
+          title: 'Sẵn sàng bàn giao',
+          description:
+            'Váy đã sẵn sàng để giao cho đơn vị vận chuyển hoặc nhận trực tiếp tại cửa hàng',
+        },
+        { title: 'Đang giao hàng', description: 'Váy đang được vận chuyển đến địa chỉ của bạn' },
+        { title: 'Hoàn tất đơn hàng', description: 'Quy trình mua hàng đã hoàn thành' },
+        {
+          title: 'Khách hàng đang sử dụng',
+          description: 'Bạn đang giữ và sử dụng váy trong thời gian thuê',
+        },
+        { title: 'Hoàn trả váy', description: 'Bạn đã gửi trả váy hoặc bàn giao lại cho cửa hàng' },
+        { title: 'Hoàn tất đơn hàng', description: 'Quy trình mua hàng đã hoàn thành' },
+      );
+    } else {
+      milestonesData.push(
+        {
+          title: 'Đo và tư vấn',
+          description: 'Tiến hành đo số đo và tư vấn kiểu dáng, chất liệu phù hợp cho khách',
+        },
+        {
+          title: 'Chuẩn bị nguyên liệu',
+          description: 'Chuẩn bị vải, ren, phụ kiện và các nguyên liệu cần thiết',
+        },
+        {
+          title: 'May và hoàn thiện cơ bản',
+          description: 'Thợ may tiến hành tạo dáng váy và hoàn thiện phần cơ bản',
+        },
+        {
+          title: 'Đặt lịch thử và chỉnh sửa',
+          description: 'Khách thử váy và thợ may điều chỉnh theo phản hồi',
+        },
+        { title: 'Hoàn tất đơn hàng', description: 'Quy trình mua hàng đã hoàn thành' },
       );
     }
 
@@ -67,19 +107,19 @@ export class MilestoneService {
   }
 
   async updateDeadlineMilestoneById(
-    userId: string, 
-    id: string, 
+    userId: string,
+    id: string,
     body: CUMilestoneDtoV2,
-  ):Promise<Milestone> {
+  ): Promise<Milestone> {
     const existingMilestone = await this.milestoneRepository.findOneBy({ id });
     if (!existingMilestone) throw new NotFoundException('Không tim thấy mốc công việc');
 
     await this.validateOwnerOfOrder(userId, existingMilestone.order.id);
 
-    if (!this.isOrderInProcess(existingMilestone.order.id)) 
+    if (!this.isOrderInProcess(existingMilestone.order.id))
       throw new ConflictException('Đơn hàng chưa được bắt đầu/đã hoàn thành/bị hủy');
 
-    if(existingMilestone.status !== MilestoneStatus.PENDING)
+    if (existingMilestone.status !== MilestoneStatus.PENDING)
       throw new BadRequestException('Mốc công việc đã bắt đầu/đã hoàn thành/bị hủy');
 
     existingMilestone.dueDate = body.dueDate;
@@ -142,14 +182,15 @@ export class MilestoneService {
 
     await this.validateOwnerOfOrder(userId, existingMilestone.order.id);
 
-    
-    if (!this.isOrderInProcess(existingMilestone.order.id)) 
+    if (!this.isOrderInProcess(existingMilestone.order.id))
       throw new ConflictException('Đơn hàng chưa được bắt đầu/đã hoàn thành/bị hủy');
 
-    if(existingMilestone.status === MilestoneStatus.PENDING || existingMilestone.status === MilestoneStatus.IN_PROGRESS)
+    if (
+      existingMilestone.status === MilestoneStatus.PENDING ||
+      existingMilestone.status === MilestoneStatus.IN_PROGRESS
+    )
       existingMilestone.status = status;
-    else
-      throw new ConflictException('Mốc công việc đã được hoàn thành/bị hủy');
+    else throw new ConflictException('Mốc công việc đã được hoàn thành/bị hủy');
 
     return await this.milestoneRepository.save(plainToInstance(Milestone, existingMilestone));
   }
@@ -268,36 +309,14 @@ export class MilestoneService {
     return milestones;
   }
 
-  async createMilestoneForOrderCustom(
-    orderId: string,
-    body: CreateMilestone,
-    milestoneIndex: number,
-  ): Promise<void> {
-    const newMilestone = await this.milestoneRepository.save({
-      order: { id: orderId },
-      title: body.title,
-      description: body.description,
-      dueDate: body.dueDate,
-      status: MilestoneStatus.PENDING,
-      index: milestoneIndex,
-    } as Milestone);
-    for (let index = 0; index < body.tasks.length; index++) {
-      await this.taskService.createTaskForOrderCustom(
-        newMilestone.id,
-        body.tasks[index],
-        index + 1,
-      );
-    }
-  }
-
   async updateMilestoneStatusForOrderCustomAfterCheckout(orderId: string): Promise<void> {
-    const firstMilestone = await this.milestoneRepository.findOne({
-      where: { order: { id: orderId }, index: 1 },
+    const milestones = await this.milestoneRepository.find({
+      where: { order: { id: orderId }, status: MilestoneStatus.PENDING },
+      order: { index: 'ASC' },
     });
-    if (!firstMilestone) throw new NotFoundException('Không tìm thấy mốc công việc');
-
-    firstMilestone.status = MilestoneStatus.IN_PROGRESS;
-    const updatedMilestone = await this.milestoneRepository.save(firstMilestone);
+    const nextMilestone = milestones[0];
+    nextMilestone.status = MilestoneStatus.IN_PROGRESS;
+    const updatedMilestone = await this.milestoneRepository.save(nextMilestone);
     await this.taskService.updateTaskStatusForOrderCustomAfterCheckout(updatedMilestone.id);
   }
 
@@ -328,37 +347,55 @@ export class MilestoneService {
     return [milestones, totalItems];
   }
 
-  async isOrderInProcess(
-    orderId: string,
-  ):Promise<boolean> {
+  async isOrderInProcess(orderId: string): Promise<boolean> {
     const order = await this.orderService.getOrderByIdV2(orderId);
     return order.status === OrderStatus.IN_PROCESS ? true : false;
   }
 
-  async startFirstMilestoneAndTask(
-    orderId: string,
-  ):Promise<void> {
+  async startFirstMilestoneAndTask(orderId: string): Promise<void> {
     // Lấy milestone đầu tiên của đơn hàng
-      const firstMilestone = await this.milestoneRepository.findOne({
-        where: { order: { id: orderId } },
+    const firstMilestone = await this.milestoneRepository.findOne({
+      where: { order: { id: orderId } },
+      order: { index: 'ASC' },
+    });
+    if (!firstMilestone) return;
+
+    // Cập nhật milestone đầu tiên thành IN_PROGRESS
+    if (firstMilestone.status === MilestoneStatus.PENDING) {
+      firstMilestone.status = MilestoneStatus.IN_PROGRESS;
+      await this.milestoneRepository.save(firstMilestone);
+    }
+
+    // Lấy task đầu tiên của milestone đầu tiên
+    const firstTask = await this.taskService.findFirstTaskOfMilestone(firstMilestone.id);
+    if (!firstTask) return;
+
+    // Cập nhật task đầu tiên thành IN_PROGRESS
+    if (firstTask.status === TaskStatus.PENDING) {
+      firstTask.status = TaskStatus.IN_PROGRESS;
+      await this.taskService.saveTask(firstTask);
+    }
+  }
+
+  async updateMilestoneStatusForUpdateRequest(
+    orderId: string,
+    status: MilestoneStatus,
+  ): Promise<void> {
+    if (status === MilestoneStatus.PENDING) {
+      const milestone = await this.milestoneRepository.findOne({
+        where: { order: { id: orderId }, status: MilestoneStatus.IN_PROGRESS },
+      });
+      if (!milestone) throw new NotFoundException('Không tìm thấy mốc công việc phù hợp');
+      await this.milestoneRepository.update(milestone.id, { status });
+      await this.taskService.updateTaskStatusForUpdateRequest(milestone.id, TaskStatus.PENDING);
+    } else if (status === MilestoneStatus.IN_PROGRESS) {
+      const milestones = await this.milestoneRepository.find({
+        where: { order: { id: orderId }, status: MilestoneStatus.PENDING },
         order: { index: 'ASC' },
       });
-      if (!firstMilestone) return;
-
-      // Cập nhật milestone đầu tiên thành IN_PROGRESS
-      if (firstMilestone.status === MilestoneStatus.PENDING) {
-        firstMilestone.status = MilestoneStatus.IN_PROGRESS;
-        await this.milestoneRepository.save(firstMilestone);
-      }
-
-      // Lấy task đầu tiên của milestone đầu tiên
-      const firstTask = await this.taskService.findFirstTaskOfMilestone(firstMilestone.id);
-      if (!firstTask) return;
-
-      // Cập nhật task đầu tiên thành IN_PROGRESS
-      if (firstTask.status === TaskStatus.PENDING) {
-        firstTask.status = TaskStatus.IN_PROGRESS;
-        await this.taskService.saveTask(firstTask);
-      }
-  };
+      const milestone = milestones[0];
+      await this.milestoneRepository.update(milestone.id, { status });
+      await this.taskService.updateTaskStatusForUpdateRequest(milestone.id, TaskStatus.IN_PROGRESS);
+    }
+  }
 }

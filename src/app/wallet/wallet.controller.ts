@@ -20,7 +20,13 @@ import {
   ApiTags,
   getSchemaPath,
 } from '@nestjs/swagger';
-import { DepositViaPayOSDto, DepositViaPayOSResponse, UpdateBankDto, WalletDto, WebhookDto } from './wallet.dto';
+import {
+  DepositViaPayOSDto,
+  DepositViaPayOSResponse,
+  UpdateBankDto,
+  WalletDto,
+  WebhookDto,
+} from './wallet.dto';
 import {
   Filtering,
   FilteringParams,
@@ -50,7 +56,8 @@ export class WalletController {
   @UseGuards(AuthGuard, RolesGuard)
   @Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN, UserRole.STAFF)
   @ApiOperation({
-    summary: 'Lấy danh sách tất cả các ví điện tử với phân trang, sắp xếp và lọc (dành cho quản trị viên)',
+    summary:
+      'Lấy danh sách tất cả các ví điện tử với phân trang, sắp xếp và lọc (dành cho quản trị viên)',
     description: `
             **Hướng dẫn sử dụng:**
 
@@ -161,7 +168,6 @@ export class WalletController {
 
   @Post('my-wallet')
   @UseGuards(AuthGuard)
-
   @Put('/deposit')
   @UseGuards(AuthGuard)
   @Roles(UserRole.CUSTOMER, UserRole.SHOP)
@@ -269,15 +275,14 @@ export class WalletController {
   async updateBankInformation(
     @UserId() userId: string,
     @Body() body: UpdateBankDto,
-  ):Promise<ItemResponse<Wallet>> {
+  ): Promise<ItemResponse<Wallet>> {
     const wallet = await this.walletService.updateBankInformation(userId, body);
     return {
       message: 'Cập nhật thông tin ngân hàng cho ví điện tử thành công',
       statusCode: HttpStatus.OK,
       item: wallet,
-    }
+    };
   }
-
 
   @Post('payment/webhook')
   @HttpCode(200)

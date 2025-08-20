@@ -475,7 +475,11 @@ export class ShopService {
 
   async getShopForOrderCustom(id: string): Promise<Shop> {
     const shop = await this.shopRepository.findOne({
-      where: { id },
+      where: {
+        id,
+        status: ShopStatus.ACTIVE,
+        isVerified: true,
+      },
       relations: { user: true },
     });
     if (!shop) throw new NotFoundException('Không tìm thấy cửa hàng');

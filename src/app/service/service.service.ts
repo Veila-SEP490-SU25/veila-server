@@ -162,7 +162,10 @@ export class ServiceService {
 
   async getServiceForOrderCustom(userId: string): Promise<Service> {
     const service = await this.serviceRepository.findOne({
-      where: { user: { id: userId } },
+      where: {
+        user: { id: userId },
+        status: ServiceStatus.AVAILABLE,
+      },
       relations: {
         user: { shop: true },
       },

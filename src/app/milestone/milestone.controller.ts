@@ -157,7 +157,7 @@ export class MilestoneController {
   async updateDeadlineMilestoneById(
     @UserId() userId: string,
     @Param('id') id: string,
-    @Body() body: CUMilestoneDtoV2
+    @Body() body: CUMilestoneDtoV2,
   ): Promise<ItemResponse<Milestone>> {
     const milestone = await this.milestoneService.updateDeadlineMilestoneById(userId, id, body);
     return {

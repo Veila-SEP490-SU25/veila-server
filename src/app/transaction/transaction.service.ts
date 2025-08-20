@@ -220,7 +220,6 @@ export class TransactionService {
     await this.walletService.saveWalletBalanceV2(wallet, transaction.amount);
 
     return await this.updateTransactionStatus(id, TransactionStatus.COMPLETED);
-
   }
 
   async cancelWithdrawRequest(id: string): Promise<Transaction> {

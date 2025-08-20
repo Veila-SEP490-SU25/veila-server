@@ -23,7 +23,6 @@ export enum TypeBalance {
   LOCKED = 'LOCKED',
 }
 
-
 @Entity('transactions')
 export class Transaction extends Base {
   @ManyToOne(() => Wallet, {

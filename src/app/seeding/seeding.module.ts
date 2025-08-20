@@ -16,7 +16,6 @@ import { ShopModule } from '@/app/shop';
 import { SubscriptionModule } from '@/app/subscription';
 import { TaskModule } from '@/app/task';
 import { TransactionModule } from '@/app/transaction';
-import { UpdateRequestModule } from '@/app/update-request';
 import { UserModule } from '@/app/user';
 import { WalletModule } from '@/app/wallet';
 import { Module } from '@nestjs/common';
@@ -42,7 +41,6 @@ import { Module } from '@nestjs/common';
     TransactionModule,
     FeedbackModule,
     RequestModule,
-    UpdateRequestModule,
   ],
   providers: [SeedingService],
 })
