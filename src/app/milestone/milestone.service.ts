@@ -52,6 +52,15 @@ export class MilestoneService {
         {title: 'Hoàn tất đơn hàng', description: 'Quy trình mua hàng đã hoàn thành' },
         {title: 'Nhận khiếu nại về đơn hàng (nếu có)', description: 'Người mua và người bán khiếu nại một số vấn đề nếu có' },
       );
+    }else {
+      milestonesData.push(
+        {title: 'Đo và tư vấn', description: 'Tiến hành đo số đo và tư vấn kiểu dáng, chất liệu phù hợp cho khách',},
+        {title: 'Chuẩn bị nguyên liệu', description: 'Chuẩn bị vải, ren, phụ kiện và các nguyên liệu cần thiết',},
+        {title: 'May và hoàn thiện cơ bản', description: 'Thợ may tiến hành tạo dáng váy và hoàn thiện phần cơ bản',},
+        {title: 'Đặt lịch thử và chỉnh sửa', description: 'Khách thử váy và thợ may điều chỉnh theo phản hồi',},
+        {title: 'Hoàn tất đơn hàng', description: 'Quy trình mua hàng đã hoàn thành' },
+        {title: 'Nhận khiếu nại về đơn hàng (nếu có)', description: 'Người mua và người bán khiếu nại một số vấn đề nếu có' },
+      );
     }
 
     const milestoneEntities = milestonesData.map((m, i) =>
