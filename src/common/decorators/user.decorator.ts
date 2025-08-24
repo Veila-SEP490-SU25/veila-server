@@ -16,4 +16,4 @@ export const CurrentRole = createParamDecorator((_, ctx: ExecutionContext) => {
   const request = ctx.switchToHttp().getRequest();
   const tokenPayload: TokenPayload = request.tokenPayload;
   return tokenPayload.role;
-})
+});

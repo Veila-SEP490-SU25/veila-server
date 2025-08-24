@@ -6,6 +6,8 @@ import { WalletService } from './wallet.service';
 import { UserModule } from '../user';
 import { TransactionModule } from '../transaction';
 import { PayosModule } from '../payos/payos.module';
+import { ShopModule } from '../shop';
+import { OrderModule } from '../order';
 
 @Module({
   imports: [
@@ -13,6 +15,8 @@ import { PayosModule } from '../payos/payos.module';
     UserModule,
     forwardRef(() => TransactionModule),
     PayosModule,
+    ShopModule,
+    forwardRef(() => OrderModule),
   ],
   controllers: [WalletController],
   providers: [WalletService],

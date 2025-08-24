@@ -12,6 +12,7 @@ import {
 import {
   BadRequestException,
   ForbiddenException,
+  forwardRef,
   Inject,
   Injectable,
   InternalServerErrorException,
@@ -19,7 +20,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { In, Repository } from 'typeorm';
+import { In, LessThanOrEqual, Repository } from 'typeorm';
 import {
   CreateOrderForCustom,
   CreateOrderRequestDto,
@@ -40,6 +41,7 @@ import { WalletService } from '../wallet';
 import { RequestService } from '@/app/request';
 import { ServiceService } from '@/app/service';
 import { MilestoneService } from '@/app/milestone';
+import { Cron, CronExpression } from '@nestjs/schedule';
 
 @Injectable()
 export class OrderService {
@@ -55,6 +57,7 @@ export class OrderService {
     @Inject(ComplaintService)
     private readonly complaintService: ComplaintService,
     private readonly dressService: DressService,
+    @Inject(forwardRef(() => WalletService))
     private readonly walletService: WalletService,
     @Inject(RequestService)
     private readonly requestService: RequestService,
@@ -371,7 +374,7 @@ export class OrderService {
     const user = await this.userService.getUserById(userId);
     if (!user) throw new NotFoundException('Người dùng này không tồn tại');
 
-    if(!this.validateOwnerOfOrder(userId, id))
+    if (!this.validateOwnerOfOrder(userId, id))
       throw new ForbiddenException('Người dùng không sở hữu đơn hàng này');
 
     existingOrder.phone = updatedOrder.phone;
@@ -392,7 +395,7 @@ export class OrderService {
     const user = await this.userService.getUserById(userId);
     if (!user) throw new NotFoundException('Người dùng này không tồn tại');
 
-    if(!this.validateOwnerOfOrder(userId, id))
+    if (!this.validateOwnerOfOrder(userId, id))
       throw new ForbiddenException('Người dùng không sở hữu đơn hàng này');
 
     existingOrder.status = status;
@@ -668,6 +671,44 @@ export class OrderService {
     }
   }
 
+  @Cron(CronExpression.EVERY_DAY_AT_MIDNIGHT, { timeZone: 'Asia/Ho_Chi_Minh' })
+  private async unlockBalanceAfterOrderCompleted(): Promise<void> {
+    //lấy ngày hiện tại mà cron chạy
+    const today = new Date();
+
+    //3 hôm trước
+    const threeDaysAgo = new Date();
+    threeDaysAgo.setDate(today.getDate() - 3);
+
+    //tìm tất cả các đơn hàng đã hoàn thành được 3 ngày (xử lý mua và thuê)
+    const orders = await this.orderRepository.find({
+      where: {
+        status: OrderStatus.COMPLETED,
+        updatedAt: LessThanOrEqual(threeDaysAgo),
+        type: In([OrderType.SELL, OrderType.RENT]),
+      },
+      relations: {
+        customer: true,
+        shop: { user: true },
+      },
+    });
+    //Mở tiền bị lock trong ví
+    await Promise.all(
+      orders.map(async (order) => {
+        if (order.type === OrderType.SELL) {
+          await this.walletService.unlockBalanceForSell(order);
+        } else if (order.type === OrderType.RENT) {
+          await this.walletService.unlockBalanceForRent(order);
+        }
+      }),
+    );
+
+    //tìm tất cả các đơn hàng đã hoàn thành được 3 ngày (xử lý mua và thuê)
+    //
+    //
+    //
+  }
+
   private async updateOrderCustomStatusAfterCheckout(orderId: string): Promise<void> {
     await this.orderRepository.update(orderId, { status: OrderStatus.IN_PROCESS });
     await this.milestoneService.updateMilestoneStatusForOrderCustomAfterCheckout(orderId);
@@ -691,7 +732,7 @@ export class OrderService {
     return await this.milestoneService.createMilestoneForSeeding(data);
   }
 
-  private async calculateSellPriceForOrder(orderId: string): Promise<number> {
+  async calculateSellPriceForOrder(orderId: string): Promise<number> {
     const orderDressDetail =
       await this.orderDressDetailsService.getOrderDressDetailByOrderId(orderId);
     if (!orderDressDetail)
@@ -717,13 +758,20 @@ export class OrderService {
     if (!existingOrder || existingOrder.status === OrderStatus.CANCELLED)
       throw new NotFoundException('Không tìm thấy đơn hàng này');
 
-    if (existingOrder.status !== OrderStatus.PENDING)
-      throw new MethodNotAllowedException('Đơn hàng không thể hủy ở trạng thái này');
-
     const user = await this.userService.getUserById(userId);
     if (!user) throw new NotFoundException('Người dùng này không tồn tại');
 
-    existingOrder.status = OrderStatus.CANCELLED;
+    // if (existingOrder.status === OrderStatus.PENDING)
+    //   existingOrder.status = OrderStatus.CANCELLED;
+    // else if (existingOrder.status === OrderStatus.IN_PROCESS){
+    //   if(existingOrder.type === OrderType.SELL) {
+        
+    //   } else if (existingOrder.type === OrderType.RENT) {
+
+    //   } else {
+    //     //xử lý luồng custom
+    //   }
+    // }
 
     return await this.orderRepository.save(plainToInstance(Order, existingOrder));
   }

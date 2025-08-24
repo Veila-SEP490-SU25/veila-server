@@ -23,7 +23,7 @@ import { MilestoneModule } from '@/app/milestone';
     OrderDressDetailsModule,
     ComplaintModule,
     DressModule,
-    WalletModule,
+    forwardRef(() => WalletModule),
     ServiceModule,
     RequestModule,
     forwardRef(() => MilestoneModule),

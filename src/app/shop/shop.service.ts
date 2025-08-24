@@ -481,4 +481,13 @@ export class ShopService {
     if (!shop) throw new NotFoundException('Không tìm thấy cửa hàng');
     return shop;
   }
+
+  async getShopById(id: string): Promise<Shop> {
+    const shop = await this.shopRepository.findOne({
+      where: { id },
+      relations: { user: true },
+    });
+    if (!shop) throw new NotFoundException('Không tìm thấy cửa hàng');
+    return shop;
+  }
 }

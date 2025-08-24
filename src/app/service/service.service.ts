@@ -101,7 +101,7 @@ export class ServiceService {
   ): Promise<Service> {
     let service;
     if (categoryId) {
-      if (!(await this.isCategopryExistForOwner(categoryId, userId)))
+      if (!(await this.isCategoryExistForOwner(categoryId, userId)))
         throw new NotFoundException('Không tìm thấy phân loại phù hợp');
       service = { user: { id: userId }, category: { id: categoryId }, ...body };
     } else {
@@ -119,7 +119,7 @@ export class ServiceService {
       throw new NotFoundException('Không tìm thấy dịch vụ phù hợp');
     let service;
     if (categoryId) {
-      if (!(await this.isCategopryExistForOwner(categoryId, userId)))
+      if (!(await this.isCategoryExistForOwner(categoryId, userId)))
         throw new NotFoundException('Không tìm thấy phân loại phù hợp');
       service = { category: { id: categoryId }, ...body };
     } else service = body;
@@ -146,7 +146,7 @@ export class ServiceService {
     return await this.serviceRepository.save(service);
   }
 
-  async isCategopryExistForOwner(id: string, userId: string): Promise<boolean> {
+  async isCategoryExistForOwner(id: string, userId: string): Promise<boolean> {
     return await this.categoryRepository.exists({
       where: { id, user: { id: userId } },
       withDeleted: true,
@@ -178,18 +178,18 @@ export class ServiceService {
     });
   }
 
-  async updateServiceRatingForSeedingFeedback(id:string): Promise<void> {
+  async updateServiceRatingForSeedingFeedback(id: string): Promise<void> {
     const service = await this.serviceRepository.findOne({
       where: { id },
       relations: { feedbacks: true },
     });
     if (!service) throw new NotFoundException('Không tìm thấy dịch vụ này');
 
-  const feedbacks = service.feedbacks ?? [];
-  const ratingCount = feedbacks.length;
-  const totalRating = feedbacks.reduce((acc, feedback) => acc + Number(feedback.rating ?? 0), 0);
-  service.ratingAverage = ratingCount > 0 ? Number(totalRating) / Number(ratingCount) : 0;
-  service.ratingCount = ratingCount;
+    const feedbacks = service.feedbacks ?? [];
+    const ratingCount = feedbacks.length;
+    const totalRating = feedbacks.reduce((acc, feedback) => acc + Number(feedback.rating ?? 0), 0);
+    service.ratingAverage = ratingCount > 0 ? Number(totalRating) / Number(ratingCount) : 0;
+    service.ratingCount = ratingCount;
 
     await this.serviceRepository.save(service);
   }

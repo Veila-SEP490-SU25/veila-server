@@ -93,7 +93,7 @@ export class OrderAccessoriesDetailsService {
   async getAccessoryById(id: string): Promise<Accessory> {
     return await this.accessoryService.getAccessoryById(id);
   }
-  
+
   async getOrderAccessoriesDetailsByOrderId(
     orderId: string,
     take: number,

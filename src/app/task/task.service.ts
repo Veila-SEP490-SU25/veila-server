@@ -1,5 +1,12 @@
 import { MilestoneStatus, OrderStatus, Task, TaskStatus } from '@/common/models';
-import { ConflictException, ForbiddenException, forwardRef, Inject, Injectable, NotFoundException } from '@nestjs/common';
+import {
+  ConflictException,
+  ForbiddenException,
+  forwardRef,
+  Inject,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { CUTaskDto, TaskDto } from './task.dto';
@@ -22,20 +29,17 @@ export class TaskService {
     private readonly milestoneService: MilestoneService,
   ) {}
 
-  async createTaskForMilestone(
-    userId: string,
-    id: string,
-    body: CUTaskDto,
-  ): Promise<Task> {
+  async createTaskForMilestone(userId: string, id: string, body: CUTaskDto): Promise<Task> {
     const milestone = await this.milestoneService.getMilestoneById(id);
     const order = await this.orderService.getOrderByIdV2(milestone.orderId);
-    if(!milestone)
-      throw new NotFoundException('Không tìm thấy mốc công việc');
-    if(milestone.status === MilestoneStatus.CANCELLED || milestone.status === MilestoneStatus.COMPLETED)
+    if (!milestone) throw new NotFoundException('Không tìm thấy mốc công việc');
+    if (
+      milestone.status === MilestoneStatus.CANCELLED ||
+      milestone.status === MilestoneStatus.COMPLETED
+    )
       throw new ConflictException('Mốc công việc không còn khả dụng để tạo công việc');
-    if(!order)
-      throw new NotFoundException('Không tìm thấy đơn hàng');
-    if(order.status !== OrderStatus.PENDING)
+    if (!order) throw new NotFoundException('Không tìm thấy đơn hàng');
+    if (order.status !== OrderStatus.PENDING)
       throw new ConflictException('Đơn hàng đang thực hiện/đã hoàn thành/đã hủy');
 
     await this.validateOwnerOfOrder(userId, milestone.orderId);
@@ -54,21 +58,17 @@ export class TaskService {
     return await this.taskRepository.save(task);
   }
 
-  async updateTask(
-    userId: string,
-    id: string, 
-    taskId: string,
-    body: CUTaskDto
-  ): Promise<void> {
+  async updateTask(userId: string, id: string, taskId: string, body: CUTaskDto): Promise<void> {
     const milestone = await this.milestoneService.getMilestoneById(id);
     const order = await this.orderService.getOrderByIdV2(milestone.orderId);
-    if(!milestone)
-      throw new NotFoundException('Không tìm thấy mốc công việc');
-    if(milestone.status === MilestoneStatus.CANCELLED || milestone.status === MilestoneStatus.COMPLETED)
+    if (!milestone) throw new NotFoundException('Không tìm thấy mốc công việc');
+    if (
+      milestone.status === MilestoneStatus.CANCELLED ||
+      milestone.status === MilestoneStatus.COMPLETED
+    )
       throw new ConflictException('Mốc công việc không còn khả dụng để tạo công việc');
-    if(!order)
-      throw new NotFoundException('Không tìm thấy đơn hàng');
-    if(order.status !== OrderStatus.PENDING)
+    if (!order) throw new NotFoundException('Không tìm thấy đơn hàng');
+    if (order.status !== OrderStatus.PENDING)
       throw new ConflictException('Đơn hàng đang thực hiện/đã hoàn thành/đã hủy');
 
     await this.validateOwnerOfOrder(userId, milestone.orderId);
@@ -86,15 +86,13 @@ export class TaskService {
     await this.taskRepository.save(existingTask);
   }
 
-  async cancelTask(
-    userId: string, 
-    id: string, 
-    taskId: string,
-  ): Promise<void> {
+  async cancelTask(userId: string, id: string, taskId: string): Promise<void> {
     const milestone = await this.milestoneService.getMilestoneById(id);
-    if(!milestone)
-      throw new NotFoundException('Không tìm thấy mốc công việc');
-    if(milestone.status === MilestoneStatus.CANCELLED || milestone.status === MilestoneStatus.COMPLETED)
+    if (!milestone) throw new NotFoundException('Không tìm thấy mốc công việc');
+    if (
+      milestone.status === MilestoneStatus.CANCELLED ||
+      milestone.status === MilestoneStatus.COMPLETED
+    )
       throw new ConflictException('Mốc công việc không còn khả dụng để tạo công việc');
 
     await this.validateOwnerOfOrder(userId, milestone.orderId);
@@ -146,20 +144,17 @@ export class TaskService {
       where: { id },
       relations: ['milestone'],
     });
-    if(!task)
-      throw new NotFoundException('Không tìm thấy công việc');
+    if (!task) throw new NotFoundException('Không tìm thấy công việc');
     return task;
   }
 
-  async deleteTask(
-    userId: string,
-    id: string,
-    taskId: string,
-  ): Promise<void> {
+  async deleteTask(userId: string, id: string, taskId: string): Promise<void> {
     const milestone = await this.milestoneService.getMilestoneById(id);
-    if(!milestone)
-      throw new NotFoundException('Không tìm thấy mốc công việc');
-    if(milestone.status === MilestoneStatus.CANCELLED || milestone.status === MilestoneStatus.COMPLETED)
+    if (!milestone) throw new NotFoundException('Không tìm thấy mốc công việc');
+    if (
+      milestone.status === MilestoneStatus.CANCELLED ||
+      milestone.status === MilestoneStatus.COMPLETED
+    )
       throw new ConflictException('Mốc công việc không còn khả dụng để tạo công việc');
 
     await this.validateOwnerOfOrder(userId, milestone.orderId);
@@ -171,7 +166,9 @@ export class TaskService {
       throw new NotFoundException('Không tìm thấy chi tiết công việc trong mốc công việc');
 
     if (existingTask.status !== TaskStatus.PENDING)
-      throw new ForbiddenException('Công việc đã/đang trong quá trình thực hiện, không cho phép xóa');
+      throw new ForbiddenException(
+        'Công việc đã/đang trong quá trình thực hiện, không cho phép xóa',
+      );
 
     await this.taskRepository.delete(taskId);
 
@@ -286,18 +283,17 @@ export class TaskService {
     if (!matchedOrder) throw new NotFoundException('Đơn hàng không tồn tại');
   }
 
-  async findFirstTaskOfMilestone(milestoneId: string):Promise<Task> {
+  async findFirstTaskOfMilestone(milestoneId: string): Promise<Task> {
     const firstTask = await this.taskRepository.findOne({
-        where: { milestone: { id: milestoneId } },
-        order: { index: 'ASC' },
+      where: { milestone: { id: milestoneId } },
+      order: { index: 'ASC' },
     });
 
-    if(!firstTask)
-      throw new NotFoundException('Không tìm thấy công việc');
+    if (!firstTask) throw new NotFoundException('Không tìm thấy công việc');
     return firstTask;
   }
 
-  async saveTask(task: Task):Promise<void> {
+  async saveTask(task: Task): Promise<void> {
     await this.taskRepository.save(task);
   }
 }

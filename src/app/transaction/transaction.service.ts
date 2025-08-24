@@ -202,6 +202,16 @@ export class TransactionService {
     return plainToInstance(TransactionDto, transaction);
   }
 
+  async getTransactionByOrderId(orderId: string): Promise<Transaction> {
+    const transaction = await this.transactionRepository.findOne({
+      where: { order: { id: orderId } },
+      relations: ['wallet', 'order', 'membership'],
+    });
+    if (!transaction) throw new NotFoundException('Không tìm thấy giao dịch');
+
+    return transaction;
+  }
+
   async createTransactionForSeeding(transaction: Transaction): Promise<Transaction> {
     return await this.transactionRepository.save(transaction);
   }
@@ -220,7 +230,6 @@ export class TransactionService {
     await this.walletService.saveWalletBalanceV2(wallet, transaction.amount);
 
     return await this.updateTransactionStatus(id, TransactionStatus.COMPLETED);
-
   }
 
   async cancelWithdrawRequest(id: string): Promise<Transaction> {

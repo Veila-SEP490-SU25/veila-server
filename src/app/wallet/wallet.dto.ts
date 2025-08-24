@@ -64,7 +64,7 @@ export class WalletDto {
   })
   @IsNotEmpty()
   @IsString()
-  @Transform(({ obj: wallet }) => wallet.user.id) 
+  @Transform(({ obj: wallet }) => wallet.user.id)
   userId: string;
 
   @Expose()
@@ -75,7 +75,7 @@ export class WalletDto {
   })
   @IsNotEmpty()
   @IsString()
-  @Transform(({ obj: wallet }) => wallet.user.username) 
+  @Transform(({ obj: wallet }) => wallet.user.username)
   userName: string;
 
   @Expose()
@@ -209,12 +209,12 @@ export class WebhookDto {
   // @Transform(({ value }) => value?.toUpperCase())
   status: TransactionStatus;
 }
- export class UpdateBankDto {
+export class UpdateBankDto {
   @Expose()
   @ApiProperty({
     description: 'Mã BIN định danh ngân hàng',
     example: '987654',
-    nullable: false
+    nullable: false,
   })
   @IsNotEmpty()
   @IsString()
@@ -229,4 +229,4 @@ export class WebhookDto {
   @IsNotEmpty()
   @IsString()
   bankNumber: string;
- }
+}
