@@ -49,6 +49,10 @@ export class MilestoneService {
           description: 'Bạn đã nhận váy cưới và xác nhận tình trạng sản phẩm',
         },
         { title: 'Hoàn tất đơn hàng', description: 'Quy trình mua hàng đã hoàn thành' },
+        {
+          title: 'Nhận khiếu nại về đơn hàng (nếu có)',
+          description: 'Người mua và người bán khiếu nại một số vấn đề nếu có',
+        },
       );
     } else if (orderType === OrderType.RENT) {
       milestonesData.push(
@@ -69,6 +73,10 @@ export class MilestoneService {
         },
         { title: 'Hoàn trả váy', description: 'Bạn đã gửi trả váy hoặc bàn giao lại cho cửa hàng' },
         { title: 'Hoàn tất đơn hàng', description: 'Quy trình mua hàng đã hoàn thành' },
+        {
+          title: 'Nhận khiếu nại về đơn hàng (nếu có)',
+          description: 'Người mua và người bán khiếu nại một số vấn đề nếu có',
+        },
       );
     } else {
       milestonesData.push(
@@ -89,6 +97,10 @@ export class MilestoneService {
           description: 'Khách thử váy và thợ may điều chỉnh theo phản hồi',
         },
         { title: 'Hoàn tất đơn hàng', description: 'Quy trình mua hàng đã hoàn thành' },
+        {
+          title: 'Nhận khiếu nại về đơn hàng (nếu có)',
+          description: 'Người mua và người bán khiếu nại một số vấn đề nếu có',
+        },
       );
     }
 
@@ -307,6 +319,33 @@ export class MilestoneService {
       },
     });
     return milestones;
+  }
+
+  async getCompletedMilestonesByOrderId(orderId: string): Promise<Milestone[]> {
+    const milestones = await this.milestoneRepository.find({
+      where: {
+        order: { id: orderId },
+        status: MilestoneStatus.COMPLETED,
+      },
+      relations: ['order'],
+      order: {
+        index: 'ASC',
+      },
+    });
+    return milestones;
+  }
+
+  async getLastMilestoneByOrderId(orderId: string): Promise<Milestone | null> {
+    const milestone = await this.milestoneRepository.findOne({
+      where: {
+        order: { id: orderId },
+      },
+      relations: ['order'],
+      order: {
+        index: 'DESC',
+      },
+    });
+    return milestone;
   }
 
   async updateMilestoneStatusForOrderCustomAfterCheckout(orderId: string): Promise<void> {

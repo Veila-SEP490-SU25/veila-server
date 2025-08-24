@@ -101,7 +101,7 @@ export class ServiceService {
   ): Promise<Service> {
     let service;
     if (categoryId) {
-      if (!(await this.isCategopryExistForOwner(categoryId, userId)))
+      if (!(await this.isCategoryExistForOwner(categoryId, userId)))
         throw new NotFoundException('Không tìm thấy phân loại phù hợp');
       service = { user: { id: userId }, category: { id: categoryId }, ...body };
     } else {
@@ -119,7 +119,7 @@ export class ServiceService {
       throw new NotFoundException('Không tìm thấy dịch vụ phù hợp');
     let service;
     if (categoryId) {
-      if (!(await this.isCategopryExistForOwner(categoryId, userId)))
+      if (!(await this.isCategoryExistForOwner(categoryId, userId)))
         throw new NotFoundException('Không tìm thấy phân loại phù hợp');
       service = { category: { id: categoryId }, ...body };
     } else service = body;
@@ -146,7 +146,7 @@ export class ServiceService {
     return await this.serviceRepository.save(service);
   }
 
-  async isCategopryExistForOwner(id: string, userId: string): Promise<boolean> {
+  async isCategoryExistForOwner(id: string, userId: string): Promise<boolean> {
     return await this.categoryRepository.exists({
       where: { id, user: { id: userId } },
       withDeleted: true,

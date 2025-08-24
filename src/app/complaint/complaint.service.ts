@@ -1,7 +1,7 @@
 import { CUComplaintDto } from '@/app/complaint/complaint.dto';
 import { OrderService } from '@/app/order';
 import { Filtering, getOrder, getWhere, Sorting } from '@/common/decorators';
-import { Complaint, ComplaintStatus, OrderStatus } from '@/common/models';
+import { Complaint, ComplaintStatus, MilestoneStatus, OrderStatus } from '@/common/models';
 import {
   BadRequestException,
   forwardRef,
@@ -12,6 +12,7 @@ import {
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
+import { MilestoneService } from '../milestone';
 
 @Injectable()
 export class ComplaintService {
@@ -20,6 +21,8 @@ export class ComplaintService {
     private readonly complaintRepository: Repository<Complaint>,
     @Inject(forwardRef(() => OrderService))
     private readonly orderService: OrderService,
+    @Inject(forwardRef(() => MilestoneService))
+    private readonly milestoneService: MilestoneService,
   ) {}
 
   async getOwnerComplaints(
@@ -62,6 +65,11 @@ export class ComplaintService {
     if (!order) throw new NotFoundException('Không tìm thấy đơn hàng này');
     if (order.status !== OrderStatus.COMPLETED)
       throw new MethodNotAllowedException('Không thể tạo khiếu nại cho đơn hàng chưa hoàn thành');
+    const complaintMilestone = await this.milestoneService.getLastMilestoneByOrderId(order.id);
+    if (complaintMilestone?.status !== MilestoneStatus.IN_PROGRESS)
+      throw new MethodNotAllowedException(
+        'Không thể tạo khiếu nại cho đơn hàng chưa vào giai đoạn khiếu nại',
+      );
     if (Date.now() - order.updatedAt.getTime() > 3 * 24 * 60 * 60 * 1000)
       throw new MethodNotAllowedException('Không thể tạo khiếu nại cho đơn hàng đã quá 3 ngày');
 
@@ -131,7 +139,6 @@ export class ComplaintService {
       throw new MethodNotAllowedException('Chỉ có thể cập nhật khiếu nại ở trạng thái đang xử lý');
     if (status !== ComplaintStatus.APPROVED && status !== ComplaintStatus.REJECTED)
       throw new BadRequestException('Trạng thái khiếu nại không hợp lệ');
-
     await this.complaintRepository.update(id, { status });
   }
 

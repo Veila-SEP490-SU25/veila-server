@@ -486,6 +486,19 @@ export class ShopService {
     return shop;
   }
 
+  async getShopById(id: string): Promise<Shop> {
+    const shop = await this.shopRepository.findOne({
+      where: {
+        id,
+        status: ShopStatus.ACTIVE,
+        isVerified: true,
+      },
+      relations: { user: true },
+    });
+    if (!shop) throw new NotFoundException('Không tìm thấy cửa hàng');
+    return shop;
+  }
+
   async addFavorite(userId: string, id: string): Promise<void> {
     const shop = await this.shopRepository.findOne({
       where: {

@@ -86,6 +86,53 @@ export class TransactionService {
     await this.transactionRepository.save(plainToInstance(Transaction, newTransaction));
   }
 
+  async saveTransferToPlatformTransaction(
+    fromUser: User,
+    walletId: string,
+    amount: number,
+  ): Promise<void> {
+    const fromUserName = fromUser.firstName + ' ' + fromUser.middleName + ' ' + fromUser.lastName;
+    const toUserName = 'Veila Platform Wallet';
+
+    const newTransaction = {
+      wallet: { id: walletId },
+      from: fromUserName + ' Wallet',
+      to: toUserName,
+      fromTypeBalance: TypeBalance.AVAILABLE,
+      toTypeBalance: TypeBalance.AVAILABLE,
+      amount: amount,
+      type: TransactionType.TRANSFER,
+      status: TransactionStatus.COMPLETED,
+      note: fromUserName + ' transfer to ' + toUserName,
+    } as Transaction;
+    await this.transactionRepository.save(plainToInstance(Transaction, newTransaction));
+  }
+
+  async saveRefundTransaction(
+    fromUser: User,
+    toUser: User,
+    walletId: string,
+    orderId: string,
+    amount: number,
+  ): Promise<void> {
+    const fromUserName = fromUser.firstName + ' ' + fromUser.middleName + ' ' + fromUser.lastName;
+    const toUserName = toUser.firstName + ' ' + toUser.middleName + ' ' + toUser.lastName;
+
+    const newTransaction = {
+      wallet: { id: walletId },
+      order: { id: orderId },
+      from: fromUserName + ' Wallet',
+      to: toUserName + ' Wallet',
+      fromTypeBalance: TypeBalance.LOCKED,
+      toTypeBalance: TypeBalance.AVAILABLE,
+      amount: amount,
+      type: TransactionType.REFUND,
+      status: TransactionStatus.COMPLETED,
+      note: fromUserName + ' refund to ' + toUserName,
+    } as Transaction;
+    await this.transactionRepository.save(plainToInstance(Transaction, newTransaction));
+  }
+
   async saveTransferOrderTransaction(
     fromUser: User,
     toUser: User,
@@ -202,6 +249,16 @@ export class TransactionService {
     return plainToInstance(TransactionDto, transaction);
   }
 
+  async getTransactionByOrderId(orderId: string): Promise<Transaction> {
+    const transaction = await this.transactionRepository.findOne({
+      where: { order: { id: orderId } },
+      relations: ['wallet', 'order', 'membership'],
+    });
+    if (!transaction) throw new NotFoundException('Không tìm thấy giao dịch');
+
+    return transaction;
+  }
+
   async createTransactionForSeeding(transaction: Transaction): Promise<Transaction> {
     return await this.transactionRepository.save(transaction);
   }
@@ -253,22 +310,5 @@ export class TransactionService {
 
   async createMembershipTransactionForSeeding(transaction: Transaction): Promise<Transaction> {
     return await this.transactionRepository.save(transaction);
-  }
-
-  async fineTransactionByOrderCode(orderCode: number): Promise<Transaction> {
-    const transaction = await this.transactionRepository.findOne({
-      where: {
-        note: orderCode.toString(),
-      },
-    });
-
-    if (!transaction) throw new NotFoundException('Không tìm thấy giao dịch phù hợp');
-    return transaction;
-  }
-
-  async updateTransactionByOrderCode(orderCode: number, status: TransactionStatus): Promise<void> {
-    const transaction = await this.fineTransactionByOrderCode(orderCode);
-    transaction.status = status;
-    await this.transactionRepository.save(transaction);
   }
 }

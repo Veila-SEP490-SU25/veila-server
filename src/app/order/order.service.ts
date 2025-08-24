@@ -15,6 +15,7 @@ import {
 import {
   BadRequestException,
   ForbiddenException,
+  forwardRef,
   Inject,
   Injectable,
   InternalServerErrorException,
@@ -22,8 +23,14 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
-import { CreateOrderForCustom, CreateOrderRequestDto, OrderDto, UOrderDto } from './order.dto';
+import { In, LessThanOrEqual, Repository } from 'typeorm';
+import {
+  CreateOrderForCustom,
+  CreateOrderRequestDto,
+  OrderDto,
+  OtpPaymentDto,
+  UOrderDto,
+} from './order.dto';
 import { plainToInstance } from 'class-transformer';
 import { UserService } from '../user';
 import { OrderDressDetailDto, OrderDressDetailsService } from '../order-dress-details';
@@ -37,6 +44,9 @@ import { WalletService } from '../wallet';
 import { RequestService } from '@/app/request';
 import { ServiceService } from '@/app/service';
 import { MilestoneService } from '@/app/milestone';
+import { Cron, CronExpression } from '@nestjs/schedule';
+import { RedisService } from '../redis';
+import { PasswordService } from '../password';
 
 @Injectable()
 export class OrderService {
@@ -54,6 +64,7 @@ export class OrderService {
     @Inject(ComplaintService)
     private readonly complaintService: ComplaintService,
     private readonly dressService: DressService,
+    @Inject(forwardRef(() => WalletService))
     private readonly walletService: WalletService,
     @Inject(RequestService)
     private readonly requestService: RequestService,
@@ -61,6 +72,10 @@ export class OrderService {
     private readonly serviceService: ServiceService,
     @Inject(MilestoneService)
     private readonly milestoneService: MilestoneService,
+    @Inject(RedisService)
+    private readonly redisService: RedisService,
+    @Inject(PasswordService)
+    private readonly passwordService: PasswordService,
   ) {}
 
   async getOrderMilestones(
@@ -320,6 +335,14 @@ export class OrderService {
     if (existingOrder.status !== OrderStatus.PENDING)
       throw new BadRequestException('Đơn hàng đang trong quá trình thực hiện');
 
+    if (!existingOrder) throw new NotFoundException('Không tìm thấy đơn hàng này');
+
+    const user = await this.userService.getUserById(userId);
+    if (!user) throw new NotFoundException('Người dùng này không tồn tại');
+
+    if (!this.validateOwnerOfOrder(userId, id))
+      throw new ForbiddenException('Người dùng không sở hữu đơn hàng này');
+
     existingOrder.phone = updatedOrder.phone;
     existingOrder.email = updatedOrder.email;
     existingOrder.address = updatedOrder.address;
@@ -548,7 +571,7 @@ export class OrderService {
     return await this.orderRepository.save(plainToInstance(Order, existingOrder));
   }
 
-  async checkOutOrder(userId: string, orderId: string): Promise<Order> {
+  async checkOutOrder(userId: string, orderId: string, body: OtpPaymentDto): Promise<Order> {
     const order = await this.orderRepository.findOne({
       where: { id: orderId, customer: { id: userId } },
       relations: {
@@ -563,6 +586,18 @@ export class OrderService {
       //Luồng mua cần thanh toán 100%, sau đó lock lại ở ví của shop
       if (!this.checkWalletBalanceIsEnough(userId, Number(order.amount)))
         throw new BadRequestException('Không đủ số dư trong ví, vui lòng nạp tiền');
+
+      //Kiểm tra mã OTP
+      const storedOtp = await this.redisService.get(`user:otp:${userId}`);
+      if (!storedOtp) throw new ForbiddenException('Mã xác thực không hợp lệ hoặc đã hết hạn.');
+      const isValidOtp = await this.passwordService.comparePassword(body.otp, storedOtp);
+      if (!isValidOtp) {
+        await this.redisService.del(`user:otp:${userId}`);
+        throw new ForbiddenException('Mã xác thực không chính xác.');
+      } else {
+        await this.redisService.del(`user:otp:${userId}`);
+      }
+
       await this.walletService.transferFromWalletToWalletForSell(
         userId,
         order,
@@ -579,6 +614,18 @@ export class OrderService {
       const deposit = await this.calculateSellPriceForOrder(orderId);
       if (!this.checkWalletBalanceIsEnough(userId, deposit))
         throw new BadRequestException('Không đủ số dư trong ví, vui lòng nạp tiền');
+
+      //Kiểm tra mã OTP
+      const storedOtp = await this.redisService.get(`user:otp:${userId}`);
+      if (!storedOtp) throw new ForbiddenException('Mã xác thực không hợp lệ hoặc đã hết hạn.');
+      const isValidOtp = await this.passwordService.comparePassword(body.otp, storedOtp);
+      if (!isValidOtp) {
+        await this.redisService.del(`user:otp:${userId}`);
+        throw new ForbiddenException('Mã xác thực không chính xác.');
+      } else {
+        await this.redisService.del(`user:otp:${userId}`);
+      }
+
       await this.walletService.transferFromWalletToWalletForRent(
         userId,
         order,
@@ -604,6 +651,18 @@ export class OrderService {
       const remainingAmount = Number(order.amount) - Number(amountPaid);
       if (customerWallet.availableBalance < remainingAmount)
         throw new BadRequestException('Không đủ số dư trong ví, vui lòng nạp tiền');
+
+      //Kiểm tra mã OTP
+      const storedOtp = await this.redisService.get(`user:otp:${userId}`);
+      if (!storedOtp) throw new ForbiddenException('Mã xác thực không hợp lệ hoặc đã hết hạn.');
+      const isValidOtp = await this.passwordService.comparePassword(body.otp, storedOtp);
+      if (!isValidOtp) {
+        await this.redisService.del(`user:otp:${userId}`);
+        throw new ForbiddenException('Mã xác thực không chính xác.');
+      } else {
+        await this.redisService.del(`user:otp:${userId}`);
+      }
+
       await this.walletService.transferFromWalletToWalletForCustom(userId, order, remainingAmount);
 
       await this.updateOrderCustomStatusAfterCheckout(order.id);
@@ -620,6 +679,44 @@ export class OrderService {
       if (!updatedOrder) throw new NotFoundException('Không tìm thấy đơn hàng nào phù hợp');
       return updatedOrder;
     }
+  }
+
+  @Cron(CronExpression.EVERY_DAY_AT_MIDNIGHT, { timeZone: 'Asia/Ho_Chi_Minh' })
+  private async unlockBalanceAfterOrderCompleted(): Promise<void> {
+    //lấy ngày hiện tại mà cron chạy
+    const today = new Date();
+
+    //3 hôm trước
+    const threeDaysAgo = new Date();
+    threeDaysAgo.setDate(today.getDate() - 3);
+
+    //tìm tất cả các đơn hàng đã hoàn thành được 3 ngày (xử lý mua và thuê)
+    const orders = await this.orderRepository.find({
+      where: {
+        status: OrderStatus.COMPLETED,
+        updatedAt: LessThanOrEqual(threeDaysAgo),
+        type: In([OrderType.SELL, OrderType.RENT]),
+      },
+      relations: {
+        customer: true,
+        shop: { user: true },
+      },
+    });
+    //Mở tiền bị lock trong ví
+    await Promise.all(
+      orders.map(async (order) => {
+        if (order.type === OrderType.SELL) {
+          await this.walletService.unlockBalanceForSell(order);
+        } else if (order.type === OrderType.RENT) {
+          await this.walletService.unlockBalanceForRent(order);
+        }
+      }),
+    );
+
+    //tìm tất cả các đơn hàng đã hoàn thành được 3 ngày (xử lý custom)
+    //
+    //
+    //
   }
 
   private async updateOrderCustomStatusAfterCheckout(orderId: string): Promise<void> {
@@ -645,7 +742,7 @@ export class OrderService {
     return await this.milestoneService.createMilestoneForSeeding(data);
   }
 
-  private async calculateSellPriceForOrder(orderId: string): Promise<number> {
+  async calculateSellPriceForOrder(orderId: string): Promise<number> {
     const orderDressDetail =
       await this.orderDressDetailsService.getOrderDressDetailByOrderId(orderId);
     if (!orderDressDetail)
@@ -666,19 +763,38 @@ export class OrderService {
   }
 
   async cancelOrder(userId: string, id: string): Promise<Order> {
-    const existingOrder = await this.getOrderById(id);
+    const existingOrder = await this.getOrderByIdV2(id);
 
-    if (!existingOrder || existingOrder.status === OrderStatus.CANCELLED)
-      throw new NotFoundException('Không tìm thấy đơn hàng này');
+    if (!existingOrder) throw new NotFoundException('Không tìm thấy đơn hàng này');
 
-    if (existingOrder.status !== OrderStatus.PENDING)
-      throw new MethodNotAllowedException('Đơn hàng không thể hủy ở trạng thái này');
+    if (
+      existingOrder.status === OrderStatus.CANCELLED ||
+      existingOrder.status === OrderStatus.COMPLETED
+    )
+      throw new BadRequestException('Đơn hàng này đã kết thúc');
 
     const user = await this.userService.getUserById(userId);
     if (!user) throw new NotFoundException('Người dùng này không tồn tại');
 
-    existingOrder.status = OrderStatus.CANCELLED;
+    const completedMilestones = await this.milestoneService.getCompletedMilestonesByOrderId(
+      existingOrder.id,
+    );
 
+    //xử lý tiền đơn hàng khi hủy đơn hàng đang được thực hiện (trước khi giao với mua thuê, trước khi hoàn tất với custom)
+    if (existingOrder.status === OrderStatus.IN_PROCESS) {
+      if (existingOrder.type === OrderType.SELL || existingOrder.type === OrderType.RENT) {
+        //xử lý luồng sell
+        if (completedMilestones.length > 2)
+          throw new BadRequestException('Không được hủy đơn hàng ở trạng thái đang giao');
+        await this.walletService.refundForSellAndRent(existingOrder);
+      } else if (existingOrder.type === OrderType.CUSTOM) {
+        if (completedMilestones.length > 4)
+          throw new BadRequestException('Không được hủy đơn hàng ở trạng thái đang giao');
+        //xử lý luồng custom
+        // await this.walletService.refundForCustom(existingOrder, completedMilestones.length);
+      }
+    }
+    existingOrder.status = OrderStatus.CANCELLED;
     return await this.orderRepository.save(plainToInstance(Order, existingOrder));
   }
 

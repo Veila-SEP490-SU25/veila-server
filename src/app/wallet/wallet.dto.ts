@@ -230,3 +230,27 @@ export class UpdateBankDto {
   @IsString()
   bankNumber: string;
 }
+
+export class SmartOTPDto {
+  @Expose()
+  @ApiProperty({
+    description: 'Smart OTP',
+    example: '123456',
+    nullable: false,
+  })
+  @IsNotEmpty()
+  @IsString()
+  smartOtp: string;
+}
+
+export class PINWalletDto {
+  @Expose()
+  @ApiProperty({
+    description: 'Password identity number',
+    example: '123456',
+    nullable: false,
+  })
+  @IsNotEmpty()
+  @IsString()
+  pin: string;
+}

@@ -13,6 +13,18 @@ import {
 import { CUOrderAccessoriesDetailDto } from '@/app/order-accessories-details';
 import { CUOrderDressDetailDto } from '@/app/order-dress-details';
 
+export class OtpPaymentDto {
+  @Expose()
+  @ApiProperty({
+    description: 'Mã OTP giao dịch',
+    example: '123456',
+    nullable: false,
+  })
+  @IsNotEmpty()
+  @IsString()
+  otp: string;
+}
+
 export class COrderDto {
   @ApiProperty({
     description: 'Số điện thoại liên hệ',

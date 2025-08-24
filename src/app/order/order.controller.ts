@@ -26,7 +26,13 @@ import {
   UserId,
 } from '@/common/decorators';
 import { AuthGuard, RolesGuard } from '@/common/guards';
-import { CreateOrderForCustom, CreateOrderRequestDto, OrderDto, UOrderDto } from './order.dto';
+import {
+  CreateOrderForCustom,
+  CreateOrderRequestDto,
+  OrderDto,
+  OtpPaymentDto,
+  UOrderDto,
+} from './order.dto';
 import { CUComplaintDto } from '@/app/complaint';
 import { OrderAccessoriesDetailDto } from '../order-accessories-details';
 import { OrderDressDetailDto } from '../order-dress-details';
@@ -721,8 +727,9 @@ export class OrderController {
   async checkOutOrder(
     @UserId() userId: string,
     @Param('id') orderId: string,
+    @Body() body: OtpPaymentDto,
   ): Promise<ItemResponse<Order>> {
-    const order = await this.orderService.checkOutOrder(userId, orderId);
+    const order = await this.orderService.checkOutOrder(userId, orderId, body);
     return {
       message: 'Thanh toán đơn hàng thành công',
       statusCode: HttpStatus.OK,
@@ -740,6 +747,7 @@ export class OrderController {
 
           - Chỉ người dùng có quyền \`CUSTOMER\` không thể cập nhật trạng thái đơn hàng.
           - Truyền \`id\` của đơn hàng trên URL.
+          - Truyền dữ liệu trong body dưới dạng JSON.
           - Truyền dữ liệu cập nhật trên URL.
           - Các trường bắt buộc: \`address\`, \`due_date\`, \`type\`.
           - Nếu không tìm thấy đơn hang sẽ trả về lỗi.

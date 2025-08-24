@@ -114,6 +114,16 @@ export class WithdrawTransactionDto {
     nullable: true,
   })
   note: string;
+
+  @Expose()
+  @ApiProperty({
+    description: 'Mã OTP giao dịch',
+    example: '123456',
+    nullable: false,
+  })
+  @IsNotEmpty()
+  @IsString()
+  otp: string;
 }
 
 export class TransactionDto {

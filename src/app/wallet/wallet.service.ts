@@ -2,6 +2,7 @@ import { Filtering, getOrder, getWhere, Sorting } from '@/common/decorators';
 import { Order, Transaction, TransactionType, Wallet } from '@/common/models';
 import {
   BadRequestException,
+  ConflictException,
   ForbiddenException,
   forwardRef,
   Inject,
@@ -13,6 +14,7 @@ import { Repository } from 'typeorm';
 import {
   DepositViaPayOSDto,
   DepositViaPayOSResponse,
+  PINWalletDto,
   UpdateBankDto,
   WalletDto,
 } from './wallet.dto';
@@ -20,6 +22,10 @@ import { plainToInstance } from 'class-transformer';
 import { UserService } from '../user';
 import { WithdrawTransactionDto, TransactionService } from '../transaction';
 import { PayosService } from '../payos/payos.service';
+import { ShopService } from '../shop';
+import { OrderService } from '../order';
+import { PasswordService } from '../password';
+import { RedisService } from '../redis';
 
 @Injectable()
 export class WalletService {
@@ -30,6 +36,13 @@ export class WalletService {
     @Inject(forwardRef(() => TransactionService))
     private readonly transactionService: TransactionService,
     private readonly payosService: PayosService,
+    private readonly shopService: ShopService,
+    @Inject(forwardRef(() => OrderService))
+    private readonly orderService: OrderService,
+    @Inject(forwardRef(() => PasswordService))
+    private readonly passwordService: PasswordService,
+    @Inject(forwardRef(() => RedisService))
+    private readonly redisService: RedisService,
   ) {}
 
   async getWalletsForAdmin(
@@ -72,6 +85,21 @@ export class WalletService {
     wallet.availableBalance = Number(wallet.availableBalance);
     wallet.lockedBalance = Number(wallet.lockedBalance);
     return plainToInstance(WalletDto, wallet);
+  }
+
+  async getWalletByUserIdV2(userId: string): Promise<Wallet> {
+    const wallet = await this.walletRepository.findOne({
+      where: {
+        user: { id: userId },
+      },
+      relations: ['user'],
+    });
+    if (!wallet) throw new NotFoundException('Không tìm thấy ví điện tử của người dùng này');
+
+    //ép kiểu số
+    wallet.availableBalance = Number(wallet.availableBalance);
+    wallet.lockedBalance = Number(wallet.lockedBalance);
+    return wallet;
   }
 
   async depositWallet(
@@ -143,6 +171,17 @@ export class WalletService {
         'Số dư khả dụng trong tài khoản không đủ để thực hiện rút tiền',
       );
     else {
+      //Kiểm tra mã OTP
+      const storedOtp = await this.redisService.get(`user:otp:${userId}`);
+      if (!storedOtp) throw new ForbiddenException('Mã xác thực không hợp lệ hoặc đã hết hạn.');
+      const isValidOtp = await this.passwordService.comparePassword(withdrawWallet.otp, storedOtp);
+      if (!isValidOtp) {
+        await this.redisService.del(`user:otp:${userId}`);
+        throw new ForbiddenException('Mã xác thực không chính xác.');
+      } else {
+        await this.redisService.del(`user:otp:${userId}`);
+      }
+
       wallet.availableBalance = Number(wallet.availableBalance) - withdrawWallet.amount;
       wallet.lockedBalance = Number(wallet.lockedBalance) + withdrawWallet.amount;
       await this.transactionService.saveWithdrawTransaction(user, wallet.id, withdrawWallet);
@@ -214,8 +253,8 @@ export class WalletService {
     if (!toUser) throw new NotFoundException('Không tìm thấy người dùng');
 
     fromWallet.availableBalance = Number(fromWallet.availableBalance) - deposit;
-    fromWallet.lockedBalance = Number(fromWallet.lockedBalance) + amount;
-    toWallet.lockedBalance = Number(toWallet.lockedBalance) + deposit - amount;
+    fromWallet.lockedBalance = Number(fromWallet.lockedBalance) + (deposit - amount);
+    toWallet.lockedBalance = Number(toWallet.lockedBalance) + amount;
 
     await this.walletRepository.save(fromWallet);
     await this.walletRepository.save(toWallet);
@@ -361,6 +400,15 @@ export class WalletService {
       .execute();
   }
 
+  async saveWalletBalanceV4(wallet: Wallet, amount: number): Promise<void> {
+    await this.walletRepository
+      .createQueryBuilder()
+      .update(Wallet)
+      .set({ availableBalance: () => `available_balance - ${amount}` })
+      .where('id = :id', { id: wallet.id })
+      .execute();
+  }
+
   async updateBankInformation(userId: string, body: UpdateBankDto): Promise<Wallet> {
     const existingWallet = await this.walletRepository.findOne({
       where: {
@@ -375,5 +423,107 @@ export class WalletService {
     existingWallet.bankNumber = body.bankNumber;
 
     return await this.walletRepository.save(existingWallet);
+  }
+
+  async unlockBalanceForSell(order: Order): Promise<void> {
+    const transaction = await this.transactionService.getTransactionByOrderId(order.id);
+    const toShop = await this.shopService.getShopById(order.shop.id);
+    const shopWallet = await this.getWalletByUserIdV2(toShop.user.id);
+
+    if (!shopWallet) throw new NotFoundException('Không tìm thấy ví điện tử của người nhận');
+
+    shopWallet.lockedBalance = Number(shopWallet.lockedBalance) - Number(transaction.amount);
+    shopWallet.availableBalance = Number(shopWallet.availableBalance) + Number(transaction.amount);
+
+    await this.walletRepository.save(shopWallet);
+  }
+
+  async unlockBalanceForRent(order: Order): Promise<void> {
+    const transaction = await this.transactionService.getTransactionByOrderId(order.id);
+    const cusWallet = await this.getWalletById(transaction.wallet.id);
+    const toShop = await this.shopService.getShopById(order.shop.id);
+    const shopWallet = await this.getWalletByUserIdV2(toShop.user.id);
+    const deposit = await this.orderService.calculateSellPriceForOrder(order.id);
+
+    if (!shopWallet) throw new NotFoundException('Không tìm thấy ví điện tử của người nhận');
+
+    cusWallet.lockedBalance =
+      Number(cusWallet.lockedBalance) + (deposit - Number(transaction.amount));
+    cusWallet.availableBalance =
+      Number(cusWallet.availableBalance) + (deposit - Number(transaction.amount));
+
+    shopWallet.lockedBalance = Number(shopWallet.lockedBalance) - Number(transaction.amount);
+    shopWallet.availableBalance = Number(shopWallet.availableBalance) + Number(transaction.amount);
+
+    await this.walletRepository.save(cusWallet);
+    await this.walletRepository.save(shopWallet);
+  }
+
+  // async unlockBalanceForCustom(order: Order):Promise<void> {
+
+  // }
+
+  async refundForSellAndRent(order: Order): Promise<void> {
+    const transaction = await this.transactionService.getTransactionByOrderId(order.id);
+    const cusWallet = await this.getWalletById(transaction.wallet.id);
+    const toShop = await this.shopService.getShopById(order.shop.id);
+    const shopWallet = await this.getWalletByUserIdV2(toShop.user.id);
+
+    if (!shopWallet) throw new NotFoundException('Không tìm thấy ví điện tử của người nhận');
+
+    shopWallet.lockedBalance = Number(shopWallet.lockedBalance) - Number(transaction.amount);
+    shopWallet.availableBalance =
+      Number(shopWallet.availableBalance) + (Number(transaction.amount) * 5) / 100;
+
+    cusWallet.availableBalance =
+      Number(cusWallet.availableBalance) + (Number(transaction.amount) * 95) / 100;
+
+    await this.walletRepository.save(cusWallet);
+    await this.walletRepository.save(shopWallet);
+
+    await this.transactionService.saveRefundTransaction(
+      shopWallet.user,
+      cusWallet.user,
+      shopWallet.id,
+      order.id,
+      Number(transaction.amount),
+    );
+  }
+
+  // async refundForCustom(
+  //   order: Order,
+  //   number: Number,
+  // ):Promise<void> {
+
+  // }
+
+  async updatePIN(userId: string, body: PINWalletDto): Promise<Wallet> {
+    const user = await this.userService.getUserById(userId);
+    if (!user) throw new NotFoundException('Không tìm thấy người dùng');
+
+    const wallet = await this.getWalletByUserIdV2(userId);
+    const hashedPin = await this.passwordService.hashPassword(body.pin);
+    wallet.pin = hashedPin;
+
+    return await this.walletRepository.save(wallet);
+  }
+
+  async requestOtpPayment(userId: string, body: PINWalletDto): Promise<string> {
+    const user = await this.userService.getUserById(userId);
+    if (!user) throw new NotFoundException('Không tìm thấy người dùng');
+
+    const wallet = await this.getWalletByUserIdV2(userId);
+    if (!wallet.pin)
+      throw new NotFoundException('Ví điện tử này chưa có mã PIN, vui lòng cập nhật');
+
+    const isPinValid = await this.passwordService.comparePassword(body.pin, wallet.pin);
+    if (!isPinValid)
+      throw new ConflictException('Mã Pin ví điện tử không chính xác, vui lòng thử lại');
+
+    const otp = this.passwordService.generateOTP(6);
+    const hashedOtp = await this.passwordService.hashPassword(otp);
+    await this.redisService.set(`user:otp:${user.id}`, hashedOtp, 5 * 60 * 1000);
+
+    return otp;
   }
 }

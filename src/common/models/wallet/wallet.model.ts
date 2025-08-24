@@ -1,6 +1,7 @@
 import { Column, Entity, JoinColumn, OneToOne } from 'typeorm';
 import { Base, User } from '@/common/models';
-import { ApiProperty } from '@nestjs/swagger';
+import { ApiHideProperty, ApiProperty } from '@nestjs/swagger';
+import { Exclude } from 'class-transformer';
 
 @Entity('wallets')
 export class Wallet extends Base {
@@ -79,4 +80,14 @@ export class Wallet extends Base {
     description: 'Số tài khoản ngân hàng',
   })
   bankNumber: string | null;
+
+  @Column({
+    type: 'varchar',
+    length: 72,
+    nullable: true,
+    comment: 'Mật khẩu đã được mã hóa bằng bcrypt (72 ký tự)',
+  })
+  @Exclude()
+  @ApiHideProperty()
+  pin: string | null;
 }
