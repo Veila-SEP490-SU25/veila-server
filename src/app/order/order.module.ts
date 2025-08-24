@@ -13,6 +13,8 @@ import { WalletModule } from '../wallet';
 import { ServiceModule } from '@/app/service';
 import { RequestModule } from '@/app/request';
 import { MilestoneModule } from '@/app/milestone';
+import { RedisModule } from '../redis';
+import { PasswordModule } from '../password';
 
 @Module({
   imports: [
@@ -27,6 +29,8 @@ import { MilestoneModule } from '@/app/milestone';
     ServiceModule,
     RequestModule,
     forwardRef(() => MilestoneModule),
+    forwardRef(() => RedisModule),
+    forwardRef(() => PasswordModule),
   ],
   controllers: [OrderController],
   providers: [OrderService],

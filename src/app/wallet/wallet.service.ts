@@ -2,6 +2,7 @@ import { Filtering, getOrder, getWhere, Sorting } from '@/common/decorators';
 import { Order, Transaction, TransactionType, Wallet } from '@/common/models';
 import {
   BadRequestException,
+  ConflictException,
   ForbiddenException,
   forwardRef,
   Inject,
@@ -13,6 +14,7 @@ import { Repository } from 'typeorm';
 import {
   DepositViaPayOSDto,
   DepositViaPayOSResponse,
+  PINWalletDto,
   UpdateBankDto,
   WalletDto,
 } from './wallet.dto';
@@ -22,6 +24,8 @@ import { WithdrawTransactionDto, TransactionService } from '../transaction';
 import { PayosService } from '../payos/payos.service';
 import { ShopService } from '../shop';
 import { OrderService } from '../order';
+import { PasswordService } from '../password';
+import { RedisService } from '../redis';
 
 @Injectable()
 export class WalletService {
@@ -35,6 +39,10 @@ export class WalletService {
     private readonly shopService: ShopService,
     @Inject(forwardRef(() => OrderService))
     private readonly orderService: OrderService,
+    @Inject(forwardRef(() => PasswordService))
+    private readonly passwordService: PasswordService,
+    @Inject(forwardRef(() => RedisService))
+    private readonly redisService: RedisService,
   ) {}
 
   async getWalletsForAdmin(
@@ -163,6 +171,17 @@ export class WalletService {
         'Số dư khả dụng trong tài khoản không đủ để thực hiện rút tiền',
       );
     else {
+      //Kiểm tra mã OTP
+      const storedOtp = await this.redisService.get(`user:otp:${userId}`);
+      if (!storedOtp) throw new ForbiddenException('Mã xác thực không hợp lệ hoặc đã hết hạn.');
+      const isValidOtp = await this.passwordService.comparePassword(withdrawWallet.otp, storedOtp);
+      if (!isValidOtp) {
+        await this.redisService.del(`user:otp:${userId}`);
+        throw new ForbiddenException('Mã xác thực không chính xác.');
+      } else {
+        await this.redisService.del(`user:otp:${userId}`);
+      }
+
       wallet.availableBalance = Number(wallet.availableBalance) - withdrawWallet.amount;
       wallet.lockedBalance = Number(wallet.lockedBalance) + withdrawWallet.amount;
       await this.transactionService.saveWithdrawTransaction(user, wallet.id, withdrawWallet);
@@ -477,4 +496,34 @@ export class WalletService {
   // ):Promise<void> {
 
   // }
+
+  async updatePIN(userId: string, body: PINWalletDto): Promise<Wallet> {
+    const user = await this.userService.getUserById(userId);
+    if (!user) throw new NotFoundException('Không tìm thấy người dùng');
+
+    const wallet = await this.getWalletByUserIdV2(userId);
+    const hashedPin = await this.passwordService.hashPassword(body.pin);
+    wallet.pin = hashedPin;
+
+    return await this.walletRepository.save(wallet);
+  }
+
+  async requestOtpPayment(userId: string, body: PINWalletDto): Promise<string> {
+    const user = await this.userService.getUserById(userId);
+    if (!user) throw new NotFoundException('Không tìm thấy người dùng');
+
+    const wallet = await this.getWalletByUserIdV2(userId);
+    if (!wallet.pin)
+      throw new NotFoundException('Ví điện tử này chưa có mã PIN, vui lòng cập nhật');
+
+    const isPinValid = await this.passwordService.comparePassword(body.pin, wallet.pin);
+    if (!isPinValid)
+      throw new ConflictException('Mã Pin ví điện tử không chính xác, vui lòng thử lại');
+
+    const otp = this.passwordService.generateOTP(6);
+    const hashedOtp = await this.passwordService.hashPassword(otp);
+    await this.redisService.set(`user:otp:${user.id}`, hashedOtp, 5 * 60 * 1000);
+
+    return otp;
+  }
 }

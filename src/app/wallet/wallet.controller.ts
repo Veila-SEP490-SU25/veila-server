@@ -23,6 +23,7 @@ import {
 import {
   DepositViaPayOSDto,
   DepositViaPayOSResponse,
+  PINWalletDto,
   UpdateBankDto,
   WalletDto,
   WebhookDto,
@@ -166,9 +167,79 @@ export class WalletController {
     };
   }
 
-  @Post('my-wallet')
-  @UseGuards(AuthGuard)
-  @Put('/deposit')
+  @Put('my-wallet')
+  @UseGuards(AuthGuard, RolesGuard)
+  @Roles(UserRole.CUSTOMER, UserRole.SHOP)
+  @ApiOperation({
+    summary: 'Cập nhật PIN cho ví điện tử',
+    description: `
+      **Hướng dẫn sử dụng:**
+
+      - Nếu không tìm thấy ví thì trả về lỗi.
+      - Nếu thành công sẽ trả về chi tiết ví điện tử vừa cập nhật.
+    `,
+  })
+  @ApiOkResponse({
+    schema: {
+      allOf: [
+        { $ref: getSchemaPath(ItemResponse) },
+        {
+          properties: {
+            items: { $ref: getSchemaPath(Wallet) },
+          },
+        },
+      ],
+    },
+  })
+  async updatePINForWallet(
+    @UserId() userId: string,
+    @Body() body: PINWalletDto,
+  ): Promise<ItemResponse<Wallet>> {
+    const wallet = await this.walletService.updatePIN(userId, body);
+    return {
+      message: 'Đây là thông tin ví điện tử đã cập nhật',
+      statusCode: HttpStatus.OK,
+      item: wallet,
+    };
+  }
+
+  @Post('request-smart-otp')
+  @UseGuards(AuthGuard, RolesGuard)
+  @Roles(UserRole.CUSTOMER, UserRole.SHOP)
+  @ApiOperation({
+    summary: 'Yêu cầu mã xác thực OTP để thực hiện giao dịch',
+    description: `
+      **Hướng dẫn sử dụng:**
+
+      - Truyền mã pin trong body dưới dạng JSON.
+      - Nếu thành công sẽ lưu otp vào redis, sau đó trả lại otp vừa tạo.
+    `,
+  })
+  @ApiOkResponse({
+    schema: {
+      allOf: [
+        { $ref: getSchemaPath(ItemResponse) },
+        {
+          properties: {
+            items: { type: 'string' },
+          },
+        },
+      ],
+    },
+  })
+  async requestOtpPayment(
+    @UserId() userId: string,
+    @Body() body: PINWalletDto,
+  ): Promise<ItemResponse<string>> {
+    const requestOtp = await this.walletService.requestOtpPayment(userId, body);
+    return {
+      message: 'Đây là mã OTP giao dịch của bạn',
+      statusCode: HttpStatus.CREATED,
+      item: requestOtp,
+    };
+  }
+
+  @Put('deposit')
   @UseGuards(AuthGuard)
   @Roles(UserRole.CUSTOMER, UserRole.SHOP)
   @ApiOperation({
@@ -209,7 +280,7 @@ export class WalletController {
     };
   }
 
-  @Put('/withdraw-request')
+  @Put('withdraw-request')
   @UseGuards(AuthGuard)
   @Roles(UserRole.CUSTOMER, UserRole.SHOP)
   @ApiOperation({

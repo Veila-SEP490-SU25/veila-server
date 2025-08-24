@@ -8,6 +8,8 @@ import { TransactionModule } from '../transaction';
 import { PayosModule } from '../payos/payos.module';
 import { ShopModule } from '../shop';
 import { OrderModule } from '../order';
+import { PasswordModule } from '../password';
+import { RedisModule } from '../redis';
 
 @Module({
   imports: [
@@ -17,6 +19,8 @@ import { OrderModule } from '../order';
     PayosModule,
     ShopModule,
     forwardRef(() => OrderModule),
+    forwardRef(() => PasswordModule),
+    forwardRef(() => RedisModule),
   ],
   controllers: [WalletController],
   providers: [WalletService],

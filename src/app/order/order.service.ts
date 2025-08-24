@@ -24,7 +24,13 @@ import {
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { In, LessThanOrEqual, Repository } from 'typeorm';
-import { CreateOrderForCustom, CreateOrderRequestDto, OrderDto, UOrderDto } from './order.dto';
+import {
+  CreateOrderForCustom,
+  CreateOrderRequestDto,
+  OrderDto,
+  OtpPaymentDto,
+  UOrderDto,
+} from './order.dto';
 import { plainToInstance } from 'class-transformer';
 import { UserService } from '../user';
 import { OrderDressDetailDto, OrderDressDetailsService } from '../order-dress-details';
@@ -39,6 +45,8 @@ import { RequestService } from '@/app/request';
 import { ServiceService } from '@/app/service';
 import { MilestoneService } from '@/app/milestone';
 import { Cron, CronExpression } from '@nestjs/schedule';
+import { RedisService } from '../redis';
+import { PasswordService } from '../password';
 
 @Injectable()
 export class OrderService {
@@ -64,6 +72,10 @@ export class OrderService {
     private readonly serviceService: ServiceService,
     @Inject(MilestoneService)
     private readonly milestoneService: MilestoneService,
+    @Inject(RedisService)
+    private readonly redisService: RedisService,
+    @Inject(PasswordService)
+    private readonly passwordService: PasswordService,
   ) {}
 
   async getOrderMilestones(
@@ -559,7 +571,7 @@ export class OrderService {
     return await this.orderRepository.save(plainToInstance(Order, existingOrder));
   }
 
-  async checkOutOrder(userId: string, orderId: string): Promise<Order> {
+  async checkOutOrder(userId: string, orderId: string, body: OtpPaymentDto): Promise<Order> {
     const order = await this.orderRepository.findOne({
       where: { id: orderId, customer: { id: userId } },
       relations: {
@@ -574,6 +586,18 @@ export class OrderService {
       //Luồng mua cần thanh toán 100%, sau đó lock lại ở ví của shop
       if (!this.checkWalletBalanceIsEnough(userId, Number(order.amount)))
         throw new BadRequestException('Không đủ số dư trong ví, vui lòng nạp tiền');
+
+      //Kiểm tra mã OTP
+      const storedOtp = await this.redisService.get(`user:otp:${userId}`);
+      if (!storedOtp) throw new ForbiddenException('Mã xác thực không hợp lệ hoặc đã hết hạn.');
+      const isValidOtp = await this.passwordService.comparePassword(body.otp, storedOtp);
+      if (!isValidOtp) {
+        await this.redisService.del(`user:otp:${userId}`);
+        throw new ForbiddenException('Mã xác thực không chính xác.');
+      } else {
+        await this.redisService.del(`user:otp:${userId}`);
+      }
+
       await this.walletService.transferFromWalletToWalletForSell(
         userId,
         order,
@@ -590,6 +614,18 @@ export class OrderService {
       const deposit = await this.calculateSellPriceForOrder(orderId);
       if (!this.checkWalletBalanceIsEnough(userId, deposit))
         throw new BadRequestException('Không đủ số dư trong ví, vui lòng nạp tiền');
+
+      //Kiểm tra mã OTP
+      const storedOtp = await this.redisService.get(`user:otp:${userId}`);
+      if (!storedOtp) throw new ForbiddenException('Mã xác thực không hợp lệ hoặc đã hết hạn.');
+      const isValidOtp = await this.passwordService.comparePassword(body.otp, storedOtp);
+      if (!isValidOtp) {
+        await this.redisService.del(`user:otp:${userId}`);
+        throw new ForbiddenException('Mã xác thực không chính xác.');
+      } else {
+        await this.redisService.del(`user:otp:${userId}`);
+      }
+
       await this.walletService.transferFromWalletToWalletForRent(
         userId,
         order,
@@ -615,6 +651,18 @@ export class OrderService {
       const remainingAmount = Number(order.amount) - Number(amountPaid);
       if (customerWallet.availableBalance < remainingAmount)
         throw new BadRequestException('Không đủ số dư trong ví, vui lòng nạp tiền');
+
+      //Kiểm tra mã OTP
+      const storedOtp = await this.redisService.get(`user:otp:${userId}`);
+      if (!storedOtp) throw new ForbiddenException('Mã xác thực không hợp lệ hoặc đã hết hạn.');
+      const isValidOtp = await this.passwordService.comparePassword(body.otp, storedOtp);
+      if (!isValidOtp) {
+        await this.redisService.del(`user:otp:${userId}`);
+        throw new ForbiddenException('Mã xác thực không chính xác.');
+      } else {
+        await this.redisService.del(`user:otp:${userId}`);
+      }
+
       await this.walletService.transferFromWalletToWalletForCustom(userId, order, remainingAmount);
 
       await this.updateOrderCustomStatusAfterCheckout(order.id);
