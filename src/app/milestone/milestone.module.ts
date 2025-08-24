@@ -6,6 +6,7 @@ import { OrderModule } from '../order';
 import { MilestoneController } from './milestone.controller';
 import { ShopModule } from '../shop';
 import { TaskModule } from '../task';
+import { ComplaintModule } from '../complaint';
 
 @Module({
   imports: [
@@ -13,6 +14,7 @@ import { TaskModule } from '../task';
     forwardRef(() => OrderModule),
     ShopModule,
     forwardRef(() => TaskModule),
+    forwardRef(() => ComplaintModule),
   ],
   controllers: [MilestoneController],
   providers: [MilestoneService],

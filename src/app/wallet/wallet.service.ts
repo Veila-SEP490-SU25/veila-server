@@ -381,6 +381,15 @@ export class WalletService {
       .execute();
   }
 
+  async saveWalletBalanceV4(wallet: Wallet, amount: number): Promise<void> {
+    await this.walletRepository
+      .createQueryBuilder()
+      .update(Wallet)
+      .set({ availableBalance: () => `available_balance - ${amount}` })
+      .where('id = :id', { id: wallet.id })
+      .execute();
+  }
+
   async updateBankInformation(userId: string, body: UpdateBankDto): Promise<Wallet> {
     const existingWallet = await this.walletRepository.findOne({
       where: {
@@ -400,36 +409,72 @@ export class WalletService {
   async unlockBalanceForSell(order: Order): Promise<void> {
     const transaction = await this.transactionService.getTransactionByOrderId(order.id);
     const toShop = await this.shopService.getShopById(order.shop.id);
-    const toWallet = await this.getWalletByUserIdV2(toShop.user.id);
+    const shopWallet = await this.getWalletByUserIdV2(toShop.user.id);
 
-    if (!toWallet) throw new NotFoundException('Không tìm thấy ví điện tử của người nhận');
+    if (!shopWallet) throw new NotFoundException('Không tìm thấy ví điện tử của người nhận');
 
-    toWallet.lockedBalance = Number(toWallet.lockedBalance) - transaction.amount;
-    toWallet.availableBalance = Number(toWallet.availableBalance) + transaction.amount;
+    shopWallet.lockedBalance = Number(shopWallet.lockedBalance) - Number(transaction.amount);
+    shopWallet.availableBalance = Number(shopWallet.availableBalance) + Number(transaction.amount);
 
-    await this.walletRepository.save(toWallet);
+    await this.walletRepository.save(shopWallet);
   }
 
   async unlockBalanceForRent(order: Order): Promise<void> {
     const transaction = await this.transactionService.getTransactionByOrderId(order.id);
-    const fromWallet = await this.getWalletById(transaction.wallet.id);
+    const cusWallet = await this.getWalletById(transaction.wallet.id);
     const toShop = await this.shopService.getShopById(order.shop.id);
-    const toWallet = await this.getWalletByUserIdV2(toShop.user.id);
+    const shopWallet = await this.getWalletByUserIdV2(toShop.user.id);
     const deposit = await this.orderService.calculateSellPriceForOrder(order.id);
 
-    if (!toWallet) throw new NotFoundException('Không tìm thấy ví điện tử của người nhận');
+    if (!shopWallet) throw new NotFoundException('Không tìm thấy ví điện tử của người nhận');
 
-    fromWallet.lockedBalance = Number(fromWallet.lockedBalance) + (deposit - transaction.amount);
-    fromWallet.availableBalance =
-      Number(fromWallet.availableBalance) + (deposit - transaction.amount);
+    cusWallet.lockedBalance =
+      Number(cusWallet.lockedBalance) + (deposit - Number(transaction.amount));
+    cusWallet.availableBalance =
+      Number(cusWallet.availableBalance) + (deposit - Number(transaction.amount));
 
-    toWallet.lockedBalance = Number(toWallet.lockedBalance) - transaction.amount;
-    toWallet.availableBalance = Number(toWallet.availableBalance) + transaction.amount;
+    shopWallet.lockedBalance = Number(shopWallet.lockedBalance) - Number(transaction.amount);
+    shopWallet.availableBalance = Number(shopWallet.availableBalance) + Number(transaction.amount);
 
-    await this.walletRepository.save(toWallet);
+    await this.walletRepository.save(cusWallet);
+    await this.walletRepository.save(shopWallet);
   }
 
   // async unlockBalanceForCustom(order: Order):Promise<void> {
+
+  // }
+
+  async refundForSellAndRent(order: Order): Promise<void> {
+    const transaction = await this.transactionService.getTransactionByOrderId(order.id);
+    const cusWallet = await this.getWalletById(transaction.wallet.id);
+    const toShop = await this.shopService.getShopById(order.shop.id);
+    const shopWallet = await this.getWalletByUserIdV2(toShop.user.id);
+
+    if (!shopWallet) throw new NotFoundException('Không tìm thấy ví điện tử của người nhận');
+
+    shopWallet.lockedBalance = Number(shopWallet.lockedBalance) - Number(transaction.amount);
+    shopWallet.availableBalance =
+      Number(shopWallet.availableBalance) + (Number(transaction.amount) * 5) / 100;
+
+    cusWallet.availableBalance =
+      Number(cusWallet.availableBalance) + (Number(transaction.amount) * 95) / 100;
+
+    await this.walletRepository.save(cusWallet);
+    await this.walletRepository.save(shopWallet);
+
+    await this.transactionService.saveRefundTransaction(
+      shopWallet.user,
+      cusWallet.user,
+      shopWallet.id,
+      order.id,
+      Number(transaction.amount),
+    );
+  }
+
+  // async refundForCustom(
+  //   order: Order,
+  //   number: Number,
+  // ):Promise<void> {
 
   // }
 }

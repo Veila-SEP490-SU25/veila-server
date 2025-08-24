@@ -88,6 +88,7 @@ import { RequestModule } from '@/app/request';
     SingleModule,
     TransactionModule,
     RequestModule,
+    MembershipModule,
   ],
   controllers: [AppController],
   providers: [

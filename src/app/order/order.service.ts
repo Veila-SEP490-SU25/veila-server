@@ -24,12 +24,7 @@ import {
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { In, LessThanOrEqual, Repository } from 'typeorm';
-import {
-  CreateOrderForCustom,
-  CreateOrderRequestDto,
-  OrderDto,
-  UOrderDto,
-} from './order.dto';
+import { CreateOrderForCustom, CreateOrderRequestDto, OrderDto, UOrderDto } from './order.dto';
 import { plainToInstance } from 'class-transformer';
 import { UserService } from '../user';
 import { OrderDressDetailDto, OrderDressDetailsService } from '../order-dress-details';
@@ -670,7 +665,7 @@ export class OrderService {
       }),
     );
 
-    //tìm tất cả các đơn hàng đã hoàn thành được 3 ngày (xử lý mua và thuê)
+    //tìm tất cả các đơn hàng đã hoàn thành được 3 ngày (xử lý custom)
     //
     //
     //
@@ -720,26 +715,38 @@ export class OrderService {
   }
 
   async cancelOrder(userId: string, id: string): Promise<Order> {
-    const existingOrder = await this.getOrderById(id);
+    const existingOrder = await this.getOrderByIdV2(id);
 
-    if (!existingOrder || existingOrder.status === OrderStatus.CANCELLED)
-      throw new NotFoundException('Không tìm thấy đơn hàng này');
+    if (!existingOrder) throw new NotFoundException('Không tìm thấy đơn hàng này');
+
+    if (
+      existingOrder.status === OrderStatus.CANCELLED ||
+      existingOrder.status === OrderStatus.COMPLETED
+    )
+      throw new BadRequestException('Đơn hàng này đã kết thúc');
 
     const user = await this.userService.getUserById(userId);
     if (!user) throw new NotFoundException('Người dùng này không tồn tại');
 
-    // if (existingOrder.status === OrderStatus.PENDING)
-    //   existingOrder.status = OrderStatus.CANCELLED;
-    // else if (existingOrder.status === OrderStatus.IN_PROCESS){
-    //   if(existingOrder.type === OrderType.SELL) {
-        
-    //   } else if (existingOrder.type === OrderType.RENT) {
+    const completedMilestones = await this.milestoneService.getCompletedMilestonesByOrderId(
+      existingOrder.id,
+    );
 
-    //   } else {
-    //     //xử lý luồng custom
-    //   }
-    // }
-
+    //xử lý tiền đơn hàng khi hủy đơn hàng đang được thực hiện (trước khi giao với mua thuê, trước khi hoàn tất với custom)
+    if (existingOrder.status === OrderStatus.IN_PROCESS) {
+      if (existingOrder.type === OrderType.SELL || existingOrder.type === OrderType.RENT) {
+        //xử lý luồng sell
+        if (completedMilestones.length > 2)
+          throw new BadRequestException('Không được hủy đơn hàng ở trạng thái đang giao');
+        await this.walletService.refundForSellAndRent(existingOrder);
+      } else if (existingOrder.type === OrderType.CUSTOM) {
+        if (completedMilestones.length > 4)
+          throw new BadRequestException('Không được hủy đơn hàng ở trạng thái đang giao');
+        //xử lý luồng custom
+        // await this.walletService.refundForCustom(existingOrder, completedMilestones.length);
+      }
+    }
+    existingOrder.status = OrderStatus.CANCELLED;
     return await this.orderRepository.save(plainToInstance(Order, existingOrder));
   }
 
