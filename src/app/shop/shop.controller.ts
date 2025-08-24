@@ -3,6 +3,7 @@ import { Shop, UserRole } from '@/common/models';
 import {
   Body,
   Controller,
+  Delete,
   Get,
   HttpStatus,
   Param,
@@ -23,6 +24,7 @@ import {
 import { ShopService } from '@/app/shop/shop.service';
 import { AuthGuard } from '@/common/guards';
 import {
+  CurrentRole,
   Filtering,
   FilteringParams,
   Pagination,
@@ -34,8 +36,8 @@ import {
 } from '@/common/decorators';
 import {
   ItemShopDto,
+  ListBlogOfShopDto,
   ListShopDto,
-  ListShopForStaffDto,
   RegisterShopDto,
   ResubmitShopDto,
   ReviewShopDto,
@@ -44,7 +46,6 @@ import {
 } from '@/app/shop/shop.dto';
 import { ListDressDto } from '@/app/dress';
 import { ListServiceDto } from '@/app/service';
-import { ListBlogDto } from '@/app/blog';
 import { ListCategoryDto } from '@/app/category';
 import { ListAccessoryDto } from '@/app/accessory';
 import { plainToInstance } from 'class-transformer';
@@ -60,14 +61,169 @@ import { plainToInstance } from 'class-transformer';
   ListShopDto,
   ListDressDto,
   ListServiceDto,
-  ListBlogDto,
   ListCategoryDto,
   ListAccessoryDto,
   ShopContactDto,
-  ListShopForStaffDto,
+  ListBlogOfShopDto,
 )
 export class ShopController {
   constructor(private readonly shopService: ShopService) {}
+
+  @Get('favorites')
+  @UseGuards(AuthGuard)
+  @ApiOperation({
+    summary: 'Lấy danh sách shop yêu thích',
+    description: `
+**Hướng dẫn sử dụng:**
+- Trả về danh sách các shop đang hoạt động (ACTIVE).
+- Hỗ trợ phân trang, sắp xếp, lọc:
+  - \`page\`: Số trang (bắt đầu từ 0)
+  - \`size\`: Số lượng mỗi trang
+  - \`sort\`: Ví dụ: name:asc
+  - \`filter\`: Ví dụ: name:like:veila
+- Chỉ trả về các shop có trạng thái ACTIVE.
+- Page bắt đầu từ 0
+- Sort theo format: [tên_field]:[asc/desc]
+- Các trường đang có thể sort: name, status, isVerified
+- Filter theo format: [tên_field]:[eq|neq|gt|gte|lt|lte|like|nlike|in|nin]:[keyword]; hoặc [tên_field]:[isnull|isnotnull]
+- Các trường đang có thể filter: name, status, isVerified
+`,
+  })
+  @ApiQuery({
+    name: 'page',
+    required: false,
+    type: Number,
+    default: 0,
+    description: 'Trang hiện tại (bắt đầu từ 0)',
+  })
+  @ApiQuery({
+    name: 'size',
+    required: false,
+    type: Number,
+    default: 10,
+    description: 'Số lượng mỗi trang',
+  })
+  @ApiQuery({
+    name: 'sort',
+    required: false,
+    type: String,
+    description: 'Sắp xếp theo trường, ví dụ: name:asc',
+  })
+  @ApiQuery({
+    name: 'filter',
+    required: false,
+    type: String,
+    description: 'Lọc theo trường, ví dụ: name:like:veila',
+  })
+  @ApiOkResponse({
+    schema: {
+      allOf: [
+        { $ref: getSchemaPath(ListResponse) },
+        {
+          properties: {
+            item: { $ref: getSchemaPath(ListShopDto) },
+          },
+        },
+      ],
+    },
+  })
+  async getFavorite(
+    @UserId() userId: string,
+    @PaginationParams() { page, size, limit, offset }: Pagination,
+    @SortingParams(['name', 'status', 'isVerified']) sort?: Sorting,
+    @FilteringParams(['name', 'status', 'isVerified']) filter?: Filtering,
+  ): Promise<ListResponse<ListShopDto>> {
+    const [shops, totalItems] = await this.shopService.getFavorite(
+      userId,
+      limit,
+      offset,
+      sort,
+      filter,
+    );
+    const totalPages = Math.ceil(totalItems / size);
+    const dtos = plainToInstance(ListShopDto, shops, { excludeExtraneousValues: true });
+    return {
+      message: 'Đây là danh sách các shop khả dụng',
+      statusCode: HttpStatus.OK,
+      pageIndex: page,
+      pageSize: size,
+      totalItems,
+      totalPages,
+      hasNextPage: page + 1 < totalPages,
+      hasPrevPage: 0 < page,
+      items: dtos,
+    };
+  }
+
+  @Post(':id/favorites')
+  @UseGuards(AuthGuard)
+  @ApiOperation({
+    summary: 'Thêm shop vào danh sách yêu thích',
+    description: `
+**Hướng dẫn sử dụng:**
+
+- Truyền \`id\` của shop trên URL.
+- Nếu shop không tồn tại hoặc không khả dụng, sẽ trả về lỗi.
+`,
+  })
+  @ApiOkResponse({
+    schema: {
+      allOf: [
+        { $ref: getSchemaPath(ItemResponse) },
+        {
+          properties: {
+            item: { example: null },
+          },
+        },
+      ],
+    },
+  })
+  async addFavorite(
+    @UserId() userId: string,
+    @Param('id') id: string,
+  ): Promise<ItemResponse<null>> {
+    await this.shopService.addFavorite(userId, id);
+    return {
+      message: 'Đã thêm shop vào danh sách yêu thích',
+      statusCode: HttpStatus.OK,
+      item: null,
+    };
+  }
+
+  @Delete(':id/favorites')
+  @UseGuards(AuthGuard)
+  @ApiOperation({
+    summary: 'Xóa shop khỏi danh sách yêu thích',
+    description: `
+**Hướng dẫn sử dụng:**
+
+- Truyền \`id\` của shop trên URL.
+- Nếu shop không tồn tại hoặc không khả dụng, sẽ trả về lỗi.
+`,
+  })
+  @ApiOkResponse({
+    schema: {
+      allOf: [
+        { $ref: getSchemaPath(ItemResponse) },
+        {
+          properties: {
+            item: { example: null },
+          },
+        },
+      ],
+    },
+  })
+  async removeFavorite(
+    @UserId() userId: string,
+    @Param('id') id: string,
+  ): Promise<ItemResponse<null>> {
+    await this.shopService.removeFavorite(userId, id);
+    return {
+      message: 'Đã xóa shop khỏi danh sách yêu thích',
+      statusCode: HttpStatus.OK,
+      item: null,
+    };
+  }
 
   @Post('me')
   @UseGuards(AuthGuard)
@@ -213,90 +369,6 @@ export class ShopController {
     };
   }
 
-  @Get('staff')
-  @UseGuards(AuthGuard)
-  @Roles(UserRole.STAFF, UserRole.ADMIN, UserRole.SUPER_ADMIN)
-  @ApiOperation({
-    summary: 'Lấy danh sách shop cho nhân viên',
-    description: `**Hướng dẫn sử dụng:**
-    - Trả về danh sách các shop.
-    - Hỗ trợ phân trang, sắp xếp, lọc:
-      - \`page\`: Số trang (bắt đầu từ 0)
-      - \`size\`: Số lượng mỗi trang
-      - \`sort\`: Ví dụ: name:asc
-      - \`filter\`: Ví dụ: name:like:veila
-    - Chỉ trả về các shop có trạng thái ACTIVE.
-    - Page bắt đầu từ 0
-    - Sort theo format: [tên_field]:[asc/desc]
-    - Các trường đang có thể sort: name
-    - Filter theo format: [tên_field]:[eq|neq|gt|gte|lt|lte|like|nlike|in|nin]:[keyword]; hoặc [tên_field]:[isnull|isnotnull]
-    - Các trường đang có thể filter: name, status, isVerified
-`,
-  })
-  @ApiQuery({
-    name: 'page',
-    required: false,
-    type: Number,
-    default: 0,
-    description: 'Trang hiện tại (bắt đầu từ 0)',
-  })
-  @ApiQuery({
-    name: 'size',
-    required: false,
-    type: Number,
-    default: 10,
-    description: 'Số lượng mỗi trang',
-  })
-  @ApiQuery({
-    name: 'sort',
-    required: false,
-    type: String,
-    description: 'Sắp xếp theo trường, ví dụ: name:asc',
-  })
-  @ApiQuery({
-    name: 'filter',
-    required: false,
-    type: String,
-    description: 'Lọc theo trường, ví dụ: name:like:veila',
-  })
-  @ApiOkResponse({
-    schema: {
-      allOf: [
-        { $ref: getSchemaPath(ListResponse) },
-        {
-          properties: {
-            item: { $ref: getSchemaPath(ListShopForStaffDto) },
-          },
-        },
-      ],
-    },
-  })
-  async getShopsForStaff(
-    @PaginationParams() { page, size, limit, offset }: Pagination,
-    @SortingParams(['name']) sort?: Sorting,
-    @FilteringParams(['name', 'status', 'isVerified']) filter?: Filtering,
-  ): Promise<ListResponse<ListShopForStaffDto>> {
-    const [shops, totalItems] = await this.shopService.getShopsForStaff(
-      limit,
-      offset,
-      sort,
-      filter,
-    );
-    const totalPages = Math.ceil(totalItems / size);
-    const dtos = plainToInstance(ListShopForStaffDto, shops, { excludeExtraneousValues: true });
-    return {
-      message: 'Đây là danh sách các shop',
-      statusCode: HttpStatus.OK,
-      pageIndex: page,
-      pageSize: size,
-      totalItems,
-      totalPages,
-      hasNextPage: page + 1 < totalPages,
-      hasPrevPage: 0 < page,
-      items: dtos,
-    };
-  }
-
   @Get(':id/contact-information')
   @UseGuards(AuthGuard)
   @Roles(UserRole.SHOP)
@@ -330,40 +402,7 @@ export class ShopController {
     };
   }
 
-  @Get(':id/staff')
-  @UseGuards(AuthGuard)
-  @Roles(UserRole.STAFF, UserRole.ADMIN, UserRole.SUPER_ADMIN)
-  @ApiOperation({
-    summary: 'Lấy thông tin chi tiết shop cho nhân viên',
-    description: `**Hướng dẫn sử dụng:**
-    - Truyền \`id\` của shop trên URL.
-    - Trả về thông tin chi tiết của shop.
-    - Nếu không tìm thấy sẽ trả về lỗi.
-    - Chỉ dành cho nhân viên, admin và super admin.
-    - Nếu shop không tồn tại, sẽ trả về mã trạng thái NOT_FOUND (404).`,
-  })
-  @ApiOkResponse({
-    schema: {
-      allOf: [
-        { $ref: getSchemaPath(ItemResponse) },
-        {
-          properties: {
-            item: { $ref: getSchemaPath(Shop) },
-          },
-        },
-      ],
-    },
-  })
-  async getShopForStaff(@Param('id') id: string): Promise<ItemResponse<Shop>> {
-    const shop = await this.shopService.getShopForStaff(id);
-    return {
-      message: 'Đây là thông tin chi tiết của shop',
-      statusCode: HttpStatus.OK,
-      item: shop,
-    };
-  }
-
-  @Patch(':id/staff')
+  @Patch(':id/review')
   @UseGuards(AuthGuard)
   @Roles(UserRole.STAFF, UserRole.ADMIN, UserRole.SUPER_ADMIN)
   @ApiOperation({
@@ -401,7 +440,7 @@ export class ShopController {
 
   @Get()
   @ApiOperation({
-    summary: 'Lấy danh sách shop khả dụng cho khách hàng',
+    summary: 'Lấy danh sách shop',
     description: `
 **Hướng dẫn sử dụng:**
 - Trả về danh sách các shop đang hoạt động (ACTIVE).
@@ -413,9 +452,9 @@ export class ShopController {
 - Chỉ trả về các shop có trạng thái ACTIVE.
 - Page bắt đầu từ 0
 - Sort theo format: [tên_field]:[asc/desc]
-- Các trường đang có thể sort: name
+- Các trường đang có thể sort: name, status, isVerified
 - Filter theo format: [tên_field]:[eq|neq|gt|gte|lt|lte|like|nlike|in|nin]:[keyword]; hoặc [tên_field]:[isnull|isnotnull]
-- Các trường đang có thể filter: name
+- Các trường đang có thể filter: name, status, isVerified
 `,
   })
   @ApiQuery({
@@ -456,12 +495,14 @@ export class ShopController {
       ],
     },
   })
-  async getShopsForCustomer(
+  async getShops(
+    @CurrentRole() currentRole: UserRole,
     @PaginationParams() { page, size, limit, offset }: Pagination,
-    @SortingParams(['name']) sort?: Sorting,
-    @FilteringParams(['name']) filter?: Filtering,
+    @SortingParams(['name', 'status', 'isVerified']) sort?: Sorting,
+    @FilteringParams(['name', 'status', 'isVerified']) filter?: Filtering,
   ): Promise<ListResponse<ListShopDto>> {
-    const [shops, totalItems] = await this.shopService.getShopsForCustomer(
+    const [shops, totalItems] = await this.shopService.getShops(
+      currentRole,
       limit,
       offset,
       sort,
@@ -484,7 +525,7 @@ export class ShopController {
 
   @Get(':id')
   @ApiOperation({
-    summary: 'Lấy thông tin chi tiết shop cho khách hàng',
+    summary: 'Lấy thông tin chi tiết shop',
     description: `
 **Hướng dẫn sử dụng:**
 - Truyền \`id\` của shop trên URL.
@@ -498,19 +539,21 @@ export class ShopController {
         { $ref: getSchemaPath(ItemResponse) },
         {
           properties: {
-            item: { $ref: getSchemaPath(ItemShopDto) },
+            item: { $ref: getSchemaPath(Shop) },
           },
         },
       ],
     },
   })
-  async getShopForCustomer(@Param('id') id: string): Promise<ItemResponse<ItemShopDto>> {
-    const shop = await this.shopService.getShopForCustomer(id);
-    const dto = plainToInstance(ItemShopDto, shop, { excludeExtraneousValues: true });
+  async getShop(
+    @CurrentRole() currentRole: UserRole,
+    @Param('id') id: string,
+  ): Promise<ItemResponse<Shop>> {
+    const shop = await this.shopService.getShop(currentRole, id);
     return {
       message: 'Đây là thông tin chi tiết của shop',
       statusCode: HttpStatus.OK,
-      item: dto,
+      item: shop,
     };
   }
 
@@ -822,7 +865,7 @@ export class ShopController {
         { $ref: getSchemaPath(ListResponse) },
         {
           properties: {
-            item: { $ref: getSchemaPath(ListBlogDto) },
+            item: { $ref: getSchemaPath(ListBlogOfShopDto) },
           },
         },
       ],
@@ -833,7 +876,7 @@ export class ShopController {
     @PaginationParams() { page, size, limit, offset }: Pagination,
     @SortingParams(['title']) sort?: Sorting,
     @FilteringParams(['title']) filter?: Filtering,
-  ): Promise<ListResponse<ListBlogDto>> {
+  ): Promise<ListResponse<ListBlogOfShopDto>> {
     const [blogs, totalItems] = await this.shopService.getBlogsForCustomer(
       id,
       limit,
@@ -842,7 +885,7 @@ export class ShopController {
       filter,
     );
     const totalPages = Math.ceil(totalItems / size);
-    const dtos = plainToInstance(ListBlogDto, blogs, { excludeExtraneousValues: true });
+    const dtos = plainToInstance(ListBlogOfShopDto, blogs, { excludeExtraneousValues: true });
     return {
       message: 'Đây là danh sách các bài blog khả dụng',
       statusCode: HttpStatus.OK,

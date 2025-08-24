@@ -236,6 +236,81 @@ export class Request extends Base {
   waistToFloor: number | null;
 
   @Column({
+    type: 'varchar',
+    length: 50,
+    nullable: true,
+    comment: 'Chất liệu',
+  })
+  @ApiProperty({
+    type: 'string',
+    description: 'Chất liệu (tối đa 50 ký tự)',
+    example: 'Cotton',
+    maxLength: 50,
+    nullable: true,
+  })
+  material: string | null;
+
+  @Column({
+    type: 'varchar',
+    length: 50,
+    nullable: true,
+    comment: 'Màu sắc',
+  })
+  @ApiProperty({
+    type: 'string',
+    description: 'Màu sắc (tối đa 50 ký tự)',
+    example: 'Đỏ',
+    maxLength: 50,
+    nullable: true,
+  })
+  color: string | null;
+
+  @Column({
+    type: 'varchar',
+    length: 50,
+    nullable: true,
+    comment: 'Độ dài',
+  })
+  @ApiProperty({
+    type: 'string',
+    description: 'Độ dài (tối đa 50 ký tự)',
+    example: 'Dài',
+    maxLength: 50,
+    nullable: true,
+  })
+  length: string | null;
+
+  @Column({
+    type: 'varchar',
+    length: 50,
+    nullable: true,
+    comment: 'Cổ',
+  })
+  @ApiProperty({
+    type: 'string',
+    description: 'Cổ (tối đa 50 ký tự)',
+    example: 'Cổ tròn',
+    maxLength: 50,
+    nullable: true,
+  })
+  neckline: string | null;
+
+  @Column({
+    type: 'varchar',
+    length: 50,
+    nullable: true,
+    comment: 'Tay',
+  })
+  @ApiProperty({
+    type: 'string',
+    description: 'Tay (tối đa 50 ký tự)',
+    example: 'Tay ngắn',
+    maxLength: 50,
+    nullable: true,
+  })
+  sleeve: string | null;
+
+  @Column({
     name: 'images',
     type: 'text',
     nullable: true,

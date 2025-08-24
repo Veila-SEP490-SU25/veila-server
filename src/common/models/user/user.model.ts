@@ -206,6 +206,34 @@ export class User extends Base {
   coverUrl: string | null;
 
   @Column({
+    name: 'fav_dresses',
+    type: 'simple-array',
+    nullable: true,
+    comment: 'Danh sách ID váy cưới yêu thích của người dùng',
+  })
+  @ApiProperty({
+    type: 'array',
+    items: { type: 'string' },
+    description: 'Danh sách ID váy cưới yêu thích của người dùng',
+    example: ['dress123', 'dress456'],
+  })
+  favDresses: string[] | null;
+
+  @Column({
+    name: 'fav_shops',
+    type: 'simple-array',
+    nullable: true,
+    comment: 'Danh sách ID cửa hàng yêu thích của người dùng',
+  })
+  @ApiProperty({
+    type: 'array',
+    items: { type: 'string' },
+    description: 'Danh sách ID cửa hàng yêu thích của người dùng',
+    example: ['shop123', 'shop456'],
+  })
+  favShops: string[] | null;
+
+  @Column({
     name: 'role',
     type: 'enum',
     enum: UserRole,

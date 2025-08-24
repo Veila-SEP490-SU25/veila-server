@@ -82,10 +82,10 @@ export class UOrderDto {
   @ApiProperty({
     description: 'Email liên hệ',
     example: 'customer.example@gmail.com',
-    nullable: true,
+    nullable: false,
   })
   @IsString()
-  email: string | null;
+  email: string;
 
   @ApiProperty({
     description: 'Địa chỉ giao hàng',
@@ -115,6 +115,15 @@ export class UOrderDto {
   @IsOptional()
   @IsDate()
   returnDate: Date | null;
+
+  @ApiProperty({
+    description: 'Giá trị đơn hàng custom (nếu có)',
+    example: 5000000,
+    nullable: true,
+  })
+  @IsOptional()
+  @IsNumber()
+  price: number | null;
 }
 
 export class OrderCustomerNameDto {}
@@ -294,103 +303,6 @@ export class CreateOrderForCustom {
   @IsNotEmpty()
   @IsString()
   shopId: string;
-}
-
-export class ShopUpdateOrderForCustom {
-  @ApiProperty({
-    description: 'Ngày giao hàng',
-    example: '2023-12-31',
-    nullable: false,
-  })
-  @IsNotEmpty()
-  @Type(() => Date)
-  @IsDate()
-  dueDate: Date;
-
-  @ApiProperty({
-    description: 'Giá trị của dịch vụ (VNĐ)',
-    example: 5000000,
-    nullable: false,
-  })
-  @IsNotEmpty()
-  @IsNumber()
-  price: number;
-
-  @ApiProperty({
-    description: 'Danh sách các mốc công việc',
-    type: () => [CreateMilestone],
-  })
-  @ValidateNested({ each: true })
-  @Type(() => CreateMilestone)
-  milestones: CreateMilestone[];
-}
-
-export class CreateMilestone {
-  @ApiProperty({
-    description: 'Tiêu đề mốc công việc',
-    example: 'Mốc công việc 1',
-    nullable: false,
-  })
-  @IsNotEmpty()
-  @IsString()
-  title: string;
-
-  @ApiProperty({
-    description: 'Mô tả mốc công việc',
-    example: 'Mô tả chi tiết mốc công việc 1',
-    nullable: true,
-  })
-  @IsString()
-  @IsOptional()
-  description: string | null;
-
-  @ApiProperty({
-    description: 'Ngày hết hạn mốc công việc',
-    example: '2023-12-31',
-    nullable: false,
-  })
-  @IsNotEmpty()
-  @Type(() => Date)
-  @IsDate()
-  dueDate: Date;
-
-  @ApiProperty({
-    description: 'Danh sách các công việc trong mốc',
-    type: () => [CreateTask],
-  })
-  @ValidateNested({ each: true })
-  @Type(() => CreateMilestone)
-  tasks: CreateTask[];
-}
-
-export class CreateTask {
-  @ApiProperty({
-    description: 'Tiêu đề công việc',
-    example: 'Công việc 1',
-    nullable: false,
-  })
-  @IsNotEmpty()
-  @IsString()
-  title: string;
-
-  @ApiProperty({
-    description: 'Mô tả công việc',
-    example: 'Mô tả chi tiết công việc 1',
-    nullable: true,
-  })
-  @IsString()
-  @IsOptional()
-  description: string | null;
-
-  @ApiProperty({
-    description: 'Ngày hết hạn công việc',
-    example: '2023-12-31',
-    nullable: false,
-  })
-  @IsNotEmpty()
-  @Type(() => Date)
-  @IsDate()
-  dueDate: Date;
 }
 
 export class PayAmountDto {

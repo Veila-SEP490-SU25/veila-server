@@ -1,6 +1,8 @@
+import { ProductCategoryDto } from '@/app/category';
+import { ProductUserDto } from '@/app/user';
 import { ShopStatus } from '@/common/models';
 import { ApiProperty } from '@nestjs/swagger';
-import { Expose } from 'class-transformer';
+import { Expose, Type } from 'class-transformer';
 import { IsBoolean, IsOptional, IsString } from 'class-validator';
 
 export class UpdateShopDto {
@@ -87,24 +89,6 @@ export class ReviewShopDto {
   @IsString({ message: 'Lý do từ chối phải là chuỗi.' })
   @IsOptional()
   rejectReason?: string | null;
-}
-
-export class ListShopForStaffDto {
-  @Expose()
-  @ApiProperty({ description: 'ID của shop', example: 'shop-uuid-123' })
-  id: string;
-
-  @Expose()
-  @ApiProperty({ description: 'Tên shop', example: 'Cửa hàng thời trang ABC' })
-  name: string;
-
-  @Expose()
-  @ApiProperty({ description: 'Trạng thái của shop', example: ShopStatus.PENDING })
-  status: ShopStatus;
-
-  @Expose()
-  @ApiProperty({ description: 'Trạng thái xác thực của shop', example: false })
-  isVerified: boolean;
 }
 
 export class ResubmitShopDto {
@@ -235,6 +219,52 @@ export class ListShopDto {
     nullable: true,
   })
   coverUrl: string | null;
+
+  @Expose()
+  @ApiProperty({ description: 'Trạng thái của shop', example: ShopStatus.PENDING })
+  status: ShopStatus;
+
+  @Expose()
+  @ApiProperty({
+    type: 'integer',
+    description: 'Điểm uy tín của shop (0-100)',
+    example: 85,
+    minimum: 0,
+    maximum: 100,
+    nullable: false,
+  })
+  reputation: number;
+
+  @Expose()
+  @ApiProperty({ description: 'Trạng thái xác thực của shop', example: false })
+  isVerified: boolean;
+
+  @Expose()
+  @ApiProperty({
+    type: 'string',
+    format: 'date-time',
+    example: '2023-10-01T12:00:00Z',
+    description: 'The date when the record was created.',
+  })
+  createdAt: Date;
+
+  @Expose()
+  @ApiProperty({
+    type: 'string',
+    format: 'date-time',
+    example: '2023-10-01T12:00:00Z',
+    description: 'The date when the record was last updated.',
+  })
+  updatedAt: Date;
+
+  @Expose()
+  @ApiProperty({
+    type: 'string',
+    format: 'date-time',
+    example: '2023-10-01T12:00:00Z',
+    description: 'The date when the record was deleted. Null if not deleted.',
+  })
+  deletedAt: Date | null;
 }
 
 export class ItemShopDto {
@@ -299,4 +329,34 @@ export class ShopContactDto {
     nullable: false,
   })
   address: string;
+}
+
+export class ListBlogOfShopDto {
+  @Expose()
+  @ApiProperty({ description: 'ID blog', example: 'blog-uuid-123' })
+  id: string;
+
+  @Expose()
+  @ApiProperty({ description: 'Tiêu đề blog', example: 'Bí quyết chọn váy cưới đẹp' })
+  title: string;
+
+  @Expose()
+  @ApiProperty({
+    description: 'Ảnh đại diện blog (URL)',
+    example: 'https://storage.veila.com/blogs/img123.jpg',
+    nullable: true,
+  })
+  images: string | null;
+
+  @Expose()
+  @Type(() => ProductUserDto)
+  user: ProductUserDto;
+
+  @Expose()
+  @Type(() => ProductCategoryDto)
+  category: ProductCategoryDto;
+
+  @Expose()
+  @ApiProperty({ description: 'Ngày tạo blog', example: '2023-01-01T00:00:00Z' })
+  createdAt: Date;
 }

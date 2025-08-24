@@ -73,149 +73,140 @@ export class UserService {
     return await this.userRepository.save(existingUser);
   }
 
-  async getUsersForSuperAdmin(
+  async getUsers(
+    currentRole: UserRole,
     { page, size, limit, offset }: Pagination,
     sort?: Sorting,
     filter?: Filtering,
   ): Promise<ListResponse<User>> {
-    const order = getOrder(sort);
-    const dynamicFilter = getWhere(filter);
+    if (currentRole === UserRole.SUPER_ADMIN) {
+      const order = getOrder(sort);
+      const dynamicFilter = getWhere(filter);
 
-    const where = {
-      role: Not(UserRole.SUPER_ADMIN),
-      ...dynamicFilter,
-    };
-    const [users, totalItems] = await this.userRepository.findAndCount({
-      where,
-      order,
-      take: limit,
-      skip: offset,
-      withDeleted: true,
-    });
+      const where = {
+        role: Not(UserRole.SUPER_ADMIN),
+        ...dynamicFilter,
+      };
+      const [users, totalItems] = await this.userRepository.findAndCount({
+        where,
+        order,
+        take: limit,
+        skip: offset,
+        withDeleted: true,
+      });
 
-    const totalPages = Math.ceil(totalItems / size);
+      const totalPages = Math.ceil(totalItems / size);
 
-    return {
-      message: 'Đây là toàn bộ danh sách tài khoản người dùng',
-      statusCode: HttpStatus.OK,
-      pageIndex: page,
-      pageSize: size,
-      totalItems,
-      totalPages,
-      hasNextPage: page + 1 < totalPages,
-      hasPrevPage: 0 < page,
-      items: users,
-    };
+      return {
+        message: 'Đây là toàn bộ danh sách tài khoản người dùng',
+        statusCode: HttpStatus.OK,
+        pageIndex: page,
+        pageSize: size,
+        totalItems,
+        totalPages,
+        hasNextPage: page + 1 < totalPages,
+        hasPrevPage: 0 < page,
+        items: users,
+      };
+    } else {
+      const order = getOrder(sort);
+      const dynamicFilter = getWhere(filter);
+
+      const where = {
+        role: Not(In([UserRole.SUPER_ADMIN, UserRole.ADMIN])),
+        ...dynamicFilter,
+      };
+      const [users, totalItems] = await this.userRepository.findAndCount({
+        where,
+        order,
+        take: limit,
+        skip: offset,
+        withDeleted: true,
+      });
+
+      const totalPages = Math.ceil(totalItems / size);
+
+      return {
+        message: 'Đây là toàn bộ danh sách tài khoản người dùng',
+        statusCode: HttpStatus.OK,
+        pageIndex: page,
+        pageSize: size,
+        totalItems,
+        totalPages,
+        hasNextPage: page + 1 < totalPages,
+        hasPrevPage: 0 < page,
+        items: users,
+      };
+    }
   }
 
-  async getUserForSuperAdmin(id: string): Promise<User> {
-    const existingUser = await this.getUserById(id);
-    if (!existingUser) throw new NotFoundException('Không tìm thấy user nào');
-    return existingUser;
+  async getUser(currentRole: UserRole, id: string): Promise<User> {
+    if (currentRole === UserRole.SUPER_ADMIN) {
+      const existingUser = await this.getUserById(id);
+      if (!existingUser) throw new NotFoundException('Không tìm thấy user nào');
+      return existingUser;
+    } else {
+      const existingUser = await this.getUserById(id);
+      if (!existingUser) throw new NotFoundException('Không tìm thấy user nào');
+      if (existingUser.role === UserRole.SUPER_ADMIN || existingUser.role === UserRole.ADMIN)
+        throw new ForbiddenException('Không có quyền truy vấn user này');
+      return existingUser;
+    }
   }
 
-  async createUserForSuperAdmin(user: CreateUser): Promise<User> {
-    if (user.role === UserRole.SUPER_ADMIN)
-      throw new ForbiddenException('Không thể tạo 1 tài khoản Super Admin mới');
-    return this.create(user);
+  async createUserForApi(currentRole: UserRole, user: CreateUser): Promise<User> {
+    if (currentRole === UserRole.SUPER_ADMIN) {
+      if (user.role === UserRole.SUPER_ADMIN)
+        throw new ForbiddenException('Không thể tạo 1 tài khoản Super Admin mới');
+      return this.create(user);
+    } else {
+      if (user.role === UserRole.SUPER_ADMIN || user.role === UserRole.ADMIN)
+        throw new ForbiddenException('Không thể tạo 1 tài khoản Super Admin | Admin mới');
+      return this.create(user);
+    }
   }
 
-  async updateUserForSuperAdmin(id: string, user: UpdateUser): Promise<User> {
-    const existingUser = await this.getUserForSuperAdmin(id);
-    if (existingUser.role === UserRole.SUPER_ADMIN)
-      throw new ForbiddenException('Không có quyền thay đổi role user này');
-    if (user.role === UserRole.SUPER_ADMIN)
-      throw new ForbiddenException('Không thể thay role thành Super Admin');
-    return this.update(existingUser, user);
+  async updateUserForApi(currentRole: UserRole, id: string, user: UpdateUser): Promise<User> {
+    const existingUser = await this.getUser(currentRole, id);
+    if (currentRole === UserRole.SUPER_ADMIN) {
+      if (existingUser.role === UserRole.SUPER_ADMIN)
+        throw new ForbiddenException('Không có quyền thay đổi role user này');
+      if (user.role === UserRole.SUPER_ADMIN)
+        throw new ForbiddenException('Không thể thay role thành Super Admin');
+      return this.update(existingUser, user);
+    } else {
+      if (existingUser.role === UserRole.ADMIN || existingUser.role === UserRole.SUPER_ADMIN)
+        throw new ForbiddenException('Không có quyền thay đổi role user này');
+      if (user.role === UserRole.SUPER_ADMIN || user.role === UserRole.ADMIN)
+        throw new ForbiddenException('Không thể đổi role Admin | System Admin');
+      return this.update(existingUser, user);
+    }
   }
 
-  async deleteUserForSuperAdmin(id: string) {
-    const existingUser = await this.getUserForSuperAdmin(id);
+  async deleteUserForApi(currentRole: UserRole, id: string) {
+    const existingUser = await this.getUser(currentRole, id);
     if (existingUser.deletedAt !== null) throw new BadRequestException('User đã xóa');
-    if (existingUser.role === UserRole.SUPER_ADMIN)
-      throw new ForbiddenException('Không có quyền xóa user này');
-    await this.userRepository.softDelete(id);
+    if (currentRole === UserRole.SUPER_ADMIN) {
+      if (existingUser.role === UserRole.SUPER_ADMIN)
+        throw new ForbiddenException('Không có quyền xóa user này');
+      await this.userRepository.softDelete(id);
+    } else {
+      if (existingUser.role === UserRole.SUPER_ADMIN || existingUser.role === UserRole.ADMIN)
+        throw new ForbiddenException('Không có quyền xóa user này');
+      await this.userRepository.softDelete(id);
+    }
   }
 
-  async restoreUserForSuperAdmin(id: string) {
-    const existingUser = await this.getUserForSuperAdmin(id);
+  async restoreUserForApi(currentRole: UserRole, id: string) {
+    const existingUser = await this.getUser(currentRole, id);
     if (existingUser.deletedAt === null) throw new BadRequestException('User đang hoạt động');
-    await this.userRepository.restore(id);
-  }
-
-  async getUsersForAdmin(
-    { page, size, limit, offset }: Pagination,
-    sort?: Sorting,
-    filter?: Filtering,
-  ): Promise<ListResponse<User>> {
-    const order = getOrder(sort);
-    const dynamicFilter = getWhere(filter);
-
-    const where = {
-      role: Not(In([UserRole.SUPER_ADMIN, UserRole.ADMIN])),
-      ...dynamicFilter,
-    };
-    const [users, totalItems] = await this.userRepository.findAndCount({
-      where,
-      order,
-      take: limit,
-      skip: offset,
-      withDeleted: true,
-    });
-
-    const totalPages = Math.ceil(totalItems / size);
-
-    return {
-      message: 'Đây là toàn bộ danh sách tài khoản người dùng',
-      statusCode: HttpStatus.OK,
-      pageIndex: page,
-      pageSize: size,
-      totalItems,
-      totalPages,
-      hasNextPage: page + 1 < totalPages,
-      hasPrevPage: 0 < page,
-      items: users,
-    };
-  }
-
-  async getUserForAdmin(id: string): Promise<User> {
-    const existingUser = await this.getUserById(id);
-    if (!existingUser) throw new NotFoundException('Không tìm thấy user nào');
-    if (existingUser.role === UserRole.SUPER_ADMIN || existingUser.role === UserRole.ADMIN)
-      throw new ForbiddenException('Không có quyền truy vấn user này');
-    return existingUser;
-  }
-
-  async createUserForAdmin(user: CreateUser): Promise<User> {
-    if (user.role === UserRole.SUPER_ADMIN || user.role === UserRole.ADMIN)
-      throw new ForbiddenException('Không thể tạo 1 tài khoản Super Admin | Admin mới');
-    return this.create(user);
-  }
-
-  async updateUserForAdmin(id: string, user: UpdateUser): Promise<User> {
-    const existingUser = await this.getUserForAdmin(id);
-    if (!existingUser) throw new NotFoundException('Không tìm thấy user nào');
-    if (existingUser.role === UserRole.ADMIN || existingUser.role === UserRole.SUPER_ADMIN)
-      throw new ForbiddenException('Không có quyền thay đổi role user này');
-    if (user.role === UserRole.SUPER_ADMIN || user.role === UserRole.ADMIN)
-      throw new ForbiddenException('Không thể đổi role Admin | System Admin');
-    return this.update(existingUser, user);
-  }
-
-  async deleteUserForAdmin(id: string) {
-    const existingUser = await this.getUserForAdmin(id);
-    if (existingUser.deletedAt !== null) throw new BadRequestException('User đã xóa');
-    if (existingUser.role === UserRole.SUPER_ADMIN || existingUser.role === UserRole.ADMIN)
-      throw new ForbiddenException('Không có quyền xóa user này');
-    await this.userRepository.softDelete(id);
-  }
-
-  async restoreUserForAdmin(id: string) {
-    const existingUser = await this.getUserForAdmin(id);
-    if ([UserRole.ADMIN, UserRole.SUPER_ADMIN].includes(existingUser.role))
-      throw new ForbiddenException('Không có quyền khôi phục user này');
-    if (existingUser.deletedAt === null) throw new BadRequestException('User đang hoạt động');
-    await this.userRepository.restore(id);
+    if (currentRole === UserRole.SUPER_ADMIN) {
+      await this.userRepository.restore(id);
+    } else {
+      if ([UserRole.ADMIN, UserRole.SUPER_ADMIN].includes(existingUser.role))
+        throw new ForbiddenException('Không có quyền khôi phục user này');
+      await this.userRepository.restore(id);
+    }
   }
 
   async getAllForSeeding(): Promise<User[]> {
@@ -256,5 +247,13 @@ export class UserService {
     const user = await this.getUserById(id);
     if (!user) throw new NotFoundException('Không tìm thấy người dùng');
     return user;
+  }
+
+  async updateFavDresses(id: string, favDresses: string[] | null): Promise<void> {
+    await this.userRepository.update(id, { favDresses } as User);
+  }
+
+  async updateFavShops(id: string, favShops: string[] | null): Promise<void> {
+    await this.userRepository.update(id, { favShops } as User);
   }
 }

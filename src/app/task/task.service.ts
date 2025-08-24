@@ -12,7 +12,7 @@ import { Repository } from 'typeorm';
 import { CUTaskDto, TaskDto } from './task.dto';
 import { plainToInstance } from 'class-transformer';
 import { Filtering, getOrder, getWhere, Sorting } from '@/common/decorators';
-import { CreateTask, OrderService } from '@/app/order';
+import { OrderService } from '@/app/order';
 import { ShopService } from '../shop';
 import { MilestoneService } from '../milestone';
 
@@ -241,31 +241,17 @@ export class TaskService {
     return task;
   }
 
-  async createTaskForOrderCustom(
-    milestoneId: string,
-    task: CreateTask,
-    taskIndex: number,
-  ): Promise<void> {
-    await this.taskRepository.save({
-      milestone: { id: milestoneId },
-      title: task.title,
-      description: task.description,
-      dueDate: task.dueDate,
-      status: TaskStatus.PENDING,
-      index: taskIndex,
-    });
-  }
-
   async updateTaskStatusForOrderCustomAfterCheckout(milestoneId: string): Promise<void> {
-    const firstTask = await this.taskRepository.findOne({
-      where: { milestone: { id: milestoneId }, index: 1 },
+    const tasks = await this.taskRepository.find({
+      where: {
+        milestone: { id: milestoneId },
+        status: TaskStatus.PENDING,
+      },
+      order: { index: 'ASC' },
     });
-    if (!firstTask)
-      throw new NotFoundException('Không tìm thấy công việc đầu tiên trong mốc công việc');
-
-    firstTask.status = TaskStatus.IN_PROGRESS;
-
-    await this.taskRepository.save(firstTask);
+    const nextTask = tasks[0];
+    nextTask.status = TaskStatus.IN_PROGRESS;
+    await this.taskRepository.save(nextTask);
   }
 
   private async validateOwnerOfOrder(userId: string, orderId: string): Promise<void> {
@@ -295,5 +281,28 @@ export class TaskService {
 
   async saveTask(task: Task): Promise<void> {
     await this.taskRepository.save(task);
+  }
+
+  async updateTaskStatusForUpdateRequest(milestoneId: string, status: TaskStatus): Promise<void> {
+    if (status === TaskStatus.PENDING) {
+      const task = await this.taskRepository.findOne({
+        where: {
+          milestone: { id: milestoneId },
+          status: TaskStatus.IN_PROGRESS,
+        },
+      });
+      if (!task) throw new NotFoundException('Không tìm thấy công việc');
+      await this.taskRepository.update(task.id, { status });
+    } else if (status === TaskStatus.IN_PROGRESS) {
+      const tasks = await this.taskRepository.find({
+        where: {
+          milestone: { id: milestoneId },
+          status: TaskStatus.PENDING,
+        },
+        order: { index: 'ASC' },
+      });
+      const task = tasks[0];
+      await this.taskRepository.update(task.id, { status });
+    }
   }
 }

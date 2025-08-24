@@ -1,4 +1,4 @@
-import { Order, OrderServiceDetail } from '@/common/models';
+import { Order, OrderServiceDetail, UpdateOrderServiceDetail } from '@/common/models';
 import { forwardRef, Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { OrderController } from './order.controller';
@@ -16,7 +16,7 @@ import { MilestoneModule } from '@/app/milestone';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([Order, OrderServiceDetail]),
+    TypeOrmModule.forFeature([Order, OrderServiceDetail, UpdateOrderServiceDetail]),
     UserModule,
     ShopModule,
     OrderAccessoriesDetailsModule,

@@ -1,6 +1,7 @@
+import { ProductUserDto } from '@/app/user';
 import { CategoryType } from '@/common/models';
 import { ApiProperty } from '@nestjs/swagger';
-import { Expose } from 'class-transformer';
+import { Expose, Type } from 'class-transformer';
 import { IsEnum, IsString, MaxLength } from 'class-validator';
 
 export class CUCategoryDto {
@@ -64,4 +65,34 @@ export class ProductCategoryDto {
   @Expose()
   @ApiProperty({ enum: CategoryType, description: 'Loại danh mục', example: CategoryType.DRESS })
   type: CategoryType;
+}
+
+export class ListBlogOfCategoryDto {
+  @Expose()
+  @ApiProperty({ description: 'ID blog', example: 'blog-uuid-123' })
+  id: string;
+
+  @Expose()
+  @ApiProperty({ description: 'Tiêu đề blog', example: 'Bí quyết chọn váy cưới đẹp' })
+  title: string;
+
+  @Expose()
+  @ApiProperty({
+    description: 'Ảnh đại diện blog (URL)',
+    example: 'https://storage.veila.com/blogs/img123.jpg',
+    nullable: true,
+  })
+  images: string | null;
+
+  @Expose()
+  @Type(() => ProductUserDto)
+  user: ProductUserDto;
+
+  @Expose()
+  @Type(() => ProductCategoryDto)
+  category: ProductCategoryDto;
+
+  @Expose()
+  @ApiProperty({ description: 'Ngày tạo blog', example: '2023-01-01T00:00:00Z' })
+  createdAt: Date;
 }
