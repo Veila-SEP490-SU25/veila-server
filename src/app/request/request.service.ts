@@ -29,7 +29,7 @@ export class RequestService {
     private readonly updateRequestRepository: Repository<UpdateRequest>,
     @Inject(forwardRef(() => OrderService))
     private readonly orderService: OrderService,
-  ) { }
+  ) {}
 
   async createRequestForCustomer(userId: string, body: CURequestDto): Promise<Request> {
     if (body.status === RequestStatus.ACCEPTED || body.status === RequestStatus.CANCELLED) {
@@ -297,8 +297,16 @@ export class RequestService {
     const threeDaysAgo = new Date(now.getDate() - 2);
     await updateRequests.map(async (updateRequest) => {
       if (updateRequest.createdAt < threeDaysAgo) {
-        await this.updateRequestRepository.update(updateRequest.id, { status: UpdateRequestStatus.REJECTED });
+        await this.updateRequestRepository.update(updateRequest.id, {
+          status: UpdateRequestStatus.REJECTED,
+        });
       }
+    });
+  }
+
+  async getUpdateRequestsByRequestId(requestId: string): Promise<UpdateRequest[]> {
+    return await this.updateRequestRepository.find({
+      where: { request: { id: requestId } },
     });
   }
 }

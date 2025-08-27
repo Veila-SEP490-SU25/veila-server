@@ -27,7 +27,7 @@ export class MilestoneService {
     private readonly shopService: ShopService,
     @Inject(forwardRef(() => TaskService))
     private readonly taskService: TaskService,
-  ) { }
+  ) {}
 
   async createMilestone(orderId: string, orderType: OrderType): Promise<void> {
     const milestonesData: { title: string; description: string }[] = [];
@@ -466,7 +466,7 @@ export class MilestoneService {
       where: {
         order: { id: orderId },
         status: MilestoneStatus.IN_PROGRESS,
-        index
+        index,
       },
     });
     const now = new Date();

@@ -801,6 +801,23 @@ export class OrderService {
         );
         await this.walletService.refundForCustom(existingOrder, customMilestone);
       }
+    } else if (existingOrder.type === OrderType.CUSTOM) {
+      const orderServiceDetail = await this.orderServiceDetailRepository.findOne({
+        where: {
+          order: existingOrder
+        },
+        relations: {
+          request: true
+        }
+      });
+      if (!orderServiceDetail) throw new NotFoundException('Không tìm thấy chi tiết dịch vụ đơn hàng');
+      const updateRequest = await this.requestService.getUpdateRequestsByRequestId(orderServiceDetail.request.id);
+      if (updateRequest.length > 0) {
+        const customMilestone = await this.milestoneService.getMilestonesByOrderId(
+          existingOrder.id,
+        );
+        await this.walletService.refundForCustom(existingOrder, customMilestone);
+      }
     }
     existingOrder.status = OrderStatus.CANCELLED;
     await this.milestoneService.cancelOrder(existingOrder.id);
