@@ -1,6 +1,6 @@
 import { ProductCategoryDto } from '@/app/category';
 import { ProductUserDto } from '@/app/user';
-import { ShopStatus } from '@/common/models';
+import { License, Membership, ShopStatus, User } from '@/common/models';
 import { ApiProperty } from '@nestjs/swagger';
 import { Expose, Type } from 'class-transformer';
 import { IsBoolean, IsOptional, IsString } from 'class-validator';
@@ -269,27 +269,89 @@ export class ListShopDto {
 
 export class ItemShopDto {
   @Expose()
-  @ApiProperty({ description: 'ID của shop', example: 'shop-uuid-123' })
+  @ApiProperty({
+    type: 'string',
+    format: 'uuid',
+    example: '123e4567-e89b-12d3-a456-426614174000',
+    description: 'The unique identifier for the record.',
+  })
   id: string;
 
   @Expose()
-  @ApiProperty({ description: 'Tên shop', example: 'Cửa hàng thời trang ABC' })
+  @ApiProperty({
+    type: 'string',
+    format: 'date-time',
+    example: '2023-10-01T12:00:00Z',
+    description: 'The date when the record was created.',
+  })
+  createdAt: Date;
+
+  @Expose()
+  @ApiProperty({
+    type: 'string',
+    format: 'date-time',
+    example: '2023-10-01T12:00:00Z',
+    description: 'The date when the record was last updated.',
+  })
+  updatedAt: Date;
+
+  @Expose()
+  @ApiProperty({
+    type: 'string',
+    format: 'date-time',
+    example: '2023-10-01T12:00:00Z',
+    description: 'The date when the record was deleted. Null if not deleted.',
+  })
+  deletedAt: Date | null;
+
+  @Expose()
+  user: User;
+
+  @Expose()
+  @ApiProperty({
+    type: 'string',
+    description: 'Tên shop',
+    example: 'Cửa hàng thời trang ABC',
+    maxLength: 100,
+    nullable: false,
+  })
   name: string;
 
   @Expose()
-  @ApiProperty({ description: 'Số điện thoại liên hệ', example: '+84901234567' })
+  @ApiProperty({
+    type: 'string',
+    description: 'Số điện thoại liên hệ của shop',
+    example: '+84901234567',
+    maxLength: 15,
+    nullable: false,
+  })
   phone: string;
 
   @Expose()
-  @ApiProperty({ description: 'Email liên hệ', example: 'shop@example.com', nullable: true })
+  @ApiProperty({
+    type: 'string',
+    format: 'email',
+    description: 'Email liên hệ của shop',
+    example: 'shop@example.com',
+    maxLength: 64,
+    nullable: false,
+  })
   email: string;
 
   @Expose()
-  @ApiProperty({ description: 'Địa chỉ shop', example: '123 Đường ABC, Quận 1, TP.HCM' })
+  @ApiProperty({
+    type: 'string',
+    description: 'Địa chỉ chi tiết của shop',
+    example: '123 Đường ABC, Phường XYZ, Quận 1, TP.HCM',
+    maxLength: 255,
+    nullable: false,
+  })
   address: string;
 
   @Expose()
   @ApiProperty({
+    type: 'string',
+    format: 'text',
     description: 'Mô tả chi tiết về shop',
     example: 'Shop chuyên cung cấp các sản phẩm thời trang...',
     nullable: true,
@@ -298,19 +360,70 @@ export class ItemShopDto {
 
   @Expose()
   @ApiProperty({
-    description: 'URL ảnh đại diện shop',
+    type: 'string',
+    format: 'uri',
+    description: 'URL logo của shop',
     example: 'https://storage.veila.com/shops/logo123.jpg',
+    maxLength: 512,
     nullable: true,
   })
   logoUrl: string | null;
 
   @Expose()
   @ApiProperty({
-    description: 'URL ảnh bìa shop',
+    type: 'string',
+    format: 'uri',
+    description: 'URL ảnh bìa của shop',
     example: 'https://storage.veila.com/shops/cover123.jpg',
+    maxLength: 512,
     nullable: true,
   })
   coverUrl: string | null;
+
+  @Expose()
+  @ApiProperty({
+    enum: ShopStatus,
+    description: 'Trạng thái hoạt động của shop',
+    example: ShopStatus.ACTIVE,
+    enumName: 'ShopStatus',
+    nullable: false,
+  })
+  status: ShopStatus;
+
+  @Expose()
+  @ApiProperty({
+    type: 'integer',
+    description: 'Điểm uy tín của shop (0-100)',
+    example: 85,
+    minimum: 0,
+    maximum: 100,
+    nullable: false,
+  })
+  reputation: number;
+
+  @Expose()
+  @ApiProperty({
+    type: 'boolean',
+    default: false,
+    description: 'Trạng thái xác thực shop',
+    example: false,
+    nullable: false,
+  })
+  isVerified: boolean;
+
+  @Expose()
+  memberships: [Membership];
+
+  @Expose()
+  license: License | null;
+
+  @Expose()
+  @ApiProperty({
+    description: 'Shop đã được yêu thích chưa',
+    example: false,
+    nullable: true,
+  })
+  isFavorite: boolean | null;
 }
 
 export class ShopContactDto {
