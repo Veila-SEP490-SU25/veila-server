@@ -235,7 +235,7 @@ export class OrderService {
 
     if (!user.isIdentified) throw new ForbiddenException('Người dùng chưa định danh');
 
-    const dress = await this.dressService.getDressForCustomer(body.dressDetails.dressId);
+    const dress = await this.dressService.getOne(body.dressDetails.dressId);
 
     const shop = dress.user.shop;
     if (!shop) throw new NotFoundException('Không tìm thấy cửa hàng');

@@ -15,7 +15,7 @@ export class OrderDressDetailsService {
   ) {}
 
   async saveOrderDressDetails(orderId: string, dressDetails: CUOrderDressDetailDto): Promise<void> {
-    const dress = await this.dressService.getDressForCustomer(dressDetails.dressId);
+    const dress = await this.dressService.getOne(dressDetails.dressId);
 
     const orderDressDetail = {
       order: { id: orderId },
