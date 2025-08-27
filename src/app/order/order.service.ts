@@ -76,7 +76,7 @@ export class OrderService {
     private readonly redisService: RedisService,
     @Inject(PasswordService)
     private readonly passwordService: PasswordService,
-  ) {}
+  ) { }
 
   async getOrderMilestones(
     orderId: string,
@@ -681,7 +681,7 @@ export class OrderService {
 
   @Cron(CronExpression.EVERY_DAY_AT_MIDNIGHT, { timeZone: 'Asia/Ho_Chi_Minh' })
   private async unlockBalanceAfterOrderCompleted(): Promise<void> {
-    //tìm tất cả các đơn hàng đã hoàn thành được 3 ngày
+    //tìm tất cả các đơn hàng đã hoàn thành
     const orders = await this.orderRepository.find({
       where: {
         status: OrderStatus.COMPLETED,
@@ -702,6 +702,22 @@ export class OrderService {
         } else if (order.type === OrderType.CUSTOM) {
           await this.walletService.unlockBalanceForCustom(order);
         }
+      }),
+    );
+  }
+
+  @Cron(CronExpression.EVERY_DAY_AT_MIDNIGHT, { timeZone: 'Asia/Ho_Chi_Minh' })
+  async completeComplaintMilestone(): Promise<void> {
+    //tìm tất cả các đơn hàng đã hoàn thành được 3 ngày
+    const orders = await this.orderRepository.find({
+      where: {
+        status: OrderStatus.IN_PROCESS,
+      },
+    });
+    // Xử lý các đơn hàng trong mốc khiếu nại được 3 ngày
+    await Promise.all(
+      orders.map(async (order) => {
+        await this.milestoneService.completeComplaintMilestone(order.id, order.type);
       }),
     );
   }

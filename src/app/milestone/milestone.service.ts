@@ -27,7 +27,7 @@ export class MilestoneService {
     private readonly shopService: ShopService,
     @Inject(forwardRef(() => TaskService))
     private readonly taskService: TaskService,
-  ) {}
+  ) { }
 
   async createMilestone(orderId: string, orderType: OrderType): Promise<void> {
     const milestonesData: { title: string; description: string }[] = [];
@@ -450,6 +450,31 @@ export class MilestoneService {
     for (const milestone of milestones) {
       await this.milestoneRepository.update(milestone.id, { status: MilestoneStatus.CANCELLED });
       await this.taskService.cancelOrder(milestone.id);
+    }
+  }
+
+  async completeComplaintMilestone(orderId: string, orderType: OrderType): Promise<void> {
+    let index;
+    if (orderType === OrderType.SELL) {
+      index = 6;
+    } else if (orderType === OrderType.RENT) {
+      index = 8;
+    } else {
+      index = 6;
+    }
+    const milestone = await this.milestoneRepository.findOne({
+      where: {
+        order: { id: orderId },
+        status: MilestoneStatus.IN_PROGRESS,
+        index
+      },
+    });
+    const now = new Date();
+    const threeDaysAgo = new Date(now.setDate(now.getDate() - 3));
+    if (milestone && milestone.updatedAt < threeDaysAgo) {
+      milestone.status = MilestoneStatus.COMPLETED;
+      await this.milestoneRepository.save(milestone);
+      await this.orderService.updateOrderStatusV2(orderId, OrderStatus.COMPLETED);
     }
   }
 }
