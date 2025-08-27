@@ -13,6 +13,7 @@ import { ApiProperty } from '@nestjs/swagger';
 
 export enum OrderStatus {
   PENDING = 'PENDING',
+  PAYING = 'PAYING',
   IN_PROCESS = 'IN_PROCESS',
   COMPLETED = 'COMPLETED',
   CANCELLED = 'CANCELLED',

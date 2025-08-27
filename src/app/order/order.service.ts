@@ -580,9 +580,11 @@ export class OrderService {
       },
     });
     if (!order) throw new NotFoundException('Không tìm thấy đơn hàng này');
+    if (order.status !== OrderStatus.PAYING)
+      throw new MethodNotAllowedException(
+        'Đơn hàng, chưa được xử lý, đang và đã thực hiện, hoặc đã bị hủy',
+      );
     if (order.type === OrderType.SELL) {
-      if (order.status !== OrderStatus.PENDING)
-        throw new MethodNotAllowedException('Đơn hàng đã hết hạn');
       //Luồng mua cần thanh toán 100%, sau đó lock lại ở ví của shop
       if (!this.checkWalletBalanceIsEnough(userId, Number(order.amount)))
         throw new BadRequestException('Không đủ số dư trong ví, vui lòng nạp tiền');
@@ -608,8 +610,6 @@ export class OrderService {
       await this.milestoneService.startFirstMilestoneAndTask(orderId);
       return await this.orderRepository.save(order);
     } else if (order.type === OrderType.RENT) {
-      if (order.status !== OrderStatus.PENDING)
-        throw new MethodNotAllowedException('Đơn hàng đã hết hạn');
       //Luồng thuê thanh toán như luồng mua, sau đó chuyển số tiền thuê qua cho shop dạng lock, số còn lại lock
       const deposit = await this.calculateSellPriceForOrder(orderId);
       if (!this.checkWalletBalanceIsEnough(userId, deposit))
@@ -637,8 +637,6 @@ export class OrderService {
       await this.milestoneService.startFirstMilestoneAndTask(orderId);
       return await this.orderRepository.save(order);
     } else {
-      if (order.status !== OrderStatus.PENDING)
-        throw new MethodNotAllowedException('Đơn hàng đã đang và đã thực hiện hoặc đã bị hủy');
       //Luồng custom có thể thanh toán nhiều lần, lock lại ở ví của shop
       const transactions = await this.walletService.getTransferTransactionsForCustomOrder(
         userId,
