@@ -16,6 +16,7 @@ import {
   MethodNotAllowedException,
   NotFoundException,
 } from '@nestjs/common';
+import { Cron, CronExpression } from '@nestjs/schedule';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Not, Repository } from 'typeorm';
 
@@ -28,7 +29,7 @@ export class RequestService {
     private readonly updateRequestRepository: Repository<UpdateRequest>,
     @Inject(forwardRef(() => OrderService))
     private readonly orderService: OrderService,
-  ) {}
+  ) { }
 
   async createRequestForCustomer(userId: string, body: CURequestDto): Promise<Request> {
     if (body.status === RequestStatus.ACCEPTED || body.status === RequestStatus.CANCELLED) {
@@ -285,5 +286,19 @@ export class RequestService {
     } else {
       throw new MethodNotAllowedException(`Trạng thái ${body.status} không hợp lệ`);
     }
+  }
+
+  @Cron(CronExpression.EVERY_DAY_AT_MIDNIGHT, { timeZone: 'Asia/Ho_Chi_Minh' })
+  async updateRequestHandle(): Promise<void> {
+    const updateRequests = await this.updateRequestRepository.find({
+      where: { status: UpdateRequestStatus.PENDING },
+    });
+    const now = new Date();
+    const threeDaysAgo = new Date(now.getDate() - 2);
+    await updateRequests.map(async (updateRequest) => {
+      if (updateRequest.createdAt < threeDaysAgo) {
+        await this.updateRequestRepository.update(updateRequest.id, { status: UpdateRequestStatus.REJECTED });
+      }
+    });
   }
 }
