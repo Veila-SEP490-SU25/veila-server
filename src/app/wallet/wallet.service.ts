@@ -459,9 +459,31 @@ export class WalletService {
     await this.walletRepository.save(shopWallet);
   }
 
-  // async unlockBalanceForCustom(order: Order):Promise<void> {
+  async unlockBalanceForCustom(order: Order): Promise<void> {
+    const receivedTransactions = await this.transactionService.getTransactionsForCustomOrder(
+      order.shop.user.id,
+      order.id,
+      TransactionType.RECEIVE,
+    );
+    const transferTransactions = await this.transactionService.getTransactionsForCustomOrder(
+      order.shop.user.id,
+      order.id,
+      TransactionType.TRANSFER,
+    );
+    const toShop = await this.shopService.getShopById(order.shop.id);
+    const shopWallet = await this.getWalletByUserIdV2(toShop.user.id);
 
-  // }
+    if (!shopWallet) throw new NotFoundException('Không tìm thấy ví điện tử của người nhận');
+
+    const amount =
+      receivedTransactions.reduce((total, tx) => total + Number(tx.amount), 0) -
+      transferTransactions.reduce((total, tx) => total + Number(tx.amount), 0);
+
+    shopWallet.availableBalance = Number(shopWallet.availableBalance) + Number(amount);
+    shopWallet.lockedBalance = Number(shopWallet.lockedBalance) - Number(amount);
+
+    await this.walletRepository.save(shopWallet);
+  }
 
   async refundForSellAndRent(order: Order): Promise<void> {
     const transaction = await this.transactionService.getTransactionByOrderId(order.id);

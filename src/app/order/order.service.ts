@@ -23,7 +23,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { In, LessThanOrEqual, Repository } from 'typeorm';
+import { In, Repository } from 'typeorm';
 import {
   CreateOrderForCustom,
   CreateOrderRequestDto,
@@ -681,19 +681,11 @@ export class OrderService {
 
   @Cron(CronExpression.EVERY_DAY_AT_MIDNIGHT, { timeZone: 'Asia/Ho_Chi_Minh' })
   private async unlockBalanceAfterOrderCompleted(): Promise<void> {
-    //lấy ngày hiện tại mà cron chạy
-    const today = new Date();
-
-    //3 hôm trước
-    const threeDaysAgo = new Date();
-    threeDaysAgo.setDate(today.getDate() - 3);
-
-    //tìm tất cả các đơn hàng đã hoàn thành được 3 ngày (xử lý mua và thuê)
+    //tìm tất cả các đơn hàng đã hoàn thành được 3 ngày
     const orders = await this.orderRepository.find({
       where: {
         status: OrderStatus.COMPLETED,
-        updatedAt: LessThanOrEqual(threeDaysAgo),
-        type: In([OrderType.SELL, OrderType.RENT]),
+        type: In([OrderType.SELL, OrderType.RENT, OrderType.CUSTOM]),
       },
       relations: {
         customer: true,
@@ -707,14 +699,11 @@ export class OrderService {
           await this.walletService.unlockBalanceForSell(order);
         } else if (order.type === OrderType.RENT) {
           await this.walletService.unlockBalanceForRent(order);
+        } else if (order.type === OrderType.CUSTOM) {
+          await this.walletService.unlockBalanceForCustom(order);
         }
       }),
     );
-
-    //tìm tất cả các đơn hàng đã hoàn thành được 3 ngày (xử lý custom)
-    //
-    //
-    //
   }
 
   private async updateOrderCustomStatusAfterCheckout(orderId: string): Promise<void> {

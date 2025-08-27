@@ -308,6 +308,21 @@ export class TransactionService {
     });
   }
 
+  async getTransactionsForCustomOrder(
+    userId: string,
+    orderId: string,
+    type: TransactionType,
+  ): Promise<Transaction[]> {
+    return await this.transactionRepository.find({
+      where: {
+        order: { id: orderId },
+        wallet: { user: { id: userId } },
+        type,
+        status: TransactionStatus.COMPLETED,
+      },
+    });
+  }
+
   async createMembershipTransactionForSeeding(transaction: Transaction): Promise<Transaction> {
     return await this.transactionRepository.save(transaction);
   }
