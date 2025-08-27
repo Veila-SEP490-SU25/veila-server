@@ -1,5 +1,5 @@
 import { Filtering, getOrder, getWhere, Sorting } from '@/common/decorators';
-import { Order, Transaction, TransactionType, Wallet } from '@/common/models';
+import { Milestone, Order, Transaction, TransactionType, Wallet } from '@/common/models';
 import {
   BadRequestException,
   ConflictException,
@@ -508,16 +508,65 @@ export class WalletService {
       cusWallet.user,
       shopWallet.id,
       order.id,
-      Number(transaction.amount),
+      (Number(transaction.amount) * 95) / 100,
+      TransactionType.REFUND,
+    );
+
+    await this.transactionService.saveRefundTransaction(
+      shopWallet.user,
+      cusWallet.user,
+      cusWallet.id,
+      order.id,
+      (Number(transaction.amount) * 95) / 100,
+      TransactionType.RECEIVE,
     );
   }
 
-  // async refundForCustom(
-  //   order: Order,
-  //   number: Number,
-  // ):Promise<void> {
+  async refundForCustom(order: Order, milestones: Milestone[]): Promise<void> {
+    const countCompletedOrInProgress = milestones.filter(
+      (m) => m.status === 'COMPLETED' || m.status === 'IN_PROGRESS',
+    ).length;
+    if (countCompletedOrInProgress > 0) {
+      const transactions = await this.transactionService.getTransactionsForCustomOrder(
+        order.shop.user.id,
+        order.id,
+        TransactionType.RECEIVE,
+      );
+      const totalReceived = transactions.reduce((total, tx) => total + Number(tx.amount), 0);
+      const percentMilestone = 0.05 * countCompletedOrInProgress;
 
-  // }
+      const cusWallet = await this.getWalletByUserIdV2(order.customer.id);
+      const shopWallet = await this.getWalletByUserIdV2(order.shop.user.id);
+
+      shopWallet.lockedBalance = Number(shopWallet.lockedBalance) - Number(totalReceived);
+      shopWallet.availableBalance =
+        Number(shopWallet.availableBalance) + Number(totalReceived) * percentMilestone;
+
+      cusWallet.availableBalance =
+        Number(cusWallet.availableBalance) + Number(totalReceived) * (1 - percentMilestone);
+
+      await this.walletRepository.save(cusWallet);
+      await this.walletRepository.save(shopWallet);
+
+      await this.transactionService.saveRefundTransaction(
+        shopWallet.user,
+        cusWallet.user,
+        cusWallet.id,
+        order.id,
+        Number(totalReceived) * (1 - percentMilestone),
+        TransactionType.RECEIVE,
+      );
+
+      await this.transactionService.saveRefundTransaction(
+        shopWallet.user,
+        cusWallet.user,
+        shopWallet.id,
+        order.id,
+        Number(totalReceived) * (1 - percentMilestone),
+        TransactionType.REFUND,
+      );
+    }
+  }
 
   async updatePIN(userId: string, body: PINWalletDto): Promise<Wallet> {
     const user = await this.userService.getUserById(userId);

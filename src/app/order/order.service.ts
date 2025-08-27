@@ -750,18 +750,20 @@ export class OrderService {
   }
 
   async cancelOrder(userId: string, id: string): Promise<Order> {
-    const existingOrder = await this.getOrderByIdV2(id);
-
-    if (!existingOrder) throw new NotFoundException('Không tìm thấy đơn hàng này');
+    const existingOrder = await this.orderRepository.findOne({
+      where: { id, customer: { id: userId } },
+      relations: {
+        customer: true,
+        shop: { user: true },
+      },
+    });
+    if (!existingOrder) throw new NotFoundException('Không tìm thấy đơn hàng nào phù hợp');
 
     if (
       existingOrder.status === OrderStatus.CANCELLED ||
       existingOrder.status === OrderStatus.COMPLETED
     )
       throw new BadRequestException('Đơn hàng này đã kết thúc');
-
-    const user = await this.userService.getUserById(userId);
-    if (!user) throw new NotFoundException('Người dùng này không tồn tại');
 
     const completedMilestones = await this.milestoneService.getCompletedMilestonesByOrderId(
       existingOrder.id,
@@ -778,10 +780,14 @@ export class OrderService {
         if (completedMilestones.length > 4)
           throw new BadRequestException('Không được hủy đơn hàng ở trạng thái đang giao');
         //xử lý luồng custom
-        // await this.walletService.refundForCustom(existingOrder, completedMilestones.length);
+        const customMilestone = await this.milestoneService.getMilestonesByOrderId(
+          existingOrder.id,
+        );
+        await this.walletService.refundForCustom(existingOrder, customMilestone);
       }
     }
     existingOrder.status = OrderStatus.CANCELLED;
+    await this.milestoneService.cancelOrder(existingOrder.id);
     return await this.orderRepository.save(plainToInstance(Order, existingOrder));
   }
 

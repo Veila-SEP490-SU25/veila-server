@@ -437,4 +437,19 @@ export class MilestoneService {
       await this.taskService.updateTaskStatusForUpdateRequest(milestone.id, TaskStatus.IN_PROGRESS);
     }
   }
+
+  async cancelOrder(orderId: string): Promise<void> {
+    const milestones = await this.milestoneRepository.find({
+      where: {
+        order: { id: orderId },
+        status: In([MilestoneStatus.IN_PROGRESS, MilestoneStatus.PENDING]),
+      },
+      withDeleted: true,
+    });
+
+    for (const milestone of milestones) {
+      await this.milestoneRepository.update(milestone.id, { status: MilestoneStatus.CANCELLED });
+      await this.taskService.cancelOrder(milestone.id);
+    }
+  }
 }

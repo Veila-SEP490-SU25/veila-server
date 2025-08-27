@@ -8,7 +8,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { In, Repository } from 'typeorm';
 import { CUTaskDto, TaskDto } from './task.dto';
 import { plainToInstance } from 'class-transformer';
 import { Filtering, getOrder, getWhere, Sorting } from '@/common/decorators';
@@ -303,6 +303,23 @@ export class TaskService {
       });
       const task = tasks[0];
       await this.taskRepository.update(task.id, { status });
+    }
+  }
+
+  async cancelOrder(milestoneId: string): Promise<void> {
+    const tasks = await this.taskRepository.find({
+      where: {
+        milestone: { id: milestoneId },
+        status: In([TaskStatus.PENDING, TaskStatus.IN_PROGRESS]),
+      },
+      withDeleted: true,
+    });
+
+    for (const task of tasks) {
+      if (task.status !== TaskStatus.CANCELLED) {
+        task.status = TaskStatus.CANCELLED;
+        await this.taskRepository.save(task);
+      }
     }
   }
 }

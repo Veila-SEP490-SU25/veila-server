@@ -114,6 +114,7 @@ export class TransactionService {
     walletId: string,
     orderId: string,
     amount: number,
+    type: TransactionType,
   ): Promise<void> {
     const fromUserName = fromUser.firstName + ' ' + fromUser.middleName + ' ' + fromUser.lastName;
     const toUserName = toUser.firstName + ' ' + toUser.middleName + ' ' + toUser.lastName;
@@ -126,7 +127,7 @@ export class TransactionService {
       fromTypeBalance: TypeBalance.LOCKED,
       toTypeBalance: TypeBalance.AVAILABLE,
       amount: amount,
-      type: TransactionType.REFUND,
+      type,
       status: TransactionStatus.COMPLETED,
       note: fromUserName + ' refund to ' + toUserName,
     } as Transaction;
