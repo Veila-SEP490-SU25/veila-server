@@ -2,6 +2,7 @@ import { OrderService } from '@/app/order';
 import { CUpdateRequestDto, CURequestDto, ReviewUpdateRequestDto } from '@/app/request/request.dto';
 import { Filtering, getOrder, getWhere, Sorting } from '@/common/decorators';
 import {
+  MilestoneStatus,
   OrderStatus,
   Request,
   RequestStatus,
@@ -175,6 +176,14 @@ export class RequestService {
     if (order.status !== OrderStatus.IN_PROCESS)
       throw new MethodNotAllowedException(
         `Không thể tạo yêu cầu cập nhật khi đơn hàng không ở trạng thái đang xử lý`,
+      );
+    if (
+      order.milestones.filter(
+        (milestone) => milestone.index === 5 && milestone.status !== MilestoneStatus.PENDING,
+      ).length > 0
+    )
+      throw new MethodNotAllowedException(
+        `Không thể tạo yêu cầu cập nhật khi mốc 4 không ở trạng thái chờ duyệt`,
       );
 
     const isUpdateRequestPending = await this.updateRequestRepository.exists({

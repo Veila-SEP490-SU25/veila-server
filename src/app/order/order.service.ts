@@ -76,7 +76,7 @@ export class OrderService {
     private readonly redisService: RedisService,
     @Inject(PasswordService)
     private readonly passwordService: PasswordService,
-  ) { }
+  ) {}
 
   async getOrderMilestones(
     orderId: string,
@@ -804,14 +804,17 @@ export class OrderService {
     } else if (existingOrder.type === OrderType.CUSTOM) {
       const orderServiceDetail = await this.orderServiceDetailRepository.findOne({
         where: {
-          order: existingOrder
+          order: existingOrder,
         },
         relations: {
-          request: true
-        }
+          request: true,
+        },
       });
-      if (!orderServiceDetail) throw new NotFoundException('Không tìm thấy chi tiết dịch vụ đơn hàng');
-      const updateRequest = await this.requestService.getUpdateRequestsByRequestId(orderServiceDetail.request.id);
+      if (!orderServiceDetail)
+        throw new NotFoundException('Không tìm thấy chi tiết dịch vụ đơn hàng');
+      const updateRequest = await this.requestService.getUpdateRequestsByRequestId(
+        orderServiceDetail.request.id,
+      );
       if (updateRequest.length > 0) {
         const customMilestone = await this.milestoneService.getMilestonesByOrderId(
           existingOrder.id,
@@ -845,7 +848,7 @@ export class OrderService {
         request: { id: requestId },
       },
       relations: {
-        order: true,
+        order: { milestones: true },
       },
     });
     if (!orderServiceDetail) throw new NotFoundException('Không tìm thấy chi tiết đơn hàng');
