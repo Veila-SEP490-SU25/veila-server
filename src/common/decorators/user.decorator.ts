@@ -4,7 +4,7 @@ import { createParamDecorator, ExecutionContext } from '@nestjs/common';
 export const UserId = createParamDecorator((_, ctx: ExecutionContext) => {
   const request = ctx.switchToHttp().getRequest();
   const tokenPayload: TokenPayload = request.tokenPayload;
-  return tokenPayload.id;
+  return tokenPayload ? tokenPayload.id : null;
 });
 
 export const CurrentUser = createParamDecorator((_, ctx: ExecutionContext) => {

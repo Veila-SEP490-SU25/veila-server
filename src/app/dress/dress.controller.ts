@@ -33,7 +33,7 @@ import {
   UserId,
 } from '@/common/decorators';
 import { CUDressDto, ItemDressDto, ListDressDto } from '@/app/dress/dress.dto';
-import { AuthGuard } from '@/common/guards';
+import { AuthGuard, OptionalAuthGuard } from '@/common/guards';
 import { plainToInstance } from 'class-transformer';
 
 @Controller('dresses')
@@ -579,6 +579,7 @@ export class DressController {
   }
 
   @Get(':id')
+  @UseGuards(OptionalAuthGuard)
   @ApiOperation({
     summary: 'Lấy thông tin chi tiết váy cưới cho khách hàng',
     description: `
@@ -601,13 +602,15 @@ export class DressController {
       ],
     },
   })
-  async getDressForCustomer(@Param('id') id: string): Promise<ItemResponse<ItemDressDto>> {
-    const dress = await this.dressService.getDressForCustomer(id);
-    const dto = plainToInstance(ItemDressDto, dress, { excludeExtraneousValues: true });
+  async getDressForCustomer(
+    @UserId() userId: string,
+    @Param('id') id: string,
+  ): Promise<ItemResponse<ItemDressDto>> {
+    const dress = await this.dressService.getDressForCustomer(userId, id);
     return {
       message: 'Đây là thông tin chi tiết của Váy cưới',
       statusCode: HttpStatus.OK,
-      item: dto,
+      item: dress,
     };
   }
 }

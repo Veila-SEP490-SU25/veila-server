@@ -22,7 +22,7 @@ import {
   getSchemaPath,
 } from '@nestjs/swagger';
 import { ShopService } from '@/app/shop/shop.service';
-import { AuthGuard } from '@/common/guards';
+import { AuthGuard, OptionalAuthGuard } from '@/common/guards';
 import {
   CurrentRole,
   Filtering,
@@ -439,6 +439,7 @@ export class ShopController {
   }
 
   @Get()
+  @UseGuards(OptionalAuthGuard)
   @ApiOperation({
     summary: 'Lấy danh sách shop',
     description: `
@@ -524,6 +525,7 @@ export class ShopController {
   }
 
   @Get(':id')
+  @UseGuards(OptionalAuthGuard)
   @ApiOperation({
     summary: 'Lấy thông tin chi tiết shop',
     description: `
@@ -539,17 +541,18 @@ export class ShopController {
         { $ref: getSchemaPath(ItemResponse) },
         {
           properties: {
-            item: { $ref: getSchemaPath(Shop) },
+            item: { $ref: getSchemaPath(ItemShopDto) },
           },
         },
       ],
     },
   })
   async getShop(
+    @UserId() userId: string,
     @CurrentRole() currentRole: UserRole,
     @Param('id') id: string,
-  ): Promise<ItemResponse<Shop>> {
-    const shop = await this.shopService.getShop(currentRole, id);
+  ): Promise<ItemResponse<ItemShopDto>> {
+    const shop = await this.shopService.getShop(userId, currentRole, id);
     return {
       message: 'Đây là thông tin chi tiết của shop',
       statusCode: HttpStatus.OK,

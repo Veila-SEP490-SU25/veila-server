@@ -22,7 +22,7 @@ import {
   getSchemaPath,
 } from '@nestjs/swagger';
 import { BlogService } from './blog.service';
-import { AuthGuard, RolesGuard } from '@/common/guards';
+import { AuthGuard, OptionalAuthGuard, RolesGuard } from '@/common/guards';
 import {
   CurrentRole,
   Filtering,
@@ -352,6 +352,7 @@ export class BlogController {
   }
 
   @Get()
+  @UseGuards(OptionalAuthGuard)
   @ApiOperation({
     summary: 'Lấy danh sách blog',
     description: `
@@ -444,6 +445,7 @@ export class BlogController {
   }
 
   @Get(':id')
+  @UseGuards(OptionalAuthGuard)
   @ApiOperation({
     summary: 'Lấy thông tin chi tiết blog cho khách hàng',
     description: `

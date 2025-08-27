@@ -11,7 +11,7 @@ import {
   Sorting,
   SortingParams,
 } from '@/common/decorators';
-import { AuthGuard } from '@/common/guards';
+import { AuthGuard, OptionalAuthGuard } from '@/common/guards';
 import { Subscription, UserRole } from '@/common/models';
 import {
   Body,
@@ -172,6 +172,7 @@ export class SubscriptionController {
   }
 
   @Get()
+  @UseGuards(OptionalAuthGuard)
   @ApiOperation({
     summary: 'Lấy danh sách gói thành viên',
     description: `
@@ -257,6 +258,7 @@ export class SubscriptionController {
   }
 
   @Get(':id')
+  @UseGuards(OptionalAuthGuard)
   @ApiOperation({
     summary: 'Lấy chi tiết gói thành viên',
     description: `**Hướng dẫn sử dụng:**

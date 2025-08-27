@@ -79,6 +79,7 @@ export class UserController {
   }
 
   @Get()
+  @UseGuards(AuthGuard)
   @Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN)
   @ApiOperation({
     summary: 'Lấy danh sách tài khoản người dùng',
@@ -148,6 +149,7 @@ export class UserController {
   }
 
   @Get(':id')
+  @UseGuards(AuthGuard)
   @Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN)
   @ApiOperation({
     summary: 'Lấy thông tin chi tiết tài khoản người dùng (chỉ dành cho Super Admin)',
@@ -184,6 +186,7 @@ export class UserController {
   }
 
   @Post()
+  @UseGuards(AuthGuard)
   @Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN)
   @ApiOperation({
     summary: 'Tạo mới tài khoản người dùng',
@@ -247,6 +250,7 @@ export class UserController {
   }
 
   @Put(':id')
+  @UseGuards(AuthGuard)
   @Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN)
   @ApiOperation({
     summary: 'Cập nhật tài khoản người dùng',
@@ -312,6 +316,7 @@ export class UserController {
   }
 
   @Delete(':id')
+  @UseGuards(AuthGuard)
   @Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN)
   @ApiOperation({
     summary: 'Xóa mềm tài khoản người dùng (chỉ dành cho Super Admin)',
@@ -348,6 +353,7 @@ export class UserController {
   }
 
   @Patch(':id')
+  @UseGuards(AuthGuard)
   @Roles(UserRole.SUPER_ADMIN)
   @ApiOperation({
     summary: 'Khôi phục tài khoản người dùng đã bị xóa mềm (chỉ dành cho Super Admin)',

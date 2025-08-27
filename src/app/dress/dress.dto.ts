@@ -395,4 +395,11 @@ export class ItemDressDto {
   @Expose()
   @Type(() => ProductCategoryDto)
   category: ProductCategoryDto;
+
+  @Expose()
+  @ApiProperty({
+    description: 'Có phải là yêu thích không',
+    example: true,
+  })
+  isFavorite: boolean | null;
 }

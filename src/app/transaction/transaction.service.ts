@@ -114,6 +114,7 @@ export class TransactionService {
     walletId: string,
     orderId: string,
     amount: number,
+    type: TransactionType,
   ): Promise<void> {
     const fromUserName = fromUser.firstName + ' ' + fromUser.middleName + ' ' + fromUser.lastName;
     const toUserName = toUser.firstName + ' ' + toUser.middleName + ' ' + toUser.lastName;
@@ -126,7 +127,7 @@ export class TransactionService {
       fromTypeBalance: TypeBalance.LOCKED,
       toTypeBalance: TypeBalance.AVAILABLE,
       amount: amount,
-      type: TransactionType.REFUND,
+      type,
       status: TransactionStatus.COMPLETED,
       note: fromUserName + ' refund to ' + toUserName,
     } as Transaction;
@@ -303,6 +304,21 @@ export class TransactionService {
         order: { id: orderId },
         wallet: { user: { id: userId } },
         type: TransactionType.TRANSFER,
+        status: TransactionStatus.COMPLETED,
+      },
+    });
+  }
+
+  async getTransactionsForCustomOrder(
+    userId: string,
+    orderId: string,
+    type: TransactionType,
+  ): Promise<Transaction[]> {
+    return await this.transactionRepository.find({
+      where: {
+        order: { id: orderId },
+        wallet: { user: { id: userId } },
+        type,
         status: TransactionStatus.COMPLETED,
       },
     });

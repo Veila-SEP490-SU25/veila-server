@@ -2,6 +2,7 @@ import { OrderService } from '@/app/order';
 import { CUpdateRequestDto, CURequestDto, ReviewUpdateRequestDto } from '@/app/request/request.dto';
 import { Filtering, getOrder, getWhere, Sorting } from '@/common/decorators';
 import {
+  MilestoneStatus,
   OrderStatus,
   Request,
   RequestStatus,
@@ -16,6 +17,7 @@ import {
   MethodNotAllowedException,
   NotFoundException,
 } from '@nestjs/common';
+import { Cron, CronExpression } from '@nestjs/schedule';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Not, Repository } from 'typeorm';
 
@@ -175,6 +177,14 @@ export class RequestService {
       throw new MethodNotAllowedException(
         `Không thể tạo yêu cầu cập nhật khi đơn hàng không ở trạng thái đang xử lý`,
       );
+    if (
+      order.milestones.filter(
+        (milestone) => milestone.index === 5 && milestone.status !== MilestoneStatus.PENDING,
+      ).length > 0
+    )
+      throw new MethodNotAllowedException(
+        `Không thể tạo yêu cầu cập nhật khi mốc 4 không ở trạng thái chờ duyệt`,
+      );
 
     const isUpdateRequestPending = await this.updateRequestRepository.exists({
       where: {
@@ -285,5 +295,27 @@ export class RequestService {
     } else {
       throw new MethodNotAllowedException(`Trạng thái ${body.status} không hợp lệ`);
     }
+  }
+
+  @Cron(CronExpression.EVERY_DAY_AT_MIDNIGHT, { timeZone: 'Asia/Ho_Chi_Minh' })
+  async updateRequestHandle(): Promise<void> {
+    const updateRequests = await this.updateRequestRepository.find({
+      where: { status: UpdateRequestStatus.PENDING },
+    });
+    const now = new Date();
+    const threeDaysAgo = new Date(now.getDate() - 2);
+    await updateRequests.map(async (updateRequest) => {
+      if (updateRequest.createdAt < threeDaysAgo) {
+        await this.updateRequestRepository.update(updateRequest.id, {
+          status: UpdateRequestStatus.REJECTED,
+        });
+      }
+    });
+  }
+
+  async getUpdateRequestsByRequestId(requestId: string): Promise<UpdateRequest[]> {
+    return await this.updateRequestRepository.find({
+      where: { request: { id: requestId } },
+    });
   }
 }

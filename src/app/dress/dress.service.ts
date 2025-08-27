@@ -3,8 +3,9 @@ import { Category, Dress, DressStatus, ShopStatus } from '@/common/models';
 import { Inject, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { In, Repository } from 'typeorm';
-import { CUDressDto } from '@/app/dress/dress.dto';
+import { CUDressDto, ItemDressDto } from '@/app/dress/dress.dto';
 import { UserService } from '@/app/user';
+import { plainToInstance } from 'class-transformer';
 
 @Injectable()
 export class DressService {
@@ -37,7 +38,33 @@ export class DressService {
     });
   }
 
-  async getDressForCustomer(id: string): Promise<Dress> {
+  async getDressForCustomer(userId: string, id: string): Promise<ItemDressDto> {
+    const dress = await this.dressRepository.findOne({
+      where: {
+        id,
+        status: DressStatus.AVAILABLE,
+        user: { shop: { status: ShopStatus.ACTIVE } },
+      },
+      relations: {
+        feedbacks: { customer: true },
+        user: { shop: true },
+        category: true,
+      },
+    });
+    if (!dress) throw new NotFoundException('Không tìm thấy váy cưới nào phù hợp');
+    if (userId) {
+      const user = await this.userService.getSelf(userId);
+      const isFavorite = user.favDresses ? user.favDresses.includes(id) : null;
+      return plainToInstance(
+        ItemDressDto,
+        { ...dress, isFavorite },
+        { excludeExtraneousValues: true },
+      );
+    }
+    return plainToInstance(ItemDressDto, dress, { excludeExtraneousValues: true });
+  }
+
+  async getOne(id: string): Promise<Dress> {
     const dress = await this.dressRepository.findOne({
       where: {
         id,

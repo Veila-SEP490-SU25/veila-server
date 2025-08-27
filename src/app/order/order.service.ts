@@ -23,7 +23,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { In, LessThanOrEqual, Repository } from 'typeorm';
+import { In, Repository } from 'typeorm';
 import {
   CreateOrderForCustom,
   CreateOrderRequestDto,
@@ -235,7 +235,7 @@ export class OrderService {
 
     if (!user.isIdentified) throw new ForbiddenException('Người dùng chưa định danh');
 
-    const dress = await this.dressService.getDressForCustomer(body.dressDetails.dressId);
+    const dress = await this.dressService.getOne(body.dressDetails.dressId);
 
     const shop = dress.user.shop;
     if (!shop) throw new NotFoundException('Không tìm thấy cửa hàng');
@@ -580,9 +580,11 @@ export class OrderService {
       },
     });
     if (!order) throw new NotFoundException('Không tìm thấy đơn hàng này');
+    if (order.status !== OrderStatus.PAYING)
+      throw new MethodNotAllowedException(
+        'Đơn hàng, chưa được xử lý, đang và đã thực hiện, hoặc đã bị hủy',
+      );
     if (order.type === OrderType.SELL) {
-      if (order.status !== OrderStatus.PENDING)
-        throw new MethodNotAllowedException('Đơn hàng đã hết hạn');
       //Luồng mua cần thanh toán 100%, sau đó lock lại ở ví của shop
       if (!this.checkWalletBalanceIsEnough(userId, Number(order.amount)))
         throw new BadRequestException('Không đủ số dư trong ví, vui lòng nạp tiền');
@@ -608,8 +610,6 @@ export class OrderService {
       await this.milestoneService.startFirstMilestoneAndTask(orderId);
       return await this.orderRepository.save(order);
     } else if (order.type === OrderType.RENT) {
-      if (order.status !== OrderStatus.PENDING)
-        throw new MethodNotAllowedException('Đơn hàng đã hết hạn');
       //Luồng thuê thanh toán như luồng mua, sau đó chuyển số tiền thuê qua cho shop dạng lock, số còn lại lock
       const deposit = await this.calculateSellPriceForOrder(orderId);
       if (!this.checkWalletBalanceIsEnough(userId, deposit))
@@ -637,8 +637,6 @@ export class OrderService {
       await this.milestoneService.startFirstMilestoneAndTask(orderId);
       return await this.orderRepository.save(order);
     } else {
-      if (order.status !== OrderStatus.PENDING)
-        throw new MethodNotAllowedException('Đơn hàng đã đang và đã thực hiện hoặc đã bị hủy');
       //Luồng custom có thể thanh toán nhiều lần, lock lại ở ví của shop
       const transactions = await this.walletService.getTransferTransactionsForCustomOrder(
         userId,
@@ -683,19 +681,11 @@ export class OrderService {
 
   @Cron(CronExpression.EVERY_DAY_AT_MIDNIGHT, { timeZone: 'Asia/Ho_Chi_Minh' })
   private async unlockBalanceAfterOrderCompleted(): Promise<void> {
-    //lấy ngày hiện tại mà cron chạy
-    const today = new Date();
-
-    //3 hôm trước
-    const threeDaysAgo = new Date();
-    threeDaysAgo.setDate(today.getDate() - 3);
-
-    //tìm tất cả các đơn hàng đã hoàn thành được 3 ngày (xử lý mua và thuê)
+    //tìm tất cả các đơn hàng đã hoàn thành
     const orders = await this.orderRepository.find({
       where: {
         status: OrderStatus.COMPLETED,
-        updatedAt: LessThanOrEqual(threeDaysAgo),
-        type: In([OrderType.SELL, OrderType.RENT]),
+        type: In([OrderType.SELL, OrderType.RENT, OrderType.CUSTOM]),
       },
       relations: {
         customer: true,
@@ -709,14 +699,27 @@ export class OrderService {
           await this.walletService.unlockBalanceForSell(order);
         } else if (order.type === OrderType.RENT) {
           await this.walletService.unlockBalanceForRent(order);
+        } else if (order.type === OrderType.CUSTOM) {
+          await this.walletService.unlockBalanceForCustom(order);
         }
       }),
     );
+  }
 
-    //tìm tất cả các đơn hàng đã hoàn thành được 3 ngày (xử lý custom)
-    //
-    //
-    //
+  @Cron(CronExpression.EVERY_DAY_AT_MIDNIGHT, { timeZone: 'Asia/Ho_Chi_Minh' })
+  async completeComplaintMilestone(): Promise<void> {
+    //tìm tất cả các đơn hàng đã hoàn thành được 3 ngày
+    const orders = await this.orderRepository.find({
+      where: {
+        status: OrderStatus.IN_PROCESS,
+      },
+    });
+    // Xử lý các đơn hàng trong mốc khiếu nại được 3 ngày
+    await Promise.all(
+      orders.map(async (order) => {
+        await this.milestoneService.completeComplaintMilestone(order.id, order.type);
+      }),
+    );
   }
 
   private async updateOrderCustomStatusAfterCheckout(orderId: string): Promise<void> {
@@ -763,18 +766,20 @@ export class OrderService {
   }
 
   async cancelOrder(userId: string, id: string): Promise<Order> {
-    const existingOrder = await this.getOrderByIdV2(id);
-
-    if (!existingOrder) throw new NotFoundException('Không tìm thấy đơn hàng này');
+    const existingOrder = await this.orderRepository.findOne({
+      where: { id, customer: { id: userId } },
+      relations: {
+        customer: true,
+        shop: { user: true },
+      },
+    });
+    if (!existingOrder) throw new NotFoundException('Không tìm thấy đơn hàng nào phù hợp');
 
     if (
       existingOrder.status === OrderStatus.CANCELLED ||
       existingOrder.status === OrderStatus.COMPLETED
     )
       throw new BadRequestException('Đơn hàng này đã kết thúc');
-
-    const user = await this.userService.getUserById(userId);
-    if (!user) throw new NotFoundException('Người dùng này không tồn tại');
 
     const completedMilestones = await this.milestoneService.getCompletedMilestonesByOrderId(
       existingOrder.id,
@@ -791,10 +796,34 @@ export class OrderService {
         if (completedMilestones.length > 4)
           throw new BadRequestException('Không được hủy đơn hàng ở trạng thái đang giao');
         //xử lý luồng custom
-        // await this.walletService.refundForCustom(existingOrder, completedMilestones.length);
+        const customMilestone = await this.milestoneService.getMilestonesByOrderId(
+          existingOrder.id,
+        );
+        await this.walletService.refundForCustom(existingOrder, customMilestone);
+      }
+    } else if (existingOrder.type === OrderType.CUSTOM) {
+      const orderServiceDetail = await this.orderServiceDetailRepository.findOne({
+        where: {
+          order: existingOrder,
+        },
+        relations: {
+          request: true,
+        },
+      });
+      if (!orderServiceDetail)
+        throw new NotFoundException('Không tìm thấy chi tiết dịch vụ đơn hàng');
+      const updateRequest = await this.requestService.getUpdateRequestsByRequestId(
+        orderServiceDetail.request.id,
+      );
+      if (updateRequest.length > 0) {
+        const customMilestone = await this.milestoneService.getMilestonesByOrderId(
+          existingOrder.id,
+        );
+        await this.walletService.refundForCustom(existingOrder, customMilestone);
       }
     }
     existingOrder.status = OrderStatus.CANCELLED;
+    await this.milestoneService.cancelOrder(existingOrder.id);
     return await this.orderRepository.save(plainToInstance(Order, existingOrder));
   }
 
@@ -819,7 +848,7 @@ export class OrderService {
         request: { id: requestId },
       },
       relations: {
-        order: true,
+        order: { milestones: true },
       },
     });
     if (!orderServiceDetail) throw new NotFoundException('Không tìm thấy chi tiết đơn hàng');

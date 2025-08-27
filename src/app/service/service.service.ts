@@ -99,6 +99,11 @@ export class ServiceService {
     userId: string,
     { categoryId, ...body }: CUServiceDto,
   ): Promise<Service> {
+    const existingService = await this.serviceRepository.findOne({
+      where: { user: { id: userId } },
+      withDeleted: true,
+    });
+    if (existingService) throw new NotFoundException('Chủ cửa hàng chỉ được tạo một dịch vụ');
     let service;
     if (categoryId) {
       if (!(await this.isCategoryExistForOwner(categoryId, userId)))

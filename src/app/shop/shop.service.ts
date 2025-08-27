@@ -1,6 +1,7 @@
 import { ContractService } from '@/app/contract';
 import { MembershipService } from '@/app/membership';
 import {
+  ItemShopDto,
   RegisterShopDto,
   ResubmitShopDto,
   ReviewShopDto,
@@ -38,6 +39,7 @@ import {
 } from '@nestjs/common';
 import { Cron, CronExpression } from '@nestjs/schedule';
 import { InjectRepository } from '@nestjs/typeorm';
+import { plainToInstance } from 'class-transformer';
 import { In, Repository } from 'typeorm';
 
 @Injectable()
@@ -102,7 +104,7 @@ export class ShopService {
     }
   }
 
-  async getShop(currentRole: UserRole, id: string): Promise<Shop> {
+  async getShop(userId: string, currentRole: UserRole, id: string): Promise<ItemShopDto> {
     if (!currentRole || currentRole === UserRole.CUSTOMER || currentRole === UserRole.SHOP) {
       const where = {
         id,
@@ -111,7 +113,13 @@ export class ShopService {
       };
       const existingShop = await this.shopRepository.findOneBy(where);
       if (!existingShop) throw new NotFoundException('Không tìm thấy cửa hàng phù hợp');
-      return existingShop;
+      if (!userId) return plainToInstance(ItemShopDto, existingShop);
+      else {
+        const user = await this.userService.getSelf(userId);
+
+        const isFavorite = user.favShops ? user.favShops.includes(existingShop.id) : null;
+        return plainToInstance(ItemShopDto, { ...existingShop, isFavorite });
+      }
     } else {
       const existingShop = await this.shopRepository.findOne({
         where: { id },
@@ -123,7 +131,7 @@ export class ShopService {
         },
       });
       if (!existingShop) throw new NotFoundException('Không tìm thấy cửa hàng phù hợp');
-      return existingShop;
+      return plainToInstance(ItemShopDto, existingShop);
     }
   }
 
