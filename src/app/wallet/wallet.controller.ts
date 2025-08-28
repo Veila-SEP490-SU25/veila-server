@@ -135,6 +135,39 @@ export class WalletController {
     };
   }
 
+  @Get('my-wallet')
+  @UseGuards(AuthGuard, RolesGuard)
+  @Roles(UserRole.CUSTOMER, UserRole.SHOP)
+  @ApiOperation({
+    summary: 'Lấy chi tiết Ví điện tử',
+    description: `
+                **Hướng dẫn sử dụng:**
+    
+                - Nếu không tìm thấy sẽ trả về lỗi.
+                - Nếu tìm thấy sẽ trả về chi tiết ví điện tử.
+            `,
+  })
+  @ApiOkResponse({
+    schema: {
+      allOf: [
+        { $ref: getSchemaPath(ItemResponse) },
+        {
+          properties: {
+            item: { $ref: getSchemaPath(WalletDto) },
+          },
+        },
+      ],
+    },
+  })
+  async getWalletForOwner(@UserId() userId: string): Promise<ItemResponse<WalletDto>> {
+    const wallet = await this.walletService.getWalletByUserId(userId);
+    return {
+      message: 'Đây là thông tin chi tiết của ví điện tử',
+      statusCode: HttpStatus.OK,
+      item: wallet,
+    };
+  }
+
   @Get(':id')
   @UseGuards(AuthGuard, RolesGuard)
   @Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN)
@@ -170,39 +203,6 @@ export class WalletController {
     };
   }
 
-  @Get('my-wallet')
-  @UseGuards(AuthGuard, RolesGuard)
-  @Roles(UserRole.CUSTOMER, UserRole.SHOP)
-  @ApiOperation({
-    summary: 'Lấy chi tiết Ví điện tử',
-    description: `
-                **Hướng dẫn sử dụng:**
-    
-                - Nếu không tìm thấy sẽ trả về lỗi.
-                - Nếu tìm thấy sẽ trả về chi tiết ví điện tử.
-            `,
-  })
-  @ApiOkResponse({
-    schema: {
-      allOf: [
-        { $ref: getSchemaPath(ItemResponse) },
-        {
-          properties: {
-            items: { $ref: getSchemaPath(WalletDto) },
-          },
-        },
-      ],
-    },
-  })
-  async getOrderById(@UserId() userId: string): Promise<ItemResponse<WalletDto>> {
-    const wallet = await this.walletService.getWalletByUserId(userId);
-    return {
-      message: 'Đây là thông tin chi tiết của ví điện tử',
-      statusCode: HttpStatus.OK,
-      item: wallet,
-    };
-  }
-
   @Put('my-wallet')
   @UseGuards(AuthGuard, RolesGuard)
   @Roles(UserRole.CUSTOMER, UserRole.SHOP)
@@ -221,7 +221,7 @@ export class WalletController {
         { $ref: getSchemaPath(ItemResponse) },
         {
           properties: {
-            items: { $ref: getSchemaPath(Wallet) },
+            item: { $ref: getSchemaPath(Wallet) },
           },
         },
       ],
@@ -257,7 +257,7 @@ export class WalletController {
         { $ref: getSchemaPath(ItemResponse) },
         {
           properties: {
-            items: { type: 'string' },
+            item: { type: 'string' },
           },
         },
       ],
