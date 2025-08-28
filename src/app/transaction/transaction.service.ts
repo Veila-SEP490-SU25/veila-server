@@ -247,6 +247,7 @@ export class TransactionService {
       where: { id },
       relations: ['wallet', 'order', 'membership'],
     });
+    if (!transaction) throw new NotFoundException('Không tìm thấy giao dịch');
     return plainToInstance(TransactionDto, transaction);
   }
 
