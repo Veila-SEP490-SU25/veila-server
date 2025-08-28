@@ -6,6 +6,7 @@ import {
   Get,
   HttpCode,
   HttpStatus,
+  Param,
   Post,
   Put,
   UseGuards,
@@ -131,6 +132,41 @@ export class WalletController {
       hasNextPage: page + 1 < totalPages,
       hasPrevPage: 0 > page,
       items: wallets,
+    };
+  }
+
+  @Get(':id')
+  @UseGuards(AuthGuard, RolesGuard)
+  @Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN)
+  @ApiOperation({
+    summary: 'Lấy chi tiết của ví điện tử (admin/super admin) only)',
+    description: `
+      **Hướng dẫn sử dụng:**
+
+      - Truyền \`id\` của ví điện tử trên URL.
+      - Nếu không tìm thấy sẽ trả về lỗi.
+      - Nếu tìm thấy sẽ trả về chi tiết ví điện tử.
+    `,
+  })
+  @ApiOkResponse({
+    schema: {
+      allOf: [
+        { $ref: getSchemaPath(ItemResponse) },
+        {
+          properties: {
+            item: { $ref: getSchemaPath(Wallet) },
+          },
+        },
+      ],
+    },
+  })
+  async getWalletById(@Param('id') id: string): Promise<ItemResponse<Wallet>> {
+    const wallet = await this.walletService.getWalletById(id);
+
+    return {
+      message: 'Đây là thông tin chi tiết của ví điện tử',
+      statusCode: HttpStatus.OK,
+      item: wallet,
     };
   }
 
