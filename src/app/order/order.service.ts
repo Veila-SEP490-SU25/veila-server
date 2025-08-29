@@ -785,45 +785,69 @@ export class OrderService {
       existingOrder.id,
     );
 
+    const delayedMilestones = await this.milestoneService.getDelayedMilestonesByOrderId(
+      existingOrder.id,
+    );
+
     //xử lý tiền đơn hàng khi hủy đơn hàng đang được thực hiện (trước khi giao với mua thuê, trước khi hoàn tất với custom)
-    if (existingOrder.status === OrderStatus.IN_PROCESS) {
-      if (existingOrder.type === OrderType.SELL || existingOrder.type === OrderType.RENT) {
-        //xử lý luồng sell
-        if (completedMilestones.length > 2)
-          throw new BadRequestException('Không được hủy đơn hàng ở trạng thái đang giao');
-        await this.walletService.refundForSellAndRent(existingOrder);
+    //trường hợp nếu hủy đơn hàng vì lí do nhà cung cấp trễ tiến độ thì không bị phạt
+    if (delayedMilestones) {
+      if (existingOrder.status === OrderStatus.IN_PROCESS) {
+        if (existingOrder.type === OrderType.SELL || existingOrder.type === OrderType.RENT) {
+          await this.walletService.refundForDelayed(existingOrder);
+          existingOrder.status = OrderStatus.CANCELLED;
+          await this.milestoneService.cancelOrder(existingOrder.id);
+
+          const user = await this.userService.getUserById(userId);
+          if (!user) throw new NotFoundException('Không tìm thấy người dùng');
+
+          user.reputation = Number(user.reputation) - 15;
+          await this.userService.createUser(user);
+        } else {
+          //luồng custom (mai dậy làm đi m :>)
+        }
+      }
+    } else {
+      //trường hợp còn lại sẽ bị phạt
+      if (existingOrder.status === OrderStatus.IN_PROCESS) {
+        if (existingOrder.type === OrderType.SELL || existingOrder.type === OrderType.RENT) {
+          //xử lý luồng sell, rent
+          if (completedMilestones.length > 2)
+            throw new BadRequestException('Không được hủy đơn hàng ở trạng thái đang giao');
+          await this.walletService.refundForSellAndRent(existingOrder);
+        } else if (existingOrder.type === OrderType.CUSTOM) {
+          if (completedMilestones.length > 4)
+            throw new BadRequestException('Không được hủy đơn hàng ở trạng thái đang giao');
+          //xử lý luồng custom
+          const customMilestone = await this.milestoneService.getMilestonesByOrderId(
+            existingOrder.id,
+          );
+          await this.walletService.refundForCustom(existingOrder, customMilestone);
+        }
       } else if (existingOrder.type === OrderType.CUSTOM) {
-        if (completedMilestones.length > 4)
-          throw new BadRequestException('Không được hủy đơn hàng ở trạng thái đang giao');
-        //xử lý luồng custom
-        const customMilestone = await this.milestoneService.getMilestonesByOrderId(
-          existingOrder.id,
+        const orderServiceDetail = await this.orderServiceDetailRepository.findOne({
+          where: {
+            order: existingOrder,
+          },
+          relations: {
+            request: true,
+          },
+        });
+        if (!orderServiceDetail)
+          throw new NotFoundException('Không tìm thấy chi tiết dịch vụ đơn hàng');
+        const updateRequest = await this.requestService.getUpdateRequestsByRequestId(
+          orderServiceDetail.request.id,
         );
-        await this.walletService.refundForCustom(existingOrder, customMilestone);
+        if (updateRequest.length > 0) {
+          const customMilestone = await this.milestoneService.getMilestonesByOrderId(
+            existingOrder.id,
+          );
+          await this.walletService.refundForCustom(existingOrder, customMilestone);
+        }
       }
-    } else if (existingOrder.type === OrderType.CUSTOM) {
-      const orderServiceDetail = await this.orderServiceDetailRepository.findOne({
-        where: {
-          order: existingOrder,
-        },
-        relations: {
-          request: true,
-        },
-      });
-      if (!orderServiceDetail)
-        throw new NotFoundException('Không tìm thấy chi tiết dịch vụ đơn hàng');
-      const updateRequest = await this.requestService.getUpdateRequestsByRequestId(
-        orderServiceDetail.request.id,
-      );
-      if (updateRequest.length > 0) {
-        const customMilestone = await this.milestoneService.getMilestonesByOrderId(
-          existingOrder.id,
-        );
-        await this.walletService.refundForCustom(existingOrder, customMilestone);
-      }
+      existingOrder.status = OrderStatus.CANCELLED;
+      await this.milestoneService.cancelOrder(existingOrder.id);
     }
-    existingOrder.status = OrderStatus.CANCELLED;
-    await this.milestoneService.cancelOrder(existingOrder.id);
     return await this.orderRepository.save(plainToInstance(Order, existingOrder));
   }
 

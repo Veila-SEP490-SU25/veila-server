@@ -22,10 +22,11 @@ import {
   getSchemaPath,
 } from '@nestjs/swagger';
 import {
+  CreatePINWalletDto,
   DepositViaPayOSDto,
   DepositViaPayOSResponse,
-  PINWalletDto,
   UpdateBankDto,
+  UpdatePINWalletDto,
   WalletDto,
   WebhookDto,
 } from './wallet.dto';
@@ -203,7 +204,44 @@ export class WalletController {
     };
   }
 
-  @Put('my-wallet')
+  @Put('my-wallet/create-pin')
+  @UseGuards(AuthGuard, RolesGuard)
+  @Roles(UserRole.CUSTOMER, UserRole.SHOP)
+  @ApiOperation({
+    summary: 'Tạo mã PIN cho ví điện tử',
+    description: `
+      **Hướng dẫn sử dụng:**
+
+      - Truyền dữ liệu trong body dưới dạng JSON.
+      - Nếu không tìm thấy ví thì trả về lỗi.
+      - Nếu thành công sẽ trả về chi tiết ví điện tử vừa cập nhật.
+    `,
+  })
+  @ApiOkResponse({
+    schema: {
+      allOf: [
+        { $ref: getSchemaPath(ItemResponse) },
+        {
+          properties: {
+            item: { $ref: getSchemaPath(Wallet) },
+          },
+        },
+      ],
+    },
+  })
+  async createPINForWallet(
+    @UserId() userId: string,
+    @Body() body: CreatePINWalletDto,
+  ): Promise<ItemResponse<Wallet>> {
+    const wallet = await this.walletService.createPIN(userId, body);
+    return {
+      message: 'Đây là thông tin ví điện tử đã cập nhật',
+      statusCode: HttpStatus.OK,
+      item: wallet,
+    };
+  }
+
+  @Put('my-wallet/update-pin')
   @UseGuards(AuthGuard, RolesGuard)
   @Roles(UserRole.CUSTOMER, UserRole.SHOP)
   @ApiOperation({
@@ -211,6 +249,8 @@ export class WalletController {
     description: `
       **Hướng dẫn sử dụng:**
 
+      - Truyền dữ liệu trong body dưới dạng JSON.
+      - Kiểm tra xem mã pin cũ có đúng hay không.
       - Nếu không tìm thấy ví thì trả về lỗi.
       - Nếu thành công sẽ trả về chi tiết ví điện tử vừa cập nhật.
     `,
@@ -229,7 +269,7 @@ export class WalletController {
   })
   async updatePINForWallet(
     @UserId() userId: string,
-    @Body() body: PINWalletDto,
+    @Body() body: UpdatePINWalletDto,
   ): Promise<ItemResponse<Wallet>> {
     const wallet = await this.walletService.updatePIN(userId, body);
     return {
@@ -265,7 +305,7 @@ export class WalletController {
   })
   async requestOtpPayment(
     @UserId() userId: string,
-    @Body() body: PINWalletDto,
+    @Body() body: CreatePINWalletDto,
   ): Promise<ItemResponse<string>> {
     const requestOtp = await this.walletService.requestOtpPayment(userId, body);
     return {
