@@ -243,7 +243,29 @@ export class SmartOTPDto {
   smartOtp: string;
 }
 
-export class PINWalletDto {
+export class CreatePINWalletDto {
+  @Expose()
+  @ApiProperty({
+    description: 'Password identity number',
+    example: '123456',
+    nullable: false,
+  })
+  @IsNotEmpty()
+  @IsString()
+  pin: string;
+}
+
+export class UpdatePINWalletDto {
+  @Expose()
+  @ApiProperty({
+    description: 'Old password identity number',
+    example: '123456',
+    nullable: false,
+  })
+  @IsNotEmpty()
+  @IsString()
+  oldPin: string;
+
   @Expose()
   @ApiProperty({
     description: 'Password identity number',
