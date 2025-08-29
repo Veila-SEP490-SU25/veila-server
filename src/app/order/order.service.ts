@@ -24,6 +24,7 @@ import {
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { In, Repository } from 'typeorm';
+import { Transaction } from '@/common/models/wallet/transaction.model';
 import {
   CreateOrderForCustom,
   CreateOrderRequestDto,
@@ -47,6 +48,7 @@ import { MilestoneService } from '@/app/milestone';
 import { Cron, CronExpression } from '@nestjs/schedule';
 import { RedisService } from '../redis';
 import { PasswordService } from '../password';
+import { TransactionService } from '../transaction';
 
 @Injectable()
 export class OrderService {
@@ -76,6 +78,8 @@ export class OrderService {
     private readonly redisService: RedisService,
     @Inject(PasswordService)
     private readonly passwordService: PasswordService,
+    @Inject(TransactionService)
+    private readonly transactionService: TransactionService,
   ) {}
 
   async getOrderMilestones(
@@ -86,6 +90,22 @@ export class OrderService {
     filter?: Filtering,
   ): Promise<[Milestone[], number]> {
     return await this.milestoneService.getOrderMilestones(orderId, take, skip, sort, filter);
+  }
+
+  async getOrderTransactions(
+    orderId: string,
+    take: number,
+    skip: number,
+    sort?: Sorting,
+    filter?: Filtering,
+  ): Promise<[Transaction[], number]> {
+    return await this.transactionService.getTransactionsByOrderId(
+      orderId,
+      take,
+      skip,
+      sort,
+      filter,
+    );
   }
 
   async getCustomOrderForShop(id: string, userId: string): Promise<Order> {
