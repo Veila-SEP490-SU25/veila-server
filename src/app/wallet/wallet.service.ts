@@ -12,10 +12,11 @@ import {
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import {
+  CreatePINWalletDto,
   DepositViaPayOSDto,
   DepositViaPayOSResponse,
-  PINWalletDto,
   UpdateBankDto,
+  UpdatePINWalletDto,
   WalletDto,
 } from './wallet.dto';
 import { plainToInstance } from 'class-transformer';
@@ -568,18 +569,34 @@ export class WalletService {
     }
   }
 
-  async updatePIN(userId: string, body: PINWalletDto): Promise<Wallet> {
+  async createPIN(userId: string, body: CreatePINWalletDto): Promise<Wallet> {
     const user = await this.userService.getUserById(userId);
     if (!user) throw new NotFoundException('Không tìm thấy người dùng');
 
     const wallet = await this.getWalletByUserIdV2(userId);
+    if (wallet.pin) throw new BadRequestException('Ví điện tử đã có PIN, vui lòng update PIN');
+
     const hashedPin = await this.passwordService.hashPassword(body.pin);
     wallet.pin = hashedPin;
 
     return await this.walletRepository.save(wallet);
   }
 
-  async requestOtpPayment(userId: string, body: PINWalletDto): Promise<string> {
+  async updatePIN(userId: string, body: UpdatePINWalletDto): Promise<Wallet> {
+    const user = await this.userService.getUserById(userId);
+    if (!user) throw new NotFoundException('Không tìm thấy người dùng');
+
+    const wallet = await this.getWalletByUserIdV2(userId);
+    if (!wallet.pin) throw new BadRequestException('Wallet chưa có PIN, vui lòng create PIN');
+
+    const isPinValid = await this.passwordService.comparePassword(body.oldPin, wallet.pin);
+    if (!isPinValid) throw new ForbiddenException('Mã pin cũ không chính xác');
+
+    wallet.pin = await this.passwordService.hashPassword(body.pin);
+    return await this.walletRepository.save(wallet);
+  }
+
+  async requestOtpPayment(userId: string, body: CreatePINWalletDto): Promise<string> {
     const user = await this.userService.getUserById(userId);
     if (!user) throw new NotFoundException('Không tìm thấy người dùng');
 
@@ -596,5 +613,39 @@ export class WalletService {
     await this.redisService.set(`user:otp:${user.id}`, hashedOtp, 5 * 60 * 1000);
 
     return otp;
+  }
+
+  async refundForDelayed(existingOrder: Order): Promise<void> {
+    const transaction = await this.transactionService.getTransactionByOrderId(existingOrder.id);
+    const cusWallet = await this.getWalletById(transaction.wallet.id);
+    const toShop = await this.shopService.getShopById(existingOrder.shop.id);
+    const shopWallet = await this.getWalletByUserIdV2(toShop.user.id);
+
+    if (!shopWallet) throw new NotFoundException('Không tìm thấy ví điện tử của người nhận');
+
+    shopWallet.lockedBalance = Number(shopWallet.lockedBalance) - Number(transaction.amount);
+
+    cusWallet.availableBalance = Number(cusWallet.availableBalance) + Number(transaction.amount);
+
+    await this.walletRepository.save(cusWallet);
+    await this.walletRepository.save(shopWallet);
+
+    await this.transactionService.saveRefundTransaction(
+      shopWallet.user,
+      cusWallet.user,
+      shopWallet.id,
+      existingOrder.id,
+      Number(transaction.amount),
+      TransactionType.REFUND,
+    );
+
+    await this.transactionService.saveRefundTransaction(
+      shopWallet.user,
+      cusWallet.user,
+      cusWallet.id,
+      existingOrder.id,
+      Number(transaction.amount),
+      TransactionType.RECEIVE,
+    );
   }
 }

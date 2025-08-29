@@ -15,6 +15,7 @@ import { plainToInstance } from 'class-transformer';
 import { OrderService } from '../order';
 import { ShopService } from '../shop';
 import { TaskDto, TaskService } from '../task';
+import { Cron, CronExpression } from '@nestjs/schedule';
 
 @Injectable()
 export class MilestoneService {
@@ -335,6 +336,17 @@ export class MilestoneService {
     return milestones;
   }
 
+  async getDelayedMilestonesByOrderId(orderId: string): Promise<Milestone[]> {
+    const milestones = await this.milestoneRepository.find({
+      where: {
+        order: { id: orderId },
+        status: MilestoneStatus.DELAYED,
+      },
+      relations: ['order'],
+    });
+    return milestones;
+  }
+
   async getLastMilestoneByOrderId(orderId: string): Promise<Milestone | null> {
     const milestone = await this.milestoneRepository.findOne({
       where: {
@@ -475,6 +487,30 @@ export class MilestoneService {
       milestone.status = MilestoneStatus.COMPLETED;
       await this.milestoneRepository.save(milestone);
       await this.orderService.updateOrderStatusV2(orderId, OrderStatus.COMPLETED);
+    }
+  }
+
+  @Cron(CronExpression.EVERY_DAY_AT_MIDNIGHT, { timeZone: 'Asia/Ho_Chi_Minh' })
+  private async markDelayForMilestone(): Promise<void> {
+    //tìm tất cả các mốc công việc có trạng thái là PENDING, IN_PROGRESS
+    const milestones = await this.milestoneRepository.find({
+      where: {
+        status: In([MilestoneStatus.PENDING, MilestoneStatus.IN_PROGRESS]),
+      },
+    });
+    //xử lý các mốc công việc đã bị trễ
+    await Promise.all(
+      milestones.map(async (milestone) => {
+        await this.markDelay(milestone);
+      }),
+    );
+  }
+
+  async markDelay(milestone: Milestone): Promise<void> {
+    const now = new Date();
+    if (milestone.dueDate < now) {
+      milestone.status = MilestoneStatus.DELAYED;
+      await this.milestoneRepository.save(milestone);
     }
   }
 }
