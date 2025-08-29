@@ -242,6 +242,29 @@ export class TransactionService {
     return [plainToInstance(TransactionDto, transactions), count];
   }
 
+  async getTransactionsByOrderId(
+    orderId: string,
+    take: number,
+    skip: number,
+    sort?: Sorting,
+    filter?: Filtering,
+  ): Promise<[Transaction[], number]> {
+    const dynamicFilter = getWhere(filter);
+    const where = {
+      ...dynamicFilter,
+      order: { id: orderId },
+    };
+    const order = getOrder(sort);
+
+    return await this.transactionRepository.findAndCount({
+      where,
+      order,
+      take,
+      skip,
+      relations: ['wallet', 'order', 'membership'],
+    });
+  }
+
   async getTransactionById(id: string): Promise<TransactionDto> {
     const transaction = await this.transactionRepository.findOne({
       where: { id },

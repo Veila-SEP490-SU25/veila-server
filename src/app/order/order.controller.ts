@@ -1,6 +1,13 @@
 import { OrderStatus } from './../../common/models/order/order.model';
 import { ItemResponse, ListResponse } from '@/common/base';
-import { Complaint, Milestone, Order, OrderServiceDetail, UserRole } from '@/common/models';
+import {
+  Complaint,
+  Milestone,
+  Order,
+  OrderServiceDetail,
+  Transaction,
+  UserRole,
+} from '@/common/models';
 import { Body, Controller, Get, HttpStatus, Post, Put, Param, UseGuards } from '@nestjs/common';
 import {
   ApiBearerAuth,
@@ -48,6 +55,7 @@ import { OrderDressDetailDto } from '../order-dress-details';
   Complaint,
   OrderServiceDetail,
   Milestone,
+  Transaction,
 )
 export class OrderController {
   constructor(private readonly orderService: OrderService) {}
@@ -485,6 +493,89 @@ export class OrderController {
       message: 'Đây là đơn hàng đặt may của cửa hàng',
       statusCode: HttpStatus.OK,
       item: orderServiceDetail,
+    };
+  }
+
+  @Get(':id/transactions')
+  @UseGuards(AuthGuard)
+  @ApiOperation({
+    summary: 'Lấy danh sách giao dịch của đơn hàng',
+    description: `
+          **Hướng dẫn sử dụng:**
+
+          - Truyền \`id\` của đơn hàng trên URL.
+          - Truyền các tham số phân trang, sắp xếp và lọc trong query.
+          - Nếu không tìm thấy đơn hàng sẽ trả về lỗi.
+          - Trả về danh sách transaction của đơn hàng.
+          - Page bắt đầu từ 0
+          - Sort theo format: [tên_field]:[asc/desc]
+          - Các trường đang có thể sort: index
+          - Filter theo format: [tên_field]:[eq|neq|gt|gte|lt|lte|like|nlike|in|nin]:[keyword]; hoặc [tên_field]:[isnull|isnotnull]
+          - Các trường đang có thể filter: status, type,...
+    `,
+  })
+  @ApiQuery({
+    name: 'page',
+    required: false,
+    type: Number,
+    default: 0,
+    description: 'Trang hiện tại (bắt đầu từ 0)',
+  })
+  @ApiQuery({
+    name: 'size',
+    required: false,
+    type: Number,
+    default: 10,
+    description: 'Số lượng mỗi trang',
+  })
+  @ApiQuery({
+    name: 'sort',
+    required: false,
+    type: String,
+    description: 'Sắp xếp theo trường: ví dụ: index:asc',
+  })
+  @ApiQuery({
+    name: 'filter',
+    required: false,
+    type: String,
+    description: 'Lọc theo trường: ví dụ: status:PENDING',
+  })
+  @ApiOkResponse({
+    schema: {
+      allOf: [
+        { $ref: getSchemaPath(ListResponse) },
+        {
+          properties: {
+            items: { type: 'array', items: { $ref: getSchemaPath(Transaction) } },
+          },
+        },
+      ],
+    },
+  })
+  async getOrderTransactions(
+    @Param('id') orderId: string,
+    @PaginationParams() { page, size, limit, offset }: Pagination,
+    @SortingParams(['amount']) sort: Sorting,
+    @FilteringParams(['type', 'status']) filter: Filtering,
+  ): Promise<ListResponse<Transaction>> {
+    const [transactions, totalItems] = await this.orderService.getOrderTransactions(
+      orderId,
+      limit,
+      offset,
+      sort,
+      filter,
+    );
+    const totalPages = Math.ceil(totalItems / size);
+    return {
+      message: 'Danh sách giao dịch của đơn hàng',
+      statusCode: HttpStatus.OK,
+      pageIndex: page,
+      pageSize: size,
+      totalItems,
+      totalPages,
+      hasNextPage: page + 1 < totalPages,
+      hasPrevPage: 0 > page,
+      items: transactions,
     };
   }
 
