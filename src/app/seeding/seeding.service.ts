@@ -71,9 +71,11 @@ export class SeedingService implements OnModuleInit {
   private readonly logger = new Logger(SeedingService.name, {
     timestamp: true,
   });
+  private readonly node_env: string;
 
   private readonly customFaker: Faker;
   private readonly customerEmail: string;
+  private readonly customer1Email: string;
   private readonly shop1Email: string;
   private readonly shop2Email: string;
   private readonly shop3Email: string;
@@ -110,12 +112,22 @@ export class SeedingService implements OnModuleInit {
       locale: vi,
     });
 
+    // Lấy đuôi biến môi trường
+    this.node_env = process.env.NODE_ENV || 'development';
+
     const customerEmail = this.configService.get<string>('SEED_CUSTOMER_EMAIL');
     if (!customerEmail) {
       this.logger.error('SEED_CUSTOMER_EMAIL is not set in the environment variables.');
       throw new Error('SEED_CUSTOMER_EMAIL is not set in the environment variables.');
     }
     this.customerEmail = customerEmail;
+
+    const customer1Email = this.configService.get<string>('SEED_CUSTOMER_1_EMAIL');
+    if (!customer1Email) {
+      this.logger.error('SEED_CUSTOMER_1_EMAIL is not set in the environment variables.');
+      throw new Error('SEED_CUSTOMER_1_EMAIL is not set in the environment variables.');
+    }
+    this.customer1Email = customer1Email;
 
     const shop1Email = this.configService.get<string>('SEED_SHOP_1_EMAIL');
     const shop2Email = this.configService.get<string>('SEED_SHOP_2_EMAIL');
@@ -151,38 +163,55 @@ export class SeedingService implements OnModuleInit {
 
   async onModuleInit() {
     this.logger.log('Seeding module initialized. Starting seeding process...');
-    Promise.all([await this.seedContracts(), await this.seedSubscriptions()])
-      .then(async () => {
-        await this.seedSystemAccounts();
-        await this.seedUsersRoleCustomer();
-        await this.seedUsersRoleShop();
-      })
-      .then(async () => {
-        await this.seedWallets();
-        await this.seedShops();
-        await this.seedCategories();
-      })
-      .then(async () => {
-        await this.seedLicenses();
-        await this.seedMemberships();
-        await this.seedDresses();
-        await this.seedServices();
-        await this.seedAccessories();
-        await this.seedBlogs();
-      })
-      .then(async () => {
-        await this.seedSubmitRequests();
-        await this.seedSellOrders();
-        await this.seedRentOrders();
-        await this.seedCustomOrders();
-      })
-      .then(async () => {
-        await this.seedFeedbacks();
-        // await this.seedComplaintsForOrder();
-      })
-      .then(async () => {
-        await this.seedUpdateRating();
-      });
+    if (this.node_env !== 'production') {
+      Promise.all([await this.seedContracts(), await this.seedSubscriptions()])
+        .then(async () => {
+          await this.seedSystemAccounts();
+          await this.seedUsersRoleCustomer();
+          await this.seedUsersRoleShop();
+        })
+        .then(async () => {
+          await this.seedWallets();
+          await this.seedShops();
+          await this.seedCategories();
+        })
+        .then(async () => {
+          await this.seedLicenses();
+          await this.seedMemberships();
+          await this.seedDresses();
+          await this.seedServices();
+          await this.seedAccessories();
+          await this.seedBlogs();
+        })
+        .then(async () => {
+          await this.seedSubmitRequests();
+          await this.seedSellOrders();
+          await this.seedRentOrders();
+          await this.seedCustomOrders();
+        })
+        .then(async () => {
+          await this.seedFeedbacks();
+          // await this.seedComplaintsForOrder();
+        })
+        .then(async () => {
+          await this.seedUpdateRating();
+        });
+    } else {
+      Promise.all([await this.seedContracts(), await this.seedSubscriptions()])
+        .then(async () => {
+          await this.seedUsersForProd();
+        })
+        .then(async () => {
+          await this.seedShopsForProd();
+          await this.seedCategoriesForProd();
+        })
+        .then(async () => {
+          await this.seedDressesForProd();
+          await this.seedServicesForProd();
+          await this.seedAccessoriesForProd();
+          await this.seedBlogsForProd();
+        });
+    }
   }
 
   private async seedContracts() {
@@ -2125,4 +2154,608 @@ export class SeedingService implements OnModuleInit {
   //     await this.orderService.createComplaintForSeeding(newComplaint);
   //   }
   // }
+
+  private async seedUsersForProd() {
+    const users = await this.userService.getAllForSeeding();
+    if (users.length > 0) this.logger.log(`Users already exist. Skipping user seeding.`);
+    else {
+      try {
+        await Promise.all([
+          await this.seedUserForProd(this.superAdminEmail, UserRole.SUPER_ADMIN),
+          await this.seedUserForProd(this.adminEmail, UserRole.ADMIN),
+          await this.seedUserForProd(this.systemOperatorEmail, UserRole.STAFF),
+          await this.seedUserForProd(this.customerEmail, UserRole.CUSTOMER),
+          await this.seedUserForProd(this.customer1Email, UserRole.CUSTOMER),
+          await this.seedUserForProd(this.shop1Email, UserRole.SHOP),
+          await this.seedUserForProd(this.shop2Email, UserRole.SHOP),
+          await this.seedUserForProd(this.shop3Email, UserRole.SHOP),
+          await this.seedUserForProd(this.shop4Email, UserRole.SHOP),
+          await this.seedUserForProd(this.shop5Email, UserRole.SHOP),
+        ]);
+        this.logger.log('Seeding process completed successfully!');
+      } catch (error) {
+        this.logger.error('Seeding users failed.', error);
+        throw new Error('Seeding users failed.');
+      }
+    }
+  }
+
+  private async seedUserForProd(email: string, role: UserRole) {
+    const contract = await this.contractService.findOne(ContractType.CUSTOMER);
+    if (!contract) {
+      this.logger.warn(
+        `Contract for type ${ContractType.CUSTOMER} not found. Skipping seeding user.`,
+      );
+      return;
+    }
+    const defaultPassword = this.configService.get<string>('SEED_ACCOUNT_PASSWORD');
+    if (!defaultPassword) {
+      this.logger.error('SEED_ACCOUNT_PASSWORD is not set in the environment variables.');
+      throw new Error('SEED_ACCOUNT_PASSWORD is not set in the environment variables.');
+    }
+    const bankNumber = this.configService.get<string>('DEFAULT_BANK_NUMBER');
+    if (!bankNumber) {
+      this.logger.error('DEFAULT_BANK_NUMBER is not set in the environment variables.');
+      throw new Error('DEFAULT_BANK_NUMBER is not set in the environment variables.');
+    }
+    const bin = this.configService.get<string>('DEFAULT_BANK_BIN');
+    if (!bin) {
+      this.logger.error('DEFAULT_BANK_BIN is not set in the environment variables.');
+      throw new Error('DEFAULT_BANK_BIN is not set in the environment variables.');
+    }
+    const pin = this.configService.get<string>('DEFAULT_BANK_PIN');
+    if (!pin) {
+      this.logger.error('DEFAULT_BANK_PIN is not set in the environment variables.');
+      throw new Error('DEFAULT_BANK_PIN is not set in the environment variables.');
+    }
+
+    // Tạo thông tin cá nhân giả
+    const sex = Math.random() < 0.5 ? 'male' : 'female';
+    const fullName = this.customFaker.person.fullName({ sex });
+    const nameParts = fullName.split(' ');
+    const firstName = nameParts.pop() || '';
+    const lastName = nameParts.shift() || '';
+    const middleName = nameParts.length > 0 ? nameParts.join(' ') : null;
+
+    // Tạo user mới với thông tin đầy đủ
+    const newUser = {
+      username: this.generateVietnameseUsername(fullName, role),
+      email,
+      password: await this.passwordService.hashPassword(defaultPassword),
+      firstName,
+      middleName,
+      lastName,
+      phone: email.includes('customer')
+        ? `+84${this.customFaker.string.numeric(1)}00${email.charAt(9)}${this.customFaker.string.numeric(5)}`
+        : email.includes('shop')
+          ? `+84${this.customFaker.string.numeric(1)}11${email.charAt(5)}${this.customFaker.string.numeric(5)}`
+          : email.includes('admin')
+            ? `+84${this.customFaker.string.numeric(1)}22${this.customFaker.string.numeric(6)}`
+            : email.includes('staff')
+              ? `+84${this.customFaker.string.numeric(1)}33${this.customFaker.string.numeric(6)}`
+              : `+84${this.customFaker.string.numeric(1)}44${this.customFaker.string.numeric(6)}`,
+      address: 'Lô E2a-7, Đường D1, Khu Công nghệ cao, Phường Tăng Nhơn Phú, TP. HCM',
+      birthDate: this.customFaker.date.between({ from: '1980-01-01', to: '2000-12-31' }),
+      avatarUrl: this.customFaker.image.avatar(),
+      coverUrl:
+        'https://marketplace.canva.com/EAE8yuYZRpo/1/0/1600w/canva-cam-v%C3%A0-xanh-l%C3%A1-khu-r%E1%BB%ABng-%E1%BA%A3nh-b%C3%ACa-facebook-m%C3%B9a-thu-hGIvF_HcwGE.jpg',
+      role,
+      status: UserStatus.ACTIVE,
+      reputation: 100,
+      isVerified: true,
+      isIdentified: true,
+      contract,
+    } as User;
+
+    const createdUser = await this.userService.createUser(newUser);
+
+    const newWallet = {
+      user: createdUser,
+      availableBalance: 100000000,
+      lockedBalance: 0,
+      bankNumber,
+      bin,
+      pin,
+    } as Wallet;
+
+    await this.walletService.create(newWallet);
+  }
+
+  private async seedShopsForProd() {
+    const shops = await this.shopService.getAll();
+    if (shops.length > 0) this.logger.log(`Shops already exist. Skipping shop seeding.`);
+    else {
+      try {
+        await Promise.all([
+          await this.seedShopForProd(this.shop1Email, 365),
+          await this.seedShopForProd(this.shop2Email, 365),
+          await this.seedShopForProd(this.shop3Email, 30),
+          await this.seedShopForProd(this.shop4Email, 30),
+          await this.seedShopForProd(this.shop5Email, 7),
+        ]);
+      } catch (error) {
+        this.logger.error(`Error seeding shops: ${error.message}`);
+        throw new Error('Seeding shops failed.');
+      }
+    }
+  }
+
+  private async seedShopForProd(email: string, subscriptionDuration: number) {
+    const user = await this.userService.getByEmail(email);
+    if (!user) {
+      this.logger.warn(`User role Shop ${email} not exists. Skipping seeding shop.`);
+      return;
+    }
+    const contract = await this.contractService.findOne(ContractType.SHOP);
+    if (!contract) {
+      this.logger.warn(`Contract for type ${ContractType.SHOP} not found. Skipping seeding shop.`);
+      return;
+    }
+    const subscription = await this.subscriptionService.findOneByDuration(subscriptionDuration);
+    if (!subscription) {
+      this.logger.warn(
+        `Subscription for duration ${subscriptionDuration} not found. Skipping seeding shop.`,
+      );
+      return;
+    }
+
+    const shopName = email.split('@')[0].replace('.', ' ').toUpperCase();
+    const newShop = {
+      user,
+      name: shopName,
+      phone: user.phone,
+      email: user.email,
+      address: 'Đường Tạ Quang Bửu, Khu phố 33, Phường Linh Xuân, TP. Hồ Chí Minh',
+      description:
+        'Cửa hàng thời trang váy cưới cao cấp, chuyên cung cấp các mẫu váy cưới đẹp và sang trọng.',
+      logoUrl:
+        'https://github.com/Veila-SEP490-SU25/Veila-mobile-app/blob/main/assets/images/logo.png?raw=true',
+      coverUrl:
+        'https://www.essexwedding.co.uk/wp-content/uploads/The-Wedding-Shop-Colchester-1.jpg',
+      status: ShopStatus.ACTIVE,
+      reputation: 100,
+      isVerified: true,
+      contract,
+    } as Shop;
+    const createdShop = await this.shopService.create(newShop);
+
+    const license = {
+      shop: createdShop,
+      images:
+        'https://mocongty.net/wp-content/uploads/2023/11/GIAY-PHEP-KINH-DOANH-CONG-TY-TNHH-1TV-525x1024.jpg',
+      status: LicenseStatus.APPROVED,
+      rejectReason: null,
+    } as License;
+    await this.shopService.createLicense(license);
+
+    const membership = {
+      shop: createdShop,
+      subscription,
+      startDate: new Date(),
+      endDate: this.customFaker.date.soon({ days: subscriptionDuration }),
+      status: MembershipStatus.ACTIVE,
+    } as Membership;
+    await this.membershipService.createForSeeding(membership);
+  }
+
+  private async seedCategoriesForProd() {
+    const categories = await this.categoryService.getAll();
+    if (categories.length > 0)
+      this.logger.log(`Categories already exist. Skipping category seeding.`);
+    else {
+      try {
+        await Promise.all([
+          this.seedCategoryForProd(this.shop1Email),
+          this.seedCategoryForProd(this.shop2Email),
+          this.seedCategoryForProd(this.shop3Email),
+          this.seedCategoryForProd(this.shop4Email),
+          this.seedCategoryForProd(this.shop5Email),
+        ]);
+      } catch (error) {
+        this.logger.error(`Error seeding categories: ${error.message}`);
+        throw new Error('Seeding categories failed.');
+      }
+    }
+  }
+
+  private async seedCategoryForProd(email: string) {
+    const user = await this.userService.getByEmail(email);
+    if (!user) {
+      this.logger.warn(`User role Shop ${email} not exists. Skipping seeding category.`);
+      return;
+    }
+
+    const categories = [
+      {
+        user,
+        type: CategoryType.ACCESSORY,
+        name: 'Phụ kiện',
+      } as Category,
+      {
+        user,
+        type: CategoryType.BLOG,
+        name: 'Blog',
+      } as Category,
+      {
+        user,
+        type: CategoryType.DRESS,
+        name: 'Váy cưới',
+      } as Category,
+      {
+        user,
+        type: CategoryType.SERVICE,
+        name: 'Dịch vụ',
+      } as Category,
+    ];
+
+    categories.forEach(async (category) => {
+      await this.categoryService.create(category);
+    });
+  }
+
+  private async seedDressesForProd() {
+    const dresses = await this.dressService.getAll();
+    if (dresses.length > 0) {
+      this.logger.log(`Dresses already exist. Skipping dress seeding.`);
+    } else {
+      try {
+        await Promise.all([
+          this.seedDressForProd(this.shop1Email),
+          this.seedDressForProd(this.shop2Email),
+          this.seedDressForProd(this.shop3Email),
+          this.seedDressForProd(this.shop4Email),
+          this.seedDressForProd(this.shop5Email),
+        ]);
+      } catch (error) {
+        this.logger.error(`Error seeding dresses: ${error.message}`);
+        throw new Error('Seeding dresses failed.');
+      }
+    }
+  }
+
+  private async seedDressForProd(email: string) {
+    const user = await this.userService.getByEmail(email);
+    if (!user) {
+      this.logger.warn(`User with email ${email} not exists. Skipping seeding dress.`);
+      return;
+    }
+    const category = await this.categoryService.getOneByUserAndType(user.id, CategoryType.DRESS);
+    if (!category) {
+      this.logger.warn(`User category ${email} not exists`);
+    }
+
+    const shopName = email.split('@')[0].replace('.', ' ').toUpperCase();
+    const dresses = [
+      {
+        user,
+        category,
+        name: 'Váy cưới công chúa',
+        description:
+          'Váy cưới công chúa lộng lẫy với thiết kế tinh tế và chất liệu cao cấp. Cung cấp bởi ' +
+          shopName,
+        images: 'https://mimosawedding.vn/wp-content/uploads/2022/08/vay-cuoi-cong-chua.jpg',
+        bust: 90,
+        waist: 60,
+        hip: 90,
+        material: 'Lụa cao cấp',
+        color: 'Trắng',
+        length: 'Dài đến sàn',
+        neckline: 'Cổ vuông',
+        sleeve: 'Không tay',
+        sellPrice: 100000,
+        rentalPrice: 50000,
+        isSellable: true,
+        isRentable: true,
+        ratingAverage: 0,
+        ratingCount: 0,
+        status: DressStatus.AVAILABLE,
+      } as Dress,
+      {
+        user,
+        category,
+        name: 'Váy cưới đuôi cá',
+        description:
+          'Váy cưới đuôi cá quyến rũ với thiết kế tinh tế và chất liệu cao cấp. Cung cấp bởi ' +
+          shopName,
+        images: 'https://i.pinimg.com/originals/72/5f/fc/725ffc17b944400e96deb1cff94d15c8.jpg',
+        bust: 90,
+        waist: 60,
+        hip: 90,
+        material: 'Lụa cao cấp',
+        color: 'Trắng',
+        length: 'Dài đến sàn',
+        neckline: 'Cổ vuông',
+        sleeve: 'Không tay',
+        sellPrice: 100000,
+        rentalPrice: 50000,
+        isSellable: true,
+        isRentable: true,
+        ratingAverage: 0,
+        ratingCount: 0,
+        status: DressStatus.AVAILABLE,
+      } as Dress,
+      {
+        user,
+        category,
+        name: 'Váy cưới chữ A',
+        description:
+          'Váy cưới chữ A thanh lịch với thiết kế tinh tế và chất liệu cao cấp. Cung cấp bởi ' +
+          shopName,
+        images: 'https://felywedding.com/wp-content/uploads/2021/11/25-2.jpg',
+        bust: 90,
+        waist: 60,
+        hip: 90,
+        material: 'Lụa cao cấp',
+        color: 'Trắng',
+        length: 'Dài đến sàn',
+        neckline: 'Cổ tròn',
+        sleeve: 'Không tay',
+        sellPrice: 100000,
+        rentalPrice: 50000,
+        isSellable: true,
+        isRentable: true,
+        ratingAverage: 0,
+        ratingCount: 0,
+        status: DressStatus.AVAILABLE,
+      } as Dress,
+      {
+        user,
+        category,
+        name: 'Váy cưới vintage',
+        description:
+          'Váy cưới vintage lộng lẫy với thiết kế tinh tế và chất liệu cao cấp. Cung cấp bởi ' +
+          shopName,
+        images:
+          'https://thaka.bing.com/th/id/OIP.5uUMhHntQyqbO7nY3-t96wHaLH?r=0&o=7rm=3&rs=1&pid=ImgDetMain&o=7&rm=3',
+        bust: 90,
+        waist: 60,
+        hip: 90,
+        material: 'Lụa cao cấp',
+        color: 'Trắng',
+        length: 'Dài đến sàn',
+        neckline: 'Cổ tròn',
+        sleeve: 'Có tay',
+        sellPrice: 100000,
+        rentalPrice: 50000,
+        isSellable: true,
+        isRentable: true,
+        ratingAverage: 0,
+        ratingCount: 0,
+        status: DressStatus.AVAILABLE,
+      } as Dress,
+      {
+        user,
+        category,
+        name: 'Váy cưới xòe',
+        description:
+          'Váy cưới xòe bồng bềnh với thiết kế tinh tế và chất liệu cao cấp. Cung cấp bởi ' +
+          shopName,
+        images: 'https://linhnga.vn/wp-content/uploads/2020/07/IMG_6067-Edit-scaled.jpg',
+        bust: 90,
+        waist: 60,
+        hip: 90,
+        material: 'Lụa cao cấp',
+        color: 'Trắng',
+        length: 'Dài đến sàn',
+        neckline: 'Cổ tròn',
+        sleeve: 'Có tay',
+        sellPrice: 100000,
+        rentalPrice: 50000,
+        isSellable: true,
+        isRentable: true,
+        ratingAverage: 0,
+        ratingCount: 0,
+        status: DressStatus.AVAILABLE,
+      } as Dress,
+    ] as Dress[];
+
+    await dresses.forEach(async (dress) => {
+      await this.dressService.create(dress);
+    });
+  }
+
+  private async seedServicesForProd() {
+    const services = await this.serviceService.getAll();
+    if (services.length > 0) this.logger.log(`Services already exist. Skipping service seeding.`);
+    else {
+      try {
+        await Promise.all([
+          await this.seedServiceForProd(this.shop1Email),
+          await this.seedServiceForProd(this.shop2Email),
+          await this.seedServiceForProd(this.shop3Email),
+        ]);
+      } catch (error) {
+        this.logger.error(`Error seeding services: ${error.message}`);
+        throw new Error('Seeding services failed.');
+      }
+    }
+  }
+
+  private async seedServiceForProd(email: string) {
+    const user = await this.userService.getByEmail(email);
+    if (!user) {
+      this.logger.warn(`User role ${email} not exists. Skipping seeding service.`);
+      return;
+    }
+    const category = await this.categoryService.getOneByUserAndType(user.id, CategoryType.SERVICE);
+    if (!category) {
+      this.logger.warn(`User category ${email} not exists`);
+    }
+
+    const shopName = email.split('@')[0].replace('.', ' ').toUpperCase();
+    const newService = {
+      user,
+      category,
+      name: `${shopName} Service`,
+      description: `${shopName} cung cấp dịch vụ may đo váy cưới`,
+      images:
+        'https://nicolebridal.vn/wp-content/uploads/2022/12/ao-cuoi-co-dau-cam-ho-576x864.jpg',
+      ratingAverage: 0,
+      ratingCount: 0,
+      status: ServiceStatus.AVAILABLE,
+    } as Service;
+
+    await this.serviceService.create(newService);
+  }
+
+  private async seedAccessoriesForProd() {
+    const accessories = await this.accessoryService.getAll();
+    if (accessories.length > 0) {
+      this.logger.log(`Accessories already exist. Skipping accessory seeding.`);
+    } else {
+      try {
+        await Promise.all([
+          await this.seedAccessoryForProd(this.shop1Email),
+          await this.seedAccessoryForProd(this.shop2Email),
+          await this.seedAccessoryForProd(this.shop3Email),
+          await this.seedAccessoryForProd(this.shop4Email),
+          await this.seedAccessoryForProd(this.shop5Email),
+        ]);
+      } catch (error) {
+        this.logger.error(`Error seeding accessories: ${error.message}`);
+        throw new Error('Seeding accessories failed.');
+      }
+    }
+  }
+
+  private async seedAccessoryForProd(email: string) {
+    const user = await this.userService.getByEmail(email);
+    if (!user) {
+      this.logger.warn(`User role ${email} not exists. Skipping seeding accessory.`);
+      return;
+    }
+    const category = await this.categoryService.getOneByUserAndType(
+      user.id,
+      CategoryType.ACCESSORY,
+    );
+    if (!category) {
+      this.logger.warn(`User category ${email} not exists`);
+    }
+
+    const accessories = [
+      {
+        user,
+        category,
+        name: 'Voan cô dâu',
+        description: 'Voan cô dâu tinh tế, phù hợp với nhiều kiểu tóc và trang phục cưới.',
+        images: 'https://product.hstatic.net/1000003159/product/bridal_veil_master.jpg',
+        sellPrice: 50000,
+        rentalPrice: 25000,
+        isSellable: true,
+        isRentable: true,
+        ratingAverage: 0,
+        ratingCount: 0,
+        status: AccessoryStatus.AVAILABLE,
+      } as Accessory,
+      {
+        user,
+        category,
+        name: 'Vương miện cưới',
+        description: 'Vương miện cưới lấp lánh, tôn vinh vẻ đẹp của cô dâu.',
+        images:
+          'https://linhnga.vn/wp-content/uploads/2022/08/f004a698955bf4dc9e6993d946a9f40b.jpg',
+        sellPrice: 70000,
+        rentalPrice: 35000,
+        isSellable: true,
+        isRentable: true,
+        ratingAverage: 0,
+        ratingCount: 0,
+        status: AccessoryStatus.AVAILABLE,
+      } as Accessory,
+      {
+        user,
+        category,
+        name: 'Lược cài tóc cô dâu',
+        description: 'Lược cài tóc cô dâu tinh tế, hoàn hảo cho ngày trọng đại.',
+        images:
+          'https://linhnga.vn/wp-content/uploads/2022/08/Luoc-cai-toc-co-dau-vong-hoa-cuoi.jpg',
+        sellPrice: 30000,
+        rentalPrice: 15000,
+        isSellable: true,
+        isRentable: true,
+        ratingAverage: 0,
+        ratingCount: 0,
+        status: AccessoryStatus.AVAILABLE,
+      } as Accessory,
+      {
+        user,
+        category,
+        name: 'Phụ kiện Hair Vine',
+        description: 'Phụ kiện Hair Vine tinh tế, tạo điểm nhấn cho kiểu tóc cô dâu.',
+        images:
+          'https://i.pinimg.com/736x/37/e7/1d/37e71dc08d23db95dd45ba22d69fc975--gold-accessories-babys-breath.jpg',
+        sellPrice: 40000,
+        rentalPrice: 20000,
+        isSellable: true,
+        isRentable: true,
+        ratingAverage: 0,
+        ratingCount: 0,
+        status: AccessoryStatus.AVAILABLE,
+      } as Accessory,
+      {
+        user,
+        category,
+        name: 'Giày cưới',
+        description: 'Giày cưới sang trọng, tôn vinh vẻ đẹp của cô dâu.',
+        images: 'https://linhnga.vn/wp-content/uploads/2022/08/Giay-cuoi.jpg',
+        sellPrice: 100000,
+        rentalPrice: 50000,
+        isSellable: true,
+        isRentable: true,
+        ratingAverage: 0,
+        ratingCount: 0,
+        status: AccessoryStatus.AVAILABLE,
+      } as Accessory,
+    ] as Accessory[];
+
+    await accessories.forEach(async (accessory) => {
+      await this.accessoryService.create(accessory);
+    });
+  }
+
+  private async seedBlogsForProd() {
+    const blogs = await this.blogService.getAll();
+    if (blogs.length > 0) this.logger.log(`Blogs already exist. Skipping blog seeding.`);
+    else {
+      try {
+        await Promise.all([
+          await this.seedBlogForProd(this.shop1Email),
+          await this.seedBlogForProd(this.shop2Email),
+          await this.seedBlogForProd(this.shop3Email),
+          await this.seedBlogForProd(this.shop4Email),
+          await this.seedBlogForProd(this.shop5Email),
+        ]);
+      } catch (error) {
+        this.logger.error(`Error seeding blogs: ${error.message}`);
+        throw new Error('Seeding blogs failed.');
+      }
+    }
+  }
+
+  private async seedBlogForProd(email: string) {
+    const user = await this.userService.getByEmail(email);
+    if (!user) {
+      this.logger.warn(`User role ${email} not exists. Skipping seeding blog.`);
+      return;
+    }
+    const category = await this.categoryService.getOneByUserAndType(user.id, CategoryType.BLOG);
+    if (!category) {
+      this.logger.warn(`User category ${email} not exists`);
+    }
+
+    for (let i = 1; i <= 5; i++) {
+      const newBlog = {
+        user,
+        category,
+        title: this.customFaker.lorem.sentence(),
+        content: this.customFaker.lorem.paragraphs(50),
+        images:
+          'https://linhnga.vn/wp-content/uploads/2022/08/Hoa-cuoi.jpg-1400x1867.jpg,https://tse4.mm.bing.net/th/id/OIP._uVCogpX1A6MFL7ms4cCrwHaIy?r=0&rs=1&pid=ImgDetMain&o=7&rm=3',
+        isVerified: true,
+        status: BlogStatus.PUBLISHED,
+      } as Blog;
+
+      await this.blogService.create(newBlog);
+    }
+  }
 }
