@@ -240,9 +240,12 @@ export class MilestoneService {
     }
 
     //Kiểm tra đơn hàng chứa công việc có đang IN_PROCESS không
-    const existingMilestone = await this.milestoneRepository.findOneBy({ id });
+    const existingMilestone = await this.milestoneRepository.findOne({
+      where: { id },
+      relations: ['order'],
+    });
     if (!existingMilestone) throw new NotFoundException('Không tim thấy mốc công việc');
-    if (!this.isOrderInProcess(existingMilestone.order.id))
+    if (!(await this.isOrderInProcess(existingMilestone.order.id)))
       throw new ConflictException('Đơn hàng chưa được bắt đầu/đã hoàn thành/bị hủy');
 
     // Chuyển task hiện tại thành COMPLETED
