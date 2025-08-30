@@ -35,7 +35,13 @@ import {
   ApiTags,
   getSchemaPath,
 } from '@nestjs/swagger';
-import { CreateUser, IdentifyAuthDto, UpdateUser, UserContactDto } from '@/app/user/user.dto';
+import {
+  CreateUser,
+  IdentifyAuthDto,
+  UpdateUser,
+  UserContactDto,
+  UsernameDto,
+} from '@/app/user/user.dto';
 
 @Controller('users')
 @UseGuards(AuthGuard)
@@ -73,6 +79,39 @@ export class UserController {
     await this.userService.identifyUser(userId, body);
     return {
       message: 'Xác minh số điện thoại cho người dùng thành công',
+      statusCode: HttpStatus.OK,
+      item: null,
+    };
+  }
+
+  @Put('username')
+  @ApiOperation({
+    summary: 'Cập nhật username (check unique cho người dùng)',
+    description: 'Cập nhật username mới cho người dùng, check unique',
+  })
+  @UseGuards(AuthGuard)
+  @Roles(UserRole.CUSTOMER, UserRole.SHOP)
+  @ApiBearerAuth()
+  @ApiBody({ type: UsernameDto })
+  @ApiOkResponse({
+    schema: {
+      allOf: [
+        { $ref: getSchemaPath(ItemResponse) },
+        {
+          properties: {
+            item: { example: null },
+          },
+        },
+      ],
+    },
+  })
+  async updateUsername(
+    @UserId() userId: string,
+    @Body() body: UsernameDto,
+  ): Promise<ItemResponse<null>> {
+    await this.userService.updateUsername(userId, body);
+    return {
+      message: 'Cập nhật user name thành công',
       statusCode: HttpStatus.OK,
       item: null,
     };

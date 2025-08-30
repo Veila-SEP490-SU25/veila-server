@@ -190,4 +190,42 @@ export class Transaction extends Base {
     nullable: true,
   })
   note?: string;
+
+  @Column({
+    name: 'available_balance_snapshot',
+    type: 'decimal',
+    precision: 18,
+    scale: 2,
+    unsigned: true,
+    nullable: false,
+    comment: 'Số dư khả dụng của ví tại thời điểm giao dịch',
+  })
+  @ApiProperty({
+    type: 'number',
+    format: 'decimal',
+    description: 'Số dư khả dụng ví tại thời điểm giao dịch',
+    example: 1200000,
+    minimum: 0,
+    required: true,
+  })
+  availableBalanceSnapshot: number;
+
+  @Column({
+    name: 'locked_balance_snapshot',
+    type: 'decimal',
+    precision: 18,
+    scale: 2,
+    unsigned: true,
+    nullable: false,
+    comment: 'Số dư bị khóa của ví tại thời điểm giao dịch',
+  })
+  @ApiProperty({
+    type: 'number',
+    format: 'decimal',
+    description: 'Số dư bị khóa ví tại thời điểm giao dịch',
+    example: 300000,
+    minimum: 0,
+    required: true,
+  })
+  lockedBalanceSnapshot: number;
 }

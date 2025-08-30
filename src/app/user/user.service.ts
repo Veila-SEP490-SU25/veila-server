@@ -3,6 +3,7 @@ import { Filtering, getOrder, getWhere, Pagination, Sorting } from '@/common/dec
 import { User, UserRole } from '@/common/models';
 import {
   BadRequestException,
+  ConflictException,
   ForbiddenException,
   HttpStatus,
   Injectable,
@@ -10,7 +11,7 @@ import {
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { In, Not, Repository } from 'typeorm';
-import { CreateUser, IdentifyAuthDto, UpdateUser, UserContactDto } from '@/app/user';
+import { CreateUser, IdentifyAuthDto, UpdateUser, UserContactDto, UsernameDto } from '@/app/user';
 import { PasswordService } from '@/app/password';
 
 @Injectable()
@@ -19,6 +20,18 @@ export class UserService {
     @InjectRepository(User) private readonly userRepository: Repository<User>,
     private readonly passwordService: PasswordService,
   ) {}
+
+  async updateUsername(userId: string, body: UsernameDto): Promise<void> {
+    const user = await this.getUserById(userId);
+    if (!user) throw new NotFoundException('Không tìm thấy người dùng');
+
+    const existingUser = await this.getByUsername(body.username);
+    if (existingUser) throw new ConflictException('Username này đã tồn tại');
+
+    user.username = body.username.trim();
+
+    await this.userRepository.save(user);
+  }
 
   async getUserById(id: string): Promise<User | null> {
     return await this.userRepository.findOne({

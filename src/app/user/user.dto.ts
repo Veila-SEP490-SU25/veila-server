@@ -232,3 +232,14 @@ export class IdentifyAuthDto {
   @IsString()
   phone: string;
 }
+
+export class UsernameDto {
+  @ApiProperty({
+    description: 'Username của người dùng (unique)',
+    example: 'hieuvuanguday',
+    nullable: false,
+  })
+  @IsNotEmpty()
+  @IsString()
+  username: string;
+}

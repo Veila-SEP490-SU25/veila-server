@@ -587,9 +587,13 @@ export class SeedingService implements OnModuleInit {
       middleName,
       lastName,
       phone: email.includes('customer.')
-        ? `+84${this.customFaker.string.numeric(1)}00${email.charAt(9)}${this.customFaker.string.numeric(5)}`
+        ? `+84${this.customFaker.string.numeric(1)}00${email.charAt(
+            9,
+          )}${this.customFaker.string.numeric(5)}`
         : email.includes('shop.')
-          ? `+84${this.customFaker.string.numeric(1)}11${email.charAt(5)}${this.customFaker.string.numeric(5)}`
+          ? `+84${this.customFaker.string.numeric(1)}11${email.charAt(
+              5,
+            )}${this.customFaker.string.numeric(5)}`
           : email.includes('admin')
             ? `+84${this.customFaker.string.numeric(1)}22${this.customFaker.string.numeric(6)}`
             : email.includes('staff')
@@ -899,6 +903,8 @@ export class SeedingService implements OnModuleInit {
       type: TransactionType.TRANSFER,
       status: TransactionStatus.COMPLETED,
       note: `Seeding membership transaction for shop: ${shop.name}, Subscription Duration: ${subscriptionDuration} days`,
+      availableBalanceSnapshot: shop.user.wallet.availableBalance,
+      lockedBalanceSnapshot: shop.user.wallet.lockedBalance,
     } as Transaction);
     this.logger.log(
       `Membership created successfully for shop: ${shop.name}, Subscription Duration: ${subscriptionDuration} days`,
@@ -1435,6 +1441,8 @@ export class SeedingService implements OnModuleInit {
         amount: newOrder.amount,
         type: TransactionType.TRANSFER,
         status: TransactionStatus.COMPLETED,
+        availableBalanceSnapshot: customerWallet.availableBalance,
+        lockedBalanceSnapshot: customerWallet.lockedBalance,
       } as Transaction);
       await this.transactionService.createTransactionForSeeding({
         wallet: shopWallet,
@@ -1446,6 +1454,8 @@ export class SeedingService implements OnModuleInit {
         amount: newOrder.amount,
         type: TransactionType.TRANSFER,
         status: TransactionStatus.COMPLETED,
+        availableBalanceSnapshot: shopWallet.availableBalance,
+        lockedBalanceSnapshot: shopWallet.lockedBalance,
       } as Transaction);
       await this.transactionService.createTransactionForSeeding({
         wallet: shopWallet,
@@ -1456,6 +1466,8 @@ export class SeedingService implements OnModuleInit {
         amount: newOrder.amount,
         type: TransactionType.TRANSFER,
         status: TransactionStatus.COMPLETED,
+        availableBalanceSnapshot: shopWallet.availableBalance,
+        lockedBalanceSnapshot: shopWallet.lockedBalance,
       } as Transaction);
 
       this.logger.log(
@@ -1678,6 +1690,8 @@ export class SeedingService implements OnModuleInit {
         amount: newOrder.amount,
         type: TransactionType.TRANSFER,
         status: TransactionStatus.COMPLETED,
+        availableBalanceSnapshot: customerWallet.availableBalance,
+        lockedBalanceSnapshot: customerWallet.lockedBalance,
       } as Transaction);
       await this.transactionService.createTransactionForSeeding({
         wallet: shopWallet,
@@ -1689,6 +1703,8 @@ export class SeedingService implements OnModuleInit {
         amount: newOrder.amount,
         type: TransactionType.TRANSFER,
         status: TransactionStatus.COMPLETED,
+        availableBalanceSnapshot: shopWallet.availableBalance,
+        lockedBalanceSnapshot: shopWallet.lockedBalance,
       } as Transaction);
       await this.transactionService.createTransactionForSeeding({
         wallet: shopWallet,
@@ -1699,6 +1715,8 @@ export class SeedingService implements OnModuleInit {
         amount: newOrder.amount,
         type: TransactionType.TRANSFER,
         status: TransactionStatus.COMPLETED,
+        availableBalanceSnapshot: shopWallet.availableBalance,
+        lockedBalanceSnapshot: shopWallet.lockedBalance,
       } as Transaction);
 
       this.logger.log(
@@ -1892,6 +1910,8 @@ export class SeedingService implements OnModuleInit {
       amount: newOrder.amount,
       type: TransactionType.TRANSFER,
       status: TransactionStatus.COMPLETED,
+      availableBalanceSnapshot: customerWallet.availableBalance,
+      lockedBalanceSnapshot: customerWallet.lockedBalance,
     } as Transaction);
     await this.transactionService.createTransactionForSeeding({
       wallet: shopWallet,
@@ -1903,6 +1923,8 @@ export class SeedingService implements OnModuleInit {
       amount: newOrder.amount,
       type: TransactionType.TRANSFER,
       status: TransactionStatus.COMPLETED,
+      availableBalanceSnapshot: shopWallet.availableBalance,
+      lockedBalanceSnapshot: shopWallet.lockedBalance,
     } as Transaction);
     await this.transactionService.createTransactionForSeeding({
       wallet: shopWallet,
@@ -1913,6 +1935,8 @@ export class SeedingService implements OnModuleInit {
       amount: newOrder.amount,
       type: TransactionType.TRANSFER,
       status: TransactionStatus.COMPLETED,
+      availableBalanceSnapshot: shopWallet.availableBalance,
+      lockedBalanceSnapshot: shopWallet.lockedBalance,
     } as Transaction);
 
     this.logger.log(
