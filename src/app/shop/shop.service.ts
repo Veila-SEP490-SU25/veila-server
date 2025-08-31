@@ -600,4 +600,10 @@ export class ShopService {
   async createMembershipForSeeding(data: Membership): Promise<Membership> {
     return await this.membershipService.createForSeeding(data);
   }
+
+  async updateShopStatus(id: string, status: ShopStatus): Promise<void> {
+    const shop = await this.shopRepository.findOne({ where: { id } });
+    if (!shop) throw new NotFoundException('Không tìm thấy cửa hàng');
+    await this.shopRepository.update(id, { status });
+  }
 }

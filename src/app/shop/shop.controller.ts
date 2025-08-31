@@ -1,5 +1,5 @@
 import { ItemResponse, ListResponse } from '@/common/base';
-import { Shop, UserRole } from '@/common/models';
+import { Shop, ShopStatus, UserRole } from '@/common/models';
 import {
   Body,
   Controller,
@@ -979,6 +979,34 @@ export class ShopController {
       hasNextPage: page + 1 < totalPages,
       hasPrevPage: 0 < page,
       items: dtos,
+    };
+  }
+
+  @Put(':id/:status')
+  @UseGuards(AuthGuard)
+  @Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN, UserRole.STAFF)
+  @ApiOperation({ summary: 'Cập nhật trạng thái shop' })
+  @ApiOkResponse({
+    schema: {
+      allOf: [
+        { $ref: getSchemaPath(ItemResponse) },
+        {
+          properties: {
+            item: { example: null },
+          },
+        },
+      ]
+    }
+  })
+  async updateShopStatus(
+    @Param('id') id: string,
+    @Param('status') status: ShopStatus,
+  ): Promise<ItemResponse<null>> {
+    await this.shopService.updateShopStatus(id, status);
+    return {
+      message: 'Cập nhật trạng thái shop thành công',
+      statusCode: HttpStatus.OK,
+      item: null,
     };
   }
 }

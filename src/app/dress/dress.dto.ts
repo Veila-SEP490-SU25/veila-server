@@ -1,7 +1,7 @@
 import { DressStatus } from '@/common/models';
 import { ApiProperty } from '@nestjs/swagger';
 import { Expose, Type } from 'class-transformer';
-import { IsBoolean, IsEnum, IsNumber, IsOptional, IsString } from 'class-validator';
+import { IsBoolean, IsEnum, IsNumber, IsOptional, IsString, Max, Min } from 'class-validator';
 import { ProductCategoryDto } from '@/app/category/category.dto';
 import { ProductUserDto } from '@/app/user/user.dto';
 
@@ -110,6 +110,8 @@ export class CUDressDto {
   })
   @IsOptional()
   @IsNumber()
+  @Min(50)
+  @Max(150)
   bust: number | null;
 
   @ApiProperty({
@@ -120,6 +122,8 @@ export class CUDressDto {
   })
   @IsOptional()
   @IsNumber()
+  @Min(40)
+  @Max(100)
   waist: number | null;
 
   @ApiProperty({
@@ -130,6 +134,8 @@ export class CUDressDto {
   })
   @IsOptional()
   @IsNumber()
+  @Min(40)
+  @Max(150)
   hip: number | null;
 
   @ApiProperty({
@@ -176,13 +182,7 @@ export class CUDressDto {
   @IsString()
   neckline: string | null;
 
-  @ApiProperty({
-    type: 'string',
-    description: 'Tay (tối đa 50 ký tự)',
-    example: 'Tay ngắn',
-    maxLength: 50,
-    nullable: true,
-  })
+  @ApiProperty({ type: 'string', description: 'Tay (tối đa 50 ký tự)', example: 'Tay ngắn', maxLength: 50, nullable: true })
   @IsOptional()
   @IsString()
   sleeve: string | null;

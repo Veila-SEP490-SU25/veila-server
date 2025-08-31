@@ -11,92 +11,92 @@ export class CUOrderDressDetailDto {
   @ApiProperty({ description: 'Chiều cao của cô dâu', example: 165 })
   @IsNotEmpty()
   @IsNumber()
-  @Min(145)
-  @Max(175)
+  @Min(130)
+  @Max(200)
   height: number;
 
   @ApiProperty({ description: 'Cân nặng của cô dâu', example: 50 })
   @IsNotEmpty()
   @IsNumber()
-  @Min(38)
-  @Max(75)
+  @Min(30)
+  @Max(100)
   weight: number;
 
   @ApiProperty({ description: 'Vòng ngực của cô dâu', example: 85 })
   @IsNotEmpty()
   @IsNumber()
-  @Min(75)
-  @Max(100)
+  @Min(50)
+  @Max(150)
   bust: number;
 
   @ApiProperty({ description: 'Vòng eo của cô dâu', example: 65 })
   @IsNotEmpty()
   @IsNumber()
-  @Min(55)
-  @Max(85)
+  @Min(40)
+  @Max(100)
   waist: number;
 
   @ApiProperty({ description: 'Vòng hông của cô dâu', example: 90 })
   @IsNotEmpty()
   @IsNumber()
-  @Min(80)
-  @Max(105)
+  @Min(40)
+  @Max(150)
   hip: number;
 
   @ApiProperty({ description: 'Vòng nách của cô dâu', example: 10 })
   @IsNotEmpty()
   @IsNumber()
-  @Min(15)
-  @Max(30)
+  @Min(10)
+  @Max(40)
   armpit: number;
 
   @ApiProperty({ description: 'Vòng bắp tay của cô dâu', example: 10 })
   @IsNotEmpty()
   @IsNumber()
-  @Min(20)
-  @Max(35)
+  @Min(10)
+  @Max(40)
   bicep: number;
 
   @ApiProperty({ description: 'Vòng cổ của cô dâu', example: 20 })
   @IsNotEmpty()
   @IsNumber()
-  @Min(28)
-  @Max(38)
+  @Min(20)
+  @Max(50)
   neck: number;
 
   @ApiProperty({ description: 'Chiều rộng vai của cô dâu', example: 40 })
   @IsNotEmpty()
   @IsNumber()
-  @Min(32)
-  @Max(45)
+  @Min(20)
+  @Max(50)
   shoulderWidth: number;
 
   @ApiProperty({ description: 'Chiều dài tay của cô dâu', example: 40 })
   @IsNotEmpty()
   @IsNumber()
-  @Min(45)
-  @Max(65)
+  @Min(0)
+  @Max(100)
   sleeveLength: number;
 
   @ApiProperty({ description: 'Chiều dài lưng của cô dâu', example: 60 })
   @IsNotEmpty()
   @IsNumber()
-  @Min(35)
-  @Max(55)
+  @Min(30)
+  @Max(60)
   backLength: number;
 
   @ApiProperty({ description: 'Từ chân ngực đến eo của cô dâu', example: 50 })
   @IsNotEmpty()
   @IsNumber()
-  @Min(10)
-  @Max(25)
+  @Min(5)
+  @Max(30)
   lowerWaist: number;
 
   @ApiProperty({ description: 'Độ dài tùng váy', example: 60 })
   @IsNotEmpty()
   @IsNumber()
-  @Min(90)
-  @Max(120)
+  @Min(0)
+  @Max(200)
   waistToFloor: number;
 }
 
