@@ -27,6 +27,7 @@ import { ShopService } from '../shop';
 import { OrderService } from '../order';
 import { PasswordService } from '../password';
 import { RedisService } from '../redis';
+import { AppSettingService } from '@/app/appsetting';
 
 @Injectable()
 export class WalletService {
@@ -44,6 +45,8 @@ export class WalletService {
     private readonly passwordService: PasswordService,
     @Inject(forwardRef(() => RedisService))
     private readonly redisService: RedisService,
+    @Inject(AppSettingService)
+    private readonly appSettingService: AppSettingService,
   ) {}
 
   async getWalletsForAdmin(
@@ -494,12 +497,16 @@ export class WalletService {
 
     if (!shopWallet) throw new NotFoundException('Không tìm thấy ví điện tử của người nhận');
 
-    shopWallet.lockedBalance = Number(shopWallet.lockedBalance) - Number(transaction.amount);
-    shopWallet.availableBalance =
-      Number(shopWallet.availableBalance) + (Number(transaction.amount) * 5) / 100;
+    const cancelPenalty = await this.appSettingService.getCancelPenalty();
 
-    cusWallet.availableBalance =
-      Number(cusWallet.availableBalance) + (Number(transaction.amount) * 95) / 100;
+    shopWallet.lockedBalance = Number(shopWallet.lockedBalance) - Number(transaction.amount);
+
+    const shopReceiveAmount = (Number(transaction.amount) * cancelPenalty) / 100;
+    const cusRefundAmount = Number(transaction.amount) - shopReceiveAmount;
+
+    shopWallet.availableBalance = Number(shopWallet.availableBalance) + shopReceiveAmount;
+
+    cusWallet.availableBalance = Number(cusWallet.availableBalance) + cusRefundAmount;
 
     await this.walletRepository.save(cusWallet);
     await this.walletRepository.save(shopWallet);
@@ -509,7 +516,7 @@ export class WalletService {
       cusWallet.user,
       shopWallet.id,
       order.id,
-      (Number(transaction.amount) * 95) / 100,
+      cusRefundAmount,
       TransactionType.REFUND,
     );
 
@@ -518,7 +525,7 @@ export class WalletService {
       cusWallet.user,
       cusWallet.id,
       order.id,
-      (Number(transaction.amount) * 95) / 100,
+      cusRefundAmount,
       TransactionType.RECEIVE,
     );
   }
@@ -534,17 +541,19 @@ export class WalletService {
         TransactionType.RECEIVE,
       );
       const totalReceived = transactions.reduce((total, tx) => total + Number(tx.amount), 0);
-      const percentMilestone = 0.05 * countCompletedOrInProgress;
 
       const cusWallet = await this.getWalletByUserIdV2(order.customer.id);
       const shopWallet = await this.getWalletByUserIdV2(order.shop.user.id);
 
-      shopWallet.lockedBalance = Number(shopWallet.lockedBalance) - Number(totalReceived);
-      shopWallet.availableBalance =
-        Number(shopWallet.availableBalance) + Number(totalReceived) * percentMilestone;
+      const cancelPenalty = await this.appSettingService.getCancelPenalty();
+      const percentMilestone = cancelPenalty * countCompletedOrInProgress;
+      const shopReceiveAmount = (Number(totalReceived) * percentMilestone) / 100;
+      const cusRefundAmount = Number(totalReceived) - shopReceiveAmount;
 
-      cusWallet.availableBalance =
-        Number(cusWallet.availableBalance) + Number(totalReceived) * (1 - percentMilestone);
+      shopWallet.lockedBalance = Number(shopWallet.lockedBalance) - Number(totalReceived);
+      shopWallet.availableBalance = Number(shopWallet.availableBalance) + Number(shopReceiveAmount);
+
+      cusWallet.availableBalance = Number(cusWallet.availableBalance) + Number(cusRefundAmount);
 
       await this.walletRepository.save(cusWallet);
       await this.walletRepository.save(shopWallet);
@@ -554,7 +563,7 @@ export class WalletService {
         cusWallet.user,
         cusWallet.id,
         order.id,
-        Number(totalReceived) * (1 - percentMilestone),
+        cusRefundAmount,
         TransactionType.RECEIVE,
       );
 
@@ -563,7 +572,7 @@ export class WalletService {
         cusWallet.user,
         shopWallet.id,
         order.id,
-        Number(totalReceived) * (1 - percentMilestone),
+        cusRefundAmount,
         TransactionType.REFUND,
       );
     }

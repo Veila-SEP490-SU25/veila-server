@@ -10,6 +10,7 @@ import { ShopModule } from '../shop';
 import { OrderModule } from '../order';
 import { PasswordModule } from '../password';
 import { RedisModule } from '../redis';
+import { AppSettingModule } from '@/app/appsetting';
 
 @Module({
   imports: [
@@ -21,6 +22,7 @@ import { RedisModule } from '../redis';
     forwardRef(() => OrderModule),
     forwardRef(() => PasswordModule),
     forwardRef(() => RedisModule),
+    AppSettingModule,
   ],
   controllers: [WalletController],
   providers: [WalletService],
