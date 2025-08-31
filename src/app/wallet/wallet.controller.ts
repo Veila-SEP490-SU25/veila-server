@@ -490,6 +490,7 @@ export class WalletController {
     if (body.status === TransactionStatus.COMPLETED) {
       const wallet = await this.walletService.getWalletById(updatedTransaction.wallet.id);
       await this.walletService.saveWalletBalance(wallet, updatedTransaction.amount);
+      await this.transactionService.updateBalanceSnapshotForDeposit(body.transactionId);
     }
     return { message: 'OK' };
   }
