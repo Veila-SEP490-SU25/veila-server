@@ -283,6 +283,8 @@ export class TransactionService {
     existingTransaction.type = transactionDetail.type;
     existingTransaction.status = transactionDetail.status;
     existingTransaction.note = transactionDetail.note;
+    existingTransaction.availableBalanceSnapshot = transactionDetail.availableBalanceSnapshot;
+    existingTransaction.lockedBalanceSnapshot = transactionDetail.lockedBalanceSnapshot;
 
     await this.transactionRepository.save(existingTransaction);
   }

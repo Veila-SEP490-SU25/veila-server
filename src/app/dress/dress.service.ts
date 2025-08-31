@@ -64,6 +64,23 @@ export class DressService {
     return plainToInstance(ItemDressDto, dress, { excludeExtraneousValues: true });
   }
 
+  async getDressById(id: string): Promise<Dress> {
+    const dress = await this.dressRepository.findOne({
+      where: {
+        id,
+        status: DressStatus.AVAILABLE,
+        user: { shop: { status: ShopStatus.ACTIVE } },
+      },
+      relations: {
+        feedbacks: { customer: true },
+        user: { shop: true },
+        category: true,
+      },
+    });
+    if (!dress) throw new NotFoundException('Không tìm thấy váy cưới');
+    return dress;
+  }
+
   async getOne(id: string): Promise<Dress> {
     const dress = await this.dressRepository.findOne({
       where: {

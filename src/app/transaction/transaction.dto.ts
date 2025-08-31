@@ -94,6 +94,24 @@ export class CUTransactionDto {
     nullable: true,
   })
   note: string;
+
+  @ApiProperty({
+    description: 'Số dư khả dụng ví tại thời điểm giao dịch',
+    example: 200000,
+    nullable: false,
+  })
+  @IsNotEmpty()
+  @IsNumber()
+  availableBalanceSnapshot: number;
+
+  @ApiProperty({
+    description: 'Số dư bị khóa của ví tại thời điểm giao dịch',
+    example: 200000,
+    nullable: false,
+  })
+  @IsNotEmpty()
+  @IsNumber()
+  lockedBalanceSnapshot: number;
 }
 
 export class WithdrawTransactionDto {

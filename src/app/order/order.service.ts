@@ -51,6 +51,7 @@ import { Cron, CronExpression } from '@nestjs/schedule';
 import { RedisService } from '../redis';
 import { PasswordService } from '../password';
 import { TransactionService } from '../transaction';
+import { AccessoryService } from '../accessory';
 import { AppSettingService } from '@/app/appsetting';
 
 @Injectable()
@@ -84,6 +85,8 @@ export class OrderService {
     private readonly passwordService: PasswordService,
     @Inject(TransactionService)
     private readonly transactionService: TransactionService,
+    @Inject(AccessoryService)
+    private readonly accessoryService: AccessoryService,
     @Inject(AppSettingService)
     private readonly appSettingService: AppSettingService,
   ) {}
@@ -572,8 +575,9 @@ export class OrderService {
   }
 
   async getOrderDressDetails(orderId: string): Promise<OrderDressDetailDto[]> {
-    const orderAccessoriesDetails =
-      await this.orderDressDetailsService.getOrderDressDetails(orderId);
+    const orderAccessoriesDetails = await this.orderDressDetailsService.getOrderDressDetails(
+      orderId,
+    );
     return plainToInstance(OrderDressDetailDto, orderAccessoriesDetails);
   }
 
@@ -794,19 +798,22 @@ export class OrderService {
   }
 
   async calculateSellPriceForOrder(orderId: string): Promise<number> {
-    const orderDressDetail =
-      await this.orderDressDetailsService.getOrderDressDetailByOrderId(orderId);
+    const orderDressDetail = await this.orderDressDetailsService.getOrderDressDetailByOrderId(
+      orderId,
+    );
     if (!orderDressDetail)
       throw new NotFoundException('Không tìm thấy chi tiết váy cưới trong đơn hàng');
     const orderAccessoryDetails =
       await this.orderAccessoriesDetailsService.getOrderAccessoryDetailsByOrderId(orderId);
     if (!orderAccessoryDetails)
       throw new NotFoundException('Không tìm thấy chi tiết phụ kiện trong đơn hàng');
-    const dressPrice = Number(orderDressDetail.price);
+    const dress = await this.dressService.getDressById(orderDressDetail.id);
+    const dressPrice = Number(dress.sellPrice);
     let accessoriesPrice = 0;
     await Promise.all(
       orderAccessoryDetails.map(async (accessoryDetail) => {
-        accessoriesPrice += accessoryDetail.price;
+        const accessory = await this.accessoryService.getAccessoryById(accessoryDetail.id);
+        accessoriesPrice += Number(accessory.sellPrice);
       }),
     );
 
