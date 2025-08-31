@@ -11,6 +11,7 @@ import { OrderModule } from '../order';
 import { PasswordModule } from '../password';
 import { RedisModule } from '../redis';
 import { AppSettingModule } from '@/app/appsetting';
+import { MailModule } from '../mail';
 
 @Module({
   imports: [
@@ -22,6 +23,7 @@ import { AppSettingModule } from '@/app/appsetting';
     forwardRef(() => OrderModule),
     forwardRef(() => PasswordModule),
     forwardRef(() => RedisModule),
+    forwardRef(() => MailModule),
     AppSettingModule,
   ],
   controllers: [WalletController],

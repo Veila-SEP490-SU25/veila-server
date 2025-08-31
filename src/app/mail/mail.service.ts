@@ -50,4 +50,24 @@ export class MailService {
       throw new UnprocessableEntityException(`Gửi email tạo tài khoản tới ${email} thất bại.`);
     }
   }
+
+  async sendCreatePinEmail(email: string, username: string): Promise<boolean> {
+    try {
+      const pin = '******';
+      await this.mailerService.sendMail({
+        to: email,
+        subject: 'Bạn đã tạo mã PIN cho ví Veila',
+        template: 'create-pin',
+        context: {
+          username,
+          email,
+          pin,
+        },
+      });
+      return true;
+    } catch (error) {
+      console.error(error);
+      throw new UnprocessableEntityException(`Gửi email tạo mã PIN tới ${email} thất bại.`);
+    }
+  }
 }

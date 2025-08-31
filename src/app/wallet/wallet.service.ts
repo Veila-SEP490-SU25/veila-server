@@ -28,6 +28,7 @@ import { OrderService } from '../order';
 import { PasswordService } from '../password';
 import { RedisService } from '../redis';
 import { AppSettingService } from '@/app/appsetting';
+import { MailService } from '../mail';
 
 @Injectable()
 export class WalletService {
@@ -45,6 +46,8 @@ export class WalletService {
     private readonly passwordService: PasswordService,
     @Inject(forwardRef(() => RedisService))
     private readonly redisService: RedisService,
+    @Inject(forwardRef(() => MailService))
+    private readonly mailService: MailService,
     @Inject(AppSettingService)
     private readonly appSettingService: AppSettingService,
   ) {}
@@ -590,7 +593,7 @@ export class WalletService {
 
     const hashedPin = await this.passwordService.hashPassword(body.pin);
     wallet.pin = hashedPin;
-
+    await this.mailService.sendCreatePinEmail(user.email, user.lastName);
     return await this.walletRepository.save(wallet);
   }
 
