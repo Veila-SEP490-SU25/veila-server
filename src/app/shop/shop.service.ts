@@ -59,7 +59,7 @@ export class ShopService {
     private readonly contractService: ContractService,
     @Inject(UserService)
     private readonly userService: UserService,
-  ) { }
+  ) {}
 
   async updateShopProfile(userId: string, body: UpdateShopDto): Promise<void> {
     const existingShop = await this.getShopForOwner(userId);
