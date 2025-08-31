@@ -241,4 +241,24 @@ export class TransactionDto {
     nullable: true,
   })
   note: string;
+
+  @Expose()
+  @ApiProperty({
+    description: 'Số dư khả dụng ví tại thời điểm giao dịch',
+    example: 200000,
+    nullable: false,
+  })
+  @IsNotEmpty()
+  @IsNumber()
+  availableBalanceSnapshot: number;
+
+  @Expose()
+  @ApiProperty({
+    description: 'Số dư bị khóa của ví tại thời điểm giao dịch',
+    example: 200000,
+    nullable: false,
+  })
+  @IsNotEmpty()
+  @IsNumber()
+  lockedBalanceSnapshot: number;
 }

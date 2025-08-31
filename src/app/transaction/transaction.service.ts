@@ -8,6 +8,7 @@ import {
   User,
   TypeBalance,
   TransactionType,
+  Wallet,
 } from '@/common/models';
 import { plainToInstance } from 'class-transformer';
 import { Filtering, getOrder, getWhere, Sorting } from '@/common/decorators';
@@ -27,6 +28,8 @@ export class TransactionService {
     walletId: string,
     transactionDetail: DepositViaPayOSDto,
   ): Promise<string> {
+    const wallet = await this.walletService.getWalletById(walletId);
+
     const newTransaction = {
       wallet: { id: walletId },
       from: user.firstName + ' ' + user.middleName + ' ' + user.lastName,
@@ -37,17 +40,28 @@ export class TransactionService {
       type: TransactionType.DEPOSIT,
       status: TransactionStatus.PENDING,
       note: transactionDetail.note,
+      availableBalanceSnapshot: Number(wallet.availableBalance),
+      lockedBalanceSnapshot: Number(wallet.lockedBalance),
     };
     return (await this.transactionRepository.save(plainToInstance(Transaction, newTransaction))).id;
   }
 
+  async updateBalanceSnapshotForDeposit(transactionId: string): Promise<Transaction> {
+    const existingTransaction = await this.getTransactionByIdV2(transactionId);
+    existingTransaction.availableBalanceSnapshot =
+      Number(existingTransaction.availableBalanceSnapshot) + Number(existingTransaction.amount);
+
+    await this.transactionRepository.save(existingTransaction);
+    return existingTransaction;
+  }
+
   async saveWithdrawTransaction(
     user: User,
-    walletId: string,
+    wallet: Wallet,
     transactionDetail: WithdrawTransactionDto,
   ): Promise<void> {
     const newTransaction = {
-      wallet: { id: walletId },
+      wallet,
       from: user.firstName + ' ' + user.middleName + ' ' + user.lastName + ' Wallet',
       to: user.firstName + ' ' + user.middleName + ' ' + user.lastName,
       fromTypeBalance: TypeBalance.AVAILABLE,
@@ -56,11 +70,33 @@ export class TransactionService {
       type: TransactionType.WITHDRAW,
       status: TransactionStatus.PENDING,
       note: transactionDetail.note,
+      availableBalanceSnapshot: Number(wallet.availableBalance),
+      lockedBalanceSnapshot: Number(wallet.lockedBalance),
     };
     await this.transactionRepository.save(plainToInstance(Transaction, newTransaction));
   }
 
-  async saveTransferTransaction(
+  async updateBalanceSnapshotForApprovedWithDraw(transactionId: string): Promise<Transaction> {
+    const existingTransaction = await this.getTransactionByIdV2(transactionId);
+    existingTransaction.lockedBalanceSnapshot =
+      Number(existingTransaction.lockedBalanceSnapshot) - Number(existingTransaction.amount);
+
+    await this.transactionRepository.save(existingTransaction);
+    return existingTransaction;
+  }
+
+  async updateBalanceSnapshotForCancelledWithDraw(transactionId: string): Promise<Transaction> {
+    const existingTransaction = await this.getTransactionByIdV2(transactionId);
+    existingTransaction.availableBalanceSnapshot =
+      Number(existingTransaction.availableBalanceSnapshot) + Number(existingTransaction.amount);
+    existingTransaction.lockedBalanceSnapshot =
+      Number(existingTransaction.lockedBalanceSnapshot) - Number(existingTransaction.amount);
+
+    await this.transactionRepository.save(existingTransaction);
+    return existingTransaction;
+  }
+
+  async saveTransferTransactionForSell(
     fromUser: User,
     toUser: User,
     walletId: string,
@@ -70,6 +106,7 @@ export class TransactionService {
   ): Promise<void> {
     const fromUserName = fromUser.firstName + ' ' + fromUser.middleName + ' ' + fromUser.lastName;
     const toUserName = toUser.firstName + ' ' + toUser.middleName + ' ' + toUser.lastName;
+    const wallet = await this.walletService.getWalletById(walletId);
 
     const newTransaction = {
       wallet: { id: walletId },
@@ -82,6 +119,67 @@ export class TransactionService {
       type: type,
       status: TransactionStatus.COMPLETED,
       note: fromUserName + ' transfer to ' + toUserName,
+      availableBalanceSnapshot: Number(wallet.availableBalance),
+      lockedBalanceSnapshot: Number(wallet.lockedBalance),
+    } as Transaction;
+    await this.transactionRepository.save(plainToInstance(Transaction, newTransaction));
+  }
+
+  async saveTransferTransactionForRent(
+    fromUser: User,
+    toUser: User,
+    walletId: string,
+    orderId: string,
+    amount: number,
+    type: TransactionType,
+  ): Promise<void> {
+    const fromUserName = fromUser.firstName + ' ' + fromUser.middleName + ' ' + fromUser.lastName;
+    const toUserName = toUser.firstName + ' ' + toUser.middleName + ' ' + toUser.lastName;
+    const wallet = await this.walletService.getWalletById(walletId);
+
+    const newTransaction = {
+      wallet: { id: walletId },
+      order: { id: orderId },
+      from: fromUserName + ' Wallet',
+      to: toUserName + ' Wallet',
+      fromTypeBalance: TypeBalance.AVAILABLE,
+      toTypeBalance: TypeBalance.LOCKED,
+      amount: amount,
+      type: type,
+      status: TransactionStatus.COMPLETED,
+      note: fromUserName + ' transfer to ' + toUserName,
+      availableBalanceSnapshot: Number(wallet.availableBalance),
+      lockedBalanceSnapshot: Number(wallet.lockedBalance),
+    } as Transaction;
+    await this.transactionRepository.save(plainToInstance(Transaction, newTransaction));
+  }
+
+  async saveSelfTransferTransactionForRent(
+    fromUser: User,
+    toUser: User,
+    walletId: string,
+    orderId: string,
+    amount: number,
+    deposit: number,
+    type: TransactionType,
+  ): Promise<void> {
+    const fromUserName = fromUser.firstName + ' ' + fromUser.middleName + ' ' + fromUser.lastName;
+    const toUserName = toUser.firstName + ' ' + toUser.middleName + ' ' + toUser.lastName;
+    const wallet = await this.walletService.getWalletById(walletId);
+
+    const newTransaction = {
+      wallet: { id: walletId },
+      order: { id: orderId },
+      from: fromUserName + ' Wallet',
+      to: toUserName + ' Wallet',
+      fromTypeBalance: TypeBalance.AVAILABLE,
+      toTypeBalance: TypeBalance.LOCKED,
+      amount: deposit,
+      type: type,
+      status: TransactionStatus.COMPLETED,
+      note: fromUserName + ' transfer to ' + toUserName,
+      availableBalanceSnapshot: Number(wallet.availableBalance),
+      lockedBalanceSnapshot: Number(wallet.lockedBalance) + amount,
     } as Transaction;
     await this.transactionRepository.save(plainToInstance(Transaction, newTransaction));
   }
@@ -93,6 +191,7 @@ export class TransactionService {
   ): Promise<void> {
     const fromUserName = fromUser.firstName + ' ' + fromUser.middleName + ' ' + fromUser.lastName;
     const toUserName = 'Veila Platform Wallet';
+    const wallet = await this.walletService.getWalletById(walletId);
 
     const newTransaction = {
       wallet: { id: walletId },
@@ -104,6 +203,8 @@ export class TransactionService {
       type: TransactionType.TRANSFER,
       status: TransactionStatus.COMPLETED,
       note: fromUserName + ' transfer to ' + toUserName,
+      availableBalanceSnapshot: Number(wallet.availableBalance),
+      lockedBalanceSnapshot: Number(wallet.lockedBalance),
     } as Transaction;
     await this.transactionRepository.save(plainToInstance(Transaction, newTransaction));
   }
@@ -118,6 +219,7 @@ export class TransactionService {
   ): Promise<void> {
     const fromUserName = fromUser.firstName + ' ' + fromUser.middleName + ' ' + fromUser.lastName;
     const toUserName = toUser.firstName + ' ' + toUser.middleName + ' ' + toUser.lastName;
+    const wallet = await this.walletService.getWalletById(walletId);
 
     const newTransaction = {
       wallet: { id: walletId },
@@ -130,6 +232,8 @@ export class TransactionService {
       type,
       status: TransactionStatus.COMPLETED,
       note: fromUserName + ' refund to ' + toUserName,
+      availableBalanceSnapshot: Number(wallet.availableBalance),
+      lockedBalanceSnapshot: Number(wallet.lockedBalance),
     } as Transaction;
     await this.transactionRepository.save(plainToInstance(Transaction, newTransaction));
   }
@@ -144,6 +248,7 @@ export class TransactionService {
   ): Promise<void> {
     const fromUserName = fromUser.firstName + ' ' + fromUser.middleName + ' ' + fromUser.lastName;
     const toUserName = toUser.firstName + ' ' + toUser.middleName + ' ' + toUser.lastName;
+    const wallet = await this.walletService.getWalletById(walletId);
 
     const newTransaction = {
       wallet: { id: walletId },
@@ -156,6 +261,8 @@ export class TransactionService {
       order: { id: orderId },
       status: TransactionStatus.COMPLETED,
       note: fromUserName + ' transfer to ' + toUserName,
+      availableBalanceSnapshot: Number(wallet.availableBalance),
+      lockedBalanceSnapshot: Number(wallet.lockedBalance),
     } as Transaction;
     await this.transactionRepository.save(plainToInstance(Transaction, newTransaction));
   }
@@ -274,6 +381,15 @@ export class TransactionService {
     return plainToInstance(TransactionDto, transaction);
   }
 
+  async getTransactionByIdV2(id: string): Promise<Transaction> {
+    const transaction = await this.transactionRepository.findOne({
+      where: { id },
+      relations: ['wallet', 'order', 'membership'],
+    });
+    if (!transaction) throw new NotFoundException('Không tìm thấy giao dịch');
+    return transaction;
+  }
+
   async getTransactionByOrderId(orderId: string): Promise<Transaction> {
     const transaction = await this.transactionRepository.findOne({
       where: { order: { id: orderId } },
@@ -300,6 +416,7 @@ export class TransactionService {
 
     const wallet = await this.walletService.getWalletById(transaction.walletId);
     await this.walletService.saveWalletBalanceV2(wallet, transaction.amount);
+    await this.updateBalanceSnapshotForApprovedWithDraw(transaction.id);
 
     return await this.updateTransactionStatus(id, TransactionStatus.COMPLETED);
   }
@@ -316,6 +433,7 @@ export class TransactionService {
 
     const wallet = await this.walletService.getWalletById(transaction.walletId);
     await this.walletService.saveWalletBalanceV3(wallet, transaction.amount);
+    await this.updateBalanceSnapshotForCancelledWithDraw(transaction.id);
     return await this.updateTransactionStatus(id, TransactionStatus.CANCELLED);
   }
 

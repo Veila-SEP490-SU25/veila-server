@@ -185,7 +185,7 @@ export class WalletService {
 
       wallet.availableBalance = Number(wallet.availableBalance) - withdrawWallet.amount;
       wallet.lockedBalance = Number(wallet.lockedBalance) + withdrawWallet.amount;
-      await this.transactionService.saveWithdrawTransaction(user, wallet.id, withdrawWallet);
+      await this.transactionService.saveWithdrawTransaction(user, wallet, withdrawWallet);
     }
 
     await this.walletRepository.save(wallet);
@@ -216,7 +216,7 @@ export class WalletService {
     await this.walletRepository.save(fromWallet);
     await this.walletRepository.save(toWallet);
 
-    await this.transactionService.saveTransferTransaction(
+    await this.transactionService.saveTransferTransactionForSell(
       fromUser,
       toUser,
       fromWallet.id,
@@ -224,7 +224,7 @@ export class WalletService {
       amount,
       TransactionType.TRANSFER,
     );
-    await this.transactionService.saveTransferTransaction(
+    await this.transactionService.saveTransferTransactionForSell(
       fromUser,
       toUser,
       toWallet.id,
@@ -260,7 +260,17 @@ export class WalletService {
     await this.walletRepository.save(fromWallet);
     await this.walletRepository.save(toWallet);
 
-    await this.transactionService.saveTransferTransaction(
+    await this.transactionService.saveSelfTransferTransactionForRent(
+      fromUser,
+      fromUser,
+      toWallet.id,
+      order.id,
+      amount,
+      deposit,
+      TransactionType.TRANSFER,
+    );
+
+    await this.transactionService.saveTransferTransactionForRent(
       fromUser,
       toUser,
       fromWallet.id,
@@ -269,22 +279,13 @@ export class WalletService {
       TransactionType.TRANSFER,
     );
 
-    await this.transactionService.saveTransferTransaction(
+    await this.transactionService.saveTransferTransactionForRent(
       fromUser,
       toUser,
       toWallet.id,
       order.id,
       amount,
       TransactionType.RECEIVE,
-    );
-
-    await this.transactionService.saveTransferTransaction(
-      fromUser,
-      fromUser,
-      toWallet.id,
-      order.id,
-      deposit - amount,
-      TransactionType.TRANSFER,
     );
   }
 
@@ -330,6 +331,12 @@ export class WalletService {
 
     const fromUser = order.customer;
     const toUser = order.shop.user;
+
+    fromWallet.availableBalance = Number(fromWallet.availableBalance) - Number(amount);
+    toWallet.lockedBalance = Number(toWallet.lockedBalance) + Number(amount);
+    await this.walletRepository.save(fromWallet);
+    await this.walletRepository.save(toWallet);
+
     await this.transactionService.saveTransferOrderTransaction(
       fromUser,
       toUser,
@@ -347,11 +354,6 @@ export class WalletService {
       amount,
       TransactionType.RECEIVE,
     );
-
-    fromWallet.availableBalance = Number(fromWallet.availableBalance) - Number(amount);
-    toWallet.lockedBalance = Number(toWallet.lockedBalance) + Number(amount);
-    await this.walletRepository.save(fromWallet);
-    await this.walletRepository.save(toWallet);
   }
 
   async getWalletForUser(userId: string): Promise<Wallet> {
