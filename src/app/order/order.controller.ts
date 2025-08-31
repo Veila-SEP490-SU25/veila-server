@@ -154,6 +154,98 @@ export class OrderController {
     };
   }
 
+  @Get('shops/:shopId')
+  @UseGuards(AuthGuard)
+  @ApiOperation({
+    summary: 'Lấy danh sách đơn hàng của một cửa hàng với phân trang, sắp xếp và lọc',
+    description: `
+        **Hướng dẫn sử dụng:**
+
+        - Trả về danh sách đơn hàng (bao gồm cả đã xóa mềm) dưới quyền quản trị/nhân viên.
+        - Hỗ trợ phân trang, sắp xếp, lọc.
+        - Page bắt đầu từ 0
+        - Sort theo format: [tên_field]:[asc/desc]
+        - Các trường đang có thể sort: due_date, amount, status
+        - Filter theo format: [tên_field]:[eq|neq|gt|gte|lt|lte|like|nlike|in|nin]:[keyword]; hoặc [tên_field]:[isnull|isnotnull]
+        - Các trường đang có thể filter: customer_id, shop_id, phone, email address, due_date, return_date, amount, type, status`,
+  })
+  @ApiQuery({
+    name: 'page',
+    required: false,
+    type: Number,
+    default: 0,
+    description: 'Trang hiện tại (bắt đầu từ 0)',
+  })
+  @ApiQuery({
+    name: 'size',
+    required: false,
+    type: Number,
+    default: 10,
+    description: 'Số lượng mỗi trang',
+  })
+  @ApiQuery({
+    name: 'sort',
+    required: false,
+    type: String,
+    description: 'Sắp xếp theo trường: ví dụ: due_date:asc',
+  })
+  @ApiQuery({
+    name: 'filter',
+    required: false,
+    type: String,
+    description: 'Lọc theo trường: ví dụ: status:PENDING',
+  })
+  @ApiOkResponse({
+    schema: {
+      allOf: [
+        { $ref: getSchemaPath(ListResponse) },
+        {
+          properties: {
+            items: { $ref: getSchemaPath(OrderDto) },
+          },
+        },
+      ],
+    },
+  })
+  async getAllOrdersOfShop(
+    @Param('shopId') shopId: string,
+    @PaginationParams() { page, size, limit, offset }: Pagination,
+    @SortingParams(['due_date', 'amount', 'status', 'createdAt', 'updatedAt']) sort?: Sorting,
+    @FilteringParams([
+      'customer_id',
+      'shop_id',
+      'phone',
+      'email',
+      'address',
+      'due_date',
+      'return_date',
+      'amount',
+      'type',
+      'status',
+    ])
+    filter?: Filtering,
+  ): Promise<ListResponse<OrderDto>> {
+    const [orders, totalItems] = await this.orderService.getOrdersForShop(
+      shopId,
+      limit,
+      offset,
+      sort,
+      filter,
+    );
+    const totalPages = Math.ceil(totalItems / limit);
+    return {
+      message: 'Đây là danh sách tất cả đơn hàng',
+      statusCode: HttpStatus.OK,
+      pageIndex: page,
+      pageSize: size,
+      totalItems,
+      totalPages,
+      hasNextPage: page + 1 < totalPages,
+      hasPrevPage: 0 > page,
+      items: orders,
+    };
+  }
+
   @Get(':id')
   @UseGuards(AuthGuard)
   @ApiOperation({

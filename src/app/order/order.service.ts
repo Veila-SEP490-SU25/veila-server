@@ -5,6 +5,8 @@ import {
   Milestone,
   MilestoneStatus,
   Order,
+  OrderAccessoryDetail,
+  OrderDressDetail,
   OrderServiceDetail,
   OrderStatus,
   OrderType,
@@ -61,6 +63,7 @@ export class OrderService {
     @InjectRepository(UpdateOrderServiceDetail)
     private readonly updateOrderServiceDetailRepository: Repository<UpdateOrderServiceDetail>,
     private readonly userService: UserService,
+    @Inject(ShopService)
     private readonly shopService: ShopService,
     private readonly orderDressDetailsService: OrderDressDetailsService,
     private readonly orderAccessoriesDetailsService: OrderAccessoriesDetailsService,
@@ -399,6 +402,28 @@ export class OrderService {
     existingOrder.status = status;
 
     return await this.orderRepository.save(plainToInstance(Order, existingOrder));
+  }
+
+  async getOrdersForShop(
+    shopId: string,
+    take: number,
+    skip: number,
+    sort?: Sorting,
+    filter?: Filtering,
+  ): Promise<[OrderDto[], number]> {
+    const dynamicFilter = getWhere(filter);
+    const where = {
+      ...dynamicFilter,
+      shop: { id: shopId },
+    };
+    const order = getOrder(sort);
+    const [items, total] = await this.orderRepository.findAndCount({
+      where,
+      order,
+      take,
+      skip,
+    });
+    return [items.map((item) => plainToInstance(OrderDto, item)), total];
   }
 
   async getOrderByShopId(shopId: string): Promise<Order[] | null> {
@@ -931,5 +956,19 @@ export class OrderService {
 
   async updateOrderAmount(id: string, amount: number): Promise<void> {
     await this.orderRepository.update(id, { amount });
+  }
+
+  async createOrderAccessoryDetailForSeeding(
+    orderAccessoryDetail: OrderAccessoryDetail,
+  ): Promise<OrderAccessoryDetail> {
+    return await this.orderAccessoriesDetailsService.createOrderAccessoryDetailForSeeding(
+      orderAccessoryDetail,
+    );
+  }
+
+  async createOrderDressDetailForSeeding(
+    orderDressDetail: OrderDressDetail,
+  ): Promise<OrderDressDetail> {
+    return await this.orderDressDetailsService.createOrderDressDetailForSeeding(orderDressDetail);
   }
 }

@@ -4,10 +4,7 @@ import { CategoryService } from '@/app/category';
 import { ContractService } from '@/app/contract';
 import { DressService } from '@/app/dress';
 import { FeedbackService } from '@/app/feedback';
-import { MembershipService } from '@/app/membership';
 import { OrderService } from '@/app/order';
-import { OrderAccessoriesDetailsService } from '@/app/order-accessories-details';
-import { OrderDressDetailsService } from '@/app/order-dress-details';
 import { PasswordService } from '@/app/password';
 import { RequestService } from '@/app/request';
 import { ServiceService } from '@/app/service';
@@ -98,11 +95,8 @@ export class SeedingService implements OnModuleInit {
     private readonly contractService: ContractService,
     private readonly subscriptionService: SubscriptionService,
     private readonly walletService: WalletService,
-    private readonly membershipService: MembershipService,
     private readonly requestService: RequestService,
     private readonly orderService: OrderService,
-    private readonly orderAccessoriesDetailsService: OrderAccessoriesDetailsService,
-    private readonly orderDressDetailsService: OrderDressDetailsService,
     private readonly taskService: TaskService,
     private readonly transactionService: TransactionService,
     private readonly feedbackService: FeedbackService,
@@ -839,7 +833,7 @@ export class SeedingService implements OnModuleInit {
   }
 
   private async seedMemberships() {
-    const memberships = await this.membershipService.findAll();
+    const memberships = await this.shopService.getAllMemberships();
     if (memberships.length >= 5) {
       this.logger.log(`Enough data available for membership. Skipping seeding`);
       return;
@@ -867,7 +861,7 @@ export class SeedingService implements OnModuleInit {
       this.logger.warn(`Shop with email ${email} not found. Skipping seeding membership.`);
       return;
     }
-    const existingMembership = await this.membershipService.findOne(shop.id);
+    const existingMembership = await this.shopService.getMembershipById(shop.id);
     if (existingMembership) {
       this.logger.warn(`Membership for shop ${shop.name} already exists. Skipping seeding.`);
       return;
@@ -887,7 +881,7 @@ export class SeedingService implements OnModuleInit {
       endDate: this.customFaker.date.soon({ days: subscriptionDuration }),
       status: MembershipStatus.ACTIVE,
     } as Membership;
-    const createdMembership = await this.membershipService.createForSeeding(newMembership);
+    const createdMembership = await this.shopService.createMembershipForSeeding(newMembership);
     if (!shop.user.wallet) {
       this.logger.warn(`Wallet for shop ${shop.name} not found. Skipping transaction creation.`);
       return;
@@ -1339,7 +1333,7 @@ export class SeedingService implements OnModuleInit {
         status: OrderStatus.COMPLETED,
       } as Order);
 
-      await this.orderDressDetailsService.createOrderDressDetailForSeeding({
+      await this.orderService.createOrderDressDetailForSeeding({
         order: newOrder,
         dress,
         height: this.customFaker.number.int({ min: 150, max: 200 }),
@@ -1362,7 +1356,7 @@ export class SeedingService implements OnModuleInit {
       } as OrderDressDetail);
 
       for (const accessory of accessories) {
-        await this.orderAccessoriesDetailsService.createOrderAccessoryDetailForSeeding({
+        await this.orderService.createOrderAccessoryDetailForSeeding({
           order: newOrder,
           accessory,
           quantity: 1,
@@ -1572,7 +1566,7 @@ export class SeedingService implements OnModuleInit {
         status: OrderStatus.COMPLETED,
       } as Order);
 
-      await this.orderDressDetailsService.createOrderDressDetailForSeeding({
+      await this.orderService.createOrderDressDetailForSeeding({
         order: newOrder,
         dress,
         height: this.customFaker.number.int({ min: 150, max: 200 }),
@@ -1595,7 +1589,7 @@ export class SeedingService implements OnModuleInit {
       } as OrderDressDetail);
 
       for (const accessory of accessories) {
-        await this.orderAccessoriesDetailsService.createOrderAccessoryDetailForSeeding({
+        await this.orderService.createOrderAccessoryDetailForSeeding({
           order: newOrder,
           accessory,
           quantity: 1,
@@ -2361,7 +2355,7 @@ export class SeedingService implements OnModuleInit {
       endDate: this.customFaker.date.soon({ days: subscriptionDuration }),
       status: MembershipStatus.ACTIVE,
     } as Membership;
-    await this.membershipService.createForSeeding(membership);
+    await this.shopService.createMembershipForSeeding(membership);
   }
 
   private async seedCategoriesForProd() {

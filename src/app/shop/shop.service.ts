@@ -21,6 +21,7 @@ import {
   DressStatus,
   License,
   LicenseStatus,
+  Membership,
   MembershipStatus,
   Service,
   ServiceStatus,
@@ -55,6 +56,7 @@ export class ShopService {
     @InjectRepository(User) private readonly userRepository: Repository<User>,
     @InjectRepository(Subscription)
     private readonly subscriptionRepository: Repository<Subscription>,
+    @Inject(MembershipService)
     private readonly membershipService: MembershipService,
     private readonly contractService: ContractService,
     @Inject(UserService)
@@ -585,5 +587,17 @@ export class ShopService {
 
   async save(shop: Shop): Promise<Shop> {
     return await this.shopRepository.save(shop);
+  }
+
+  async getAllMemberships(): Promise<Membership[]> {
+    return await this.membershipService.findAll();
+  }
+
+  async getMembershipById(id: string): Promise<Membership | null> {
+    return await this.membershipService.findOne(id);
+  }
+
+  async createMembershipForSeeding(data: Membership): Promise<Membership> {
+    return await this.membershipService.createForSeeding(data);
   }
 }

@@ -160,7 +160,6 @@ export class MembershipService {
       subscriptionId,
     );
     if (!subscription) throw new NotFoundException('Không tìm thấy gói đăng ký phù hợp');
-    if (!subscription) throw new NotFoundException('Không tìm thấy gói đăng ký phù hợp');
 
     const membership = await this.membershipRepository.findOne({
       where: {
