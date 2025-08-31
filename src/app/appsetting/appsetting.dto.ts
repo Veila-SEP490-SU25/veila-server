@@ -10,3 +10,13 @@ export class CancelPenaltyDto {
   @Max(100)
   penalty: number;
 }
+
+export class DelayPenaltyDto {
+  @ApiProperty({
+    example: 15,
+  })
+  @IsNumber()
+  @Min(0)
+  @Max(100)
+  penalty: number;
+}

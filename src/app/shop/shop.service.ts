@@ -582,4 +582,8 @@ export class ShopService {
       skip,
     });
   }
+
+  async save(shop: Shop): Promise<Shop> {
+    return await this.shopRepository.save(shop);
+  }
 }

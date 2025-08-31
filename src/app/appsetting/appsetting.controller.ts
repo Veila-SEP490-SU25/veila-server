@@ -1,4 +1,4 @@
-import { CancelPenaltyDto } from '@/app/appsetting/appsetting.dto';
+import { CancelPenaltyDto, DelayPenaltyDto } from '@/app/appsetting/appsetting.dto';
 import { AppSettingService } from '@/app/appsetting/appsetting.service';
 import { ItemResponse } from '@/common/base';
 import { Roles } from '@/common/decorators';
@@ -45,6 +45,52 @@ export class AppSettingController {
       statusCode: 200,
       item: setting,
     } as ItemResponse<AppSetting>;
+  }
+
+  @Get('delay-penalty')
+  @ApiOperation({ summary: 'Get delay penalty' })
+  @ApiOkResponse({
+    schema: {
+      allOf: [
+        { $ref: getSchemaPath(ItemResponse) },
+        {
+          properties: {
+            item: { $ref: getSchemaPath(Number) },
+          },
+        },
+      ],
+    },
+  })
+  async getDelayPenalty(): Promise<ItemResponse<number>> {
+    const penalty = await this.appSettingService.getDelayPenalty();
+    return {
+      message: 'Delay penalty retrieved successfully',
+      statusCode: 200,
+      item: penalty,
+    } as ItemResponse<number>;
+  }
+
+  @Post('delay-penalty')
+  @ApiOperation({ summary: 'Set delay penalty' })
+  @ApiOkResponse({
+    schema: {
+      allOf: [
+        { $ref: getSchemaPath(ItemResponse) },
+        {
+          properties: {
+            item: { example: null },
+          },
+        },
+      ],
+    },
+  })
+  async setDelayPenalty(@Body() body: DelayPenaltyDto): Promise<ItemResponse<null>> {
+    await this.appSettingService.setDelayPenalty(body.penalty);
+    return {
+      message: 'Delay penalty updated successfully',
+      statusCode: 200,
+      item: null,
+    } as ItemResponse<null>;
   }
 
   @Get('cancel-penalty')

@@ -15,6 +15,24 @@ export class AppSettingService {
     return settings[0] || null;
   }
 
+  async getDelayPenalty(): Promise<number> {
+    const appSettings = await this.appSettingRepository.find();
+    const appSetting = appSettings[0];
+    return appSetting?.delayPenalty ?? 0;
+  }
+
+  async setDelayPenalty(penalty: number): Promise<void> {
+    const appsettings = await this.appSettingRepository.find();
+    const appSetting = appsettings[0];
+    if (appSetting) {
+      appSetting.delayPenalty = penalty;
+      await this.appSettingRepository.save(appSetting);
+    } else {
+      const newSetting = this.appSettingRepository.create({ delayPenalty: penalty });
+      await this.appSettingRepository.save(newSetting);
+    }
+  }
+
   async getCancelPenalty(): Promise<number> {
     const appSettings = await this.appSettingRepository.find();
     const appSetting = appSettings[0];

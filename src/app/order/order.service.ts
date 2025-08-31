@@ -49,6 +49,7 @@ import { Cron, CronExpression } from '@nestjs/schedule';
 import { RedisService } from '../redis';
 import { PasswordService } from '../password';
 import { TransactionService } from '../transaction';
+import { AppSettingService } from '@/app/appsetting';
 
 @Injectable()
 export class OrderService {
@@ -80,6 +81,8 @@ export class OrderService {
     private readonly passwordService: PasswordService,
     @Inject(TransactionService)
     private readonly transactionService: TransactionService,
+    @Inject(AppSettingService)
+    private readonly appSettingService: AppSettingService,
   ) {}
 
   async getOrderMilestones(
@@ -813,19 +816,14 @@ export class OrderService {
     //trường hợp nếu hủy đơn hàng vì lí do nhà cung cấp trễ tiến độ thì không bị phạt
     if (delayedMilestones) {
       if (existingOrder.status === OrderStatus.IN_PROCESS) {
-        if (existingOrder.type === OrderType.SELL || existingOrder.type === OrderType.RENT) {
-          await this.walletService.refundForDelayed(existingOrder);
-          existingOrder.status = OrderStatus.CANCELLED;
-          await this.milestoneService.cancelOrder(existingOrder.id);
+        await this.walletService.refundForDelayed(existingOrder);
+        existingOrder.status = OrderStatus.CANCELLED;
+        await this.milestoneService.cancelOrder(existingOrder.id);
 
-          const user = await this.userService.getUserById(userId);
-          if (!user) throw new NotFoundException('Không tìm thấy người dùng');
-
-          user.reputation = Number(user.reputation) - 15;
-          await this.userService.createUser(user);
-        } else {
-          //luồng custom (mai dậy làm đi m :>)
-        }
+        const shop = existingOrder.shop;
+        const delaySetting = await this.appSettingService.getDelayPenalty();
+        shop.reputation = Number(shop.reputation) - delaySetting;
+        await this.shopService.save(shop);
       }
     } else {
       //trường hợp còn lại sẽ bị phạt

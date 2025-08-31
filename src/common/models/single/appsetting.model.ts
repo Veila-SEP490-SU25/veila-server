@@ -12,4 +12,13 @@ export class AppSetting extends Base {
   })
   @ApiProperty({ example: 5 })
   cancelPenalty: number;
+
+  @Column({
+    name: 'delay_penalty',
+    type: 'int',
+    nullable: false,
+    default: 15,
+  })
+  @ApiProperty({ example: 15 })
+  delayPenalty: number;
 }
