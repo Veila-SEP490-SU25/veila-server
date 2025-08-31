@@ -45,8 +45,8 @@ export class CURequestDto {
   })
   @IsNumber()
   @IsOptional()
-  @Min(145)
-  @Max(175)
+  @Min(130)
+  @Max(200)
   height: number | null;
 
   @ApiProperty({
@@ -57,8 +57,8 @@ export class CURequestDto {
   })
   @IsNumber()
   @IsOptional()
-  @Min(38)
-  @Max(75)
+  @Min(30)
+  @Max(100)
   weight: number | null;
 
   @ApiProperty({
@@ -69,8 +69,8 @@ export class CURequestDto {
   })
   @IsNumber()
   @IsOptional()
-  @Min(75)
-  @Max(100)
+  @Min(50)
+  @Max(150)
   bust: number | null;
 
   @ApiProperty({
@@ -81,8 +81,8 @@ export class CURequestDto {
   })
   @IsNumber()
   @IsOptional()
-  @Min(55)
-  @Max(85)
+  @Min(40)
+  @Max(100)
   waist: number | null;
 
   @ApiProperty({
@@ -93,8 +93,8 @@ export class CURequestDto {
   })
   @IsNumber()
   @IsOptional()
-  @Min(80)
-  @Max(105)
+  @Min(40)
+  @Max(150)
   hip: number | null;
 
   @ApiProperty({
@@ -105,8 +105,8 @@ export class CURequestDto {
   })
   @IsNumber()
   @IsOptional()
-  @Min(15)
-  @Max(30)
+  @Min(10)
+  @Max(40)
   armpit: number | null;
 
   @ApiProperty({
@@ -117,8 +117,8 @@ export class CURequestDto {
   })
   @IsNumber()
   @IsOptional()
-  @Min(20)
-  @Max(35)
+  @Min(10)
+  @Max(40)
   bicep: number | null;
 
   @ApiProperty({
@@ -129,8 +129,8 @@ export class CURequestDto {
   })
   @IsNumber()
   @IsOptional()
-  @Min(28)
-  @Max(38)
+  @Min(20)
+  @Max(50)
   neck: number | null;
 
   @ApiProperty({
@@ -141,8 +141,8 @@ export class CURequestDto {
   })
   @IsNumber()
   @IsOptional()
-  @Min(32)
-  @Max(45)
+  @Min(20)
+  @Max(50)
   shoulderWidth: number | null;
 
   @ApiProperty({
@@ -153,8 +153,8 @@ export class CURequestDto {
   })
   @IsNumber()
   @IsOptional()
-  @Min(45)
-  @Max(65)
+  @Min(0)
+  @Max(100)
   sleeveLength: number | null;
 
   @ApiProperty({
@@ -165,8 +165,8 @@ export class CURequestDto {
   })
   @IsNumber()
   @IsOptional()
-  @Min(35)
-  @Max(55)
+  @Min(30)
+  @Max(60)
   backLength: number | null;
 
   @ApiProperty({
@@ -177,8 +177,8 @@ export class CURequestDto {
   })
   @IsNumber()
   @IsOptional()
-  @Min(10)
-  @Max(25)
+  @Min(5)
+  @Max(30)
   lowerWaist: number | null;
 
   @ApiProperty({
@@ -189,8 +189,8 @@ export class CURequestDto {
   })
   @IsNumber()
   @IsOptional()
-  @Min(90)
-  @Max(120)
+  @Min(0)
+  @Max(200)
   waistToFloor: number | null;
 
   @ApiProperty({
@@ -308,8 +308,8 @@ export class CUpdateRequestDto {
   })
   @IsNumber()
   @IsOptional()
-  @Min(145)
-  @Max(175)
+  @Min(130)
+  @Max(200)
   height: number | null;
 
   @ApiProperty({
@@ -320,8 +320,8 @@ export class CUpdateRequestDto {
   })
   @IsNumber()
   @IsOptional()
-  @Min(38)
-  @Max(75)
+  @Min(30)
+  @Max(100)
   weight: number | null;
 
   @ApiProperty({
@@ -332,8 +332,8 @@ export class CUpdateRequestDto {
   })
   @IsNumber()
   @IsOptional()
-  @Min(75)
-  @Max(100)
+  @Min(50)
+  @Max(150)
   bust: number | null;
 
   @ApiProperty({
@@ -344,8 +344,8 @@ export class CUpdateRequestDto {
   })
   @IsNumber()
   @IsOptional()
-  @Min(55)
-  @Max(85)
+  @Min(40)
+  @Max(100)
   waist: number | null;
 
   @ApiProperty({
@@ -356,8 +356,8 @@ export class CUpdateRequestDto {
   })
   @IsNumber()
   @IsOptional()
-  @Min(80)
-  @Max(105)
+  @Min(40)
+  @Max(150)
   hip: number | null;
 
   @ApiProperty({
@@ -368,8 +368,8 @@ export class CUpdateRequestDto {
   })
   @IsNumber()
   @IsOptional()
-  @Min(15)
-  @Max(30)
+  @Min(10)
+  @Max(40)
   armpit: number | null;
 
   @ApiProperty({
@@ -380,8 +380,8 @@ export class CUpdateRequestDto {
   })
   @IsNumber()
   @IsOptional()
-  @Min(20)
-  @Max(35)
+  @Min(10)
+  @Max(40)
   bicep: number | null;
 
   @ApiProperty({
@@ -392,8 +392,8 @@ export class CUpdateRequestDto {
   })
   @IsNumber()
   @IsOptional()
-  @Min(28)
-  @Max(38)
+  @Min(20)
+  @Max(50)
   neck: number | null;
 
   @ApiProperty({
@@ -404,8 +404,8 @@ export class CUpdateRequestDto {
   })
   @IsNumber()
   @IsOptional()
-  @Min(32)
-  @Max(45)
+  @Min(20)
+  @Max(50)
   shoulderWidth: number | null;
 
   @ApiProperty({
@@ -416,8 +416,8 @@ export class CUpdateRequestDto {
   })
   @IsNumber()
   @IsOptional()
-  @Min(45)
-  @Max(65)
+  @Min(0)
+  @Max(100)
   sleeveLength: number | null;
 
   @ApiProperty({
@@ -428,8 +428,8 @@ export class CUpdateRequestDto {
   })
   @IsNumber()
   @IsOptional()
-  @Min(35)
-  @Max(55)
+  @Min(30)
+  @Max(60)
   backLength: number | null;
 
   @ApiProperty({
@@ -440,8 +440,8 @@ export class CUpdateRequestDto {
   })
   @IsNumber()
   @IsOptional()
-  @Min(10)
-  @Max(25)
+  @Min(5)
+  @Max(30)
   lowerWaist: number | null;
 
   @ApiProperty({
@@ -452,8 +452,8 @@ export class CUpdateRequestDto {
   })
   @IsNumber()
   @IsOptional()
-  @Min(90)
-  @Max(120)
+  @Min(0)
+  @Max(200)
   waistToFloor: number | null;
 
   @ApiProperty({
