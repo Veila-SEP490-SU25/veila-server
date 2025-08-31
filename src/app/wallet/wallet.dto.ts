@@ -123,6 +123,11 @@ export class WalletDto {
 
   @Exclude()
   pin: string | null;
+
+  @Expose()
+  get hasPin(): boolean {
+    return !!this.pin;
+  }
 }
 
 export class DepositViaPayOSDto {
