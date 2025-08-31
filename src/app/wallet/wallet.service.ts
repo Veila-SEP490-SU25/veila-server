@@ -91,7 +91,8 @@ export class WalletService {
     //ép kiểu số
     wallet.availableBalance = Number(wallet.availableBalance);
     wallet.lockedBalance = Number(wallet.lockedBalance);
-    return plainToInstance(WalletDto, wallet);
+    const hasPin = !!wallet.pin;
+    return plainToInstance(WalletDto, { ...wallet, hasPin });
   }
 
   async getWalletByUserIdV2(userId: string): Promise<Wallet> {

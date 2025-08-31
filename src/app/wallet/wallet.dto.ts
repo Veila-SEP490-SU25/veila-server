@@ -125,9 +125,7 @@ export class WalletDto {
   pin: string | null;
 
   @Expose()
-  get hasPin(): boolean {
-    return !!this.pin;
-  }
+  hasPin: boolean;
 }
 
 export class DepositViaPayOSDto {

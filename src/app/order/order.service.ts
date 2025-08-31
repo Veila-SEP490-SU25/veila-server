@@ -577,9 +577,8 @@ export class OrderService {
   }
 
   async getOrderDressDetails(orderId: string): Promise<OrderDressDetailDto[]> {
-    const orderAccessoriesDetails = await this.orderDressDetailsService.getOrderDressDetails(
-      orderId,
-    );
+    const orderAccessoriesDetails =
+      await this.orderDressDetailsService.getOrderDressDetails(orderId);
     return plainToInstance(OrderDressDetailDto, orderAccessoriesDetails);
   }
 
@@ -802,9 +801,8 @@ export class OrderService {
   }
 
   async calculateDepositForRentOrder(orderId: string): Promise<number> {
-    const orderDressDetail = await this.orderDressDetailsService.getOrderDressDetailByOrderId(
-      orderId,
-    );
+    const orderDressDetail =
+      await this.orderDressDetailsService.getOrderDressDetailByOrderId(orderId);
     if (!orderDressDetail)
       throw new NotFoundException('Không tìm thấy chi tiết váy cưới trong đơn hàng');
     const orderAccessoryDetails =

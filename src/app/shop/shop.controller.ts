@@ -995,8 +995,8 @@ export class ShopController {
             item: { example: null },
           },
         },
-      ]
-    }
+      ],
+    },
   })
   async updateShopStatus(
     @Param('id') id: string,

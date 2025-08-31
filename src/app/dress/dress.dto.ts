@@ -182,7 +182,13 @@ export class CUDressDto {
   @IsString()
   neckline: string | null;
 
-  @ApiProperty({ type: 'string', description: 'Tay (tối đa 50 ký tự)', example: 'Tay ngắn', maxLength: 50, nullable: true })
+  @ApiProperty({
+    type: 'string',
+    description: 'Tay (tối đa 50 ký tự)',
+    example: 'Tay ngắn',
+    maxLength: 50,
+    nullable: true,
+  })
   @IsOptional()
   @IsString()
   sleeve: string | null;
