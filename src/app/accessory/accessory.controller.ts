@@ -101,7 +101,7 @@ export class AccessoryController {
   async getAccessoriesForOwner(
     @UserId() userId: string,
     @PaginationParams() { page, size, limit, offset }: Pagination,
-    @SortingParams(['name', 'sellPrice', 'rentalPrice']) sort?: Sorting,
+    @SortingParams(['name', 'sellPrice', 'rentalPrice', 'createdAt', 'updatedAt']) sort?: Sorting,
     @FilteringParams(['name', 'sellPrice', 'rentalPrice', 'isSellable', 'isRentable', 'status'])
     filter?: Filtering,
   ): Promise<ListResponse<Accessory>> {

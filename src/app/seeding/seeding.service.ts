@@ -2249,13 +2249,15 @@ export class SeedingService implements OnModuleInit {
 
     const createdUser = await this.userService.createUser(newUser);
 
+    const hashedPin = await this.passwordService.hashPassword(pin);
+
     const newWallet = {
       user: createdUser,
       availableBalance: 100000000,
       lockedBalance: 0,
       bankNumber,
       bin,
-      pin,
+      pin: hashedPin,
     } as Wallet;
 
     await this.walletService.create(newWallet);

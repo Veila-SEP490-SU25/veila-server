@@ -143,7 +143,7 @@ export class RequestController {
   async getRequestsForCustomer(
     @UserId() userId: string,
     @PaginationParams() { page, size, limit, offset }: Pagination,
-    @SortingParams(['title', 'createdAt', 'status']) sort?: Sorting,
+    @SortingParams(['title', 'createdAt', 'status', 'updatedAt']) sort?: Sorting,
     @FilteringParams(['title', 'status']) filter?: Filtering,
   ): Promise<ListResponse<Request>> {
     const [requests, totalItems] = await this.requestService.getRequestsForCustomer(
@@ -374,7 +374,7 @@ export class RequestController {
   async getUpdateRequests(
     @Param('id') id: string,
     @PaginationParams() { page, size, limit, offset }: Pagination,
-    @SortingParams(['title', 'createdAt', 'status']) sort?: Sorting,
+    @SortingParams(['title', 'createdAt', 'status', 'updatedAt']) sort?: Sorting,
     @FilteringParams(['title', 'status']) filter?: Filtering,
   ): Promise<ListResponse<UpdateRequest>> {
     const [updateRequests, totalItems] = await this.requestService.getUpdateRequests(

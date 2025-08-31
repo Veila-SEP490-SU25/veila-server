@@ -142,7 +142,7 @@ export class UserController {
   async getUsers(
     @CurrentRole() currentRole: UserRole,
     @PaginationParams() pagination: Pagination,
-    @SortingParams(['username', 'email']) sort?: Sorting,
+    @SortingParams(['username', 'email', 'createdAt', 'updatedAt']) sort?: Sorting,
     @FilteringParams(['username', 'firstName', 'lastName']) filter?: Filtering,
   ): Promise<ListResponse<User>> {
     return await this.userService.getUsers(currentRole, pagination, sort, filter);

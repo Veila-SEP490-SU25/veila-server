@@ -14,7 +14,7 @@ export class DressService {
     @InjectRepository(Category) private readonly categoryRepository: Repository<Category>,
     @Inject(UserService)
     private readonly userService: UserService,
-  ) { }
+  ) {}
 
   async getDressesForCustomer(
     take: number,

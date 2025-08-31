@@ -105,7 +105,8 @@ export class DressController {
   async getFavorite(
     @UserId() userId: string,
     @PaginationParams() { page, size, limit, offset }: Pagination,
-    @SortingParams(['name', 'sellPrice', 'rentalPrice', 'ratingAverage']) sort?: Sorting,
+    @SortingParams(['name', 'sellPrice', 'rentalPrice', 'ratingAverage', 'createdAt', 'updatedAt'])
+    sort?: Sorting,
     @FilteringParams([
       'name',
       'sellPrice',
@@ -266,7 +267,8 @@ export class DressController {
   async getDressesForOwner(
     @UserId() userId: string,
     @PaginationParams() { page, size, limit, offset }: Pagination,
-    @SortingParams(['name', 'sellPrice', 'rentalPrice', 'ratingAverage']) sort?: Sorting,
+    @SortingParams(['name', 'sellPrice', 'rentalPrice', 'ratingAverage', 'createdAt', 'updatedAt'])
+    sort?: Sorting,
     @FilteringParams([
       'name',
       'sellPrice',
@@ -546,7 +548,8 @@ export class DressController {
   })
   async getDressesForCustomer(
     @PaginationParams() { page, size, limit, offset }: Pagination,
-    @SortingParams(['name', 'sellPrice', 'rentalPrice', 'ratingAverage']) sort?: Sorting,
+    @SortingParams(['name', 'sellPrice', 'rentalPrice', 'ratingAverage', 'createdAt', 'updatedAt'])
+    sort?: Sorting,
     @FilteringParams([
       'name',
       'sellPrice',

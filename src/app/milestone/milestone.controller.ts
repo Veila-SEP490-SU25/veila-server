@@ -263,7 +263,7 @@ export class MilestoneController {
   async getTasksByMilestoneId(
     @Param('id') id: string,
     @PaginationParams() { page, size, limit, offset }: Pagination,
-    @SortingParams(['index']) sort?: Sorting,
+    @SortingParams(['index', 'createdAt', 'updatedAt']) sort?: Sorting,
     @FilteringParams(['status']) filter?: Filtering,
   ): Promise<ListResponse<TaskDto>> {
     const [items, totalItems] = await this.milestoneService.getTasksByMilestonesId(

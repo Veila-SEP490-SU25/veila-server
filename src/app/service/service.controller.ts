@@ -101,7 +101,7 @@ export class ServiceController {
   async getServicesForOwner(
     @UserId() userId: string,
     @PaginationParams() { page, size, limit, offset }: Pagination,
-    @SortingParams(['name']) sort?: Sorting,
+    @SortingParams(['name', 'createdAt', 'updatedAt']) sort?: Sorting,
     @FilteringParams(['name', 'status']) filter?: Filtering,
   ): Promise<ListResponse<Service>> {
     const [services, totalItems] = await this.serviceService.getServicesForOwner(
@@ -375,7 +375,7 @@ export class ServiceController {
   })
   async getServicesForCustomer(
     @PaginationParams() { page, size, limit, offset }: Pagination,
-    @SortingParams(['name', 'ratingAverage']) sort?: Sorting,
+    @SortingParams(['name', 'ratingAverage', 'createdAt', 'updatedAt']) sort?: Sorting,
     @FilteringParams(['name', 'ratingAverage']) filter?: Filtering,
   ): Promise<ListResponse<ListServiceDto>> {
     const [services, totalItems] = await this.serviceService.getServicesForCustomer(

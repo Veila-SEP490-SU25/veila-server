@@ -130,7 +130,7 @@ export class ShopController {
   async getFavorite(
     @UserId() userId: string,
     @PaginationParams() { page, size, limit, offset }: Pagination,
-    @SortingParams(['name', 'status', 'isVerified']) sort?: Sorting,
+    @SortingParams(['name', 'status', 'isVerified', 'createdAt', 'updatedAt']) sort?: Sorting,
     @FilteringParams(['name', 'status', 'isVerified']) filter?: Filtering,
   ): Promise<ListResponse<ListShopDto>> {
     const [shops, totalItems] = await this.shopService.getFavorite(
@@ -499,7 +499,7 @@ export class ShopController {
   async getShops(
     @CurrentRole() currentRole: UserRole,
     @PaginationParams() { page, size, limit, offset }: Pagination,
-    @SortingParams(['name', 'status', 'isVerified']) sort?: Sorting,
+    @SortingParams(['name', 'status', 'isVerified', 'createdAt', 'updatedAt']) sort?: Sorting,
     @FilteringParams(['name', 'status', 'isVerified']) filter?: Filtering,
   ): Promise<ListResponse<ListShopDto>> {
     const [shops, totalItems] = await this.shopService.getShops(
@@ -625,7 +625,7 @@ export class ShopController {
   async getAccessoriesForCustomer(
     @Param('id') id: string,
     @PaginationParams() { page, size, limit, offset }: Pagination,
-    @SortingParams(['name', 'sellPrice', 'rentalPrice']) sort?: Sorting,
+    @SortingParams(['name', 'sellPrice', 'rentalPrice', 'createdAt', 'updatedAt']) sort?: Sorting,
     @FilteringParams(['name', 'sellPrice', 'rentalPrice', 'isSellable', 'isRentable'])
     filter?: Filtering,
   ): Promise<ListResponse<ListAccessoryDto>> {
@@ -707,7 +707,8 @@ export class ShopController {
   async getDressesForCustomer(
     @Param('id') id: string,
     @PaginationParams() { page, size, limit, offset }: Pagination,
-    @SortingParams(['name', 'sellPrice', 'rentalPrice', 'ratingAverage']) sort?: Sorting,
+    @SortingParams(['name', 'sellPrice', 'rentalPrice', 'ratingAverage', 'createdAt', 'updatedAt'])
+    sort?: Sorting,
     @FilteringParams([
       'name',
       'sellPrice',
@@ -796,7 +797,7 @@ export class ShopController {
   async getServicesForCustomer(
     @Param('id') id: string,
     @PaginationParams() { page, size, limit, offset }: Pagination,
-    @SortingParams(['name', 'ratingAverage']) sort?: Sorting,
+    @SortingParams(['name', 'ratingAverage', 'createdAt', 'updatedAt']) sort?: Sorting,
     @FilteringParams(['name', 'ratingAverage']) filter?: Filtering,
   ): Promise<ListResponse<ListServiceDto>> {
     const [services, totalItems] = await this.shopService.getServicesForCustomer(
@@ -877,7 +878,7 @@ export class ShopController {
   async getBlogsForCustomer(
     @Param('id') id: string,
     @PaginationParams() { page, size, limit, offset }: Pagination,
-    @SortingParams(['title']) sort?: Sorting,
+    @SortingParams(['title', 'createdAt', 'updatedAt']) sort?: Sorting,
     @FilteringParams(['title']) filter?: Filtering,
   ): Promise<ListResponse<ListBlogOfShopDto>> {
     const [blogs, totalItems] = await this.shopService.getBlogsForCustomer(
@@ -958,7 +959,7 @@ export class ShopController {
   async getCategoriesForCustomer(
     @Param('id') id: string,
     @PaginationParams() { page, size, limit, offset }: Pagination,
-    @SortingParams(['name']) sort?: Sorting,
+    @SortingParams(['name', 'createdAt', 'updatedAt']) sort?: Sorting,
     @FilteringParams(['name']) filter?: Filtering,
   ): Promise<ListResponse<ListCategoryDto>> {
     const [categories, totalItems] = await this.shopService.getCategoriesForCustomer(

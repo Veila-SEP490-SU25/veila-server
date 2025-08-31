@@ -112,6 +112,8 @@ export class TransactionController {
       'type',
       'status',
       'note',
+      'createdAt',
+      'updatedAt',
     ])
     sort?: Sorting,
     @FilteringParams([
@@ -219,6 +221,8 @@ export class TransactionController {
       'type',
       'status',
       'note',
+      'createdAt',
+      'updatedAt',
     ])
     sort?: Sorting,
     @FilteringParams([

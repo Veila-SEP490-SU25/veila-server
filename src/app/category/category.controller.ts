@@ -152,7 +152,7 @@ export class CategoryController {
   async findCategoriesForOwner(
     @UserId() userId: string,
     @PaginationParams() { page, size, limit, offset }: Pagination,
-    @SortingParams(['name']) sort?: Sorting,
+    @SortingParams(['name', 'createdAt', 'updatedAt']) sort?: Sorting,
     @FilteringParams(['name', 'status']) filter?: Filtering,
   ): Promise<ListResponse<Category>> {
     const [categories, totalItems] = await this.categoryService.findCategoriesForOwner(
@@ -419,7 +419,8 @@ export class CategoryController {
   async findDressesForCustomer(
     @Param('id') id: string,
     @PaginationParams() { page, size, limit, offset }: Pagination,
-    @SortingParams(['name', 'sellPrice', 'rentalPrice', 'ratingAverage']) sort?: Sorting,
+    @SortingParams(['name', 'sellPrice', 'rentalPrice', 'ratingAverage', 'createdAt', 'updatedAt'])
+    sort?: Sorting,
     @FilteringParams([
       'name',
       'sellPrice',
@@ -512,7 +513,7 @@ export class CategoryController {
   async findServicesForCustomer(
     @Param('id') id: string,
     @PaginationParams() { page, size, limit, offset }: Pagination,
-    @SortingParams(['name', 'ratingAverage']) sort?: Sorting,
+    @SortingParams(['name', 'ratingAverage', 'createdAt', 'updatedAt']) sort?: Sorting,
     @FilteringParams(['name', 'ratingAverage']) filter?: Filtering,
   ): Promise<ListResponse<ListServiceDto>> {
     const [services, totalItems] = await this.categoryService.findServicesForCustomer(
@@ -597,7 +598,7 @@ export class CategoryController {
   async findBlogsForCustomer(
     @Param('id') id: string,
     @PaginationParams() { page, size, limit, offset }: Pagination,
-    @SortingParams(['title']) sort?: Sorting,
+    @SortingParams(['title', 'createdAt', 'updatedAt']) sort?: Sorting,
     @FilteringParams(['title']) filter?: Filtering,
   ): Promise<ListResponse<ListBlogOfCategoryDto>> {
     const [blogs, totalItems] = await this.categoryService.findBlogsForCustomer(
@@ -682,7 +683,7 @@ export class CategoryController {
   async getAccessoriesForCustomer(
     @Param('id') id: string,
     @PaginationParams() { page, size, limit, offset }: Pagination,
-    @SortingParams(['name', 'sellPrice', 'rentalPrice']) sort?: Sorting,
+    @SortingParams(['name', 'sellPrice', 'rentalPrice', 'createdAt', 'updatedAt']) sort?: Sorting,
     @FilteringParams(['name', 'sellPrice', 'rentalPrice', 'isSellable', 'isRentable'])
     filter?: Filtering,
   ): Promise<ListResponse<ListAccessoryDto>> {

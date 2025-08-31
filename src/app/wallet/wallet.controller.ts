@@ -112,7 +112,15 @@ export class WalletController {
   })
   async getAllWalletsForAdmin(
     @PaginationParams() { page, size, limit, offset }: Pagination,
-    @SortingParams(['available_balance', 'locked_balance', 'bin', 'bank_number']) sort?: Sorting,
+    @SortingParams([
+      'available_balance',
+      'locked_balance',
+      'bin',
+      'bank_number',
+      'createdAt',
+      'updatedAt',
+    ])
+    sort?: Sorting,
     @FilteringParams(['user_id', 'available_balance', 'locked_balance', 'bin', 'bank_number'])
     filter?: Filtering,
   ): Promise<ListResponse<WalletDto>> {
