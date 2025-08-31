@@ -1,4 +1,5 @@
 import { AccessoryModule } from '@/app/accessory';
+import { AppSettingModule } from '@/app/appsetting';
 import { BlogModule } from '@/app/blog';
 import { CategoryModule } from '@/app/category';
 import { ContractModule } from '@/app/contract';
@@ -35,6 +36,7 @@ import { Module } from '@nestjs/common';
     TransactionModule,
     FeedbackModule,
     RequestModule,
+    AppSettingModule,
   ],
   providers: [SeedingService],
 })

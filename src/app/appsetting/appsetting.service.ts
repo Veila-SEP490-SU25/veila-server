@@ -15,6 +15,10 @@ export class AppSettingService {
     return settings[0] || null;
   }
 
+  async createAppSetting(body: AppSetting): Promise<void> {
+    await this.appSettingRepository.save(body);
+  }
+
   async getDelayPenalty(): Promise<number> {
     const appSettings = await this.appSettingRepository.find();
     const appSetting = appSettings[0];

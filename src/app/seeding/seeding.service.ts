@@ -1,4 +1,5 @@
 import { AccessoryService } from '@/app/accessory';
+import { AppSettingService } from '@/app/appsetting';
 import { BlogService } from '@/app/blog';
 import { CategoryService } from '@/app/category';
 import { ContractService } from '@/app/contract';
@@ -59,6 +60,7 @@ import {
   // ComplaintStatus,
   // Complaint,
 } from '@/common/models';
+import { AppSetting } from '@/common/models/single/appsetting.model';
 import { Faker, faker, vi } from '@faker-js/faker';
 import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
@@ -100,6 +102,7 @@ export class SeedingService implements OnModuleInit {
     private readonly taskService: TaskService,
     private readonly transactionService: TransactionService,
     private readonly feedbackService: FeedbackService,
+    private readonly appSettingService: AppSettingService,
   ) {
     // Khởi tạo faker với locale tiếng Việt
     this.customFaker = new Faker({
@@ -158,7 +161,11 @@ export class SeedingService implements OnModuleInit {
   async onModuleInit() {
     this.logger.log('Seeding module initialized. Starting seeding process...');
     if (this.node_env !== 'production') {
-      Promise.all([await this.seedContracts(), await this.seedSubscriptions()])
+      Promise.all([
+        await this.seedAppSetting(),
+        await this.seedContracts(),
+        await this.seedSubscriptions(),
+      ])
         .then(async () => {
           await this.seedSystemAccounts();
           await this.seedUsersRoleCustomer();
@@ -191,7 +198,11 @@ export class SeedingService implements OnModuleInit {
           await this.seedUpdateRating();
         });
     } else {
-      Promise.all([await this.seedContracts(), await this.seedSubscriptions()])
+      Promise.all([
+        await this.seedAppSetting(),
+        await this.seedContracts(),
+        await this.seedSubscriptions(),
+      ])
         .then(async () => {
           await this.seedUsersForProd();
         })
@@ -205,6 +216,18 @@ export class SeedingService implements OnModuleInit {
           await this.seedAccessoriesForProd();
           await this.seedBlogsForProd();
         });
+    }
+  }
+
+  private async seedAppSetting() {
+    const appsetting = await this.appSettingService.getAppSetting();
+    if (appsetting) {
+      this.logger.log(`App settings already exist. Skipping seeding.`);
+    } else {
+      await this.appSettingService.createAppSetting({
+        cancelPenalty: 5,
+        delayPenalty: 15,
+      } as AppSetting);
     }
   }
 
