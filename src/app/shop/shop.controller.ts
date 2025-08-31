@@ -338,12 +338,10 @@ export class ShopController {
 
   @Get('me')
   @UseGuards(AuthGuard)
-  @Roles(UserRole.SHOP)
   @ApiOperation({
     summary: 'Lấy thông tin chi tiết shop của chủ shop đang đăng nhập',
     description: `
 **Hướng dẫn sử dụng:**
-- Truyền \`id\` của shop trên URL.
 - Chỉ trả về shop thuộc về tài khoản đang đăng nhập.
 - Nếu không tìm thấy sẽ trả về lỗi.
 `,
