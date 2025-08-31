@@ -16,6 +16,7 @@ import { MilestoneModule } from '@/app/milestone';
 import { RedisModule } from '../redis';
 import { PasswordModule } from '../password';
 import { TransactionModule } from '../transaction';
+import { AccessoryModule } from '../accessory';
 
 @Module({
   imports: [
@@ -33,6 +34,7 @@ import { TransactionModule } from '../transaction';
     forwardRef(() => RedisModule),
     forwardRef(() => PasswordModule),
     forwardRef(() => TransactionModule),
+    forwardRef(() => AccessoryModule),
   ],
   controllers: [OrderController],
   providers: [OrderService],
