@@ -59,7 +59,7 @@ export class ShopService {
     private readonly contractService: ContractService,
     @Inject(UserService)
     private readonly userService: UserService,
-  ) {}
+  ) { }
 
   async updateShopProfile(userId: string, body: UpdateShopDto): Promise<void> {
     const existingShop = await this.getShopForOwner(userId);
@@ -277,23 +277,46 @@ export class ShopService {
       throw new BadRequestException('Người dùng đã có cửa hàng');
     if (!user.isIdentified)
       throw new BadRequestException('Bạn cần xác thực danh tính (SDT) để đăng ký cửa hàng');
-    const contract = await this.contractService.findAvailableContract(ContractType.SHOP);
 
-    const newShop = await this.shopRepository.save({
-      user: { id: userId },
-      contract,
-      name,
-      phone,
-      email,
-      address,
-      status: ShopStatus.PENDING,
-      isVerified: false,
+    const existingShop = await this.shopRepository.findOne({
+      where: { user: { id: userId } },
+      relations: {
+        license: true,
+      },
     });
-    await this.licenseRepository.save({
-      images: licenseImages,
-      shop: newShop,
-      status: LicenseStatus.PENDING,
-    });
+    if (!existingShop) {
+      const contract = await this.contractService.findAvailableContract(ContractType.SHOP);
+
+      const newShop = await this.shopRepository.save({
+        user: { id: userId },
+        contract,
+        name,
+        phone,
+        email,
+        address,
+        status: ShopStatus.PENDING,
+        isVerified: false,
+      });
+      await this.licenseRepository.save({
+        images: licenseImages,
+        shop: newShop,
+        status: LicenseStatus.PENDING,
+      });
+    } else {
+      if (!existingShop.license)
+        throw new NotFoundException('Không tìm thấy giấy phép kinh doanh của cửa hàng');
+      await this.shopRepository.update(existingShop.id, {
+        name,
+        phone,
+        email,
+        address,
+        status: ShopStatus.PENDING,
+      });
+      await this.licenseRepository.update(existingShop.license.id, {
+        images: licenseImages,
+        status: LicenseStatus.RESUBMIT,
+      });
+    }
   }
 
   async resubmitShop(
