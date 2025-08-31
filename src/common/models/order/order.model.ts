@@ -147,6 +147,25 @@ export class Order extends Base {
   amount: number;
 
   @Column({
+    type: 'decimal',
+    precision: 12,
+    scale: 2,
+    unsigned: true,
+    nullable: true,
+    default: 0,
+    comment: 'Tổng số tiền cọc của đơn hàng',
+  })
+  @ApiProperty({
+    type: 'number',
+    format: 'decimal',
+    minimum: 0,
+    nullable: true,
+    description: 'Tổng số tiền cọc của đơn hàng (VNĐ)',
+    example: 5000000,
+  })
+  deposit: number | null;
+
+  @Column({
     type: 'enum',
     enum: OrderType,
     nullable: false,

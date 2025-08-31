@@ -277,15 +277,15 @@ export class OrderService {
       const dressPrice = Number(dress.sellPrice);
 
       //tính tiền phụ kiện
-      let accessoriesPrice = 0;
-      await Promise.all(
+      const accessoriesPriceArray = await Promise.all(
         body.accessoriesDetails.map(async (accessory) => {
           const item = await this.orderAccessoriesDetailsService.getAccessoryById(
             accessory.accessoryId,
           );
-          accessoriesPrice += Number(item.sellPrice) * Number(accessory.quantity);
+          return Number(item.sellPrice) * Number(accessory.quantity);
         }),
       );
+      const accessoriesPrice = accessoriesPriceArray.reduce((a, b) => a + b, 0);
 
       //tạo đơn hàng
       const order = {
@@ -299,16 +299,16 @@ export class OrderService {
         type: OrderType.SELL,
         status: OrderStatus.PENDING,
       } as Order;
-      const orderId = (await this.orderRepository.save(order)).id;
+      const createdOrder = await this.orderRepository.save(order);
 
-      await this.orderDressDetailsService.saveOrderDressDetails(orderId, body.dressDetails);
+      await this.orderDressDetailsService.saveOrderDressDetails(createdOrder.id, body.dressDetails);
       await this.orderAccessoriesDetailsService.saveOrderAccessoryDetails(
-        orderId,
+        createdOrder.id,
         body.accessoriesDetails,
       );
-      await this.milestoneService.createMilestone(orderId, body.newOrder.type);
+      await this.milestoneService.createMilestone(createdOrder.id, body.newOrder.type);
 
-      return order;
+      return createdOrder;
     } else {
       //Đây là luồng thuê váy
 
@@ -316,15 +316,15 @@ export class OrderService {
       const dressPrice = Number(dress.rentalPrice);
 
       //tính tiền phụ kiện
-      let accessoriesPrice = 0;
-      await Promise.all(
+      const accessoriesPriceArray = await Promise.all(
         body.accessoriesDetails.map(async (accessory) => {
           const item = await this.orderAccessoriesDetailsService.getAccessoryById(
             accessory.accessoryId,
           );
-          accessoriesPrice += Number(item.rentalPrice) * Number(accessory.quantity);
+          return Number(item.rentalPrice) * Number(accessory.quantity);
         }),
       );
+      const accessoriesPrice = accessoriesPriceArray.reduce((a, b) => a + b, 0);
 
       //tạo đơn hàng
       const order = {
@@ -339,16 +339,18 @@ export class OrderService {
         type: OrderType.RENT,
         status: OrderStatus.PENDING,
       } as Order;
-      const orderId = (await this.orderRepository.save(order)).id;
+      const createdOrder = await this.orderRepository.save(order);
 
-      await this.orderDressDetailsService.saveOrderDressDetails(orderId, body.dressDetails);
+      await this.orderDressDetailsService.saveOrderDressDetails(createdOrder.id, body.dressDetails);
       await this.orderAccessoriesDetailsService.saveOrderAccessoryDetails(
-        orderId,
+        createdOrder.id,
         body.accessoriesDetails,
       );
-      await this.milestoneService.createMilestone(orderId, body.newOrder.type);
 
-      return order;
+      await this.milestoneService.createMilestone(createdOrder.id, body.newOrder.type);
+      createdOrder.deposit = await this.calculateDepositForRentOrder(createdOrder.id);
+      await this.orderRepository.save(createdOrder);
+      return createdOrder;
     }
   }
 
@@ -575,8 +577,9 @@ export class OrderService {
   }
 
   async getOrderDressDetails(orderId: string): Promise<OrderDressDetailDto[]> {
-    const orderAccessoriesDetails =
-      await this.orderDressDetailsService.getOrderDressDetails(orderId);
+    const orderAccessoriesDetails = await this.orderDressDetailsService.getOrderDressDetails(
+      orderId,
+    );
     return plainToInstance(OrderDressDetailDto, orderAccessoriesDetails);
   }
 
@@ -662,7 +665,9 @@ export class OrderService {
       return await this.orderRepository.save(order);
     } else if (order.type === OrderType.RENT) {
       //Luồng thuê thanh toán như luồng mua, sau đó chuyển số tiền thuê qua cho shop dạng lock, số còn lại lock
-      const deposit = await this.calculateSellPriceForOrder(orderId);
+      if (!order.deposit)
+        throw new NotFoundException('Không tìm thấy giá trị tiền đặt cọc của đơn thuê');
+      const deposit = order.deposit;
       if (!this.checkWalletBalanceIsEnough(userId, deposit))
         throw new BadRequestException('Không đủ số dư trong ví, vui lòng nạp tiền');
 
@@ -796,9 +801,10 @@ export class OrderService {
     return await this.milestoneService.createMilestoneForSeeding(data);
   }
 
-  async calculateSellPriceForOrder(orderId: string): Promise<number> {
-    const orderDressDetail =
-      await this.orderDressDetailsService.getOrderDressDetailByOrderId(orderId);
+  async calculateDepositForRentOrder(orderId: string): Promise<number> {
+    const orderDressDetail = await this.orderDressDetailsService.getOrderDressDetailByOrderId(
+      orderId,
+    );
     if (!orderDressDetail)
       throw new NotFoundException('Không tìm thấy chi tiết váy cưới trong đơn hàng');
     const orderAccessoryDetails =
@@ -807,13 +813,15 @@ export class OrderService {
       throw new NotFoundException('Không tìm thấy chi tiết phụ kiện trong đơn hàng');
     const dress = await this.dressService.getDressById(orderDressDetail.id);
     const dressPrice = Number(dress.sellPrice);
-    let accessoriesPrice = 0;
-    await Promise.all(
+    const accessoriesPriceArray = await Promise.all(
       orderAccessoryDetails.map(async (accessoryDetail) => {
-        const accessory = await this.accessoryService.getAccessoryById(accessoryDetail.id);
-        accessoriesPrice += Number(accessory.sellPrice);
+        const item = await this.orderAccessoriesDetailsService.getAccessoryById(
+          accessoryDetail.accessory.id,
+        );
+        return Number(item.sellPrice) * Number(accessoryDetail.quantity);
       }),
     );
+    const accessoriesPrice = accessoriesPriceArray.reduce((a, b) => a + b, 0);
 
     return dressPrice + accessoriesPrice;
   }

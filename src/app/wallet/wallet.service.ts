@@ -449,7 +449,8 @@ export class WalletService {
     const cusWallet = await this.getWalletById(transaction.wallet.id);
     const toShop = await this.shopService.getShopById(order.shop.id);
     const shopWallet = await this.getWalletByUserIdV2(toShop.user.id);
-    const deposit = await this.orderService.calculateSellPriceForOrder(order.id);
+    if (!order.deposit) throw new NotFoundException('Không tìm thấy giá trị tiền cọc của đơn hàng');
+    const deposit = order.deposit;
 
     if (!shopWallet) throw new NotFoundException('Không tìm thấy ví điện tử của người nhận');
 
