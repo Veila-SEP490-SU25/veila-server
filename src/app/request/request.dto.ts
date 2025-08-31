@@ -1,6 +1,6 @@
 import { RequestStatus, UpdateRequestStatus } from '@/common/models';
 import { ApiProperty } from '@nestjs/swagger';
-import { IsBoolean, IsEnum, IsNumber, IsOptional, IsString } from 'class-validator';
+import { IsBoolean, IsEnum, IsNumber, IsOptional, IsString, Min, Max } from 'class-validator';
 
 export class ListRequestDto {}
 
@@ -45,6 +45,8 @@ export class CURequestDto {
   })
   @IsNumber()
   @IsOptional()
+  @Min(145)
+  @Max(175)
   height: number | null;
 
   @ApiProperty({
@@ -55,6 +57,8 @@ export class CURequestDto {
   })
   @IsNumber()
   @IsOptional()
+  @Min(38)
+  @Max(75)
   weight: number | null;
 
   @ApiProperty({
@@ -65,6 +69,8 @@ export class CURequestDto {
   })
   @IsNumber()
   @IsOptional()
+  @Min(75)
+  @Max(100)
   bust: number | null;
 
   @ApiProperty({
@@ -75,6 +81,8 @@ export class CURequestDto {
   })
   @IsNumber()
   @IsOptional()
+  @Min(55)
+  @Max(85)
   waist: number | null;
 
   @ApiProperty({
@@ -85,6 +93,8 @@ export class CURequestDto {
   })
   @IsNumber()
   @IsOptional()
+  @Min(80)
+  @Max(105)
   hip: number | null;
 
   @ApiProperty({
@@ -95,6 +105,8 @@ export class CURequestDto {
   })
   @IsNumber()
   @IsOptional()
+  @Min(15)
+  @Max(30)
   armpit: number | null;
 
   @ApiProperty({
@@ -105,6 +117,8 @@ export class CURequestDto {
   })
   @IsNumber()
   @IsOptional()
+  @Min(20)
+  @Max(35)
   bicep: number | null;
 
   @ApiProperty({
@@ -115,6 +129,8 @@ export class CURequestDto {
   })
   @IsNumber()
   @IsOptional()
+  @Min(28)
+  @Max(38)
   neck: number | null;
 
   @ApiProperty({
@@ -125,6 +141,8 @@ export class CURequestDto {
   })
   @IsNumber()
   @IsOptional()
+  @Min(32)
+  @Max(45)
   shoulderWidth: number | null;
 
   @ApiProperty({
@@ -135,6 +153,8 @@ export class CURequestDto {
   })
   @IsNumber()
   @IsOptional()
+  @Min(45)
+  @Max(65)
   sleeveLength: number | null;
 
   @ApiProperty({
@@ -145,6 +165,8 @@ export class CURequestDto {
   })
   @IsNumber()
   @IsOptional()
+  @Min(35)
+  @Max(55)
   backLength: number | null;
 
   @ApiProperty({
@@ -155,6 +177,8 @@ export class CURequestDto {
   })
   @IsNumber()
   @IsOptional()
+  @Min(10)
+  @Max(25)
   lowerWaist: number | null;
 
   @ApiProperty({
@@ -165,6 +189,8 @@ export class CURequestDto {
   })
   @IsNumber()
   @IsOptional()
+  @Min(90)
+  @Max(120)
   waistToFloor: number | null;
 
   @ApiProperty({
@@ -282,6 +308,8 @@ export class CUpdateRequestDto {
   })
   @IsNumber()
   @IsOptional()
+  @Min(145)
+  @Max(175)
   height: number | null;
 
   @ApiProperty({
@@ -292,6 +320,8 @@ export class CUpdateRequestDto {
   })
   @IsNumber()
   @IsOptional()
+  @Min(38)
+  @Max(75)
   weight: number | null;
 
   @ApiProperty({
@@ -302,6 +332,8 @@ export class CUpdateRequestDto {
   })
   @IsNumber()
   @IsOptional()
+  @Min(75)
+  @Max(100)
   bust: number | null;
 
   @ApiProperty({
@@ -312,6 +344,8 @@ export class CUpdateRequestDto {
   })
   @IsNumber()
   @IsOptional()
+  @Min(55)
+  @Max(85)
   waist: number | null;
 
   @ApiProperty({
@@ -322,6 +356,8 @@ export class CUpdateRequestDto {
   })
   @IsNumber()
   @IsOptional()
+  @Min(80)
+  @Max(105)
   hip: number | null;
 
   @ApiProperty({
@@ -332,6 +368,8 @@ export class CUpdateRequestDto {
   })
   @IsNumber()
   @IsOptional()
+  @Min(15)
+  @Max(30)
   armpit: number | null;
 
   @ApiProperty({
@@ -342,6 +380,8 @@ export class CUpdateRequestDto {
   })
   @IsNumber()
   @IsOptional()
+  @Min(20)
+  @Max(35)
   bicep: number | null;
 
   @ApiProperty({
@@ -352,6 +392,8 @@ export class CUpdateRequestDto {
   })
   @IsNumber()
   @IsOptional()
+  @Min(28)
+  @Max(38)
   neck: number | null;
 
   @ApiProperty({
@@ -362,6 +404,8 @@ export class CUpdateRequestDto {
   })
   @IsNumber()
   @IsOptional()
+  @Min(32)
+  @Max(45)
   shoulderWidth: number | null;
 
   @ApiProperty({
@@ -372,6 +416,8 @@ export class CUpdateRequestDto {
   })
   @IsNumber()
   @IsOptional()
+  @Min(45)
+  @Max(65)
   sleeveLength: number | null;
 
   @ApiProperty({
@@ -382,6 +428,8 @@ export class CUpdateRequestDto {
   })
   @IsNumber()
   @IsOptional()
+  @Min(35)
+  @Max(55)
   backLength: number | null;
 
   @ApiProperty({
@@ -392,6 +440,8 @@ export class CUpdateRequestDto {
   })
   @IsNumber()
   @IsOptional()
+  @Min(10)
+  @Max(25)
   lowerWaist: number | null;
 
   @ApiProperty({
@@ -402,6 +452,8 @@ export class CUpdateRequestDto {
   })
   @IsNumber()
   @IsOptional()
+  @Min(90)
+  @Max(120)
   waistToFloor: number | null;
 
   @ApiProperty({
