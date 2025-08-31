@@ -1,6 +1,6 @@
 import { TransactionStatus } from '@/common/models';
 import { ApiProperty } from '@nestjs/swagger';
-import { Expose, Transform } from 'class-transformer';
+import { Exclude, Expose, Transform } from 'class-transformer';
 import {
   IsEnum,
   IsInt,
@@ -120,6 +120,9 @@ export class WalletDto {
   @IsString()
   @MaxLength(20)
   bankNumber: string | null;
+
+  @Exclude()
+  pin: string | null;
 }
 
 export class DepositViaPayOSDto {

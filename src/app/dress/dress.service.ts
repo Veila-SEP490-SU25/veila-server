@@ -14,7 +14,7 @@ export class DressService {
     @InjectRepository(Category) private readonly categoryRepository: Repository<Category>,
     @Inject(UserService)
     private readonly userService: UserService,
-  ) {}
+  ) { }
 
   async getDressesForCustomer(
     take: number,
@@ -132,9 +132,9 @@ export class DressService {
     if (categoryId) {
       if (!(await this.isCategoryExistForOwner(categoryId, userId)))
         throw new NotFoundException('Không tìm thấy phân loại phù hợp');
-      dress = { userId, categoryId, ...newDress };
+      dress = { user: { id: userId }, category: { id: categoryId }, ...newDress } as Dress;
     } else {
-      dress = { userId, ...newDress };
+      dress = { user: { id: userId }, ...newDress } as Dress;
     }
     return await this.dressRepository.save(dress);
   }
