@@ -113,6 +113,7 @@ export class WalletService {
   async depositWallet(
     userId: string,
     depositWallet: DepositViaPayOSDto,
+    origin?: string,
   ): Promise<DepositViaPayOSResponse> {
     const user = await this.userService.getUserById(userId);
     if (!user) throw new NotFoundException('Người dùng không tồn tại');
@@ -136,6 +137,7 @@ export class WalletService {
       wallet.id,
       depositWallet,
     );
+    console.log(origin);
 
     //Tạo request Payos
     const request = this.payosService.buildCheckoutRequest({
@@ -144,11 +146,13 @@ export class WalletService {
       description: 'Nạp tiền',
       buyerName: user.firstName + ' ' + user.middleName + ' ' + user.lastName,
       expiredAt: Math.floor(Date.now() / 1000) + 15 * 60,
+      returnUrl: origin,
+      cancelUrl: origin,
     });
 
     //Tạo link thanh toán
     const paymentLink = await this.payosService.createPaymentLink(request);
-
+    console.log(paymentLink);
     const response = new DepositViaPayOSResponse();
     response.transactionId = pendingTransactionId;
     response.orderCode = orderCode;

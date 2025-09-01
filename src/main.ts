@@ -27,6 +27,8 @@ async function bootstrap() {
       'Content-Type',
       'Range',
       'Authorization',
+      'ngrok-skip-browser-warning',
+      '*',
     ],
     exposedHeaders: ['Content-Length', 'Content-Range', 'Content-Type'],
     maxAge: 86400,
