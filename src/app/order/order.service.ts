@@ -53,6 +53,7 @@ import { PasswordService } from '../password';
 import { TransactionService } from '../transaction';
 import { AccessoryService } from '../accessory';
 import { AppSettingService } from '@/app/appsetting';
+import { MailService } from '../mail';
 
 @Injectable()
 export class OrderService {
@@ -89,6 +90,8 @@ export class OrderService {
     private readonly accessoryService: AccessoryService,
     @Inject(AppSettingService)
     private readonly appSettingService: AppSettingService,
+    @Inject(MailService)
+    private readonly mailService: MailService,
   ) {}
 
   async getOrderMilestones(
@@ -180,6 +183,24 @@ export class OrderService {
     const createdOrder = await this.orderRepository.save(newOrder);
 
     await this.milestoneService.createMilestone(createdOrder.id, OrderType.CUSTOM);
+
+    await this.mailService.sendCreateOrder(
+      user.email,
+      user.username,
+      createdOrder.id,
+      'Váy thiết kế riêng',
+      createdOrder.amount,
+      new Date().toLocaleString('vi-VN', { timeZone: 'Asia/Ho_Chi_Minh' }),
+    );
+
+    await this.mailService.sendCreateOrder(
+      shop.user.email,
+      shop.user.username,
+      createdOrder.id,
+      'Váy thiết kế riêng',
+      createdOrder.amount,
+      new Date().toLocaleString('vi-VN', { timeZone: 'Asia/Ho_Chi_Minh' }),
+    );
 
     return createdOrder;
   }
@@ -308,6 +329,24 @@ export class OrderService {
       );
       await this.milestoneService.createMilestone(createdOrder.id, body.newOrder.type);
 
+      await this.mailService.sendCreateOrder(
+        user.email,
+        user.username,
+        createdOrder.id,
+        dress.name,
+        createdOrder.amount,
+        new Date().toLocaleString('vi-VN', { timeZone: 'Asia/Ho_Chi_Minh' }),
+      );
+
+      await this.mailService.sendCreateOrder(
+        dress.user.email,
+        dress.user.username,
+        createdOrder.id,
+        dress.name,
+        createdOrder.amount,
+        new Date().toLocaleString('vi-VN', { timeZone: 'Asia/Ho_Chi_Minh' }),
+      );
+
       return createdOrder;
     } else {
       //Đây là luồng thuê váy
@@ -367,6 +406,24 @@ export class OrderService {
         await this.orderRepository.save(createdOrder);
       }
 
+      await this.mailService.sendCreateOrder(
+        user.email,
+        user.username,
+        createdOrder.id,
+        dress.name,
+        createdOrder.amount,
+        new Date().toLocaleString('vi-VN', { timeZone: 'Asia/Ho_Chi_Minh' }),
+      );
+
+      await this.mailService.sendCreateOrder(
+        dress.user.email,
+        dress.user.username,
+        createdOrder.id,
+        dress.name,
+        createdOrder.amount,
+        new Date().toLocaleString('vi-VN', { timeZone: 'Asia/Ho_Chi_Minh' }),
+      );
+
       return createdOrder;
     }
   }
@@ -410,7 +467,16 @@ export class OrderService {
   }
 
   async updateOrderStatus(userId: string, id: string, status: OrderStatus): Promise<Order> {
-    const existingOrder = await this.getOrderById(id);
+    const existingOrder = await this.orderRepository.findOne({
+      where: { id },
+      relations: {
+        customer: true,
+        shop: true,
+        orderDressDetail: { dress: true },
+        orderAccessoriesDetail: { accessory: true },
+        orderServiceDetail: { service: true, request: true },
+      },
+    });
 
     if (!existingOrder || existingOrder.status === OrderStatus.CANCELLED)
       throw new NotFoundException('Không tìm thấy đơn hàng này');
@@ -422,6 +488,36 @@ export class OrderService {
       throw new ForbiddenException('Người dùng không sở hữu đơn hàng này');
 
     existingOrder.status = status;
+
+    if (status === OrderStatus.PAYING) {
+      if (existingOrder.type !== OrderType.CUSTOM) {
+        if (!existingOrder.orderDressDetail)
+          throw new NotFoundException('Không tìm thấy chi tiết váy của đơn hàng');
+        if (!existingOrder.orderDressDetail.dress)
+          throw new NotFoundException('Không tìm thấy váy trong chi tiết váy của đơn hàng');
+        await this.mailService.sendVerifyOrder(
+          user.email,
+          user.username,
+          existingOrder.id,
+          existingOrder.orderDressDetail.dress.name,
+          existingOrder.amount,
+          new Date().toLocaleString('vi-VN', { timeZone: 'Asia/Ho_Chi_Minh' }),
+        );
+      } else {
+        if (!existingOrder.orderServiceDetail)
+          throw new NotFoundException('Không tìm thấy chi tiết váy của đơn hàng');
+        if (!existingOrder.orderServiceDetail.request)
+          throw new NotFoundException('Không tìm thấy váy trong chi tiết váy của đơn hàng');
+        await this.mailService.sendVerifyOrder(
+          user.email,
+          user.username,
+          existingOrder.id,
+          existingOrder.orderServiceDetail.request.title,
+          existingOrder.amount,
+          new Date().toLocaleString('vi-VN', { timeZone: 'Asia/Ho_Chi_Minh' }),
+        );
+      }
+    }
 
     return await this.orderRepository.save(plainToInstance(Order, existingOrder));
   }
@@ -679,6 +775,23 @@ export class OrderService {
 
       order.status = OrderStatus.IN_PROCESS;
       await this.milestoneService.startFirstMilestoneAndTask(orderId);
+
+      await this.mailService.sendCheckoutOrder(
+        order.customer.email,
+        order.customer.username,
+        order.id,
+        order.amount,
+        new Date().toLocaleString('vi-VN', { timeZone: 'Asia/Ho_Chi_Minh' }),
+      );
+
+      await this.mailService.sendCheckoutOrder(
+        order.shop.user.email,
+        order.shop.user.username,
+        order.id,
+        order.amount,
+        new Date().toLocaleString('vi-VN', { timeZone: 'Asia/Ho_Chi_Minh' }),
+      );
+
       return await this.orderRepository.save(order);
     } else if (order.type === OrderType.RENT) {
       //Luồng thuê thanh toán như luồng mua, sau đó chuyển số tiền thuê qua cho shop dạng lock, số còn lại lock
@@ -706,6 +819,23 @@ export class OrderService {
 
       order.status = OrderStatus.IN_PROCESS;
       await this.milestoneService.startFirstMilestoneAndTask(orderId);
+
+      await this.mailService.sendCheckoutOrder(
+        order.customer.email,
+        order.customer.username,
+        order.id,
+        order.amount,
+        new Date().toLocaleString('vi-VN', { timeZone: 'Asia/Ho_Chi_Minh' }),
+      );
+
+      await this.mailService.sendCheckoutOrder(
+        order.shop.user.email,
+        order.shop.user.username,
+        order.id,
+        order.amount,
+        new Date().toLocaleString('vi-VN', { timeZone: 'Asia/Ho_Chi_Minh' }),
+      );
+
       return await this.orderRepository.save(order);
     } else {
       //Luồng custom có thể thanh toán nhiều lần, lock lại ở ví của shop
@@ -746,6 +876,23 @@ export class OrderService {
         },
       });
       if (!updatedOrder) throw new NotFoundException('Không tìm thấy đơn hàng nào phù hợp');
+
+      await this.mailService.sendCheckoutOrder(
+        order.customer.email,
+        order.customer.username,
+        order.id,
+        remainingAmount,
+        new Date().toLocaleString('vi-VN', { timeZone: 'Asia/Ho_Chi_Minh' }),
+      );
+
+      await this.mailService.sendCheckoutOrder(
+        order.shop.user.email,
+        order.shop.user.username,
+        order.id,
+        remainingAmount,
+        new Date().toLocaleString('vi-VN', { timeZone: 'Asia/Ho_Chi_Minh' }),
+      );
+
       return updatedOrder;
     }
   }
@@ -876,6 +1023,20 @@ export class OrderService {
         const delaySetting = await this.appSettingService.getDelayPenalty();
         shop.reputation = Number(shop.reputation) - delaySetting;
         await this.shopService.save(shop);
+
+        await this.mailService.sendCancelOrder(
+          existingOrder.customer.email,
+          existingOrder.customer.username,
+          existingOrder.id,
+          new Date().toLocaleString('vi-VN', { timeZone: 'Asia/Ho_Chi_Minh' }),
+        );
+
+        await this.mailService.sendCancelOrder(
+          existingOrder.shop.user.email,
+          existingOrder.shop.user.username,
+          existingOrder.id,
+          new Date().toLocaleString('vi-VN', { timeZone: 'Asia/Ho_Chi_Minh' }),
+        );
       }
     } else {
       //trường hợp còn lại sẽ bị phạt
@@ -917,7 +1078,22 @@ export class OrderService {
       }
       existingOrder.status = OrderStatus.CANCELLED;
       await this.milestoneService.cancelOrder(existingOrder.id);
+
+      await this.mailService.sendCancelOrder(
+        existingOrder.customer.email,
+        existingOrder.customer.username,
+        existingOrder.id,
+        new Date().toLocaleString('vi-VN', { timeZone: 'Asia/Ho_Chi_Minh' }),
+      );
+
+      await this.mailService.sendCancelOrder(
+        existingOrder.shop.user.email,
+        existingOrder.shop.user.username,
+        existingOrder.id,
+        new Date().toLocaleString('vi-VN', { timeZone: 'Asia/Ho_Chi_Minh' }),
+      );
     }
+
     return await this.orderRepository.save(plainToInstance(Order, existingOrder));
   }
 

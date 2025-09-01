@@ -18,6 +18,7 @@ import { PasswordModule } from '../password';
 import { TransactionModule } from '../transaction';
 import { AppSettingModule } from '@/app/appsetting';
 import { AccessoryModule } from '../accessory';
+import { MailModule } from '../mail';
 
 @Module({
   imports: [
@@ -37,6 +38,7 @@ import { AccessoryModule } from '../accessory';
     forwardRef(() => TransactionModule),
     AppSettingModule,
     forwardRef(() => AccessoryModule),
+    forwardRef(() => MailModule),
   ],
   controllers: [OrderController],
   providers: [OrderService],
