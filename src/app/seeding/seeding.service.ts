@@ -10,6 +10,7 @@ import { PasswordService } from '@/app/password';
 import { RequestService } from '@/app/request';
 import { ServiceService } from '@/app/service';
 import { ShopService } from '@/app/shop';
+import { SingleService } from '@/app/single';
 import { SubscriptionService } from '@/app/subscription';
 import { TaskService } from '@/app/task';
 import { TransactionService } from '@/app/transaction';
@@ -61,6 +62,10 @@ import {
   // Complaint,
 } from '@/common/models';
 import { AppSetting } from '@/common/models/single/appsetting.model';
+import {
+  MilestoneTemplate,
+  MilestoneTemplateType,
+} from '@/common/models/single/milestone-template.model';
 import { Faker, faker, vi } from '@faker-js/faker';
 import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
@@ -103,6 +108,7 @@ export class SeedingService implements OnModuleInit {
     private readonly transactionService: TransactionService,
     private readonly feedbackService: FeedbackService,
     private readonly appSettingService: AppSettingService,
+    private readonly singleService: SingleService,
   ) {
     // Khởi tạo faker với locale tiếng Việt
     this.customFaker = new Faker({
@@ -163,6 +169,7 @@ export class SeedingService implements OnModuleInit {
     if (this.node_env !== 'production') {
       Promise.all([
         await this.seedAppSetting(),
+        await this.seedMilestoneTemplates(),
         await this.seedContracts(),
         await this.seedSubscriptions(),
       ])
@@ -200,6 +207,7 @@ export class SeedingService implements OnModuleInit {
     } else {
       Promise.all([
         await this.seedAppSetting(),
+        await this.seedMilestoneTemplates(),
         await this.seedContracts(),
         await this.seedSubscriptions(),
       ])
@@ -217,6 +225,180 @@ export class SeedingService implements OnModuleInit {
           await this.seedBlogsForProd();
         });
     }
+  }
+
+  private async seedMilestoneTemplates() {
+    const milestones = await this.singleService.getMilestoneTemplates();
+    if (milestones.length > 0)
+      this.logger.log(`Milestone templates already exist. Skipping seeding.`);
+    else {
+      try {
+        await Promise.all([
+          await this.seedMilestoneTemplate(
+            'Chuẩn bị váy',
+            'Cửa hàng đang chuẩn bị và kiểm tra chất lượng váy cưới',
+            1,
+            5,
+            MilestoneTemplateType.SELL,
+          ),
+          await this.seedMilestoneTemplate(
+            'Sẵn sàng bàn giao',
+            'Váy đã sẵn sàng để giao cho đơn vị vận chuyển hoặc nhận trực tiếp tại cửa hàng',
+            2,
+            10,
+            MilestoneTemplateType.SELL,
+          ),
+          await this.seedMilestoneTemplate(
+            'Đang giao hàng',
+            'Váy đang được vận chuyển đến địa chỉ của bạn',
+            3,
+            15,
+            MilestoneTemplateType.SELL,
+          ),
+          await this.seedMilestoneTemplate(
+            'Đã nhận hàng',
+            'Bạn đã nhận váy cưới và xác nhận tình trạng sản phẩm',
+            4,
+            20,
+            MilestoneTemplateType.SELL,
+          ),
+          await this.seedMilestoneTemplate(
+            'Hoàn tất đơn hàng',
+            'Quy trình mua hàng đã hoàn thành',
+            5,
+            25,
+            MilestoneTemplateType.SELL,
+          ),
+          await this.seedMilestoneTemplate(
+            'Nhận khiếu nại về đơn hàng (nếu có)',
+            'Người mua và người bán khiếu nại một số vấn đề nếu có',
+            6,
+            30,
+            MilestoneTemplateType.SELL,
+          ),
+
+          await this.seedMilestoneTemplate(
+            'Chuẩn bị váy',
+            'Cửa hàng đang chuẩn bị và kiểm tra chất lượng váy cưới',
+            1,
+            5,
+            MilestoneTemplateType.RENT,
+          ),
+          await this.seedMilestoneTemplate(
+            'Sẵn sàng bàn giao',
+            'Váy đã sẵn sàng để giao cho đơn vị vận chuyển hoặc nhận trực tiếp tại cửa hàng',
+            2,
+            10,
+            MilestoneTemplateType.RENT,
+          ),
+          await this.seedMilestoneTemplate(
+            'Đang giao hàng',
+            'Váy đang được vận chuyển đến địa chỉ của bạn',
+            3,
+            15,
+            MilestoneTemplateType.RENT,
+          ),
+          await this.seedMilestoneTemplate(
+            'Hoàn tất đơn hàng',
+            'Quy trình mua hàng đã hoàn thành',
+            4,
+            20,
+            MilestoneTemplateType.RENT,
+          ),
+          await this.seedMilestoneTemplate(
+            'Khách hàng đang sử dụng',
+            'Bạn đang giữ và sử dụng váy trong thời gian thuê',
+            5,
+            25,
+            MilestoneTemplateType.RENT,
+          ),
+          await this.seedMilestoneTemplate(
+            'Hoàn trả váy',
+            'Bạn đã gửi trả váy hoặc bàn giao lại cho cửa hàng',
+            6,
+            30,
+            MilestoneTemplateType.RENT,
+          ),
+          await this.seedMilestoneTemplate(
+            'Hoàn tất đơn hàng',
+            'Quy trình mua hàng đã hoàn thành',
+            7,
+            35,
+            MilestoneTemplateType.RENT,
+          ),
+          await this.seedMilestoneTemplate(
+            'Nhận khiếu nại về đơn hàng (nếu có)',
+            'Người mua và người bán khiếu nại một số vấn đề nếu có',
+            8,
+            40,
+            MilestoneTemplateType.RENT,
+          ),
+
+          await this.seedMilestoneTemplate(
+            'Đo và tư vấn',
+            'Tiến hành đo số đo và tư vấn kiểu dáng, chất liệu phù hợp cho khách',
+            1,
+            5,
+            MilestoneTemplateType.CUSTOM,
+          ),
+          await this.seedMilestoneTemplate(
+            'Chuẩn bị nguyên liệu',
+            'Chuẩn bị vải, ren, phụ kiện và các nguyên liệu cần thiết',
+            2,
+            10,
+            MilestoneTemplateType.CUSTOM,
+          ),
+          await this.seedMilestoneTemplate(
+            'May và hoàn thiện cơ bản',
+            'Thợ may tiến hành tạo dáng váy và hoàn thiện phần cơ bản',
+            3,
+            15,
+            MilestoneTemplateType.CUSTOM,
+          ),
+          await this.seedMilestoneTemplate(
+            'Đặt lịch thử và chỉnh sửa',
+            'Khách thử váy và thợ may điều chỉnh theo phản hồi',
+            4,
+            20,
+            MilestoneTemplateType.CUSTOM,
+          ),
+          await this.seedMilestoneTemplate(
+            'Hoàn tất đơn hàng',
+            'Quy trình mua hàng đã hoàn thành',
+            5,
+            25,
+            MilestoneTemplateType.CUSTOM,
+          ),
+          await this.seedMilestoneTemplate(
+            'Nhận khiếu nại về đơn hàng (nếu có)',
+            'Người mua và người bán khiếu nại một số vấn đề nếu có',
+            6,
+            30,
+            MilestoneTemplateType.CUSTOM,
+          ),
+        ]);
+      } catch (error) {
+        this.logger.error('Seeding milestone templates failed.', error);
+        throw new Error('Seeding milestone templates failed.');
+      }
+    }
+  }
+
+  private async seedMilestoneTemplate(
+    title: string,
+    description: string,
+    index: number,
+    timeGap: number,
+    type: MilestoneTemplateType,
+  ) {
+    const milestoneTemplate = {
+      title,
+      description,
+      index,
+      timeGap,
+      type,
+    } as MilestoneTemplate;
+    await this.singleService.createMilestoneTemplate(milestoneTemplate);
   }
 
   private async seedAppSetting() {

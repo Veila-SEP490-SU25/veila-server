@@ -11,6 +11,7 @@ import { RequestModule } from '@/app/request';
 import { SeedingService } from '@/app/seeding/seeding.service';
 import { ServiceModule } from '@/app/service';
 import { ShopModule } from '@/app/shop';
+import { SingleModule } from '@/app/single';
 import { SubscriptionModule } from '@/app/subscription';
 import { TaskModule } from '@/app/task';
 import { TransactionModule } from '@/app/transaction';
@@ -37,6 +38,7 @@ import { Module } from '@nestjs/common';
     FeedbackModule,
     RequestModule,
     AppSettingModule,
+    SingleModule,
   ],
   providers: [SeedingService],
 })

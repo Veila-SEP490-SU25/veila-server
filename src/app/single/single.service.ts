@@ -1,12 +1,26 @@
 import { CUSlideDto } from '@/app/single/single.dto';
 import { Slide } from '@/common/models/single';
+import { MilestoneTemplate } from '@/common/models/single/milestone-template.model';
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 
 @Injectable()
 export class SingleService {
-  constructor(@InjectRepository(Slide) private readonly slideRepository: Repository<Slide>) {}
+  constructor(
+    @InjectRepository(Slide)
+    private readonly slideRepository: Repository<Slide>,
+    @InjectRepository(MilestoneTemplate)
+    private readonly milestoneTemplateRepository: Repository<MilestoneTemplate>,
+  ) {}
+
+  async getMilestoneTemplates(): Promise<MilestoneTemplate[]> {
+    return await this.milestoneTemplateRepository.find();
+  }
+
+  async createMilestoneTemplate(data: MilestoneTemplate): Promise<MilestoneTemplate> {
+    return await this.milestoneTemplateRepository.save(data);
+  }
 
   async getSlides(): Promise<Slide[]> {
     return await this.slideRepository.find({
