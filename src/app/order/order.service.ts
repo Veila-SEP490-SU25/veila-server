@@ -101,7 +101,7 @@ export class OrderService {
         status: OrderStatus.COMPLETED,
       }
     });
-    const totalIncomeByCompleted = Number(orders.reduce((acc, order) => acc + order.amount, 0));
+    const totalIncomeByCompleted = Number(orders.reduce((acc, order) => acc + Number(order.amount), 0));
 
     const cancelOrders = await this.orderRepository.find({
       where: {
@@ -112,10 +112,10 @@ export class OrderService {
         transaction: true
       }
     });
-    let totalIncomeByCancelled = Number(cancelOrders.reduce((acc, order) => acc + order.amount, 0));
+    let totalIncomeByCancelled = Number(cancelOrders.reduce((acc, order) => acc + Number(order.amount), 0));
     for (const co of cancelOrders) {
       const transactions = co.transaction.filter(t => t.type === 'REFUND');
-      const totalRefund = transactions.reduce((acc, t) => acc + t.amount, 0);
+      const totalRefund = transactions.reduce((acc, t) => acc + Number(t.amount), 0);
       totalIncomeByCancelled -= Number(totalRefund);
     }
 
