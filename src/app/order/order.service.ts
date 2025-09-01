@@ -1214,4 +1214,21 @@ export class OrderService {
   ): Promise<OrderDressDetail> {
     return await this.orderDressDetailsService.createOrderDressDetailForSeeding(orderDressDetail);
   }
+
+  async isMilestoneComplaint(id: string): Promise<boolean> {
+    const order = await this.orderRepository.findOne({
+      where: { id },
+      relations: {
+        milestones: true,
+      },
+    });
+    if (!order) throw new NotFoundException('Không tìm thấy đơn hàng'); 
+    if (!order.milestones || order.milestones.length === 0) return false;
+    // Sắp xếp milestones theo index tăng dần
+    const sortedMilestones = order.milestones.sort((a, b) => a.index - b.index);
+    // Lấy milestone cuối cùng
+    const lastMilestone = sortedMilestones[sortedMilestones.length - 1];
+    // Kiểm tra status
+    return lastMilestone.status === MilestoneStatus.IN_PROGRESS;
+  }
 }

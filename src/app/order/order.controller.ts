@@ -785,6 +785,33 @@ export class OrderController {
     };
   }
 
+  @Get(':id/is-milestone-complaint')
+  @ApiOperation({
+    summary: 'Kiểm tra xem mốc thời gian có bị khiếu nại hay không',
+  })
+  @ApiOkResponse({
+    schema: {
+      allOf: [
+        { $ref: getSchemaPath(ItemResponse) },
+        {
+          properties: {
+            item: { type: 'boolean' },
+          },
+        },
+      ],
+    },
+  })
+  async getIsMilestoneComplaint(
+    @Param('id') id: string,
+  ): Promise<ItemResponse<boolean>> {
+    const isComplaint = await this.orderService.isMilestoneComplaint(id);
+    return {
+      message: 'Kiểm tra khiếu nại mốc thời gian',
+      statusCode: HttpStatus.OK,
+      item: isComplaint,
+    };
+  }
+
   @Get(':id/complaints/me')
   @UseGuards(AuthGuard)
   @ApiOperation({
