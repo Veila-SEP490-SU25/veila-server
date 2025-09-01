@@ -1,4 +1,8 @@
-import { CUComplaintDto, ReviewComplaintDto } from '@/app/complaint/complaint.dto';
+import {
+  CUComplaintDto,
+  CUComplaintReason,
+  ReviewComplaintDto,
+} from '@/app/complaint/complaint.dto';
 import { ComplaintService } from '@/app/complaint/complaint.service';
 import { ItemResponse, ListResponse } from '@/common/base';
 import {
@@ -14,9 +18,20 @@ import {
 import { AuthGuard } from '@/common/guards';
 import { Complaint, UserRole } from '@/common/models';
 import { ComplaintReason } from '@/common/models/single';
-import { Body, Controller, Get, HttpStatus, Param, Put, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  HttpStatus,
+  Param,
+  Post,
+  Put,
+  UseGuards,
+} from '@nestjs/common';
 import {
   ApiBearerAuth,
+  ApiCreatedResponse,
   ApiExtraModels,
   ApiNoContentResponse,
   ApiOkResponse,
@@ -195,6 +210,116 @@ export class ComplaintController {
       hasNextPage: page < totalPages - 1,
       hasPrevPage: page > 0,
       items: reasons,
+    };
+  }
+
+  @Post('reasons')
+  @UseGuards(AuthGuard)
+  @Roles(UserRole.STAFF, UserRole.ADMIN, UserRole.SUPER_ADMIN)
+  @ApiOperation({
+    summary: 'Tạo lý do khiếu nại',
+    description: `
+        **Hướng dẫn sử dụng:**
+
+        - Truyền dữ liệu tạo mới trong body.
+        - Các trường bắt buộc: \`code\`, \`description\`.
+        - Nếu không tìm thấy lý do khiếu nại sẽ trả về lỗi.
+        - Trả về thông tin chi tiết của lý do khiếu nại đã tạo.
+    `,
+  })
+  @ApiCreatedResponse({
+    schema: {
+      allOf: [
+        { $ref: getSchemaPath(ItemResponse) },
+        {
+          properties: {
+            item: { $ref: getSchemaPath(ComplaintReason) },
+          },
+        },
+      ],
+    },
+  })
+  async createComplaintReason(
+    @Body() body: CUComplaintReason,
+  ): Promise<ItemResponse<ComplaintReason>> {
+    const reason = await this.complaintService.createComplaintReason(body);
+    return {
+      message: 'Tạo lý do khiếu nại thành công',
+      statusCode: HttpStatus.CREATED,
+      item: reason,
+    };
+  }
+
+  @Put('reasons/:id')
+  @UseGuards(AuthGuard)
+  @Roles(UserRole.STAFF, UserRole.ADMIN, UserRole.SUPER_ADMIN)
+  @ApiOperation({
+    summary: 'Cập nhật lý do khiếu nại',
+    description: `
+        **Hướng dẫn sử dụng:**
+
+        - Truyền \`id\` của lý do khiếu nại trên URL.
+        - Truyền dữ liệu cập nhật trong body.
+        - Các trường bắt buộc: \`code\`, \`description\`.
+        - Nếu không tìm thấy lý do khiếu nại sẽ trả về lỗi.
+        - Trả về thông tin chi tiết của lý do khiếu nại đã cập nhật.
+    `,
+  })
+  @ApiOkResponse({
+    schema: {
+      allOf: [
+        { $ref: getSchemaPath(ItemResponse) },
+        {
+          properties: {
+            item: { $ref: getSchemaPath(ComplaintReason) },
+          },
+        },
+      ],
+    },
+  })
+  async updateComplaintReason(
+    @Param('id') id: string,
+    @Body() body: CUComplaintReason,
+  ): Promise<ItemResponse<null>> {
+    await this.complaintService.updateComplaintReason(id, body);
+    return {
+      message: 'Cập nhật lý do khiếu nại thành công',
+      statusCode: HttpStatus.OK,
+      item: null,
+    };
+  }
+
+  @Delete('reasons/:id')
+  @UseGuards(AuthGuard)
+  @Roles(UserRole.STAFF, UserRole.ADMIN, UserRole.SUPER_ADMIN)
+  @ApiOperation({
+    summary: 'Xóa lý do khiếu nại',
+    description: `
+        **Hướng dẫn sử dụng:**
+
+        - Truyền \`id\` của lý do khiếu nại trên URL.
+        - Nếu không tìm thấy lý do khiếu nại sẽ trả về lỗi.
+        - Trả về thông tin chi tiết của lý do khiếu nại đã xóa.
+    `,
+  })
+  @ApiOkResponse({
+    schema: {
+      allOf: [
+        { $ref: getSchemaPath(ItemResponse) },
+        {
+          properties: {
+            item: { $ref: getSchemaPath(ComplaintReason) },
+          },
+        },
+      ],
+    },
+  })
+  async deleteComplaintReason(@Param('id') id: string): Promise<ItemResponse<null>> {
+    await this.complaintService.deleteComplaintReason(id);
+    return {
+      message: 'Xóa lý do khiếu nại thành công',
+      statusCode: HttpStatus.OK,
+      item: null,
     };
   }
 

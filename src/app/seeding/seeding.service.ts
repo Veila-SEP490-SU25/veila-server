@@ -62,6 +62,7 @@ import {
   // Complaint,
 } from '@/common/models';
 import { AppSetting } from '@/common/models/single/appsetting.model';
+import { ComplaintReason } from '@/common/models/single/complaint-reason.model';
 import {
   MilestoneTemplate,
   MilestoneTemplateType,
@@ -168,6 +169,7 @@ export class SeedingService implements OnModuleInit {
     this.logger.log('Seeding module initialized. Starting seeding process...');
     if (this.node_env !== 'production') {
       Promise.all([
+        await this.seedComplaintReasons(),
         await this.seedAppSetting(),
         await this.seedMilestoneTemplates(),
         await this.seedContracts(),
@@ -206,6 +208,7 @@ export class SeedingService implements OnModuleInit {
         });
     } else {
       Promise.all([
+        await this.seedComplaintReasons(),
         await this.seedAppSetting(),
         await this.seedMilestoneTemplates(),
         await this.seedContracts(),
@@ -224,6 +227,45 @@ export class SeedingService implements OnModuleInit {
           await this.seedAccessoriesForProd();
           await this.seedBlogsForProd();
         });
+    }
+  }
+
+  private async seedComplaintReasons() {
+    const reasons = await this.singleService.getComplaintReasons();
+    if (reasons.length > 0) this.logger.log(`Complaint reasons already exist. Skipping seeding.`);
+    else {
+      try {
+        await Promise.all([
+          await this.singleService.createComplaintReason({
+            code: 'REASON_1',
+            reason: 'Hàng không đúng mô tả',
+            complaintReputationPenalty: 10,
+          } as ComplaintReason),
+          await this.singleService.createComplaintReason({
+            code: 'REASON_2',
+            reason: 'Hàng bị lỗi',
+            complaintReputationPenalty: 10,
+          } as ComplaintReason),
+          await this.singleService.createComplaintReason({
+            code: 'REASON_3',
+            reason: 'Hàng không đúng kích thước',
+            complaintReputationPenalty: 10,
+          } as ComplaintReason),
+          await this.singleService.createComplaintReason({
+            code: 'REASON_4',
+            reason: 'Hàng bị hư hỏng trong quá trình vận chuyển',
+            complaintReputationPenalty: 10,
+          } as ComplaintReason),
+          await this.singleService.createComplaintReason({
+            code: 'REASON_5',
+            reason: 'Trễ deadline',
+            complaintReputationPenalty: 10,
+          } as ComplaintReason),
+        ]);
+      } catch (error) {
+        this.logger.error(`Error seeding complaint reasons: ${error.message}`);
+        throw new Error(`Error seeding complaint reasons: ${error.message}`);
+      }
     }
   }
 

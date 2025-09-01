@@ -1,4 +1,4 @@
-import { CUComplaintDto } from '@/app/complaint/complaint.dto';
+import { CUComplaintDto, CUComplaintReason } from '@/app/complaint/complaint.dto';
 import { OrderService } from '@/app/order';
 import { Filtering, getOrder, getWhere, Sorting } from '@/common/decorators';
 import { Complaint, ComplaintStatus, MilestoneStatus, OrderStatus } from '@/common/models';
@@ -32,7 +32,7 @@ export class ComplaintService {
     private readonly userService: UserService,
     @Inject(ShopService)
     private readonly shopService: ShopService,
-  ) { }
+  ) {}
 
   async getComplaintReasons(
     take: number,
@@ -88,11 +88,7 @@ export class ComplaintService {
     return complaint;
   }
 
-  async createComplaint(
-    userId: string,
-    orderId: string,
-    body: CUComplaintDto,
-  ): Promise<Complaint> {
+  async createComplaint(userId: string, orderId: string, body: CUComplaintDto): Promise<Complaint> {
     const order = await this.orderService.getOwnerOrderById(userId, orderId);
     if (!order) throw new NotFoundException('Không tìm thấy đơn hàng này');
     if (order.status !== OrderStatus.COMPLETED)
@@ -119,11 +115,7 @@ export class ComplaintService {
     return await this.complaintRepository.save(complaint);
   }
 
-  async updateComplaint(
-    userId: string,
-    id: string,
-    body: CUComplaintDto,
-  ): Promise<void> {
+  async updateComplaint(userId: string, id: string, body: CUComplaintDto): Promise<void> {
     const complaint = await this.getOwnerComplaintById(userId, id);
     if (complaint.status !== ComplaintStatus.DRAFT)
       throw new MethodNotAllowedException('Chỉ có thể cập nhật khiếu nại ở trạng thái nháp');
@@ -182,8 +174,11 @@ export class ComplaintService {
     await this.complaintRepository.update(id, { status });
 
     if (status === ComplaintStatus.APPROVED) {
-      const complaintReason = await this.complaintReasonRepository.findOneBy({ code: complaint.title });
-      if (!complaintReason) throw new NotFoundException('Không tìm thấy lý do khiếu nại nào phù hợp');
+      const complaintReason = await this.complaintReasonRepository.findOneBy({
+        code: complaint.title,
+      });
+      if (!complaintReason)
+        throw new NotFoundException('Không tìm thấy lý do khiếu nại nào phù hợp');
 
       const isCustomer = complaint.sender === complaint.order.customer;
       if (isCustomer) {
@@ -215,5 +210,22 @@ export class ComplaintService {
 
   async createComplaintForSeeding(complaint: Complaint): Promise<Complaint> {
     return await this.complaintRepository.save(complaint);
+  }
+
+  async createComplaintReason(body: CUComplaintReason): Promise<ComplaintReason> {
+    const reason = this.complaintReasonRepository.create(body);
+    return await this.complaintReasonRepository.save(reason);
+  }
+
+  async updateComplaintReason(id: string, body: CUComplaintReason): Promise<void> {
+    const reason = await this.complaintReasonRepository.findOne({ where: { id } });
+    if (!reason) throw new NotFoundException('Không tìm thấy lý do khiếu nại nào phù hợp');
+    await this.complaintReasonRepository.update(id, body);
+  }
+
+  async deleteComplaintReason(id: string): Promise<void> {
+    const reason = await this.complaintReasonRepository.findOne({ where: { id } });
+    if (!reason) throw new NotFoundException('Không tìm thấy lý do khiếu nại nào phù hợp');
+    await this.complaintReasonRepository.delete(id);
   }
 }

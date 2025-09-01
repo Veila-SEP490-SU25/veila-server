@@ -1,6 +1,6 @@
 import { ComplaintStatus } from '@/common/models';
 import { ApiProperty } from '@nestjs/swagger';
-import { IsEnum, IsOptional, IsString } from 'class-validator';
+import { IsEnum, IsNumber, IsOptional, IsString } from 'class-validator';
 
 export class CUComplaintDto {
   @ApiProperty({
@@ -47,4 +47,27 @@ export class ReviewComplaintDto {
   })
   @IsEnum(ComplaintStatus)
   status: ComplaintStatus;
+}
+
+export class CUComplaintReason {
+  @ApiProperty({
+    description: 'The code of the complaint reason',
+    example: 'DEFECTIVE_PRODUCT',
+  })
+  @IsString()
+  code: string;
+
+  @ApiProperty({
+    description: 'The description of the complaint reason',
+    example: 'The product is defective',
+  })
+  @IsString()
+  reason: string;
+
+  @ApiProperty({
+    description: "The penalty applied to the user's reputation for this complaint reason",
+    example: 10,
+  })
+  @IsNumber()
+  complaintReputationPenalty: number;
 }
