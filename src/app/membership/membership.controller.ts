@@ -19,7 +19,7 @@ import { Roles, UserId } from '@/common/decorators';
 @ApiBearerAuth()
 @ApiExtraModels(ItemResponse, Membership)
 export class MembershipController {
-  constructor(private readonly membershipService: MembershipService) {}
+  constructor(private readonly membershipService: MembershipService) { }
 
   @Post('register')
   @UseGuards(AuthGuard, RolesGuard)
@@ -95,9 +95,31 @@ export class MembershipController {
   }
 
   @Get('me')
-  @UseGuards(AuthGuard) 
+  @UseGuards(AuthGuard)
   @Roles(UserRole.SHOP)
-  async getMembership(@UserId() userId: string) {
+  @ApiOperation({
+    summary: 'Lấy thông tin membership của shop',
+    description: `
+        **Hướng dẫn sử dụng:**
+
+        - API để lấy thông tin membership hiện tại của shop.
+        - Nếu không có membership active -> trả về lỗi 404.
+        - Nếu có -> trả về thông tin membership.
+    `,
+  })
+  @ApiOkResponse({
+    schema: {
+      allOf: [
+        { $ref: getSchemaPath(ItemResponse) },
+        {
+          properties: {
+            items: { $ref: getSchemaPath(Membership) },
+          },
+        },
+      ],
+    },
+  })
+  async getMembership(@UserId() userId: string): Promise<ItemResponse<Membership>> {
     const membership = await this.membershipService.getOwner(userId);
     return {
       message: 'Lấy thông tin membership thành công',
