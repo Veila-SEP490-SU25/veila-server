@@ -246,6 +246,37 @@ export class OrderController {
     };
   }
 
+  @Get('shops/:shopId/income')
+  @ApiOperation({
+    summary: 'Lấy tổng thu nhập của một cửa hàng',
+    description: `
+        **Hướng dẫn sử dụng:**
+
+        - Trả về tổng thu nhập của cửa hàng.
+        - Nếu không tìm thấy sẽ trả về lỗi.
+    `,
+  })
+  @ApiOkResponse({
+    schema: {
+      allOf: [
+        { $ref: getSchemaPath(ItemResponse) },
+        {
+          properties: {
+            item: { type: 'number' },
+          },
+        },
+      ],
+    },
+  })
+  async getShopIncome(@Param('shopId') shopId: string): Promise<ItemResponse<number>> {
+    const income = await this.orderService.getShopIncome(shopId);
+    return {
+      message: 'Đây là tổng thu nhập của cửa hàng',
+      statusCode: HttpStatus.OK,
+      item: income,
+    };
+  }
+
   @Get(':id')
   @UseGuards(AuthGuard)
   @ApiOperation({

@@ -94,6 +94,34 @@ export class OrderService {
     private readonly mailService: MailService,
   ) {}
 
+  async getShopIncome(shopId: string): Promise<number> {
+    const orders = await this.orderRepository.find({
+      where: {
+        shop: { id: shopId },
+        status: OrderStatus.COMPLETED,
+      }
+    });
+    const totalIncomeByCompleted = Number(orders.reduce((acc, order) => acc + order.amount, 0));
+
+    const cancelOrders = await this.orderRepository.find({
+      where: {
+        shop: { id: shopId },
+        status: OrderStatus.CANCELLED,
+      },
+      relations: {
+        transaction: true
+      }
+    });
+    let totalIncomeByCancelled = Number(cancelOrders.reduce((acc, order) => acc + order.amount, 0));
+    for (const co of cancelOrders) {
+      const transactions = co.transaction.filter(t => t.type === 'REFUND');
+      const totalRefund = transactions.reduce((acc, t) => acc + t.amount, 0);
+      totalIncomeByCancelled -= Number(totalRefund);
+    }
+
+    return totalIncomeByCancelled + totalIncomeByCompleted;
+  }
+
   async getOrderMilestones(
     orderId: string,
     take: number,

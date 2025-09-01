@@ -50,7 +50,7 @@ export class WalletService {
     private readonly mailService: MailService,
     @Inject(AppSettingService)
     private readonly appSettingService: AppSettingService,
-  ) {}
+  ) { }
 
   async getWalletsForAdmin(
     take: number,
@@ -569,6 +569,15 @@ export class WalletService {
       cusRefundAmount,
       TransactionType.RECEIVE,
     );
+
+    await this.transactionService.saveRefundTransaction(
+      shopWallet.user,
+      shopWallet.user,
+      shopWallet.id,
+      order.id,
+      shopReceiveAmount,
+      TransactionType.RECEIVE,
+    );
   }
 
   async refundForCustom(order: Order, milestones: Milestone[]): Promise<void> {
@@ -615,6 +624,15 @@ export class WalletService {
         order.id,
         cusRefundAmount,
         TransactionType.REFUND,
+      );
+
+      await this.transactionService.saveRefundTransaction(
+        shopWallet.user,
+        shopWallet.user,
+        shopWallet.id,
+        order.id,
+        shopReceiveAmount,
+        TransactionType.RECEIVE,
       );
     }
   }
