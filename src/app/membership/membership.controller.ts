@@ -1,4 +1,4 @@
-import { Body, Controller, HttpStatus, Post, Put, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, HttpStatus, Post, Put, UseGuards } from '@nestjs/common';
 import {
   ApiBearerAuth,
   ApiExtraModels,
@@ -91,6 +91,18 @@ export class MembershipController {
       message: 'Membership đã được hủy thành công',
       statusCode: HttpStatus.OK,
       item: null,
+    };
+  }
+
+  @Get('me')
+  @UseGuards(AuthGuard) 
+  @Roles(UserRole.SHOP)
+  async getMembership(@UserId() userId: string) {
+    const membership = await this.membershipService.getOwner(userId);
+    return {
+      message: 'Lấy thông tin membership thành công',
+      statusCode: HttpStatus.OK,
+      item: membership,
     };
   }
 }

@@ -36,7 +36,18 @@ export class MembershipService {
     private readonly redisService: RedisService,
     @Inject(forwardRef(() => PasswordService))
     private readonly passwordService: PasswordService,
-  ) {}
+  ) { }
+
+  async getOwner(userId: string): Promise<Membership> {
+    const membership = await this.membershipRepository.findOne({
+      where: {
+        shop: { user: { id: userId } },
+        status: MembershipStatus.ACTIVE,
+      },
+    });
+    if (!membership) throw new NotFoundException('Không tìm thấy membership');
+    return membership;
+  }
 
   async purchaseMembership(userId: string, body: RegisterMembershipDto): Promise<Membership> {
     const shop = await this.shopService.getShopByUserId(userId);
