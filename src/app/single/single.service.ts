@@ -1,6 +1,9 @@
 import { CUSlideDto } from '@/app/single/single.dto';
 import { Slide } from '@/common/models/single';
-import { MilestoneTemplate } from '@/common/models/single/milestone-template.model';
+import {
+  MilestoneTemplate,
+  MilestoneTemplateType,
+} from '@/common/models/single/milestone-template.model';
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
@@ -16,6 +19,15 @@ export class SingleService {
 
   async getMilestoneTemplates(): Promise<MilestoneTemplate[]> {
     return await this.milestoneTemplateRepository.find();
+  }
+
+  async getMilestoneTemplatesByType(
+    milestoneTemplateType: MilestoneTemplateType,
+  ): Promise<MilestoneTemplate[]> {
+    return this.milestoneTemplateRepository.find({
+      where: { type: milestoneTemplateType },
+      order: { index: 'ASC' },
+    });
   }
 
   async createMilestoneTemplate(data: MilestoneTemplate): Promise<MilestoneTemplate> {

@@ -16,6 +16,8 @@ import { OrderService } from '../order';
 import { ShopService } from '../shop';
 import { TaskDto, TaskService } from '../task';
 import { Cron, CronExpression } from '@nestjs/schedule';
+import { SingleService } from '../single';
+import { MilestoneTemplateType } from '@/common/models/single/milestone-template.model';
 
 @Injectable()
 export class MilestoneService {
@@ -28,95 +30,31 @@ export class MilestoneService {
     private readonly shopService: ShopService,
     @Inject(forwardRef(() => TaskService))
     private readonly taskService: TaskService,
+    private readonly singleService: SingleService,
   ) {}
 
   async createMilestone(orderId: string, orderType: OrderType): Promise<void> {
-    const milestonesData: { title: string; description: string }[] = [];
+    let templatesType;
+    if (orderType === OrderType.SELL) templatesType = MilestoneTemplateType.SELL;
+    else if (orderType === OrderType.RENT) templatesType = MilestoneTemplateType.RENT;
+    else if (orderType === OrderType.CUSTOM) templatesType = MilestoneTemplateType.CUSTOM;
+    const templates = await this.singleService.getMilestoneTemplatesByType(templatesType);
 
-    if (orderType === OrderType.SELL) {
-      milestonesData.push(
-        {
-          title: 'Chuẩn bị váy',
-          description: 'Cửa hàng đang chuẩn bị và kiểm tra chất lượng váy cưới',
-        },
-        {
-          title: 'Sẵn sàng bàn giao',
-          description:
-            'Váy đã sẵn sàng để giao cho đơn vị vận chuyển hoặc nhận trực tiếp tại cửa hàng',
-        },
-        { title: 'Đang giao hàng', description: 'Váy đang được vận chuyển đến địa chỉ của bạn' },
-        {
-          title: 'Đã nhận hàng',
-          description: 'Bạn đã nhận váy cưới và xác nhận tình trạng sản phẩm',
-        },
-        { title: 'Hoàn tất đơn hàng', description: 'Quy trình mua hàng đã hoàn thành' },
-        {
-          title: 'Nhận khiếu nại về đơn hàng (nếu có)',
-          description: 'Người mua và người bán khiếu nại một số vấn đề nếu có',
-        },
-      );
-    } else if (orderType === OrderType.RENT) {
-      milestonesData.push(
-        {
-          title: 'Chuẩn bị váy',
-          description: 'Cửa hàng đang chuẩn bị và kiểm tra chất lượng váy cưới',
-        },
-        {
-          title: 'Sẵn sàng bàn giao',
-          description:
-            'Váy đã sẵn sàng để giao cho đơn vị vận chuyển hoặc nhận trực tiếp tại cửa hàng',
-        },
-        { title: 'Đang giao hàng', description: 'Váy đang được vận chuyển đến địa chỉ của bạn' },
-        { title: 'Hoàn tất đơn hàng', description: 'Quy trình mua hàng đã hoàn thành' },
-        {
-          title: 'Khách hàng đang sử dụng',
-          description: 'Bạn đang giữ và sử dụng váy trong thời gian thuê',
-        },
-        { title: 'Hoàn trả váy', description: 'Bạn đã gửi trả váy hoặc bàn giao lại cho cửa hàng' },
-        { title: 'Hoàn tất đơn hàng', description: 'Quy trình mua hàng đã hoàn thành' },
-        {
-          title: 'Nhận khiếu nại về đơn hàng (nếu có)',
-          description: 'Người mua và người bán khiếu nại một số vấn đề nếu có',
-        },
-      );
-    } else {
-      milestonesData.push(
-        {
-          title: 'Đo và tư vấn',
-          description: 'Tiến hành đo số đo và tư vấn kiểu dáng, chất liệu phù hợp cho khách',
-        },
-        {
-          title: 'Chuẩn bị nguyên liệu',
-          description: 'Chuẩn bị vải, ren, phụ kiện và các nguyên liệu cần thiết',
-        },
-        {
-          title: 'May và hoàn thiện cơ bản',
-          description: 'Thợ may tiến hành tạo dáng váy và hoàn thiện phần cơ bản',
-        },
-        {
-          title: 'Đặt lịch thử và chỉnh sửa',
-          description: 'Khách thử váy và thợ may điều chỉnh theo phản hồi',
-        },
-        { title: 'Hoàn tất đơn hàng', description: 'Quy trình mua hàng đã hoàn thành' },
-        {
-          title: 'Nhận khiếu nại về đơn hàng (nếu có)',
-          description: 'Người mua và người bán khiếu nại một số vấn đề nếu có',
-        },
-      );
+    if (!templates.length) {
+      throw new Error(`No milestone templates found for type: ${orderType}`);
     }
-
     //lấy ngày hôm nay
     const startDate = new Date();
 
-    const milestoneEntities = milestonesData.map((m, i) => {
+    const milestoneEntities = templates.map((template) => {
       const dueDate = new Date(startDate);
-      dueDate.setDate(dueDate.getDate() + (i + 1) * 5);
+      dueDate.setDate(dueDate.getDate() + template.timeGap);
 
       return this.milestoneRepository.create({
         order: { id: orderId },
-        title: m.title,
-        description: m.description,
-        index: i + 1,
+        title: template.title,
+        description: template.description,
+        index: template.index,
         status: MilestoneStatus.PENDING,
         dueDate,
       });
