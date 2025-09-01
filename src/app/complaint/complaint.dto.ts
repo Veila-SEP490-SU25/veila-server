@@ -18,6 +18,13 @@ export class CUComplaintDto {
   description: string;
 
   @ApiProperty({
+    description: 'The reason for the complaint',
+    example: 'The product is defective',
+  })
+  @IsString()
+  reason: string;
+
+  @ApiProperty({
     description: 'The images related to the complaint',
     example: 'https://example.com/image1.jpg,https://example.com/image2.jpg',
   })

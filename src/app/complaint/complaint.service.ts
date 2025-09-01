@@ -14,6 +14,8 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { MilestoneService } from '../milestone';
 import { ComplaintReason } from '@/common/models/single';
+import { UserService } from '@/app/user';
+import { ShopService } from '@/app/shop';
 
 @Injectable()
 export class ComplaintService {
@@ -26,7 +28,11 @@ export class ComplaintService {
     private readonly orderService: OrderService,
     @Inject(forwardRef(() => MilestoneService))
     private readonly milestoneService: MilestoneService,
-  ) {}
+    @Inject(UserService)
+    private readonly userService: UserService,
+    @Inject(ShopService)
+    private readonly shopService: ShopService,
+  ) { }
 
   async getComplaintReasons(
     take: number,
@@ -82,7 +88,11 @@ export class ComplaintService {
     return complaint;
   }
 
-  async createComplaint(userId: string, orderId: string, body: CUComplaintDto): Promise<Complaint> {
+  async createComplaint(
+    userId: string,
+    orderId: string,
+    body: CUComplaintDto,
+  ): Promise<Complaint> {
     const order = await this.orderService.getOwnerOrderById(userId, orderId);
     if (!order) throw new NotFoundException('Không tìm thấy đơn hàng này');
     if (order.status !== OrderStatus.COMPLETED)
@@ -109,7 +119,11 @@ export class ComplaintService {
     return await this.complaintRepository.save(complaint);
   }
 
-  async updateComplaint(userId: string, id: string, body: CUComplaintDto): Promise<void> {
+  async updateComplaint(
+    userId: string,
+    id: string,
+    body: CUComplaintDto,
+  ): Promise<void> {
     const complaint = await this.getOwnerComplaintById(userId, id);
     if (complaint.status !== ComplaintStatus.DRAFT)
       throw new MethodNotAllowedException('Chỉ có thể cập nhật khiếu nại ở trạng thái nháp');
@@ -155,6 +169,10 @@ export class ComplaintService {
   async reviewComplaint(id: string, status: ComplaintStatus): Promise<void> {
     const complaint = await this.complaintRepository.findOne({
       where: { id },
+      relations: {
+        sender: true,
+        order: { shop: { user: true }, customer: true },
+      },
     });
     if (!complaint) throw new NotFoundException('Không tìm thấy khiếu nại nào phù hợp');
     if (complaint.status !== ComplaintStatus.IN_PROGRESS)
@@ -162,6 +180,22 @@ export class ComplaintService {
     if (status !== ComplaintStatus.APPROVED && status !== ComplaintStatus.REJECTED)
       throw new BadRequestException('Trạng thái khiếu nại không hợp lệ');
     await this.complaintRepository.update(id, { status });
+
+    if (status === ComplaintStatus.APPROVED) {
+      const complaintReason = await this.complaintReasonRepository.findOneBy({ code: complaint.title });
+      if (!complaintReason) throw new NotFoundException('Không tìm thấy lý do khiếu nại nào phù hợp');
+
+      const isCustomer = complaint.sender === complaint.order.customer;
+      if (isCustomer) {
+        const shop = complaint.order.shop;
+        shop.reputation -= complaintReason.complaintReputationPenalty;
+        await this.shopService.save(shop);
+      } else {
+        const customer = complaint.order.customer;
+        customer.reputation -= complaintReason.complaintReputationPenalty;
+        await this.userService.updateUser(customer);
+      }
+    }
   }
 
   async isExistsInProgressComplaint(userId: string, orderId: string): Promise<boolean> {

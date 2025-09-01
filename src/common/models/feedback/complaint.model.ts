@@ -66,6 +66,21 @@ export class Complaint extends Base {
   description: string;
 
   @Column({
+    name: 'reason',
+    type: 'varchar',
+    length: 200,
+    charset: 'utf8mb4',
+    collation: 'utf8mb4_unicode_ci',
+  })
+  @ApiProperty({
+    type: 'string',
+    description: 'Lý do khiếu nại',
+    example: 'Sản phẩm không đúng mô tả',
+    maxLength: 200,
+  })
+  reason: string;
+
+  @Column({
     name: 'images',
     type: 'text',
     nullable: true,
