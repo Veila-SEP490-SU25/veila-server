@@ -104,7 +104,6 @@ export class BlogService {
       order,
       take,
       skip,
-      withDeleted: true,
       relations: {
         category: true,
       },
@@ -118,7 +117,6 @@ export class BlogService {
     };
     const blog = await this.blogRepository.findOne({
       where,
-      withDeleted: true,
       relations: {
         category: true,
       },
