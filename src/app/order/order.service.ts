@@ -540,6 +540,10 @@ export class OrderService {
       order,
       take,
       skip,
+      relations: {
+        customer: true,
+        shop: { user: true },
+      },
     });
     return [items.map((item) => plainToInstance(OrderDto, item)), total];
   }
