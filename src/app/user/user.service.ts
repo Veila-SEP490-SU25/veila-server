@@ -13,12 +13,14 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { In, Not, Repository } from 'typeorm';
 import { CreateUser, IdentifyAuthDto, UpdateUser, UserContactDto, UsernameDto } from '@/app/user';
 import { PasswordService } from '@/app/password';
+import { RedisService } from '../redis';
 
 @Injectable()
 export class UserService {
   constructor(
     @InjectRepository(User) private readonly userRepository: Repository<User>,
     private readonly passwordService: PasswordService,
+    private readonly redisService: RedisService,
   ) {}
 
   async updateUsername(userId: string, body: UsernameDto): Promise<void> {
@@ -244,6 +246,11 @@ export class UserService {
   async identifyUser(userId: string, body: IdentifyAuthDto) {
     const user = await this.getUserById(userId);
     if (!user) throw new NotFoundException('Không tìm thấy người dùng');
+
+    const hashedOtp = await this.redisService.get(`${userId}:phone-otp`);
+    if (!hashedOtp) throw new NotFoundException('OTP đã hết hạn hoặc không tồn tại');
+    if (!(await this.passwordService.comparePassword(body.otp, hashedOtp)))
+      throw new BadRequestException('Mã OTP không chính xác');
 
     const phone = body.phone.trim();
 

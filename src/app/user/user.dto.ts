@@ -231,6 +231,15 @@ export class IdentifyAuthDto {
   @IsNotEmpty()
   @IsString()
   phone: string;
+
+  @ApiProperty({
+    description: 'Mã OTP được gửi đến số điện thoại',
+    example: '123456',
+    nullable: false,
+  })
+  @IsNotEmpty()
+  @IsString()
+  otp: string;
 }
 
 export class UsernameDto {

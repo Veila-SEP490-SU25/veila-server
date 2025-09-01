@@ -260,8 +260,8 @@ export class WalletService {
     const toUser = await this.userService.getUserById(order.shop.user.id);
     if (!toUser) throw new NotFoundException('Không tìm thấy người dùng');
 
-    fromWallet.availableBalance = Number(fromWallet.availableBalance) - deposit;
-    fromWallet.lockedBalance = Number(fromWallet.lockedBalance) + (deposit - amount);
+    fromWallet.availableBalance = Number(fromWallet.availableBalance) - (deposit + amount);
+    fromWallet.lockedBalance = Number(fromWallet.lockedBalance) + deposit;
     toWallet.lockedBalance = Number(toWallet.lockedBalance) + amount;
 
     await this.walletRepository.save(fromWallet);
@@ -462,14 +462,12 @@ export class WalletService {
     const toShop = await this.shopService.getShopById(order.shop.id);
     const shopWallet = await this.getWalletByUserIdV2(toShop.user.id);
     if (!order.deposit) throw new NotFoundException('Không tìm thấy giá trị tiền cọc của đơn hàng');
-    const deposit = order.deposit;
+    const deposit = Number(order.deposit);
 
     if (!shopWallet) throw new NotFoundException('Không tìm thấy ví điện tử của người nhận');
 
-    cusWallet.lockedBalance =
-      Number(cusWallet.lockedBalance) + (deposit - Number(transaction.amount));
-    cusWallet.availableBalance =
-      Number(cusWallet.availableBalance) + (deposit - Number(transaction.amount));
+    cusWallet.lockedBalance = Number(cusWallet.lockedBalance) - deposit;
+    cusWallet.availableBalance = Number(cusWallet.availableBalance) + deposit;
 
     shopWallet.lockedBalance = Number(shopWallet.lockedBalance) - Number(transaction.amount);
     shopWallet.availableBalance = Number(shopWallet.availableBalance) + Number(transaction.amount);
@@ -482,7 +480,7 @@ export class WalletService {
         order.customer.email,
         order.customer.username,
         order.id,
-        deposit - transaction.amount,
+        deposit,
         new Date().toLocaleString('vi-VN', { timeZone: 'Asia/Ho_Chi_Minh' }),
       );
     }

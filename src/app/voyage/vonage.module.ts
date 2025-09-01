@@ -1,6 +1,6 @@
-import { VonageController } from "@/app/voyage/vonage.controller";
-import { VonageService } from "@/app/voyage/vonage.service";
-import { Module } from "@nestjs/common";
+import { VonageController } from '@/app/voyage/vonage.controller';
+import { VonageService } from '@/app/voyage/vonage.service';
+import { Module } from '@nestjs/common';
 
 @Module({
   imports: [],

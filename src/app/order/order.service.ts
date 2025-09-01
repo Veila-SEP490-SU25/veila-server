@@ -395,10 +395,10 @@ export class OrderService {
         throw new BadRequestException('Ngày trả phải sau ngày giao ít nhất 1 ngày');
       }
 
-      //tính tiền váy
+      //tính tiền thuê váy
       const dressPrice = Number(dress.rentalPrice) * rentalDays;
 
-      //tính tiền phụ kiện
+      //tính tiền thuê phụ kiện
       const accessoriesPriceArray = await Promise.all(
         body.accessoriesDetails.map(async (accessory) => {
           const item = await this.orderAccessoriesDetailsService.getAccessoryById(
@@ -432,18 +432,16 @@ export class OrderService {
       );
 
       await this.milestoneService.createMilestone(createdOrder.id, body.newOrder.type);
-      const defaultDeposit = await this.calculateDepositForRentOrder(createdOrder.id);
-      if (defaultDeposit > createdOrder.amount) {
-        createdOrder.deposit = await this.calculateDepositForRentOrder(createdOrder.id);
-        await this.orderRepository.save(createdOrder);
-      }
+      createdOrder.deposit = await this.calculateDepositForRentOrder(createdOrder.id);
+
+      await this.orderRepository.save(createdOrder);
 
       await this.mailService.sendCreateOrder(
         user.email,
         user.username,
         createdOrder.id,
         dress.name,
-        createdOrder.amount,
+        Number(createdOrder.amount) + Number(createdOrder.deposit),
         new Date().toLocaleString('vi-VN', { timeZone: 'Asia/Ho_Chi_Minh' }),
       );
 
@@ -452,7 +450,7 @@ export class OrderService {
         dress.user.username,
         createdOrder.id,
         dress.name,
-        createdOrder.amount,
+        Number(createdOrder.amount) + Number(createdOrder.deposit),
         new Date().toLocaleString('vi-VN', { timeZone: 'Asia/Ho_Chi_Minh' }),
       );
 
@@ -831,8 +829,14 @@ export class OrderService {
       return await this.orderRepository.save(order);
     } else if (order.type === OrderType.RENT) {
       //Luồng thuê thanh toán như luồng mua, sau đó chuyển số tiền thuê qua cho shop dạng lock, số còn lại lock
-      const deposit = order.deposit !== null ? order.deposit : order.amount;
-      if (!(await this.checkWalletBalanceIsEnough(userId, deposit)))
+      if (!order.deposit)
+        throw new InternalServerErrorException('Đơn hàng chưa tính được tiền đặt cọc');
+      if (
+        !(await this.checkWalletBalanceIsEnough(
+          userId,
+          Number(order.amount) + Number(order.deposit),
+        ))
+      )
         throw new BadRequestException('Không đủ số dư trong ví, vui lòng nạp tiền');
 
       //Kiểm tra mã OTP
@@ -850,7 +854,7 @@ export class OrderService {
         userId,
         order,
         Number(order.amount),
-        deposit,
+        Number(order.deposit),
       );
 
       order.status = OrderStatus.IN_PROCESS;
@@ -860,7 +864,7 @@ export class OrderService {
         order.customer.email,
         order.customer.username,
         order.id,
-        order.amount,
+        Number(order.amount) + Number(order.deposit),
         new Date().toLocaleString('vi-VN', { timeZone: 'Asia/Ho_Chi_Minh' }),
       );
 
@@ -868,7 +872,7 @@ export class OrderService {
         order.shop.user.email,
         order.shop.user.username,
         order.id,
-        order.amount,
+        Number(order.amount) + Number(order.deposit),
         new Date().toLocaleString('vi-VN', { timeZone: 'Asia/Ho_Chi_Minh' }),
       );
 

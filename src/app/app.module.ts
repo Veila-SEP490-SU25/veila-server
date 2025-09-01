@@ -92,7 +92,7 @@ import { VonageModule } from '@/app/voyage';
     RequestModule,
     MembershipModule,
     AppSettingModule,
-    VonageModule
+    VonageModule,
   ],
   controllers: [AppController],
   providers: [
