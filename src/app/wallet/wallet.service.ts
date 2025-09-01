@@ -446,6 +446,14 @@ export class WalletService {
     shopWallet.availableBalance = Number(shopWallet.availableBalance) + Number(transaction.amount);
 
     await this.walletRepository.save(shopWallet);
+
+    await this.mailService.sendUnlockBalance(
+      order.shop.user.email,
+      order.shop.user.username,
+      order.id,
+      transaction.amount,
+      new Date().toLocaleString('vi-VN', { timeZone: 'Asia/Ho_Chi_Minh' }),
+    );
   }
 
   async unlockBalanceForRent(order: Order): Promise<void> {
@@ -468,6 +476,24 @@ export class WalletService {
 
     await this.walletRepository.save(cusWallet);
     await this.walletRepository.save(shopWallet);
+
+    if (deposit - Number(transaction.amount) != 0) {
+      await this.mailService.sendUnlockBalance(
+        order.customer.email,
+        order.customer.username,
+        order.id,
+        deposit - transaction.amount,
+        new Date().toLocaleString('vi-VN', { timeZone: 'Asia/Ho_Chi_Minh' }),
+      );
+    }
+
+    await this.mailService.sendUnlockBalance(
+      order.shop.user.email,
+      order.shop.user.username,
+      order.id,
+      transaction.amount,
+      new Date().toLocaleString('vi-VN', { timeZone: 'Asia/Ho_Chi_Minh' }),
+    );
   }
 
   async unlockBalanceForCustom(order: Order): Promise<void> {
@@ -494,6 +520,14 @@ export class WalletService {
     shopWallet.lockedBalance = Number(shopWallet.lockedBalance) - Number(amount);
 
     await this.walletRepository.save(shopWallet);
+
+    await this.mailService.sendUnlockBalance(
+      order.shop.user.email,
+      order.shop.user.username,
+      order.id,
+      amount,
+      new Date().toLocaleString('vi-VN', { timeZone: 'Asia/Ho_Chi_Minh' }),
+    );
   }
 
   async refundForSellAndRent(order: Order): Promise<void> {

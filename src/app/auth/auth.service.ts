@@ -55,6 +55,7 @@ export class AuthService {
       hashedRefreshToken,
       60 * 60 * 24 * 7 * 1000,
     );
+
     return {
       accessToken,
       refreshToken,

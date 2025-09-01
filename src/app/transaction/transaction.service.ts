@@ -13,6 +13,9 @@ import {
 import { plainToInstance } from 'class-transformer';
 import { Filtering, getOrder, getWhere, Sorting } from '@/common/decorators';
 import { DepositViaPayOSDto, WalletService } from '../wallet';
+import { Cron, CronExpression } from '@nestjs/schedule';
+import { MailService } from '../mail';
+import { UserService } from '../user';
 
 @Injectable()
 export class TransactionService {
@@ -21,6 +24,10 @@ export class TransactionService {
     private readonly transactionRepository: Repository<Transaction>,
     @Inject(forwardRef(() => WalletService))
     private readonly walletService: WalletService,
+    @Inject(forwardRef(() => MailService))
+    private readonly mailService: MailService,
+    @Inject(forwardRef(() => UserService))
+    private readonly userService: UserService,
   ) {}
 
   async saveDepositTransaction(
@@ -420,6 +427,18 @@ export class TransactionService {
     await this.walletService.saveWalletBalanceV2(wallet, transaction.amount);
     await this.updateBalanceSnapshotForApprovedWithDraw(transaction.id);
 
+    //gửi mail xác nhận
+    const user = await this.userService.getUserById(wallet.user.id);
+    if (!user) throw new NotFoundException('Không tìm thấy người dùng');
+
+    await this.mailService.sendWithdrawAnswer(
+      user.email,
+      user.username,
+      TransactionStatus.COMPLETED,
+      transaction.amount,
+      new Date().toLocaleString('vi-VN', { timeZone: 'Asia/Ho_Chi_Minh' }),
+    );
+
     return await this.updateTransactionStatus(id, TransactionStatus.COMPLETED);
   }
 
@@ -436,6 +455,19 @@ export class TransactionService {
     const wallet = await this.walletService.getWalletById(transaction.walletId);
     await this.walletService.saveWalletBalanceV3(wallet, transaction.amount);
     await this.updateBalanceSnapshotForCancelledWithDraw(transaction.id);
+
+    //gửi mail xác nhận
+    const user = await this.userService.getUserById(wallet.user.id);
+    if (!user) throw new NotFoundException('Không tìm thấy người dùng');
+
+    await this.mailService.sendWithdrawAnswer(
+      user.email,
+      user.username,
+      TransactionStatus.CANCELLED,
+      transaction.amount,
+      new Date().toLocaleString('vi-VN', { timeZone: 'Asia/Ho_Chi_Minh' }),
+    );
+
     return await this.updateTransactionStatus(id, TransactionStatus.CANCELLED);
   }
 
@@ -470,5 +502,31 @@ export class TransactionService {
 
   async createMembershipTransactionForSeeding(transaction: Transaction): Promise<Transaction> {
     return await this.transactionRepository.save(transaction);
+  }
+
+  @Cron(CronExpression.EVERY_DAY_AT_MIDNIGHT, { timeZone: 'Asia/Ho_Chi_Minh' })
+  async expiredDepositTransaction(): Promise<void> {
+    //tìm tất cả các giao dịch nạp tiền vẫn còn đang pending sau 15p
+    const transactions = await this.transactionRepository.find({
+      where: {
+        type: TransactionType.DEPOSIT,
+        status: TransactionStatus.PENDING,
+      },
+    });
+    //cancel các giao dịch rút tiền đang pending sau 15p
+    await Promise.all(
+      transactions.map(async (transaction) => {
+        await this.autoCancelExpiredDepositTransaction(transaction);
+      }),
+    );
+  }
+
+  async autoCancelExpiredDepositTransaction(transaction: Transaction): Promise<void> {
+    const now = new Date();
+    const fifteenMinutesAgo = new Date(now.getTime() - 15 * 60 * 1000);
+    if (transaction.createdAt < fifteenMinutesAgo) {
+      transaction.status = TransactionStatus.CANCELLED;
+      await this.transactionRepository.save(transaction);
+    }
   }
 }
