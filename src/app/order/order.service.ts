@@ -432,7 +432,7 @@ export class OrderService {
   }
 
   async getOrderByShopId(shopId: string): Promise<Order[] | null> {
-    return await this.orderRepository
+    const orders = await this.orderRepository
       .createQueryBuilder('order')
       .leftJoinAndSelect('order.shop', 'shop')
       .where('shop.id = :shopId', { shopId })
@@ -440,6 +440,7 @@ export class OrderService {
         statuses: [OrderStatus.PENDING, OrderStatus.IN_PROCESS],
       })
       .getMany();
+    return orders;
   }
 
   async getAllTypeOrders(type: OrderType): Promise<Order[]> {
@@ -577,8 +578,9 @@ export class OrderService {
   }
 
   async getOrderDressDetails(orderId: string): Promise<OrderDressDetailDto[]> {
-    const orderAccessoriesDetails =
-      await this.orderDressDetailsService.getOrderDressDetails(orderId);
+    const orderAccessoriesDetails = await this.orderDressDetailsService.getOrderDressDetails(
+      orderId,
+    );
     return plainToInstance(OrderDressDetailDto, orderAccessoriesDetails);
   }
 
@@ -801,8 +803,9 @@ export class OrderService {
   }
 
   async calculateDepositForRentOrder(orderId: string): Promise<number> {
-    const orderDressDetail =
-      await this.orderDressDetailsService.getOrderDressDetailByOrderId(orderId);
+    const orderDressDetail = await this.orderDressDetailsService.getOrderDressDetailByOrderId(
+      orderId,
+    );
     if (!orderDressDetail)
       throw new NotFoundException('Không tìm thấy chi tiết váy cưới trong đơn hàng');
     const orderAccessoryDetails =

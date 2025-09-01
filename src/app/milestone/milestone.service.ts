@@ -105,16 +105,22 @@ export class MilestoneService {
       );
     }
 
-    const milestoneEntities = milestonesData.map((m, i) =>
-      this.milestoneRepository.create({
+    //lấy ngày hôm nay
+    const startDate = new Date();
+
+    const milestoneEntities = milestonesData.map((m, i) => {
+      const dueDate = new Date(startDate);
+      dueDate.setDate(dueDate.getDate() + (i + 1) * 5);
+
+      return this.milestoneRepository.create({
         order: { id: orderId },
         title: m.title,
         description: m.description,
         index: i + 1,
         status: MilestoneStatus.PENDING,
-        dueDate: new Date(),
-      }),
-    );
+        dueDate,
+      });
+    });
 
     await this.milestoneRepository.save(milestoneEntities);
   }
@@ -124,12 +130,16 @@ export class MilestoneService {
     id: string,
     body: CUMilestoneDtoV2,
   ): Promise<Milestone> {
-    const existingMilestone = await this.milestoneRepository.findOneBy({ id });
+    const existingMilestone = await this.milestoneRepository.findOne({
+      where: { id },
+      relations: { order: true },
+    });
+
     if (!existingMilestone) throw new NotFoundException('Không tim thấy mốc công việc');
 
     await this.validateOwnerOfOrder(userId, existingMilestone.order.id);
 
-    if (!this.isOrderInProcess(existingMilestone.order.id))
+    if (!(await this.isOrderInProcess(existingMilestone.order.id)))
       throw new ConflictException('Đơn hàng chưa được bắt đầu/đã hoàn thành/bị hủy');
 
     if (existingMilestone.status !== MilestoneStatus.PENDING)
@@ -190,7 +200,10 @@ export class MilestoneService {
     id: string,
     status: MilestoneStatus,
   ): Promise<Milestone> {
-    const existingMilestone = await this.milestoneRepository.findOneBy({ id });
+    const existingMilestone = await this.milestoneRepository.findOne({
+      where: { id },
+      relations: { order: true },
+    });
     if (!existingMilestone) throw new NotFoundException('Không tim thấy mốc công việc');
 
     await this.validateOwnerOfOrder(userId, existingMilestone.order.id);
@@ -213,7 +226,7 @@ export class MilestoneService {
     if (!shop) throw new NotFoundException('Người dùng này chưa có cửa hàng nào');
 
     const orders = await this.orderService.getOrderByShopId(shop.id);
-    if (!orders || orders.length === 0) {
+    if (!orders) {
       throw new NotFoundException(
         'Không tìm thấy đơn hàng đang chờ hoặc đang thực hiện của người dùng này',
       );
