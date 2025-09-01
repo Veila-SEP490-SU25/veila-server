@@ -50,7 +50,7 @@ export class WalletService {
     private readonly mailService: MailService,
     @Inject(AppSettingService)
     private readonly appSettingService: AppSettingService,
-  ) { }
+  ) {}
 
   async getWalletsForAdmin(
     take: number,

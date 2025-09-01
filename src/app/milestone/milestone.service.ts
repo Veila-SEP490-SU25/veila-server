@@ -65,7 +65,10 @@ export class MilestoneService {
 
     //Tạo task số 1 mặc định cho mỗi milestone
     await Promise.all(
-      savedMilestones.map((milestone) => this.taskService.createDefaultTask(milestone)),
+      savedMilestones.map((milestone, i) => {
+        if (i == savedMilestones.length - 1) return; // bỏ qua milestone cuối cùng
+        this.taskService.createDefaultTask(milestone);
+      }),
     );
   }
 

@@ -36,14 +36,14 @@ export class MembershipService {
     private readonly redisService: RedisService,
     @Inject(forwardRef(() => PasswordService))
     private readonly passwordService: PasswordService,
-  ) { }
+  ) {}
 
   async getOwner(userId: string): Promise<Membership> {
     const memberships = await this.membershipRepository.find({
       where: {
         shop: { user: { id: userId } },
       },
-      order: { createdAt: 'DESC' }
+      order: { createdAt: 'DESC' },
     });
 
     const membership = memberships[0];

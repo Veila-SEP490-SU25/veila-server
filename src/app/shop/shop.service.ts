@@ -451,7 +451,8 @@ export class ShopService {
           (membership) => membership.status === MembershipStatus.ACTIVE,
         );
         const boolean = activeMembership && new Date(activeMembership.endDate) < today;
-        if (boolean) await this.membershipService.updateStatus(activeMembership.id, MembershipStatus.INACTIVE);
+        if (boolean)
+          await this.membershipService.updateStatus(activeMembership.id, MembershipStatus.INACTIVE);
         return boolean;
       })
       .map(async (shop) => shop.id);

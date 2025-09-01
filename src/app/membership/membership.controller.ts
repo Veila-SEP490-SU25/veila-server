@@ -19,7 +19,7 @@ import { Roles, UserId } from '@/common/decorators';
 @ApiBearerAuth()
 @ApiExtraModels(ItemResponse, Membership)
 export class MembershipController {
-  constructor(private readonly membershipService: MembershipService) { }
+  constructor(private readonly membershipService: MembershipService) {}
 
   @Post('register')
   @UseGuards(AuthGuard, RolesGuard)
