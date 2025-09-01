@@ -810,7 +810,7 @@ export class OrderService {
       await this.orderAccessoriesDetailsService.getOrderAccessoryDetailsByOrderId(orderId);
     if (!orderAccessoryDetails)
       throw new NotFoundException('Không tìm thấy chi tiết phụ kiện trong đơn hàng');
-    const dress = await this.dressService.getDressById(orderDressDetail.id);
+    const dress = await this.dressService.getDressById(orderDressDetail.dress.id);
     const dressPrice = Number(dress.sellPrice);
     const accessoriesPriceArray = await Promise.all(
       orderAccessoryDetails.map(async (accessoryDetail) => {
