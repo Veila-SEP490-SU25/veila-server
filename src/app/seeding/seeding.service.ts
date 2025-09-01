@@ -787,12 +787,12 @@ export class SeedingService implements OnModuleInit {
       lastName,
       phone: email.includes('customer.')
         ? `+84${this.customFaker.string.numeric(1)}00${email.charAt(
-            9,
-          )}${this.customFaker.string.numeric(5)}`
+          9,
+        )}${this.customFaker.string.numeric(5)}`
         : email.includes('shop.')
           ? `+84${this.customFaker.string.numeric(1)}11${email.charAt(
-              5,
-            )}${this.customFaker.string.numeric(5)}`
+            5,
+          )}${this.customFaker.string.numeric(5)}`
           : email.includes('admin')
             ? `+84${this.customFaker.string.numeric(1)}22${this.customFaker.string.numeric(6)}`
             : email.includes('staff')
@@ -2974,8 +2974,7 @@ export class SeedingService implements OnModuleInit {
         category,
         title: this.customFaker.lorem.sentence(),
         content: this.customFaker.lorem.paragraphs(50),
-        images:
-          'https://linhnga.vn/wp-content/uploads/2022/08/Hoa-cuoi.jpg-1400x1867.jpg,https://tse4.mm.bing.net/th/id/OIP._uVCogpX1A6MFL7ms4cCrwHaIy?r=0&rs=1&pid=ImgDetMain&o=7&rm=3',
+        images: 'https://images2.thanhnien.vn/528068263637045248/2023/9/29/snapinstaapp38148559410051804873592488387668610735444640n1080-16960069698972083614296.jpg,https://chupanhphuyen.com/uploads/news/2024_09/co-dau-dien-vay-cuoi-suot-mot-nam-ao-cuoi-dep-tuy-hoa-phu-yen.jpg',
         isVerified: true,
         status: BlogStatus.PUBLISHED,
       } as Blog;
