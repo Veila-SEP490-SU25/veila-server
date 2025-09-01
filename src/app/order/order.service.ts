@@ -425,8 +425,8 @@ export class OrderService {
       } as Order;
       const createdOrder = await this.orderRepository.save(order);
 
-      await this.orderDressDetailsService.saveOrderDressDetails(createdOrder.id, body.dressDetails);
-      await this.orderAccessoriesDetailsService.saveOrderAccessoryDetails(
+      await this.orderDressDetailsService.saveRentalOrderDressDetails(createdOrder.id, body.dressDetails);
+      await this.orderAccessoriesDetailsService.saveRentalOrderAccessoryDetails(
         createdOrder.id,
         body.accessoriesDetails,
       );

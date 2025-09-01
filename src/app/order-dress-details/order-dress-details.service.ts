@@ -40,6 +40,32 @@ export class OrderDressDetailsService {
     await this.orderDressDetailRepository.save(plainToInstance(OrderDressDetail, orderDressDetail));
   }
 
+  async saveRentalOrderDressDetails(orderId: string, dressDetails: CUOrderDressDetailDto): Promise<void> {
+    const dress = await this.dressService.getOne(dressDetails.dressId);
+
+    const orderDressDetail = {
+      order: { id: orderId },
+      dress: { id: dressDetails.dressId },
+      height: dressDetails.height,
+      weight: dressDetails.weight,
+      bust: dressDetails.bust,
+      waist: dressDetails.waist,
+      hip: dressDetails.hip,
+      armpit: dressDetails.armpit,
+      bicep: dressDetails.bicep,
+      neck: dressDetails.neck,
+      shoulderWidth: dressDetails.shoulderWidth,
+      sleeveLength: dressDetails.sleeveLength,
+      backLength: dressDetails.backLength,
+      lowerWaist: dressDetails.lowerWaist,
+      waistToFloor: dressDetails.waistToFloor,
+      description: '',
+      price: Number(dress.rentalPrice),
+    } as OrderDressDetail;
+
+    await this.orderDressDetailRepository.save(plainToInstance(OrderDressDetail, orderDressDetail));
+  }
+
   async updateOrderDressDetail(
     id: string,
     shopId: string,

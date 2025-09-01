@@ -37,6 +37,26 @@ export class OrderAccessoriesDetailsService {
 
     await this.orderAccessoryDetailRepository.save(orderAccessoryDetails);
   }
+  
+  async saveRentalOrderAccessoryDetails(
+    orderId: string,
+    accessoriesDetails: CUOrderAccessoriesDetailDto[],
+  ): Promise<void> {
+    // Resolve async computations within map; otherwise you'll pass an array of Promises to save()
+    const orderAccessoryDetails = await Promise.all(
+      accessoriesDetails.map(async (detail) => {
+        const accessory = await this.getAccessoryById(detail.accessoryId);
+        return this.orderAccessoryDetailRepository.create({
+          order: { id: orderId },
+          accessory: { id: detail.accessoryId },
+          quantity: Number(detail.quantity),
+          price: Number(accessory.rentalPrice ?? 0) * Number(detail.quantity ?? 0),
+        } as OrderAccessoryDetail);
+      }),
+    );
+
+    await this.orderAccessoryDetailRepository.save(orderAccessoryDetails);
+  }
 
   async updateOrderAccessoryDetail(
     id: string,
