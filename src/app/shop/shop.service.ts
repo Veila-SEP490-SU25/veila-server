@@ -374,7 +374,7 @@ export class ShopService {
 
     if (isApproved) {
       await this.shopRepository.update(existingShop.id, {
-        status: ShopStatus.ACTIVE,
+        status: ShopStatus.SUSPENDED,
         isVerified: true,
       });
 
@@ -383,14 +383,6 @@ export class ShopService {
       });
 
       await this.userRepository.update({ id: existingShop.user.id }, { role: UserRole.SHOP });
-
-      const subscription = await this.subscriptionRepository.findOne({
-        where: { duration: 7 },
-      });
-      if (!subscription) {
-        throw new NotFoundException('Không tìm thấy gói đăng ký phù hợp');
-      }
-      await this.membershipService.registerMembership(existingShop.id, subscription.id);
     } else {
       await this.shopRepository.update(existingShop.id, {
         status: ShopStatus.INACTIVE,
@@ -453,14 +445,16 @@ export class ShopService {
       },
     });
 
-    const shopIdsToSuspend = shops
-      .filter((shop) => {
+    const shopIdsToSuspend = await shops
+      .filter(async (shop) => {
         const activeMembership = shop.memberships.find(
           (membership) => membership.status === MembershipStatus.ACTIVE,
         );
-        return activeMembership && new Date(activeMembership.endDate) < today;
+        const boolean = activeMembership && new Date(activeMembership.endDate) < today;
+        if (boolean) await this.membershipService.updateStatus(activeMembership.id, MembershipStatus.INACTIVE);
+        return boolean;
       })
-      .map((shop) => shop.id);
+      .map(async (shop) => shop.id);
 
     if (shopIdsToSuspend.length > 0) {
       await this.shopRepository.update(

@@ -1,4 +1,4 @@
-import { Membership, MembershipStatus, UserRole } from '@/common/models';
+import { Membership, MembershipStatus, ShopStatus, UserRole } from '@/common/models';
 import {
   BadRequestException,
   ForbiddenException,
@@ -39,13 +39,14 @@ export class MembershipService {
   ) { }
 
   async getOwner(userId: string): Promise<Membership> {
-    const membership = await this.membershipRepository.findOne({
+    const memberships = await this.membershipRepository.find({
       where: {
         shop: { user: { id: userId } },
-        status: MembershipStatus.ACTIVE,
       },
+      order: { createdAt: 'DESC' }
     });
-    if (!membership) throw new NotFoundException('Không tìm thấy membership');
+
+    const membership = memberships[0];
     return membership;
   }
 
@@ -148,6 +149,8 @@ export class MembershipService {
       status: MembershipStatus.INACTIVE,
       endDate: new Date(),
     });
+
+    await this.shopService.updateShopStatus(shop.id, ShopStatus.SUSPENDED);
   }
 
   async findAll(): Promise<Membership[]> {
@@ -163,6 +166,10 @@ export class MembershipService {
 
   async createForSeeding(membership: Membership): Promise<Membership> {
     return await this.membershipRepository.save(membership);
+  }
+
+  async updateStatus(id: string, status: MembershipStatus): Promise<void> {
+    await this.membershipRepository.update(id, { status });
   }
 
   async registerMembership(shopId: string, subscriptionId: string): Promise<void> {
