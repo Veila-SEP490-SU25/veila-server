@@ -36,6 +36,7 @@ import { SingleModule } from '@/app/single';
 import { TransactionModule } from './transaction';
 import { RequestModule } from '@/app/request';
 import { AppSettingModule } from '@/app/appsetting';
+import { VonageModule } from '@/app/voyage';
 
 @Module({
   imports: [
@@ -91,6 +92,7 @@ import { AppSettingModule } from '@/app/appsetting';
     RequestModule,
     MembershipModule,
     AppSettingModule,
+    VonageModule
   ],
   controllers: [AppController],
   providers: [
