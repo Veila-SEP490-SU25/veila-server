@@ -46,6 +46,7 @@ export class MilestoneService {
     //lấy ngày hôm nay
     const startDate = new Date();
 
+    //Tạo milestone mặc định theo templates
     const milestoneEntities = templates.map((template) => {
       const dueDate = new Date(startDate);
       dueDate.setDate(dueDate.getDate() + template.timeGap);
@@ -60,7 +61,12 @@ export class MilestoneService {
       });
     });
 
-    await this.milestoneRepository.save(milestoneEntities);
+    const savedMilestones = await this.milestoneRepository.save(milestoneEntities);
+
+    //Tạo task số 1 mặc định cho mỗi milestone
+    await Promise.all(
+      savedMilestones.map((milestone) => this.taskService.createDefaultTask(milestone)),
+    );
   }
 
   async updateDeadlineMilestoneById(
