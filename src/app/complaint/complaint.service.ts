@@ -13,17 +13,39 @@ import {
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { MilestoneService } from '../milestone';
+import { ComplaintReason } from '@/common/models/single';
 
 @Injectable()
 export class ComplaintService {
   constructor(
     @InjectRepository(Complaint)
     private readonly complaintRepository: Repository<Complaint>,
+    @InjectRepository(ComplaintReason)
+    private readonly complaintReasonRepository: Repository<ComplaintReason>,
     @Inject(forwardRef(() => OrderService))
     private readonly orderService: OrderService,
     @Inject(forwardRef(() => MilestoneService))
     private readonly milestoneService: MilestoneService,
   ) {}
+
+  async getComplaintReasons(
+    take: number,
+    skip: number,
+    sort?: Sorting,
+    filter?: Filtering,
+  ): Promise<[ComplaintReason[], number]> {
+    const dynamicFilter = getWhere(filter);
+    const where = {
+      ...dynamicFilter,
+    };
+    const order = getOrder(sort);
+    return await this.complaintReasonRepository.findAndCount({
+      where,
+      order,
+      take,
+      skip,
+    });
+  }
 
   async getOwnerComplaints(
     userId: string,

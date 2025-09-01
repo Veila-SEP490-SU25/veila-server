@@ -173,7 +173,7 @@ export class CURequestDto {
     type: 'number',
     nullable: true,
     description: 'Vòng hông của cô dâu (cm)',
-    example: '90',
+    example: '20',
   })
   @IsNumber()
   @IsOptional()
@@ -436,7 +436,7 @@ export class CUpdateRequestDto {
     type: 'number',
     nullable: true,
     description: 'Vòng hông của cô dâu (cm)',
-    example: '90',
+    example: '20',
   })
   @IsNumber()
   @IsOptional()

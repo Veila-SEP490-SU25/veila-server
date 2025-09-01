@@ -5,10 +5,11 @@ import { Complaint } from '@/common/models';
 import { forwardRef, Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { MilestoneModule } from '../milestone';
+import { ComplaintReason } from '@/common/models/single';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([Complaint]),
+    TypeOrmModule.forFeature([Complaint, ComplaintReason]),
     forwardRef(() => OrderModule),
     forwardRef(() => MilestoneModule),
   ],

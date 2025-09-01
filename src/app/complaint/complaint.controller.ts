@@ -13,6 +13,7 @@ import {
 } from '@/common/decorators';
 import { AuthGuard } from '@/common/guards';
 import { Complaint, UserRole } from '@/common/models';
+import { ComplaintReason } from '@/common/models/single';
 import { Body, Controller, Get, HttpStatus, Param, Put, UseGuards } from '@nestjs/common';
 import {
   ApiBearerAuth,
@@ -28,7 +29,7 @@ import {
 @Controller('complaints')
 @ApiTags('Complaint Controller')
 @ApiBearerAuth()
-@ApiExtraModels(ListResponse, ItemResponse, Complaint)
+@ApiExtraModels(ListResponse, ItemResponse, Complaint, ComplaintReason)
 export class ComplaintController {
   constructor(private readonly complaintService: ComplaintService) {}
 
@@ -112,6 +113,88 @@ export class ComplaintController {
       hasNextPage: page < totalPages - 1,
       hasPrevPage: page > 0,
       items: complaints,
+    };
+  }
+
+  @Get('reasons')
+  @ApiOperation({
+    summary: 'Lấy danh sách lý do khiếu nại',
+    description: `
+        **Hướng dẫn sử dụng:**
+
+        - Sử dụng phân trang với các tham số \`page\`, \`size\`, \`sort\`, \`filter\`.
+        - \`page\`: Trang hiện tại (bắt đầu từ 0).
+        - \`size\`: Số lượng mục mỗi trang.
+        - \`sort\`: Trường sắp xếp, ví dụ: \`createdAt:asc\`.
+        - \`filter\`: Điều kiện lọc, ví dụ: \`status:IN_PROGRESS\`.
+        - Trả về danh sách lý do khiếu nại với các thông tin như mã, mô tả.
+        - Page bắt đầu từ 0
+        - Sort theo format: [tên_field]:[asc/desc]
+        - Các trường có thể lọc: code
+        - Filter theo format: [tên_field]:[isnull|isnotnull]
+        - Các trường có thể sắp xếp: createdAt, updatedAt, code
+    `,
+  })
+  @ApiQuery({
+    name: 'page',
+    required: false,
+    type: Number,
+    default: 0,
+    description: 'Trang hiện tại (bắt đầu từ 0)',
+  })
+  @ApiQuery({
+    name: 'size',
+    required: false,
+    type: Number,
+    default: 10,
+    description: 'Số lượng mỗi trang',
+  })
+  @ApiQuery({
+    name: 'sort',
+    required: false,
+    type: String,
+    description: 'Sắp xếp theo trường, ví dụ: :asc',
+  })
+  @ApiQuery({
+    name: 'filter',
+    required: false,
+    type: String,
+    description: 'Lọc theo trường, ví dụ: :like:',
+  })
+  @ApiOkResponse({
+    schema: {
+      allOf: [
+        { $ref: getSchemaPath(ListResponse) },
+        {
+          properties: {
+            item: { $ref: getSchemaPath(ComplaintReason) },
+          },
+        },
+      ],
+    },
+  })
+  async getComplaintReasons(
+    @PaginationParams() { page, size, limit, offset }: Pagination,
+    @SortingParams(['createdAt', 'updatedAt', 'code']) sort?: Sorting,
+    @FilteringParams(['code']) filter?: Filtering,
+  ): Promise<ListResponse<ComplaintReason>> {
+    const [reasons, totalItems] = await this.complaintService.getComplaintReasons(
+      limit,
+      offset,
+      sort,
+      filter,
+    );
+    const totalPages = Math.ceil(totalItems / size);
+    return {
+      message: 'Danh sách lý do khiếu nại',
+      statusCode: HttpStatus.OK,
+      pageIndex: page,
+      pageSize: size,
+      totalItems,
+      totalPages,
+      hasNextPage: page < totalPages - 1,
+      hasPrevPage: page > 0,
+      items: reasons,
     };
   }
 
