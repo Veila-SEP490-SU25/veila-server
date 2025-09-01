@@ -1,4 +1,4 @@
-import { CUComplaintDto } from '@/app/complaint/complaint.dto';
+import { CUComplaintDto, CUComplaintReason } from '@/app/complaint/complaint.dto';
 import { OrderService } from '@/app/order';
 import { Filtering, getOrder, getWhere, Sorting } from '@/common/decorators';
 import { Complaint, ComplaintStatus, MilestoneStatus, OrderStatus } from '@/common/models';
@@ -13,17 +13,45 @@ import {
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { MilestoneService } from '../milestone';
+import { ComplaintReason } from '@/common/models/single';
+import { UserService } from '@/app/user';
+import { ShopService } from '@/app/shop';
 
 @Injectable()
 export class ComplaintService {
   constructor(
     @InjectRepository(Complaint)
     private readonly complaintRepository: Repository<Complaint>,
+    @InjectRepository(ComplaintReason)
+    private readonly complaintReasonRepository: Repository<ComplaintReason>,
     @Inject(forwardRef(() => OrderService))
     private readonly orderService: OrderService,
     @Inject(forwardRef(() => MilestoneService))
     private readonly milestoneService: MilestoneService,
+    @Inject(UserService)
+    private readonly userService: UserService,
+    @Inject(ShopService)
+    private readonly shopService: ShopService,
   ) {}
+
+  async getComplaintReasons(
+    take: number,
+    skip: number,
+    sort?: Sorting,
+    filter?: Filtering,
+  ): Promise<[ComplaintReason[], number]> {
+    const dynamicFilter = getWhere(filter);
+    const where = {
+      ...dynamicFilter,
+    };
+    const order = getOrder(sort);
+    return await this.complaintReasonRepository.findAndCount({
+      where,
+      order,
+      take,
+      skip,
+    });
+  }
 
   async getOwnerComplaints(
     userId: string,
@@ -133,6 +161,10 @@ export class ComplaintService {
   async reviewComplaint(id: string, status: ComplaintStatus): Promise<void> {
     const complaint = await this.complaintRepository.findOne({
       where: { id },
+      relations: {
+        sender: true,
+        order: { shop: { user: true }, customer: true },
+      },
     });
     if (!complaint) throw new NotFoundException('Không tìm thấy khiếu nại nào phù hợp');
     if (complaint.status !== ComplaintStatus.IN_PROGRESS)
@@ -140,6 +172,25 @@ export class ComplaintService {
     if (status !== ComplaintStatus.APPROVED && status !== ComplaintStatus.REJECTED)
       throw new BadRequestException('Trạng thái khiếu nại không hợp lệ');
     await this.complaintRepository.update(id, { status });
+
+    if (status === ComplaintStatus.APPROVED) {
+      const complaintReason = await this.complaintReasonRepository.findOneBy({
+        code: complaint.title,
+      });
+      if (!complaintReason)
+        throw new NotFoundException('Không tìm thấy lý do khiếu nại nào phù hợp');
+
+      const isCustomer = complaint.sender === complaint.order.customer;
+      if (isCustomer) {
+        const shop = complaint.order.shop;
+        shop.reputation -= complaintReason.complaintReputationPenalty;
+        await this.shopService.save(shop);
+      } else {
+        const customer = complaint.order.customer;
+        customer.reputation -= complaintReason.complaintReputationPenalty;
+        await this.userService.updateUser(customer);
+      }
+    }
   }
 
   async isExistsInProgressComplaint(userId: string, orderId: string): Promise<boolean> {
@@ -159,5 +210,22 @@ export class ComplaintService {
 
   async createComplaintForSeeding(complaint: Complaint): Promise<Complaint> {
     return await this.complaintRepository.save(complaint);
+  }
+
+  async createComplaintReason(body: CUComplaintReason): Promise<ComplaintReason> {
+    const reason = this.complaintReasonRepository.create(body);
+    return await this.complaintReasonRepository.save(reason);
+  }
+
+  async updateComplaintReason(id: string, body: CUComplaintReason): Promise<void> {
+    const reason = await this.complaintReasonRepository.findOne({ where: { id } });
+    if (!reason) throw new NotFoundException('Không tìm thấy lý do khiếu nại nào phù hợp');
+    await this.complaintReasonRepository.update(id, body);
+  }
+
+  async deleteComplaintReason(id: string): Promise<void> {
+    const reason = await this.complaintReasonRepository.findOne({ where: { id } });
+    if (!reason) throw new NotFoundException('Không tìm thấy lý do khiếu nại nào phù hợp');
+    await this.complaintReasonRepository.delete(id);
   }
 }

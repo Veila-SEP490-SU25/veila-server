@@ -44,6 +44,9 @@ export class MembershipService {
         shop: { user: { id: userId } },
       },
       order: { createdAt: 'DESC' },
+      relations: {
+        subscription: true,
+      },
     });
 
     const membership = memberships[0];

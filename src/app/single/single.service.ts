@@ -1,5 +1,5 @@
 import { CUSlideDto } from '@/app/single/single.dto';
-import { Slide } from '@/common/models/single';
+import { ComplaintReason, Slide } from '@/common/models/single';
 import {
   MilestoneTemplate,
   MilestoneTemplateType,
@@ -15,7 +15,17 @@ export class SingleService {
     private readonly slideRepository: Repository<Slide>,
     @InjectRepository(MilestoneTemplate)
     private readonly milestoneTemplateRepository: Repository<MilestoneTemplate>,
+    @InjectRepository(ComplaintReason)
+    private readonly complaintReasonRepository: Repository<ComplaintReason>,
   ) {}
+
+  async createComplaintReason(data: ComplaintReason): Promise<ComplaintReason> {
+    return await this.complaintReasonRepository.save(data);
+  }
+
+  async getComplaintReasons(): Promise<ComplaintReason[]> {
+    return await this.complaintReasonRepository.find();
+  }
 
   async getMilestoneTemplates(): Promise<MilestoneTemplate[]> {
     return await this.milestoneTemplateRepository.find();

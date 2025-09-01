@@ -1,4 +1,8 @@
-import { CUComplaintDto, ReviewComplaintDto } from '@/app/complaint/complaint.dto';
+import {
+  CUComplaintDto,
+  CUComplaintReason,
+  ReviewComplaintDto,
+} from '@/app/complaint/complaint.dto';
 import { ComplaintService } from '@/app/complaint/complaint.service';
 import { ItemResponse, ListResponse } from '@/common/base';
 import {
@@ -13,9 +17,21 @@ import {
 } from '@/common/decorators';
 import { AuthGuard } from '@/common/guards';
 import { Complaint, UserRole } from '@/common/models';
-import { Body, Controller, Get, HttpStatus, Param, Put, UseGuards } from '@nestjs/common';
+import { ComplaintReason } from '@/common/models/single';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  HttpStatus,
+  Param,
+  Post,
+  Put,
+  UseGuards,
+} from '@nestjs/common';
 import {
   ApiBearerAuth,
+  ApiCreatedResponse,
   ApiExtraModels,
   ApiNoContentResponse,
   ApiOkResponse,
@@ -28,7 +44,7 @@ import {
 @Controller('complaints')
 @ApiTags('Complaint Controller')
 @ApiBearerAuth()
-@ApiExtraModels(ListResponse, ItemResponse, Complaint)
+@ApiExtraModels(ListResponse, ItemResponse, Complaint, ComplaintReason)
 export class ComplaintController {
   constructor(private readonly complaintService: ComplaintService) {}
 
@@ -112,6 +128,198 @@ export class ComplaintController {
       hasNextPage: page < totalPages - 1,
       hasPrevPage: page > 0,
       items: complaints,
+    };
+  }
+
+  @Get('reasons')
+  @ApiOperation({
+    summary: 'Lấy danh sách lý do khiếu nại',
+    description: `
+        **Hướng dẫn sử dụng:**
+
+        - Sử dụng phân trang với các tham số \`page\`, \`size\`, \`sort\`, \`filter\`.
+        - \`page\`: Trang hiện tại (bắt đầu từ 0).
+        - \`size\`: Số lượng mục mỗi trang.
+        - \`sort\`: Trường sắp xếp, ví dụ: \`createdAt:asc\`.
+        - \`filter\`: Điều kiện lọc, ví dụ: \`status:IN_PROGRESS\`.
+        - Trả về danh sách lý do khiếu nại với các thông tin như mã, mô tả.
+        - Page bắt đầu từ 0
+        - Sort theo format: [tên_field]:[asc/desc]
+        - Các trường có thể lọc: code
+        - Filter theo format: [tên_field]:[isnull|isnotnull]
+        - Các trường có thể sắp xếp: createdAt, updatedAt, code
+    `,
+  })
+  @ApiQuery({
+    name: 'page',
+    required: false,
+    type: Number,
+    default: 0,
+    description: 'Trang hiện tại (bắt đầu từ 0)',
+  })
+  @ApiQuery({
+    name: 'size',
+    required: false,
+    type: Number,
+    default: 10,
+    description: 'Số lượng mỗi trang',
+  })
+  @ApiQuery({
+    name: 'sort',
+    required: false,
+    type: String,
+    description: 'Sắp xếp theo trường, ví dụ: :asc',
+  })
+  @ApiQuery({
+    name: 'filter',
+    required: false,
+    type: String,
+    description: 'Lọc theo trường, ví dụ: :like:',
+  })
+  @ApiOkResponse({
+    schema: {
+      allOf: [
+        { $ref: getSchemaPath(ListResponse) },
+        {
+          properties: {
+            item: { $ref: getSchemaPath(ComplaintReason) },
+          },
+        },
+      ],
+    },
+  })
+  async getComplaintReasons(
+    @PaginationParams() { page, size, limit, offset }: Pagination,
+    @SortingParams(['createdAt', 'updatedAt', 'code']) sort?: Sorting,
+    @FilteringParams(['code']) filter?: Filtering,
+  ): Promise<ListResponse<ComplaintReason>> {
+    const [reasons, totalItems] = await this.complaintService.getComplaintReasons(
+      limit,
+      offset,
+      sort,
+      filter,
+    );
+    const totalPages = Math.ceil(totalItems / size);
+    return {
+      message: 'Danh sách lý do khiếu nại',
+      statusCode: HttpStatus.OK,
+      pageIndex: page,
+      pageSize: size,
+      totalItems,
+      totalPages,
+      hasNextPage: page < totalPages - 1,
+      hasPrevPage: page > 0,
+      items: reasons,
+    };
+  }
+
+  @Post('reasons')
+  @UseGuards(AuthGuard)
+  @Roles(UserRole.STAFF, UserRole.ADMIN, UserRole.SUPER_ADMIN)
+  @ApiOperation({
+    summary: 'Tạo lý do khiếu nại',
+    description: `
+        **Hướng dẫn sử dụng:**
+
+        - Truyền dữ liệu tạo mới trong body.
+        - Các trường bắt buộc: \`code\`, \`description\`.
+        - Nếu không tìm thấy lý do khiếu nại sẽ trả về lỗi.
+        - Trả về thông tin chi tiết của lý do khiếu nại đã tạo.
+    `,
+  })
+  @ApiCreatedResponse({
+    schema: {
+      allOf: [
+        { $ref: getSchemaPath(ItemResponse) },
+        {
+          properties: {
+            item: { $ref: getSchemaPath(ComplaintReason) },
+          },
+        },
+      ],
+    },
+  })
+  async createComplaintReason(
+    @Body() body: CUComplaintReason,
+  ): Promise<ItemResponse<ComplaintReason>> {
+    const reason = await this.complaintService.createComplaintReason(body);
+    return {
+      message: 'Tạo lý do khiếu nại thành công',
+      statusCode: HttpStatus.CREATED,
+      item: reason,
+    };
+  }
+
+  @Put('reasons/:id')
+  @UseGuards(AuthGuard)
+  @Roles(UserRole.STAFF, UserRole.ADMIN, UserRole.SUPER_ADMIN)
+  @ApiOperation({
+    summary: 'Cập nhật lý do khiếu nại',
+    description: `
+        **Hướng dẫn sử dụng:**
+
+        - Truyền \`id\` của lý do khiếu nại trên URL.
+        - Truyền dữ liệu cập nhật trong body.
+        - Các trường bắt buộc: \`code\`, \`description\`.
+        - Nếu không tìm thấy lý do khiếu nại sẽ trả về lỗi.
+        - Trả về thông tin chi tiết của lý do khiếu nại đã cập nhật.
+    `,
+  })
+  @ApiOkResponse({
+    schema: {
+      allOf: [
+        { $ref: getSchemaPath(ItemResponse) },
+        {
+          properties: {
+            item: { $ref: getSchemaPath(ComplaintReason) },
+          },
+        },
+      ],
+    },
+  })
+  async updateComplaintReason(
+    @Param('id') id: string,
+    @Body() body: CUComplaintReason,
+  ): Promise<ItemResponse<null>> {
+    await this.complaintService.updateComplaintReason(id, body);
+    return {
+      message: 'Cập nhật lý do khiếu nại thành công',
+      statusCode: HttpStatus.OK,
+      item: null,
+    };
+  }
+
+  @Delete('reasons/:id')
+  @UseGuards(AuthGuard)
+  @Roles(UserRole.STAFF, UserRole.ADMIN, UserRole.SUPER_ADMIN)
+  @ApiOperation({
+    summary: 'Xóa lý do khiếu nại',
+    description: `
+        **Hướng dẫn sử dụng:**
+
+        - Truyền \`id\` của lý do khiếu nại trên URL.
+        - Nếu không tìm thấy lý do khiếu nại sẽ trả về lỗi.
+        - Trả về thông tin chi tiết của lý do khiếu nại đã xóa.
+    `,
+  })
+  @ApiOkResponse({
+    schema: {
+      allOf: [
+        { $ref: getSchemaPath(ItemResponse) },
+        {
+          properties: {
+            item: { $ref: getSchemaPath(ComplaintReason) },
+          },
+        },
+      ],
+    },
+  })
+  async deleteComplaintReason(@Param('id') id: string): Promise<ItemResponse<null>> {
+    await this.complaintService.deleteComplaintReason(id);
+    return {
+      message: 'Xóa lý do khiếu nại thành công',
+      statusCode: HttpStatus.OK,
+      item: null,
     };
   }
 

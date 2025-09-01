@@ -85,7 +85,7 @@ export class CUOrderDressDetailDto {
   @Max(60)
   backLength: number;
 
-  @ApiProperty({ description: 'Từ chân ngực đến eo của cô dâu', example: 50 })
+  @ApiProperty({ description: 'Từ chân ngực đến eo của cô dâu', example: 20 })
   @IsNotEmpty()
   @IsNumber()
   @Min(5)
