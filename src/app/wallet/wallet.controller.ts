@@ -33,6 +33,7 @@ import {
 import {
   Filtering,
   FilteringParams,
+  Origin,
   Pagination,
   PaginationParams,
   Roles,
@@ -355,8 +356,9 @@ export class WalletController {
   async depositWallet(
     @UserId() userId: string,
     @Body() depositWallet: DepositViaPayOSDto,
+    @Origin() origin: string,
   ): Promise<ItemResponse<DepositViaPayOSResponse>> {
-    const paymentLink = await this.walletService.depositWallet(userId, depositWallet);
+    const paymentLink = await this.walletService.depositWallet(userId, depositWallet, origin);
     return {
       message: 'Tạo link thanh toán PayOS thành công',
       statusCode: HttpStatus.OK,
@@ -482,7 +484,7 @@ export class WalletController {
       },
     },
   })
-  async handleWebhook(@Body() body: WebhookDto) {
+  async handleWebhook(@Body() body: WebhookDto): Promise<ItemResponse<null>> {
     const updatedTransaction = await this.transactionService.updateTransactionStatus(
       body.transactionId,
       body.status,
@@ -492,6 +494,6 @@ export class WalletController {
       await this.walletService.saveWalletBalance(wallet, updatedTransaction.amount);
       await this.transactionService.updateBalanceSnapshotForDeposit(body.transactionId);
     }
-    return { message: 'OK' };
+    return { message: 'OK', statusCode: HttpStatus.OK, item: null };
   }
 }
