@@ -68,6 +68,13 @@ export class ShopService {
     await this.shopRepository.update(existingShop.id, { ...body });
   }
 
+  async staffUpdateShopProfile(id: string, body: UpdateShopDto): Promise<void> {
+    const existingShop = await this.shopRepository.findOneBy({ id });
+    if (!existingShop) throw new NotFoundException('Không tìm thấy cửa hàng');
+
+    await this.shopRepository.update(existingShop.id, { ...body });
+  }
+
   async getShops(
     currentRole: UserRole,
     take: number,

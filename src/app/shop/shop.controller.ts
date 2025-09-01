@@ -1009,4 +1009,29 @@ export class ShopController {
       item: null,
     };
   }
+
+  @Put(':id')
+  @UseGuards(AuthGuard)
+  @Roles(UserRole.STAFF, UserRole.ADMIN, UserRole.SUPER_ADMIN)
+  @ApiOperation({ summary: 'Cập nhật thông tin shop cho nhân viên' })
+  @ApiOkResponse({
+    schema: {
+      allOf: [
+        { $ref: getSchemaPath(ItemResponse) },
+        {
+          properties: {
+            item: { example: null },
+          },
+        },
+      ],
+    },
+  })
+  async staffUpdateShopProfile(@Param('id') id: string, @Body() body: UpdateShopDto) {
+    await this.shopService.staffUpdateShopProfile(id, body);
+    return {
+      message: 'Cập nhật thông tin shop thành công',
+      statusCode: HttpStatus.OK,
+      item: null,
+    };
+  }
 }
