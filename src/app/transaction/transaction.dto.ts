@@ -1,7 +1,7 @@
 import { TransactionStatus, TransactionType, TypeBalance } from '@/common/models';
 import { ApiProperty } from '@nestjs/swagger';
 import { Expose, Transform } from 'class-transformer';
-import { IsNotEmpty, IsNumber, IsString } from 'class-validator';
+import { IsNotEmpty, IsNumber, IsString, Min } from 'class-validator';
 
 export class CUTransactionDto {
   @ApiProperty({
@@ -121,6 +121,7 @@ export class WithdrawTransactionDto {
     example: 200000,
     nullable: false,
   })
+  @Min(50000)
   @IsNotEmpty()
   @IsNumber()
   amount: number;

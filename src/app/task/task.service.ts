@@ -1,4 +1,4 @@
-import { MilestoneStatus, OrderStatus, Task, TaskStatus } from '@/common/models';
+import { Milestone, MilestoneStatus, OrderStatus, Task, TaskStatus } from '@/common/models';
 import {
   ConflictException,
   ForbiddenException,
@@ -53,6 +53,19 @@ export class TaskService {
       index: existingTasks.length + 1,
       status: TaskStatus.PENDING,
       dueDate: body.dueDate,
+    } as Task;
+
+    return await this.taskRepository.save(task);
+  }
+
+  async createDefaultTask(milestone: Milestone) {
+    const task = {
+      milestone: { id: milestone.id },
+      title: milestone.title,
+      description: milestone.description,
+      index: 1,
+      status: TaskStatus.PENDING,
+      dueDate: milestone.dueDate,
     } as Task;
 
     return await this.taskRepository.save(task);

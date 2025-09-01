@@ -311,9 +311,21 @@ export class OrderService {
       return createdOrder;
     } else {
       //Đây là luồng thuê váy
+      //Tính số ngày thuê
+      const dueDate = new Date(body.newOrder.dueDate);
+      if (!body.newOrder.returnDate) throw new BadRequestException('Cần nhập ngày trả váy thuê');
+      const returnDate = new Date(body.newOrder.returnDate);
+      const rentalDays = Math.floor(
+        (returnDate.getTime() - dueDate.getTime()) / (1000 * 60 * 60 * 24),
+      );
+
+      // Không cho số ngày < 1
+      if (rentalDays < 1) {
+        throw new BadRequestException('Ngày trả phải sau ngày giao ít nhất 1 ngày');
+      }
 
       //tính tiền váy
-      const dressPrice = Number(dress.rentalPrice);
+      const dressPrice = Number(dress.rentalPrice) * rentalDays;
 
       //tính tiền phụ kiện
       const accessoriesPriceArray = await Promise.all(
@@ -324,7 +336,8 @@ export class OrderService {
           return Number(item.rentalPrice) * Number(accessory.quantity);
         }),
       );
-      const accessoriesPrice = accessoriesPriceArray.reduce((a, b) => a + b, 0);
+      const accessoriesPricePerDay = accessoriesPriceArray.reduce((a, b) => a + b, 0);
+      const accessoriesFinalPrice = accessoriesPricePerDay * rentalDays;
 
       //tạo đơn hàng
       const order = {
@@ -335,7 +348,7 @@ export class OrderService {
         address: body.newOrder.address,
         dueDate: body.newOrder.dueDate,
         returnDate: body.newOrder.returnDate,
-        amount: dressPrice + accessoriesPrice,
+        amount: dressPrice + accessoriesFinalPrice,
         type: OrderType.RENT,
         status: OrderStatus.PENDING,
       } as Order;
@@ -348,8 +361,12 @@ export class OrderService {
       );
 
       await this.milestoneService.createMilestone(createdOrder.id, body.newOrder.type);
-      createdOrder.deposit = await this.calculateDepositForRentOrder(createdOrder.id);
-      await this.orderRepository.save(createdOrder);
+      const defaultDeposit = await this.calculateDepositForRentOrder(createdOrder.id);
+      if (defaultDeposit > createdOrder.amount) {
+        createdOrder.deposit = await this.calculateDepositForRentOrder(createdOrder.id);
+        await this.orderRepository.save(createdOrder);
+      }
+
       return createdOrder;
     }
   }
@@ -665,10 +682,8 @@ export class OrderService {
       return await this.orderRepository.save(order);
     } else if (order.type === OrderType.RENT) {
       //Luồng thuê thanh toán như luồng mua, sau đó chuyển số tiền thuê qua cho shop dạng lock, số còn lại lock
-      if (!order.deposit)
-        throw new NotFoundException('Không tìm thấy giá trị tiền đặt cọc của đơn thuê');
-      const deposit = order.deposit;
-      if (!this.checkWalletBalanceIsEnough(userId, deposit))
+      const deposit = order.deposit !== null ? order.deposit : order.amount;
+      if (!(await this.checkWalletBalanceIsEnough(userId, deposit)))
         throw new BadRequestException('Không đủ số dư trong ví, vui lòng nạp tiền');
 
       //Kiểm tra mã OTP
