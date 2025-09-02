@@ -19,10 +19,16 @@ import { TransactionModule } from '../transaction';
 import { AppSettingModule } from '@/app/appsetting';
 import { AccessoryModule } from '../accessory';
 import { MailModule } from '../mail';
+import { ConfirmNoComplaint } from '@/common/models/single';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([Order, OrderServiceDetail, UpdateOrderServiceDetail]),
+    TypeOrmModule.forFeature([
+      Order,
+      OrderServiceDetail,
+      UpdateOrderServiceDetail,
+      ConfirmNoComplaint,
+    ]),
     UserModule,
     ShopModule,
     OrderAccessoriesDetailsModule,

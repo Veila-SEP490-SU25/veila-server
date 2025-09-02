@@ -54,6 +54,7 @@ import { TransactionService } from '../transaction';
 import { AccessoryService } from '../accessory';
 import { AppSettingService } from '@/app/appsetting';
 import { MailService } from '../mail';
+import { ConfirmNoComplaint } from '@/common/models/single';
 
 @Injectable()
 export class OrderService {
@@ -92,6 +93,8 @@ export class OrderService {
     private readonly appSettingService: AppSettingService,
     @Inject(MailService)
     private readonly mailService: MailService,
+    @InjectRepository(ConfirmNoComplaint)
+    private readonly confirmNoComplaintRepository: Repository<ConfirmNoComplaint>,
   ) {}
 
   async getShopIncome(shopId: string): Promise<number> {
@@ -974,11 +977,21 @@ export class OrderService {
       where: {
         status: OrderStatus.IN_PROCESS,
       },
+      relations: {
+        milestones: true,
+      },
     });
     // Xử lý các đơn hàng trong mốc khiếu nại được 3 ngày
     await Promise.all(
       orders.map(async (order) => {
-        await this.milestoneService.completeComplaintMilestone(order.id, order.type);
+        const milestones = order.milestones.sort((a, b) => a.index - b.index);
+        const milestone = milestones[milestones.length - 1];
+        if (milestone.status === MilestoneStatus.IN_PROGRESS) {
+          const now = new Date();
+          const threeDaysAgo = new Date(now.setDate(now.getDate() - 3));
+          if (milestone && milestone.updatedAt < threeDaysAgo)
+            await this.milestoneService.completeComplaintMilestone(order.id, milestone);
+        }
       }),
     );
   }
@@ -1235,5 +1248,49 @@ export class OrderService {
     const lastMilestone = sortedMilestones[sortedMilestones.length - 1];
     // Kiểm tra status
     return lastMilestone.status === MilestoneStatus.IN_PROGRESS;
+  }
+
+  async confirmNoComplaint(id: string, currentRole: UserRole): Promise<string> {
+    const order = await this.orderRepository.findOne({
+      where: { id },
+      relations: {
+        milestones: true,
+      },
+    });
+    if (!order) throw new NotFoundException('Không tìm thấy đơn hàng');
+    if (!order.milestones || order.milestones.length === 0)
+      throw new NotFoundException('Không tìm thấy mốc nào của đơn hàng này');
+
+    const milestones = order.milestones.sort((a, b) => a.index - b.index);
+    const milestone = milestones[milestones.length - 1];
+    if (milestone.status !== MilestoneStatus.IN_PROGRESS)
+      throw new BadRequestException('Không thể xác nhận không khiếu nại');
+
+    if (order.type !== OrderType.RENT) {
+      if (currentRole === UserRole.SHOP)
+        throw new MethodNotAllowedException(
+          'Chỉ có khách hàng mới có thể xác nhận không khiếu nại ở đơn hàng này',
+        );
+      await this.milestoneService.completeComplaintMilestone(order.id, milestone);
+    } else {
+      const confirmNoComplaint = await this.confirmNoComplaintRepository.findOne({
+        where: { orderId: order.id },
+      });
+      if (!confirmNoComplaint) {
+        const newConfirmNoComplaint = {
+          orderId: order.id,
+          isCusConfirm: currentRole === UserRole.CUSTOMER,
+          isShopConfirm: currentRole === UserRole.SHOP,
+        } as ConfirmNoComplaint;
+        await this.confirmNoComplaintRepository.save(newConfirmNoComplaint);
+        return 'Vui lòng đợi bên còn lại xác nhận';
+      } else {
+        confirmNoComplaint.isCusConfirm = currentRole === UserRole.CUSTOMER;
+        confirmNoComplaint.isShopConfirm = currentRole === UserRole.SHOP;
+        await this.confirmNoComplaintRepository.save(confirmNoComplaint);
+        await this.milestoneService.completeComplaintMilestone(order.id, milestone);
+      }
+    }
+    return 'Xác nhận không khiếu nại thành công';
   }
 }

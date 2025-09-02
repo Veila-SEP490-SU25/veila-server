@@ -1014,6 +1014,43 @@ export class OrderController {
     };
   }
 
+  @Put(':id/confirm-no-complaint')
+  @UseGuards(AuthGuard)
+  @Roles(UserRole.CUSTOMER, UserRole.SHOP)
+  @ApiOperation({
+    summary: 'Xác nhận không khiếu nại',
+    description: `
+      **Hướng dẫn sử dụng:**
+
+      - Truyền \`id\` của đơn hàng trên URL.
+      - Nếu không tìm thấy đơn hàng thì trả về lỗi.
+      - Trả về thông tin chi tiết của đơn hàng đã xác nhận không khiếu nại.
+    `,
+  })
+  @ApiOkResponse({
+    schema: {
+      allOf: [
+        { $ref: getSchemaPath(ItemResponse) },
+        {
+          properties: {
+            item: { example: null, type: 'string' },
+          },
+        },
+      ],
+    },
+  })
+  async confirmNoComplaint(
+    @CurrentRole() currentRole: UserRole,
+    @Param('id') id: string,
+  ): Promise<ItemResponse<string>> {
+    const message = await this.orderService.confirmNoComplaint(id, currentRole);
+    return {
+      message: 'Xác nhận không khiếu nại thành công',
+      statusCode: HttpStatus.OK,
+      item: message,
+    };
+  }
+
   @Put(':id/:status')
   @UseGuards(AuthGuard, RolesGuard)
   @Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN, UserRole.STAFF, UserRole.SHOP)
