@@ -98,14 +98,6 @@ export class UpdateUser {
   @IsEmail({}, { message: 'Định dạng email không hợp lệ.' })
   email: string;
 
-  @ApiProperty({
-    required: true,
-    description: 'Mật khẩu (tối thiểu 8 ký tự, có chữ hoa, chữ thường, số, ký tự đặc biệt)',
-    example: 'yourPassword123',
-  })
-  @IsPassword()
-  password: string;
-
   @ApiProperty({ required: true, description: 'Tên', example: 'New' })
   @IsNotEmpty()
   firstName: string;
