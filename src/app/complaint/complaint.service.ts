@@ -91,7 +91,7 @@ export class ComplaintService {
   async createComplaint(userId: string, orderId: string, body: CUComplaintDto): Promise<Complaint> {
     const order = await this.orderService.getOwnerOrderById(userId, orderId);
     if (!order) throw new NotFoundException('Không tìm thấy đơn hàng này');
-    if (order.status !== OrderStatus.COMPLETED)
+    if (order.status === OrderStatus.COMPLETED)
       throw new MethodNotAllowedException('Không thể tạo khiếu nại cho đơn hàng chưa hoàn thành');
     const complaintMilestone = await this.milestoneService.getLastMilestoneByOrderId(order.id);
     if (complaintMilestone?.status !== MilestoneStatus.IN_PROGRESS)
