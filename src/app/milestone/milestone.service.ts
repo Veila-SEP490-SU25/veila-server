@@ -86,7 +86,7 @@ export class MilestoneService {
 
     await this.validateOwnerOfOrder(userId, existingMilestone.order.id);
 
-    if (!(await this.isOrderInProcess(existingMilestone.order.id)))
+    if (!(await this.isOrderInProcessOrderPending(existingMilestone.order.id)))
       throw new ConflictException('Đơn hàng chưa được bắt đầu/đã hoàn thành/bị hủy');
 
     if (existingMilestone.status !== MilestoneStatus.PENDING)
@@ -359,6 +359,14 @@ export class MilestoneService {
     });
 
     return [milestones, totalItems];
+  }
+
+  async isOrderInProcessOrderPending(orderId: string): Promise<boolean> {
+    const order = await this.orderService.getOrderByIdV2(orderId);
+    let isBoolean = false;
+    if (order.status === OrderStatus.PENDING || order.status === OrderStatus.IN_PROCESS)
+      isBoolean = true;
+    return isBoolean;
   }
 
   async isOrderInProcess(orderId: string): Promise<boolean> {
