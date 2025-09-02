@@ -474,6 +474,17 @@ export class ShopService {
       .getOne();
   }
 
+  async getShopByUserIdForRegisterMemberShip(userId: string): Promise<Shop | null> {
+    return await this.shopRepository
+      .createQueryBuilder('shop')
+      .leftJoinAndSelect('shop.user', 'user')
+      .where('user.id = :userId', { userId })
+      .andWhere('shop.status IN (:...statuses)', {
+        statuses: [ShopStatus.ACTIVE, ShopStatus.SUSPENDED],
+      })
+      .getOne();
+  }
+
   async getContactInformation(userId: string): Promise<ShopContactDto> {
     const shop = await this.getShopByUserId(userId);
     if (!shop) throw new NotFoundException('Không tìm thấy cửa hàng');
