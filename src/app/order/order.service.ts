@@ -95,7 +95,7 @@ export class OrderService {
     private readonly mailService: MailService,
     @InjectRepository(ConfirmNoComplaint)
     private readonly confirmNoComplaintRepository: Repository<ConfirmNoComplaint>,
-  ) {}
+  ) { }
 
   async getShopIncome(shopId: string): Promise<number> {
     const orders = await this.orderRepository.find({
@@ -1288,7 +1288,9 @@ export class OrderService {
         confirmNoComplaint.isCusConfirm = currentRole === UserRole.CUSTOMER;
         confirmNoComplaint.isShopConfirm = currentRole === UserRole.SHOP;
         await this.confirmNoComplaintRepository.save(confirmNoComplaint);
-        await this.milestoneService.completeComplaintMilestone(order.id, milestone);
+        if (confirmNoComplaint.isCusConfirm && confirmNoComplaint.isShopConfirm)
+          await this.milestoneService.completeComplaintMilestone(order.id, milestone);
+        else return 'Vui lòng đợi bên còn lại xác nhận';
       }
     }
     return 'Xác nhận không khiếu nại thành công';
