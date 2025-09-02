@@ -394,33 +394,19 @@ export class WalletService {
   }
 
   async saveWalletBalanceV2(wallet: Wallet, amount: number): Promise<void> {
-    await this.walletRepository
-      .createQueryBuilder()
-      .update(Wallet)
-      .set({ lockedBalance: () => `locked_balance - ${amount}` })
-      .where('id = :id', { id: wallet.id })
-      .execute();
+    wallet.lockedBalance = Number(wallet.lockedBalance) - Number(amount);
+    await this.walletRepository.save(wallet);
   }
 
   async saveWalletBalanceV3(wallet: Wallet, amount: number): Promise<void> {
-    await this.walletRepository
-      .createQueryBuilder()
-      .update(Wallet)
-      .set({
-        lockedBalance: () => `locked_balance - ${amount}`,
-        availableBalance: () => `available_balance + ${amount}`,
-      })
-      .where('id = :id', { id: wallet.id })
-      .execute();
+    wallet.lockedBalance = Number(wallet.lockedBalance) - Number(amount);
+    wallet.availableBalance = Number(wallet.availableBalance) + Number(amount);
+    await this.walletRepository.save(wallet);
   }
 
   async saveWalletBalanceV4(wallet: Wallet, amount: number): Promise<void> {
-    await this.walletRepository
-      .createQueryBuilder()
-      .update(Wallet)
-      .set({ availableBalance: () => `available_balance - ${amount}` })
-      .where('id = :id', { id: wallet.id })
-      .execute();
+    wallet.availableBalance = Number(wallet.availableBalance) - Number(amount);
+    await this.walletRepository.save(wallet);
   }
 
   async updateBankInformation(userId: string, body: UpdateBankDto): Promise<Wallet> {
