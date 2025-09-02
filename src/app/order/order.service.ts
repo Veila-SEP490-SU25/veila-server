@@ -471,7 +471,7 @@ export class OrderService {
         shop: { user: { id: userId } },
       },
       relations: {
-        orderDressDetail: true,
+        orderServiceDetail: true,
       }
     });
     if (!existingOrder) throw new NotFoundException('Không tìm thấy đơn hàng này');
