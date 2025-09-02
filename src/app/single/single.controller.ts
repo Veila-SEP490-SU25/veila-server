@@ -38,7 +38,9 @@ export class SingleController {
       ],
     },
   })
-  async getMilestoneTemplates(@Param('type') type: MilestoneTemplateType): Promise<ItemResponse<MilestoneTemplate[]>> {
+  async getMilestoneTemplates(
+    @Param('type') type: MilestoneTemplateType,
+  ): Promise<ItemResponse<MilestoneTemplate[]>> {
     const templates = await this.singleService.getMilestoneTemplatesByType(type);
     return {
       message: 'Get milestone templates successfully',
@@ -66,7 +68,9 @@ export class SingleController {
       ],
     },
   })
-  async addMilestoneTemplate(@Body() body: CUMilestoneTemplateDto): Promise<ItemResponse<MilestoneTemplate>> {
+  async addMilestoneTemplate(
+    @Body() body: CUMilestoneTemplateDto,
+  ): Promise<ItemResponse<MilestoneTemplate>> {
     const template = await this.singleService.addMilestoneTemplate(body);
     return {
       message: 'Add milestone template successfully',
@@ -125,7 +129,9 @@ export class SingleController {
       ],
     },
   })
-  async removeMilestoneTemplate(@Param('type') type: MilestoneTemplateType): Promise<ItemResponse<null>> {
+  async removeMilestoneTemplate(
+    @Param('type') type: MilestoneTemplateType,
+  ): Promise<ItemResponse<null>> {
     await this.singleService.removeMilestoneTemplate(type);
     return {
       message: 'Remove milestone template successfully',

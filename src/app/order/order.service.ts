@@ -95,7 +95,7 @@ export class OrderService {
     private readonly mailService: MailService,
     @InjectRepository(ConfirmNoComplaint)
     private readonly confirmNoComplaintRepository: Repository<ConfirmNoComplaint>,
-  ) { }
+  ) {}
 
   async getShopIncome(shopId: string): Promise<number> {
     const orders = await this.orderRepository.find({
@@ -1073,7 +1073,7 @@ export class OrderService {
       if (existingOrder.status === OrderStatus.IN_PROCESS) {
         await this.walletService.refundForDelayed(existingOrder);
         existingOrder.status = OrderStatus.CANCELLED;
-        await this.orderRepository.save(existingOrder);
+        await this.orderRepository.update(existingOrder.id, { status: OrderStatus.CANCELLED });
         await this.milestoneService.cancelOrder(existingOrder.id);
 
         const shop = existingOrder.shop;
@@ -1134,7 +1134,7 @@ export class OrderService {
         }
       }
       existingOrder.status = OrderStatus.CANCELLED;
-      await this.orderRepository.save(existingOrder);
+      await this.orderRepository.update(existingOrder.id, { status: OrderStatus.CANCELLED });
       await this.milestoneService.cancelOrder(existingOrder.id);
 
       await this.mailService.sendCancelOrder(

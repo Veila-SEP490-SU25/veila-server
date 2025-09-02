@@ -32,7 +32,7 @@ export class ComplaintService {
     private readonly userService: UserService,
     @Inject(ShopService)
     private readonly shopService: ShopService,
-  ) { }
+  ) {}
 
   async getComplaintReasons(
     take: number,
