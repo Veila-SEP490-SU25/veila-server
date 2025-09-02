@@ -1,3 +1,4 @@
+import { MilestoneTemplateType } from '@/common/models/single/milestone-template.model';
 import { ApiProperty } from '@nestjs/swagger';
 import { IsOptional, IsString } from 'class-validator';
 
@@ -30,4 +31,32 @@ export class CUSlideDto {
   @IsString()
   @IsOptional()
   images: string | null;
+}
+
+export class CUMilestoneTemplateDto {
+  @ApiProperty({
+    type: String,
+    maxLength: 255,
+    example: 'Thiết kế mẫu váy',
+  })
+  title: string;
+
+  @ApiProperty({
+    type: String,
+    example: 'Mô tả chi tiết về mẫu',
+  })
+  description: string;
+
+  @ApiProperty({
+    type: Number,
+    example: 30,
+  })
+  timeGap: number;
+
+  @ApiProperty({
+    type: String,
+    enum: MilestoneTemplateType,
+    example: MilestoneTemplateType.SELL,
+  })
+  type: MilestoneTemplateType;
 }

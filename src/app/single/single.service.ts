@@ -1,4 +1,4 @@
-import { CUSlideDto } from '@/app/single/single.dto';
+import { CUMilestoneTemplateDto, CUSlideDto } from '@/app/single/single.dto';
 import { ComplaintReason, Slide } from '@/common/models/single';
 import {
   MilestoneTemplate,
@@ -18,6 +18,28 @@ export class SingleService {
     @InjectRepository(ComplaintReason)
     private readonly complaintReasonRepository: Repository<ComplaintReason>,
   ) {}
+
+  async addMilestoneTemplate(data: CUMilestoneTemplateDto): Promise<MilestoneTemplate> {
+    const milestones = await this.getMilestoneTemplatesByType(data.type);
+    const sorted = milestones.sort((a, b) => a.index - b.index);
+    const lastIndex = sorted[sorted.length - 1]?.index || 0;
+    const newMilestone = {
+      ...data,
+      index: lastIndex + 1,
+    };
+    return await this.milestoneTemplateRepository.save(newMilestone);
+  }
+
+  async updateMilestoneTemplate(id: string, data: CUMilestoneTemplateDto): Promise<void> {
+    await this.milestoneTemplateRepository.update(id, data);
+  }
+
+  async removeMilestoneTemplate(type: MilestoneTemplateType): Promise<void> {
+    const milestones = await this.getMilestoneTemplatesByType(type);
+    const sorted = milestones.sort((a, b) => a.index - b.index);
+    const lastMilestone = sorted[sorted.length - 1];
+    await this.milestoneTemplateRepository.delete(lastMilestone.id);
+  }
 
   async createComplaintReason(data: ComplaintReason): Promise<ComplaintReason> {
     return await this.complaintReasonRepository.save(data);
