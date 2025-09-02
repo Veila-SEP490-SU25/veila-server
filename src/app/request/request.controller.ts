@@ -469,7 +469,7 @@ export class RequestController {
     };
   }
 
-  @Put('{id}/updates/:updateId')
+  @Put(':id/updates/:updateId')
   @UseGuards(AuthGuard)
   @Roles(UserRole.SHOP)
   @ApiOperation({
