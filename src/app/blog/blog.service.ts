@@ -1,9 +1,9 @@
 import { Filtering, getOrder, getWhere, Sorting } from '@/common/decorators';
 import { Blog, BlogStatus, Category, ShopStatus, UserRole } from '@/common/models';
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, MethodNotAllowedException, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { CUBlogDto } from './blog.dto';
+import { CUBlogDto, VerifyBlogDto } from './blog.dto';
 
 @Injectable()
 export class BlogService {
@@ -42,6 +42,7 @@ export class BlogService {
       const dynamicFilter = getWhere(filter);
       const where = {
         ...dynamicFilter,
+        status: BlogStatus.PUBLISHED,
       };
       const order = getOrder(sort);
       return await this.blogRepository.findAndCount({
@@ -49,7 +50,6 @@ export class BlogService {
         order,
         take,
         skip,
-        withDeleted: true,
         relations: {
           user: { shop: true },
           category: true,
@@ -78,7 +78,6 @@ export class BlogService {
       };
       const blog = await this.blogRepository.findOne({
         where,
-        withDeleted: true,
         relations: { category: true, user: { shop: true } },
       });
       if (!blog) throw new NotFoundException('Không tìm thấy bài blog phù hợp');
@@ -127,6 +126,8 @@ export class BlogService {
 
   async createBlogForOwner(userId: string, { categoryId, ...body }: CUBlogDto): Promise<Blog> {
     let blog;
+    if (body.status === BlogStatus.UNPUBLISHED)
+      throw new MethodNotAllowedException('Không thể tạo blog với trạng thái không xuất bản');
     if (categoryId) {
       if (!(await this.isCategoryExistForOwner(categoryId, userId)))
         throw new NotFoundException('Không tìm thấy phân loại phù hợp');
@@ -143,6 +144,8 @@ export class BlogService {
     if (!(await this.isBlogExistForOwner(id, userId)))
       throw new NotFoundException('Không tìm thấy bài blog phù hợp');
     let blog;
+    if (body.status === BlogStatus.UNPUBLISHED)
+      throw new MethodNotAllowedException('Không thể tạo blog với trạng thái không xuất bản');
     if (categoryId) {
       if (!(await this.isCategoryExistForOwner(categoryId, userId)))
         throw new NotFoundException('Không tìm thấy phân loại phù hợp');
@@ -185,14 +188,15 @@ export class BlogService {
     });
   }
 
-  async verifyBlog(id: string): Promise<Blog> {
+  async verifyBlog(id: string, body: VerifyBlogDto): Promise<Blog> {
     const blog = await this.blogRepository.findOneBy({
       id,
       status: BlogStatus.PUBLISHED,
       isVerified: false,
     });
     if (!blog) throw new NotFoundException('Không tìm thấy bài blog phù hợp');
-    blog.isVerified = true;
+    if (body.isVerified === false) blog.status = BlogStatus.UNPUBLISHED;
+    else blog.isVerified = true;
     await this.blogRepository.save(blog);
     return blog;
   }

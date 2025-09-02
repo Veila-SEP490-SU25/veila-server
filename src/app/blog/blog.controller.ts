@@ -34,7 +34,7 @@ import {
   SortingParams,
   UserId,
 } from '@/common/decorators';
-import { CUBlogDto, ItemBlogDto, ListBlogDto } from '@/app/blog/blog.dto';
+import { CUBlogDto, ItemBlogDto, ListBlogDto, VerifyBlogDto } from '@/app/blog/blog.dto';
 import { plainToInstance } from 'class-transformer';
 
 @Controller('blogs')
@@ -211,9 +211,7 @@ export class BlogController {
     description: `
 **Hướng dẫn sử dụng:**
 - Truyền \`id\` của blog trên URL.
-- Chỉ xác minh blog của chủ shop.
-- Nếu không tìm thấy sẽ trả về lỗi.
-- Trả về thông tin blog đã xác minh.
+- Truyền true false trong body
 `,
   })
   @ApiOkResponse({
@@ -228,8 +226,11 @@ export class BlogController {
       ],
     },
   })
-  async verifyBlog(@Param('id') id: string): Promise<ItemResponse<Blog>> {
-    const blog = await this.blogService.verifyBlog(id);
+  async verifyBlog(
+    @Param('id') id: string,
+    @Body() body: VerifyBlogDto,
+  ): Promise<ItemResponse<Blog>> {
+    const blog = await this.blogService.verifyBlog(id, body);
     return {
       message: 'Xác minh thành công',
       statusCode: HttpStatus.OK,
