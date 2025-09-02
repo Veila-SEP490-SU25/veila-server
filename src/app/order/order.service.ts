@@ -1069,7 +1069,7 @@ export class OrderService {
 
     //xử lý tiền đơn hàng khi hủy đơn hàng đang được thực hiện (trước khi giao với mua thuê, trước khi hoàn tất với custom)
     //trường hợp nếu hủy đơn hàng vì lí do nhà cung cấp trễ tiến độ thì không bị phạt
-    if (delayedMilestones) {
+    if (delayedMilestones.length > 0) {
       if (existingOrder.status === OrderStatus.IN_PROCESS) {
         await this.walletService.refundForDelayed(existingOrder);
         existingOrder.status = OrderStatus.CANCELLED;
