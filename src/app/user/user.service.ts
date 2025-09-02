@@ -258,6 +258,9 @@ export class UserService {
     if (phone.startsWith('0')) {
       user.phone = '+84' + phone.slice(1);
     }
+    if (phone.startsWith('84')) {
+      user.phone = '+' + phone;
+    }
     user.isIdentified = true;
 
     await this.userRepository.save(user);

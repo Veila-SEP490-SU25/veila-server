@@ -22,10 +22,10 @@ export class VonageService {
     const otp = this.passwordService.generateOTP(6);
     const hashedOtp = await this.passwordService.hashPassword(otp);
     await this.redisService.set(`${userId}:phone-otp`, hashedOtp, 5 * 60 * 1000);
-
+    const _to = to.startsWith('0') ? '84' + to.slice(1) : to.startsWith('+84') ? to.slice(1) : to;
     try {
       const response = await this.vonage.sms.send({
-        to,
+        to: _to,
         from: '84966316803', // must be a real number, not a made-up string
         text: otp,
       });
