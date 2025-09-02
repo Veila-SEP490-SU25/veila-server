@@ -124,6 +124,9 @@ export class MembershipService {
       status: MembershipStatus.ACTIVE,
     } as Membership);
 
+    shop.status = ShopStatus.ACTIVE;
+    await this.shopService.save(shop);
+
     await this.walletService.saveWalletBalanceV4(wallet, Number(subscription.amount));
     const user = await this.userService.getUserById(userId);
     if (!user) throw new NotFoundException('Không tìm thấy người dùng');
