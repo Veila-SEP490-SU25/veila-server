@@ -183,11 +183,11 @@ export class ComplaintService {
       const isCustomer = complaint.sender === complaint.order.customer;
       if (isCustomer) {
         const shop = complaint.order.shop;
-        shop.reputation -= complaintReason.complaintReputationPenalty;
+        shop.reputation -= complaintReason.reputationPenalty;
         await this.shopService.save(shop);
       } else {
         const customer = complaint.order.customer;
-        customer.reputation -= complaintReason.complaintReputationPenalty;
+        customer.reputation -= complaintReason.reputationPenalty;
         await this.userService.updateUser(customer);
       }
     }

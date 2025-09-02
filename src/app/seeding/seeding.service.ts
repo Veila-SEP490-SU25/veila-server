@@ -62,7 +62,10 @@ import {
   // Complaint,
 } from '@/common/models';
 import { AppSetting } from '@/common/models/single/appsetting.model';
-import { ComplaintReason } from '@/common/models/single/complaint-reason.model';
+import {
+  ComplaintReason,
+  ComplaintReasonType,
+} from '@/common/models/single/complaint-reason.model';
 import {
   MilestoneTemplate,
   MilestoneTemplateType,
@@ -239,27 +242,44 @@ export class SeedingService implements OnModuleInit {
           await this.singleService.createComplaintReason({
             code: 'REASON_1',
             reason: 'Hàng không đúng mô tả',
-            complaintReputationPenalty: 10,
+            reputationPenalty: 10,
+            type: ComplaintReasonType.CUSTOMER,
           } as ComplaintReason),
           await this.singleService.createComplaintReason({
             code: 'REASON_2',
             reason: 'Hàng bị lỗi',
-            complaintReputationPenalty: 10,
+            reputationPenalty: 10,
+            type: ComplaintReasonType.CUSTOMER,
           } as ComplaintReason),
           await this.singleService.createComplaintReason({
             code: 'REASON_3',
             reason: 'Hàng không đúng kích thước',
-            complaintReputationPenalty: 10,
+            reputationPenalty: 10,
+            type: ComplaintReasonType.CUSTOMER,
           } as ComplaintReason),
           await this.singleService.createComplaintReason({
             code: 'REASON_4',
             reason: 'Hàng bị hư hỏng trong quá trình vận chuyển',
-            complaintReputationPenalty: 10,
+            reputationPenalty: 10,
+            type: ComplaintReasonType.CUSTOMER,
           } as ComplaintReason),
           await this.singleService.createComplaintReason({
             code: 'REASON_5',
             reason: 'Trễ deadline',
-            complaintReputationPenalty: 10,
+            reputationPenalty: 10,
+            type: ComplaintReasonType.CUSTOMER,
+          } as ComplaintReason),
+          await this.singleService.createComplaintReason({
+            code: 'REASON_6',
+            reason: 'Hàng bị hư',
+            reputationPenalty: 10,
+            type: ComplaintReasonType.SHOP,
+          } as ComplaintReason),
+          await this.singleService.createComplaintReason({
+            code: 'REASON_7',
+            reason: 'Trả hàng không đúng hạn',
+            reputationPenalty: 10,
+            type: ComplaintReasonType.SHOP,
           } as ComplaintReason),
         ]);
       } catch (error) {

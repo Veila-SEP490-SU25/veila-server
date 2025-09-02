@@ -37,7 +37,7 @@ export class OrderAccessoriesDetailsService {
 
     await this.orderAccessoryDetailRepository.save(orderAccessoryDetails);
   }
-  
+
   async saveRentalOrderAccessoryDetails(
     orderId: string,
     accessoriesDetails: CUOrderAccessoriesDetailDto[],

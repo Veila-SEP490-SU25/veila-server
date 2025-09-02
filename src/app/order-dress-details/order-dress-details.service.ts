@@ -40,7 +40,10 @@ export class OrderDressDetailsService {
     await this.orderDressDetailRepository.save(plainToInstance(OrderDressDetail, orderDressDetail));
   }
 
-  async saveRentalOrderDressDetails(orderId: string, dressDetails: CUOrderDressDetailDto): Promise<void> {
+  async saveRentalOrderDressDetails(
+    orderId: string,
+    dressDetails: CUOrderDressDetailDto,
+  ): Promise<void> {
     const dress = await this.dressService.getOne(dressDetails.dressId);
 
     const orderDressDetail = {

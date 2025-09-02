@@ -479,15 +479,13 @@ export class WalletService {
     await this.walletRepository.save(cusWallet);
     await this.walletRepository.save(shopWallet);
 
-    if (deposit - Number(transaction.amount) != 0) {
-      await this.mailService.sendUnlockBalance(
-        order.customer.email,
-        order.customer.username,
-        order.id,
-        deposit,
-        new Date().toLocaleString('vi-VN', { timeZone: 'Asia/Ho_Chi_Minh' }),
-      );
-    }
+    await this.mailService.sendUnlockBalance(
+      order.customer.email,
+      order.customer.username,
+      order.id,
+      deposit,
+      new Date().toLocaleString('vi-VN', { timeZone: 'Asia/Ho_Chi_Minh' }),
+    );
 
     await this.mailService.sendUnlockBalance(
       order.shop.user.email,

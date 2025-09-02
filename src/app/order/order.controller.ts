@@ -801,9 +801,7 @@ export class OrderController {
       ],
     },
   })
-  async getIsMilestoneComplaint(
-    @Param('id') id: string,
-  ): Promise<ItemResponse<boolean>> {
+  async getIsMilestoneComplaint(@Param('id') id: string): Promise<ItemResponse<boolean>> {
     const isComplaint = await this.orderService.isMilestoneComplaint(id);
     return {
       message: 'Kiểm tra khiếu nại mốc thời gian',

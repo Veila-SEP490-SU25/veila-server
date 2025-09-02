@@ -26,7 +26,7 @@ import {
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { In, Repository } from 'typeorm';
-import { Transaction } from '@/common/models/wallet/transaction.model';
+import { Transaction, TransactionType } from '@/common/models/wallet/transaction.model';
 import {
   CreateOrderForCustom,
   CreateOrderRequestDto,
@@ -118,7 +118,7 @@ export class OrderService {
       cancelOrders.reduce((acc, order) => acc + Number(order.amount), 0),
     );
     for (const co of cancelOrders) {
-      const transactions = co.transaction.filter((t) => t.type === 'REFUND');
+      const transactions = co.transaction.filter((t) => t.type === TransactionType.REFUND);
       const totalRefund = transactions.reduce((acc, t) => acc + Number(t.amount), 0);
       totalIncomeByCancelled -= Number(totalRefund);
     }
@@ -425,7 +425,10 @@ export class OrderService {
       } as Order;
       const createdOrder = await this.orderRepository.save(order);
 
-      await this.orderDressDetailsService.saveRentalOrderDressDetails(createdOrder.id, body.dressDetails);
+      await this.orderDressDetailsService.saveRentalOrderDressDetails(
+        createdOrder.id,
+        body.dressDetails,
+      );
       await this.orderAccessoriesDetailsService.saveRentalOrderAccessoryDetails(
         createdOrder.id,
         body.accessoriesDetails,
@@ -1222,7 +1225,7 @@ export class OrderService {
         milestones: true,
       },
     });
-    if (!order) throw new NotFoundException('Không tìm thấy đơn hàng'); 
+    if (!order) throw new NotFoundException('Không tìm thấy đơn hàng');
     if (!order.milestones || order.milestones.length === 0) return false;
     // Sắp xếp milestones theo index tăng dần
     const sortedMilestones = order.milestones.sort((a, b) => a.index - b.index);
