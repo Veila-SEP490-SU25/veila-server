@@ -184,7 +184,7 @@ export class OrderService {
       relations: {
         request: true,
         service: true,
-        updateOrderServiceDetails: true,
+        updateOrderServiceDetails: { updateRequest: true },
       },
     });
     if (!orderServiceDetail) throw new NotFoundException('Không tìm thấy chi tiết đơn hàng');
