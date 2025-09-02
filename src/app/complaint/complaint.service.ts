@@ -11,7 +11,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Not, Repository } from 'typeorm';
 import { MilestoneService } from '../milestone';
 import { ComplaintReason } from '@/common/models/single';
 import { UserService } from '@/app/user';
@@ -32,7 +32,7 @@ export class ComplaintService {
     private readonly userService: UserService,
     @Inject(ShopService)
     private readonly shopService: ShopService,
-  ) {}
+  ) { }
 
   async getComplaintReasons(
     take: number,
@@ -131,6 +131,7 @@ export class ComplaintService {
     const dynamicFilter = getWhere(filter);
     const where = {
       ...dynamicFilter,
+      status: Not(ComplaintStatus.DRAFT),
     };
     const order = getOrder(sort);
 
@@ -148,7 +149,10 @@ export class ComplaintService {
 
   async getComplaintForStaff(id: string): Promise<Complaint> {
     const complaint = await this.complaintRepository.findOne({
-      where: { id },
+      where: {
+        id,
+        status: Not(ComplaintStatus.DRAFT),
+      },
       relations: {
         sender: true,
         order: true,
