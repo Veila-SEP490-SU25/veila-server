@@ -1,6 +1,6 @@
 import { ListResponse } from '@/common/base';
 import { Filtering, getOrder, getWhere, Pagination, Sorting } from '@/common/decorators';
-import { User, UserRole } from '@/common/models';
+import { Contract, ContractType, User, UserRole } from '@/common/models';
 import {
   BadRequestException,
   ConflictException,
@@ -19,6 +19,7 @@ import { RedisService } from '../redis';
 export class UserService {
   constructor(
     @InjectRepository(User) private readonly userRepository: Repository<User>,
+    @InjectRepository(Contract) private readonly contractRepository: Repository<Contract>,
     private readonly passwordService: PasswordService,
     private readonly redisService: RedisService,
   ) {}
@@ -70,7 +71,8 @@ export class UserService {
     if (existingUsername) throw new BadRequestException('Không thể tạo user vì trùng lặp username');
 
     user.password = await this.passwordService.hashPassword(user.password);
-    const newUser = { ...user };
+    const contract = await this.contractRepository.findOneBy({ contractType: ContractType.CUSTOMER });
+    const newUser = { ...user, contract } as User;
     return await this.userRepository.save(newUser);
   }
 
