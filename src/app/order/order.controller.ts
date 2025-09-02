@@ -390,7 +390,7 @@ export class OrderController {
 
   @Put(':id')
   @UseGuards(AuthGuard, RolesGuard)
-  @Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN, UserRole.STAFF, UserRole.CUSTOMER)
+  @Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN, UserRole.STAFF, UserRole.CUSTOMER, UserRole.SHOP)
   @ApiOperation({
     summary: 'Cập nhật thông tin đơn hàng',
     description: `
