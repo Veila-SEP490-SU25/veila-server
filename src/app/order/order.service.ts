@@ -1060,6 +1060,7 @@ export class OrderService {
       if (existingOrder.status === OrderStatus.IN_PROCESS) {
         await this.walletService.refundForDelayed(existingOrder);
         existingOrder.status = OrderStatus.CANCELLED;
+        await this.orderRepository.save(existingOrder);
         await this.milestoneService.cancelOrder(existingOrder.id);
 
         const shop = existingOrder.shop;
@@ -1120,6 +1121,7 @@ export class OrderService {
         }
       }
       existingOrder.status = OrderStatus.CANCELLED;
+      await this.orderRepository.save(existingOrder);
       await this.milestoneService.cancelOrder(existingOrder.id);
 
       await this.mailService.sendCancelOrder(
