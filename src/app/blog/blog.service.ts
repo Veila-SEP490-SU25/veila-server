@@ -50,7 +50,6 @@ export class BlogService {
         order,
         take,
         skip,
-        withDeleted: true,
         relations: {
           user: { shop: true },
           category: true,
@@ -79,7 +78,6 @@ export class BlogService {
       };
       const blog = await this.blogRepository.findOne({
         where,
-        withDeleted: true,
         relations: { category: true, user: { shop: true } },
       });
       if (!blog) throw new NotFoundException('Không tìm thấy bài blog phù hợp');
