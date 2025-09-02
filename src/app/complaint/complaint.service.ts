@@ -129,10 +129,11 @@ export class ComplaintService {
     filter?: Filtering,
   ): Promise<[Complaint[], number]> {
     const dynamicFilter = getWhere(filter);
-    const where = {
-      ...dynamicFilter,
-      status: Not(ComplaintStatus.DRAFT),
-    };
+    let where = { ...dynamicFilter };
+    // Nếu filter không truyền vào status thì mới loại DRAFT
+    if (!filter || filter.property !== 'status') {
+      where = { ...where, status: Not(ComplaintStatus.DRAFT) };
+    }
     const order = getOrder(sort);
 
     return await this.complaintRepository.findAndCount({
