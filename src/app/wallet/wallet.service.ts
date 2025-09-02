@@ -274,7 +274,7 @@ export class WalletService {
     await this.transactionService.saveSelfTransferTransactionForRent(
       fromUser,
       fromUser,
-      toWallet.id,
+      fromWallet.id,
       order.id,
       amount,
       deposit,
