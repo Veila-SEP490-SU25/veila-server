@@ -393,7 +393,7 @@ export class UserController {
 
   @Patch(':id')
   @UseGuards(AuthGuard)
-  @Roles(UserRole.SUPER_ADMIN)
+  @Roles(UserRole.SUPER_ADMIN, UserRole.ADMIN)
   @ApiOperation({
     summary: 'Khôi phục tài khoản người dùng đã bị xóa mềm (chỉ dành cho Super Admin)',
     description: `
