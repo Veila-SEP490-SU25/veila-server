@@ -3,7 +3,7 @@ import { ProductUserDto } from '@/app/user/user.dto';
 import { BlogStatus } from '@/common/models';
 import { ApiProperty } from '@nestjs/swagger';
 import { Expose, Type } from 'class-transformer';
-import { IsEnum, IsOptional, IsString } from 'class-validator';
+import { IsBoolean, IsEnum, IsOptional, IsString } from 'class-validator';
 
 export class CUBlogDto {
   @ApiProperty({ example: '123e4567-e89b-12d3-a456-426614174000' })
@@ -166,4 +166,10 @@ export class ItemBlogDto {
     description: 'The date when the record was deleted. Null if not deleted.',
   })
   deletedAt: Date | null;
+}
+
+export class VerifyBlogDto {
+  @ApiProperty({ example: true })
+  @IsBoolean()
+  isVerified: boolean;
 }
