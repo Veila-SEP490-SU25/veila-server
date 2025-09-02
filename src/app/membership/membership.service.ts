@@ -54,7 +54,7 @@ export class MembershipService {
   }
 
   async purchaseMembership(userId: string, body: RegisterMembershipDto): Promise<Membership> {
-    const shop = await this.shopService.getShopByUserId(userId);
+    const shop = await this.shopService.getShopByUserIdForRegisterMemberShip(userId);
     if (!shop) throw new NotFoundException('Không tìm thấy cửa hàng');
 
     const subscription = await this.subscriptionService.getSubscription(
