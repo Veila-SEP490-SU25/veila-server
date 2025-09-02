@@ -194,8 +194,8 @@ export class WalletService {
         await this.redisService.del(`user:otp:${userId}`);
       }
 
-      wallet.availableBalance = Number(wallet.availableBalance) - withdrawWallet.amount;
-      wallet.lockedBalance = Number(wallet.lockedBalance) + withdrawWallet.amount;
+      wallet.availableBalance = Number(wallet.availableBalance) - Number(withdrawWallet.amount);
+      wallet.lockedBalance = Number(wallet.lockedBalance) + Number(withdrawWallet.amount);
       await this.transactionService.saveWithdrawTransaction(user, wallet, withdrawWallet);
     }
 
