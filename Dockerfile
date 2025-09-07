@@ -23,7 +23,7 @@ COPY package.json ./
 RUN node --version && npm --version
 
 # Install production dependencies
-RUN npm install --omit=dev --legacy-peer-deps
+RUN npm install --omit=dev --force
 
 # ------------------------------------------------------------------------------
 # Build the application
@@ -36,7 +36,7 @@ COPY package.json ./
 RUN node --version && npm --version
 
 # Install all dependencies (including dev)
-RUN npm install --legacy-peer-deps
+RUN npm install --force
 
 # Copy source code
 COPY . .
@@ -47,11 +47,6 @@ RUN npm run build
 # ------------------------------------------------------------------------------
 # Final stage with minimal runtime dependencies
 FROM base AS final
-
-# Set production environment
-ENV NODE_ENV=production
-ENV PORT=1205
-ENV START_COMMAND=start:prod
 
 # Switch to non-root user
 USER node
