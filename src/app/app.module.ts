@@ -16,7 +16,7 @@ import { TokenModule } from '@/app/token';
 import { UserModule } from '@/app/user';
 import { PayosModule } from '@/app/payos/payos.module';
 import { RolesGuard } from '@/common/guards';
-import { LoggingMiddleware } from '@/common/middlewares';
+import { LoggingMiddleware, RoleMiddleware } from '@/common/middlewares';
 import { MiddlewareConsumer, Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { APP_GUARD } from '@nestjs/core';
@@ -105,6 +105,6 @@ import { VonageModule } from '@/app/voyage';
 })
 export class AppModule {
   configure(consumer: MiddlewareConsumer) {
-    consumer.apply(LoggingMiddleware).forRoutes('*');
+    consumer.apply(LoggingMiddleware, RoleMiddleware).forRoutes('*');
   }
 }

@@ -1,5 +1,6 @@
 import { TokenPayload } from '@/app/token';
 import { createParamDecorator, ExecutionContext } from '@nestjs/common';
+import { Request } from 'express';
 
 export const UserId = createParamDecorator((_, ctx: ExecutionContext) => {
   const request = ctx.switchToHttp().getRequest();
@@ -13,7 +14,6 @@ export const CurrentUser = createParamDecorator((_, ctx: ExecutionContext) => {
 });
 
 export const CurrentRole = createParamDecorator((_, ctx: ExecutionContext) => {
-  const request = ctx.switchToHttp().getRequest();
-  const tokenPayload: TokenPayload = request.tokenPayload;
-  return tokenPayload ? tokenPayload.role : null;
+  const request: Request = ctx.switchToHttp().getRequest();
+  return request.currentRole;
 });
