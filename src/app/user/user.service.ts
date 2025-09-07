@@ -43,6 +43,12 @@ export class UserService {
     });
   }
 
+  async getCurrentRole(id: string): Promise<UserRole> {
+    const user = await this.getUserById(id);
+    if (!user) throw new NotFoundException('Không tìm thấy người dùng');
+    return user.role;
+  }
+
   async getByUsername(username: string): Promise<User | null> {
     return await this.userRepository.findOne({
       where: { username },

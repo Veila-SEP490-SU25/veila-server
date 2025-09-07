@@ -1,14 +1,17 @@
 import { TokenOptions, TokenPayload } from '@/app/token/token.dto';
-import { User } from '@/common/models';
-import { Injectable, UnauthorizedException } from '@nestjs/common';
+import { User, UserRole } from '@/common/models';
+import { forwardRef, Inject, Injectable, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
+import { UserService } from '@/app/user';
 
 @Injectable()
 export class TokenService {
   constructor(
     private readonly jwtService: JwtService,
     private readonly configService: ConfigService,
+    @Inject(forwardRef(() => UserService))
+    private readonly userService: UserService,
   ) {}
 
   async createToken(user: User, options?: TokenOptions): Promise<string> {
@@ -49,5 +52,9 @@ export class TokenService {
     } catch {
       throw new UnauthorizedException('Token không hợp lệ hoặc đã hết hạn.');
     }
+  }
+
+  async getCurrentRole(userId: string): Promise<UserRole> {
+    return await this.userService.getCurrentRole(userId);
   }
 }
