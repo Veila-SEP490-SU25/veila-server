@@ -1145,7 +1145,7 @@ export class SeedingService implements OnModuleInit {
       shop,
       subscription,
       startDate: new Date(),
-      endDate: this.customFaker.date.soon({ days: subscriptionDuration }),
+      endDate: new Date(Date.now() + subscriptionDuration * 24 * 60 * 60 * 1000),
       status: MembershipStatus.ACTIVE,
     } as Membership;
     const createdMembership = await this.shopService.createMembershipForSeeding(newMembership);
@@ -2615,11 +2615,14 @@ export class SeedingService implements OnModuleInit {
     } as License;
     await this.shopService.createLicense(license);
 
+    const startDate = new Date();
+    const endDate = new Date(startDate);
+    endDate.setDate(startDate.getDate() + subscriptionDuration);
     const membership = {
       shop: createdShop,
       subscription,
-      startDate: new Date(),
-      endDate: this.customFaker.date.soon({ days: subscriptionDuration }),
+      startDate,
+      endDate,
       status: MembershipStatus.ACTIVE,
     } as Membership;
     await this.shopService.createMembershipForSeeding(membership);
