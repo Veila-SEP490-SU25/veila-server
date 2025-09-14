@@ -131,7 +131,8 @@ export class ComplaintService {
     const dynamicFilter = getWhere(filter);
     let where = { ...dynamicFilter };
     // Nếu filter không truyền vào status thì mới loại DRAFT
-    if (!filter || filter.property !== 'status') {
+    const hasStatusFilter = Array.isArray(filter) && filter.some(f => f.property === 'status');
+    if (!hasStatusFilter) {
       where = { ...where, status: Not(ComplaintStatus.DRAFT) };
     }
     const order = getOrder(sort);
