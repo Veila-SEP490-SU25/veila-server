@@ -313,8 +313,8 @@ export class TransactionService {
   async getTransactionsForAdmin(
     take: number,
     skip: number,
-    sort?: Sorting,
-    filter?: Filtering,
+    sort?: Sorting[],
+    filter?: Filtering[],
   ): Promise<[TransactionDto[], number]> {
     const dynamicFilter = getWhere(filter);
     const where = {
@@ -337,8 +337,8 @@ export class TransactionService {
     walletId: string,
     take: number,
     skip: number,
-    sort?: Sorting,
-    filter?: Filtering,
+    sort?: Sorting[],
+    filter?: Filtering[],
   ): Promise<[TransactionDto[], number]> {
     const dynamicFilter = getWhere(filter);
     const where = {
@@ -362,8 +362,8 @@ export class TransactionService {
     orderId: string,
     take: number,
     skip: number,
-    sort?: Sorting,
-    filter?: Filtering,
+    sort?: Sorting[],
+    filter?: Filtering[],
   ): Promise<[Transaction[], number]> {
     const dynamicFilter = getWhere(filter);
     const where = {

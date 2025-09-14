@@ -99,8 +99,8 @@ export class UserService {
   async getUsers(
     currentRole: UserRole,
     { page, size, limit, offset }: Pagination,
-    sort?: Sorting,
-    filter?: Filtering,
+    sort?: Sorting[],
+    filter?: Filtering[],
   ): Promise<ListResponse<User>> {
     if (currentRole === UserRole.SUPER_ADMIN) {
       const order = getOrder(sort);

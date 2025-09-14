@@ -102,8 +102,8 @@ export class BlogController {
   async getBlogsForOwner(
     @UserId() userId: string,
     @PaginationParams() { page, size, limit, offset }: Pagination,
-    @SortingParams(['title', 'createdAt', 'updatedAt']) sort?: Sorting,
-    @FilteringParams(['title', 'status']) filter?: Filtering,
+    @SortingParams(['title', 'createdAt', 'updatedAt']) sort?: Sorting[],
+    @FilteringParams(['title', 'status']) filter?: Filtering[],
   ): Promise<ListResponse<Blog>> {
     const [blogs, totalItems] = await this.blogService.getBlogsForOwner(
       userId,
@@ -420,8 +420,8 @@ export class BlogController {
   async getBlogs(
     @CurrentRole() currentRole: UserRole,
     @PaginationParams() { page, size, limit, offset }: Pagination,
-    @SortingParams(['title', 'createdAt', 'isVerified', 'createdAt', 'updatedAt']) sort?: Sorting,
-    @FilteringParams(['title', 'status', 'isVerified']) filter?: Filtering,
+    @SortingParams(['title', 'createdAt', 'isVerified', 'createdAt', 'updatedAt']) sort?: Sorting[],
+    @FilteringParams(['title', 'status', 'isVerified']) filter?: Filtering[],
   ): Promise<ListResponse<ListBlogDto>> {
     const [blogs, totalItems] = await this.blogService.getBlogs(
       currentRole,

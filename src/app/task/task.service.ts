@@ -207,8 +207,8 @@ export class TaskService {
     milestoneId: string,
     take: number,
     skip: number,
-    sort?: Sorting,
-    filter?: Filtering,
+    sort?: Sorting[],
+    filter?: Filtering[],
   ): Promise<[TaskDto[], number]> {
     const dynamicFilter = getWhere(filter);
     const where = {

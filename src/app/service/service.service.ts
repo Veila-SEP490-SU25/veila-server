@@ -15,8 +15,8 @@ export class ServiceService {
   async getServicesForCustomer(
     take: number,
     skip: number,
-    sort?: Sorting,
-    filter?: Filtering,
+    sort?: Sorting[],
+    filter?: Filtering[],
   ): Promise<[Service[], number]> {
     const dynamicFilter = getWhere(filter);
     const where = {
@@ -56,8 +56,8 @@ export class ServiceService {
     userId: string,
     take: number,
     skip: number,
-    sort?: Sorting,
-    filter?: Filtering,
+    sort?: Sorting[],
+    filter?: Filtering[],
   ): Promise<[Service[], number]> {
     const dynamicFilter = getWhere(filter);
     const where = {

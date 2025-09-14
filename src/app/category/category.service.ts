@@ -42,8 +42,8 @@ export class CategoryService {
     id: string,
     take: number,
     skip: number,
-    sort?: Sorting,
-    filter?: Filtering,
+    sort?: Sorting[],
+    filter?: Filtering[],
   ): Promise<[Dress[], number]> {
     const dynamicFilter = getWhere(filter);
     const where = {
@@ -66,8 +66,8 @@ export class CategoryService {
     id: string,
     take: number,
     skip: number,
-    sort?: Sorting,
-    filter?: Filtering,
+    sort?: Sorting[],
+    filter?: Filtering[],
   ): Promise<[Service[], number]> {
     const dynamicFilter = getWhere(filter);
     const where = {
@@ -90,8 +90,8 @@ export class CategoryService {
     id: string,
     take: number,
     skip: number,
-    sort?: Sorting,
-    filter?: Filtering,
+    sort?: Sorting[],
+    filter?: Filtering[],
   ): Promise<[Blog[], number]> {
     const dynamicFilter = getWhere(filter);
     const where = {
@@ -115,8 +115,8 @@ export class CategoryService {
     id: string,
     take: number,
     skip: number,
-    sort?: Sorting,
-    filter?: Filtering,
+    sort?: Sorting[],
+    filter?: Filtering[],
   ): Promise<[Accessory[], number]> {
     const dynamicFilter = getWhere(filter);
     const where = {
@@ -144,8 +144,8 @@ export class CategoryService {
     userId: string,
     take: number,
     skip: number,
-    sort?: Sorting,
-    filter?: Filtering,
+    sort?: Sorting[],
+    filter?: Filtering[],
   ): Promise<[Category[], number]> {
     const dynamicFilter = getWhere(filter);
     const where = {

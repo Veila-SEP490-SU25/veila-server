@@ -105,13 +105,13 @@ export class MilestoneService {
     milestoneId: string,
     take: number,
     skip: number,
-    sort?: Sorting,
-    filter?: Filtering,
+    sort?: Sorting[],
+    filter?: Filtering[],
   ): Promise<[TaskDto[], number]> {
     return await this.taskService.getTasksByMilestoneId(milestoneId, take, skip, sort, filter);
   }
 
-  async getAllMilestonesForOrder(orderId: string, sort?: Sorting): Promise<MilestoneDto[]> {
+  async getAllMilestonesForOrder(orderId: string, sort?: Sorting[]): Promise<MilestoneDto[]> {
     const existingOrder = await this.orderService.getOrderById(orderId);
     if (!existingOrder) throw new NotFoundException('Không tìm thấy đơn hàng');
 
@@ -338,8 +338,8 @@ export class MilestoneService {
     orderId: string,
     take: number,
     skip: number,
-    sort?: Sorting,
-    filter?: Filtering,
+    sort?: Sorting[],
+    filter?: Filtering[],
   ): Promise<[Milestone[], number]> {
     const dynamicFilter = getWhere(filter);
     const where = {

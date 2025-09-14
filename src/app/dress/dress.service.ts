@@ -19,8 +19,8 @@ export class DressService {
   async getDressesForCustomer(
     take: number,
     skip: number,
-    sort?: Sorting,
-    filter?: Filtering,
+    sort?: Sorting[],
+    filter?: Filtering[],
   ): Promise<[Dress[], number]> {
     const dynamicFilter = getWhere(filter);
     const where = {
@@ -102,8 +102,8 @@ export class DressService {
     userId: string,
     take: number,
     skip: number,
-    sort?: Sorting,
-    filter?: Filtering,
+    sort?: Sorting[],
+    filter?: Filtering[],
   ): Promise<[Dress[], number]> {
     const dynamicFilter = getWhere(filter);
     const where = {
@@ -269,8 +269,8 @@ export class DressService {
     userId: string,
     take: number,
     skip: number,
-    sort?: Sorting,
-    filter?: Filtering,
+    sort?: Sorting[],
+    filter?: Filtering[],
   ): Promise<[Dress[], number]> {
     const user = await this.userService.getSelf(userId);
     if (!user.favDresses || user.favDresses.length === 0) {

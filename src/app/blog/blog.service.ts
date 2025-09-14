@@ -16,8 +16,8 @@ export class BlogService {
     currentRole: UserRole,
     take: number,
     skip: number,
-    sort?: Sorting,
-    filter?: Filtering,
+    sort?: Sorting[],
+    filter?: Filtering[],
   ): Promise<[Blog[], number]> {
     if (!currentRole || currentRole === UserRole.CUSTOMER) {
       const dynamicFilter = getWhere(filter);
@@ -89,8 +89,8 @@ export class BlogService {
     userId: string,
     take: number,
     skip: number,
-    sort?: Sorting,
-    filter?: Filtering,
+    sort?: Sorting[],
+    filter?: Filtering[],
   ): Promise<[Blog[], number]> {
     const dynamicFilter = getWhere(filter);
     const where = {

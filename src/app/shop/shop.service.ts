@@ -79,8 +79,8 @@ export class ShopService {
     currentRole: UserRole,
     take: number,
     skip: number,
-    sort?: Sorting,
-    filter?: Filtering,
+    sort?: Sorting[],
+    filter?: Filtering[],
   ): Promise<[Shop[], number]> {
     if (!currentRole || currentRole === UserRole.CUSTOMER || currentRole === UserRole.SHOP) {
       const dynamicFilter = getWhere(filter);
@@ -148,8 +148,8 @@ export class ShopService {
     id: string,
     take: number,
     skip: number,
-    sort?: Sorting,
-    filter?: Filtering,
+    sort?: Sorting[],
+    filter?: Filtering[],
   ): Promise<[Dress[], number]> {
     const existingShop = await this.getShopForCustomerWithUser(id);
     const dynamicFilter = getWhere(filter);
@@ -172,8 +172,8 @@ export class ShopService {
     id: string,
     take: number,
     skip: number,
-    sort?: Sorting,
-    filter?: Filtering,
+    sort?: Sorting[],
+    filter?: Filtering[],
   ): Promise<[Accessory[], number]> {
     const existingShop = await this.getShopForCustomerWithUser(id);
     const dynamicFilter = getWhere(filter);
@@ -196,8 +196,8 @@ export class ShopService {
     id: string,
     take: number,
     skip: number,
-    sort?: Sorting,
-    filter?: Filtering,
+    sort?: Sorting[],
+    filter?: Filtering[],
   ): Promise<[Service[], number]> {
     const existingShop = await this.getShopForCustomerWithUser(id);
     const dynamicFilter = getWhere(filter);
@@ -220,8 +220,8 @@ export class ShopService {
     id: string,
     take: number,
     skip: number,
-    sort?: Sorting,
-    filter?: Filtering,
+    sort?: Sorting[],
+    filter?: Filtering[],
   ): Promise<[Blog[], number]> {
     const existingShop = await this.getShopForCustomerWithUser(id);
     const dynamicFilter = getWhere(filter);
@@ -245,8 +245,8 @@ export class ShopService {
     id: string,
     take: number,
     skip: number,
-    sort?: Sorting,
-    filter?: Filtering,
+    sort?: Sorting[],
+    filter?: Filtering[],
   ): Promise<[Category[], number]> {
     const existingShop = await this.getShopForCustomerWithUser(id);
     const dynamicFilter = getWhere(filter);
@@ -575,8 +575,8 @@ export class ShopService {
     userId: string,
     take: number,
     skip: number,
-    sort?: Sorting,
-    filter?: Filtering,
+    sort?: Sorting[],
+    filter?: Filtering[],
   ): Promise<[Shop[], number]> {
     const user = await this.userService.getSelf(userId);
     if (!user.favShops || user.favShops.length === 0) {

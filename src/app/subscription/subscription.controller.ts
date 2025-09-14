@@ -233,8 +233,8 @@ export class SubscriptionController {
   async getSubscriptions(
     @CurrentRole() currentRole: UserRole,
     @PaginationParams() { page, size, limit, offset }: Pagination,
-    @SortingParams(['name', 'duration', 'amount', 'createdAt', 'updatedAt']) sort?: Sorting,
-    @FilteringParams(['name']) filter?: Filtering,
+    @SortingParams(['name', 'duration', 'amount', 'createdAt', 'updatedAt']) sort?: Sorting[],
+    @FilteringParams(['name']) filter?: Filtering[],
   ): Promise<ListResponse<Subscription>> {
     const [subscriptions, totalItems] = await this.subscriptionService.getSubscriptions(
       currentRole,
