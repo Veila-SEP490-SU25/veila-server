@@ -118,8 +118,8 @@ export class OrderAccessoriesDetailsService {
     orderId: string,
     take: number,
     skip: number,
-    sort?: Sorting,
-    filter?: Filtering,
+    sort?: Sorting[],
+    filter?: Filtering[],
   ): Promise<OrderAccessoryDetail[]> {
     const dynamicFilter = getWhere(filter);
     const where = {

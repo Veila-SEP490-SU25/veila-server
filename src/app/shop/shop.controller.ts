@@ -130,8 +130,8 @@ export class ShopController {
   async getFavorite(
     @UserId() userId: string,
     @PaginationParams() { page, size, limit, offset }: Pagination,
-    @SortingParams(['name', 'status', 'isVerified', 'createdAt', 'updatedAt']) sort?: Sorting,
-    @FilteringParams(['name', 'status', 'isVerified']) filter?: Filtering,
+    @SortingParams(['name', 'status', 'isVerified', 'createdAt', 'updatedAt']) sort?: Sorting[],
+    @FilteringParams(['name', 'status', 'isVerified']) filter?: Filtering[],
   ): Promise<ListResponse<ListShopDto>> {
     const [shops, totalItems] = await this.shopService.getFavorite(
       userId,
@@ -446,13 +446,13 @@ export class ShopController {
 - Hỗ trợ phân trang, sắp xếp, lọc:
   - \`page\`: Số trang (bắt đầu từ 0)
   - \`size\`: Số lượng mỗi trang
-  - \`sort\`: Ví dụ: name:asc
-  - \`filter\`: Ví dụ: name:like:veila
+  - \`sort\`: Ví dụ: name:asc,createdAt:desc (có thể sort nhiều field)
+  - \`filter\`: Ví dụ: name:like:veila,status:eq:ACTIVE (có thể filter nhiều field)
 - Chỉ trả về các shop có trạng thái ACTIVE.
 - Page bắt đầu từ 0
-- Sort theo format: [tên_field]:[asc/desc]
-- Các trường đang có thể sort: name, status, isVerified
-- Filter theo format: [tên_field]:[eq|neq|gt|gte|lt|lte|like|nlike|in|nin]:[keyword]; hoặc [tên_field]:[isnull|isnotnull]
+- Sort theo format: [tên_field]:[asc/desc] (có thể phân cách bằng dấu phẩy cho nhiều field)
+- Các trường đang có thể sort: name, status, isVerified, createdAt, updatedAt
+- Filter theo format: [tên_field]:[eq|neq|gt|gte|lt|lte|like|nlike|in|nin]:[keyword]; hoặc [tên_field]:[isnull|isnotnull] (có thể phân cách bằng dấu phẩy cho nhiều field)
 - Các trường đang có thể filter: name, status, isVerified
 `,
   })
@@ -497,8 +497,8 @@ export class ShopController {
   async getShops(
     @CurrentRole() currentRole: UserRole,
     @PaginationParams() { page, size, limit, offset }: Pagination,
-    @SortingParams(['name', 'status', 'isVerified', 'createdAt', 'updatedAt']) sort?: Sorting,
-    @FilteringParams(['name', 'status', 'isVerified']) filter?: Filtering,
+    @SortingParams(['name', 'status', 'isVerified', 'createdAt', 'updatedAt']) sort?: Sorting[],
+    @FilteringParams(['name', 'status', 'isVerified']) filter?: Filtering[],
   ): Promise<ListResponse<ListShopDto>> {
     const [shops, totalItems] = await this.shopService.getShops(
       currentRole,
@@ -623,9 +623,9 @@ export class ShopController {
   async getAccessoriesForCustomer(
     @Param('id') id: string,
     @PaginationParams() { page, size, limit, offset }: Pagination,
-    @SortingParams(['name', 'sellPrice', 'rentalPrice', 'createdAt', 'updatedAt']) sort?: Sorting,
+    @SortingParams(['name', 'sellPrice', 'rentalPrice', 'createdAt', 'updatedAt']) sort?: Sorting[],
     @FilteringParams(['name', 'sellPrice', 'rentalPrice', 'isSellable', 'isRentable'])
-    filter?: Filtering,
+    filter?: Filtering[],
   ): Promise<ListResponse<ListAccessoryDto>> {
     const [accessories, totalItems] = await this.shopService.getAccessoriesForCustomer(
       id,
@@ -706,7 +706,7 @@ export class ShopController {
     @Param('id') id: string,
     @PaginationParams() { page, size, limit, offset }: Pagination,
     @SortingParams(['name', 'sellPrice', 'rentalPrice', 'ratingAverage', 'createdAt', 'updatedAt'])
-    sort?: Sorting,
+    sort?: Sorting[],
     @FilteringParams([
       'name',
       'sellPrice',
@@ -715,7 +715,7 @@ export class ShopController {
       'isRentable',
       'ratingAverage',
     ])
-    filter?: Filtering,
+    filter?: Filtering[],
   ): Promise<ListResponse<ListDressDto>> {
     const [dresses, totalItems] = await this.shopService.getDressesForCustomer(
       id,
@@ -795,8 +795,8 @@ export class ShopController {
   async getServicesForCustomer(
     @Param('id') id: string,
     @PaginationParams() { page, size, limit, offset }: Pagination,
-    @SortingParams(['name', 'ratingAverage', 'createdAt', 'updatedAt']) sort?: Sorting,
-    @FilteringParams(['name', 'ratingAverage']) filter?: Filtering,
+    @SortingParams(['name', 'ratingAverage', 'createdAt', 'updatedAt']) sort?: Sorting[],
+    @FilteringParams(['name', 'ratingAverage']) filter?: Filtering[],
   ): Promise<ListResponse<ListServiceDto>> {
     const [services, totalItems] = await this.shopService.getServicesForCustomer(
       id,
@@ -876,8 +876,8 @@ export class ShopController {
   async getBlogsForCustomer(
     @Param('id') id: string,
     @PaginationParams() { page, size, limit, offset }: Pagination,
-    @SortingParams(['title', 'createdAt', 'updatedAt']) sort?: Sorting,
-    @FilteringParams(['title']) filter?: Filtering,
+    @SortingParams(['title', 'createdAt', 'updatedAt']) sort?: Sorting[],
+    @FilteringParams(['title']) filter?: Filtering[],
   ): Promise<ListResponse<ListBlogOfShopDto>> {
     const [blogs, totalItems] = await this.shopService.getBlogsForCustomer(
       id,
@@ -957,8 +957,8 @@ export class ShopController {
   async getCategoriesForCustomer(
     @Param('id') id: string,
     @PaginationParams() { page, size, limit, offset }: Pagination,
-    @SortingParams(['name', 'createdAt', 'updatedAt']) sort?: Sorting,
-    @FilteringParams(['name']) filter?: Filtering,
+    @SortingParams(['name', 'createdAt', 'updatedAt']) sort?: Sorting[],
+    @FilteringParams(['name']) filter?: Filtering[],
   ): Promise<ListResponse<ListCategoryDto>> {
     const [categories, totalItems] = await this.shopService.getCategoriesForCustomer(
       id,

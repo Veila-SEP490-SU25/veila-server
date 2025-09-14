@@ -117,7 +117,7 @@ export class OrderController {
     @UserId() userId: string,
     @CurrentRole() currentRole: UserRole,
     @PaginationParams() { page, size, limit, offset }: Pagination,
-    @SortingParams(['due_date', 'amount', 'status', 'createdAt', 'updatedAt']) sort?: Sorting,
+    @SortingParams(['due_date', 'amount', 'status', 'createdAt', 'updatedAt']) sort?: Sorting[],
     @FilteringParams([
       'customer_id',
       'shop_id',
@@ -130,7 +130,7 @@ export class OrderController {
       'type',
       'status',
     ])
-    filter?: Filtering,
+    filter?: Filtering[],
   ): Promise<ListResponse<OrderDto>> {
     const [orders, totalItems] = await this.orderService.getOrders(
       userId,
@@ -210,7 +210,7 @@ export class OrderController {
   async getAllOrdersOfShop(
     @Param('shopId') shopId: string,
     @PaginationParams() { page, size, limit, offset }: Pagination,
-    @SortingParams(['due_date', 'amount', 'status', 'createdAt', 'updatedAt']) sort?: Sorting,
+    @SortingParams(['due_date', 'amount', 'status', 'createdAt', 'updatedAt']) sort?: Sorting[],
     @FilteringParams([
       'customer_id',
       'shop_id',
@@ -223,7 +223,7 @@ export class OrderController {
       'type',
       'status',
     ])
-    filter?: Filtering,
+    filter?: Filtering[],
   ): Promise<ListResponse<OrderDto>> {
     const [orders, totalItems] = await this.orderService.getOrdersForShop(
       shopId,
@@ -678,8 +678,8 @@ export class OrderController {
   async getOrderTransactions(
     @Param('id') orderId: string,
     @PaginationParams() { page, size, limit, offset }: Pagination,
-    @SortingParams(['amount', 'createdAt', 'updatedAt']) sort: Sorting,
-    @FilteringParams(['type', 'status']) filter: Filtering,
+    @SortingParams(['amount', 'createdAt', 'updatedAt']) sort: Sorting[],
+    @FilteringParams(['type', 'status']) filter: Filtering[],
   ): Promise<ListResponse<Transaction>> {
     const [transactions, totalItems] = await this.orderService.getOrderTransactions(
       orderId,
@@ -761,8 +761,8 @@ export class OrderController {
   async getOrderMilestones(
     @Param('id') orderId: string,
     @PaginationParams() { page, size, limit, offset }: Pagination,
-    @SortingParams(['index', 'createdAt', 'updatedAt']) sort: Sorting,
-    @FilteringParams(['status']) filter: Filtering,
+    @SortingParams(['index', 'createdAt', 'updatedAt']) sort: Sorting[],
+    @FilteringParams(['status']) filter: Filtering[],
   ): Promise<ListResponse<Milestone>> {
     const [milestones, totalItems] = await this.orderService.getOrderMilestones(
       orderId,
@@ -869,8 +869,8 @@ export class OrderController {
     @UserId() userId: string,
     @Param('id') orderId: string,
     @PaginationParams() { page, size, limit, offset }: Pagination,
-    @SortingParams(['createdAt', 'updatedAt', 'status', 'createdAt', 'updatedAt']) sort: Sorting,
-    @FilteringParams(['status']) filter: Filtering,
+    @SortingParams(['createdAt', 'updatedAt', 'status', 'createdAt', 'updatedAt']) sort: Sorting[],
+    @FilteringParams(['status']) filter: Filtering[],
   ): Promise<ListResponse<Complaint>> {
     const [complaints, totalItems] = await this.orderService.getOwnerComplaints(
       userId,

@@ -106,7 +106,7 @@ export class DressController {
     @UserId() userId: string,
     @PaginationParams() { page, size, limit, offset }: Pagination,
     @SortingParams(['name', 'sellPrice', 'rentalPrice', 'ratingAverage', 'createdAt', 'updatedAt'])
-    sort?: Sorting,
+    sort?: Sorting[],
     @FilteringParams([
       'name',
       'sellPrice',
@@ -115,7 +115,7 @@ export class DressController {
       'isSellable',
       'isRentable',
     ])
-    filter?: Filtering,
+    filter?: Filtering[],
   ): Promise<ListResponse<ListDressDto>> {
     const [dresses, totalItems] = await this.dressService.getFavorite(
       userId,
@@ -268,7 +268,7 @@ export class DressController {
     @UserId() userId: string,
     @PaginationParams() { page, size, limit, offset }: Pagination,
     @SortingParams(['name', 'sellPrice', 'rentalPrice', 'ratingAverage', 'createdAt', 'updatedAt'])
-    sort?: Sorting,
+    sort?: Sorting[],
     @FilteringParams([
       'name',
       'sellPrice',
@@ -278,7 +278,7 @@ export class DressController {
       'isRentable',
       'status',
     ])
-    filter?: Filtering,
+    filter?: Filtering[],
   ): Promise<ListResponse<Dress>> {
     const [dresses, totalItems] = await this.dressService.getDressesForOwner(
       userId,
@@ -549,7 +549,7 @@ export class DressController {
   async getDressesForCustomer(
     @PaginationParams() { page, size, limit, offset }: Pagination,
     @SortingParams(['name', 'sellPrice', 'rentalPrice', 'ratingAverage', 'createdAt', 'updatedAt'])
-    sort?: Sorting,
+    sort?: Sorting[],
     @FilteringParams([
       'name',
       'sellPrice',
@@ -558,7 +558,7 @@ export class DressController {
       'isSellable',
       'isRentable',
     ])
-    filter?: Filtering,
+    filter?: Filtering[],
   ): Promise<ListResponse<ListDressDto>> {
     const [dresses, totalItems] = await this.dressService.getDressesForCustomer(
       limit,

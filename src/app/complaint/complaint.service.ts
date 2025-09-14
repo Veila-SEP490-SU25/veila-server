@@ -37,8 +37,8 @@ export class ComplaintService {
   async getComplaintReasons(
     take: number,
     skip: number,
-    sort?: Sorting,
-    filter?: Filtering,
+    sort?: Sorting[],
+    filter?: Filtering[],
   ): Promise<[ComplaintReason[], number]> {
     const dynamicFilter = getWhere(filter);
     const where = {
@@ -58,8 +58,8 @@ export class ComplaintService {
     orderId: string,
     take: number,
     skip: number,
-    sort?: Sorting,
-    filter?: Filtering,
+    sort?: Sorting[],
+    filter?: Filtering[],
   ): Promise<[Complaint[], number]> {
     const dynamicFilter = getWhere(filter);
     const where = {
@@ -125,8 +125,8 @@ export class ComplaintService {
   async getComplaintsForStaff(
     take: number,
     skip: number,
-    sort?: Sorting,
-    filter?: Filtering,
+    sort?: Sorting[],
+    filter?: Filtering[],
   ): Promise<[Complaint[], number]> {
     const dynamicFilter = getWhere(filter);
     const where = {

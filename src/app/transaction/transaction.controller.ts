@@ -115,7 +115,7 @@ export class TransactionController {
       'createdAt',
       'updatedAt',
     ])
-    sort?: Sorting,
+    sort?: Sorting[],
     @FilteringParams([
       'wallet_id',
       'order_id',
@@ -129,7 +129,7 @@ export class TransactionController {
       'status',
       'note',
     ])
-    filter?: Filtering,
+    filter?: Filtering[],
   ): Promise<ListResponse<TransactionDto>> {
     const [transactions, totalItems] = await this.transactionService.getTransactionsForAdmin(
       limit,
@@ -224,7 +224,7 @@ export class TransactionController {
       'createdAt',
       'updatedAt',
     ])
-    sort?: Sorting,
+    sort?: Sorting[],
     @FilteringParams([
       'wallet_id',
       'order_id',
@@ -238,7 +238,7 @@ export class TransactionController {
       'status',
       'note',
     ])
-    filter?: Filtering,
+    filter?: Filtering[],
   ): Promise<ListResponse<TransactionDto>> {
     const wallet = await this.walletService.getWalletByUserId(userId);
     const [transactions, totalItems] = await this.transactionService.getTransactionsForUser(

@@ -82,7 +82,7 @@ export class MilestoneController {
   })
   async getAllMilestonesForOrder(
     @Query('orderId') orderId: string,
-    @SortingParams(['index']) sort?: Sorting,
+    @SortingParams(['index']) sort?: Sorting[],
   ): Promise<ListResponse<MilestoneDto>> {
     const milestones = await this.milestoneService.getAllMilestonesForOrder(orderId, sort);
     return {
@@ -263,8 +263,8 @@ export class MilestoneController {
   async getTasksByMilestoneId(
     @Param('id') id: string,
     @PaginationParams() { page, size, limit, offset }: Pagination,
-    @SortingParams(['index', 'createdAt', 'updatedAt']) sort?: Sorting,
-    @FilteringParams(['status']) filter?: Filtering,
+    @SortingParams(['index', 'createdAt', 'updatedAt']) sort?: Sorting[],
+    @FilteringParams(['status']) filter?: Filtering[],
   ): Promise<ListResponse<TaskDto>> {
     const [items, totalItems] = await this.milestoneService.getTasksByMilestonesId(
       id,

@@ -152,8 +152,8 @@ export class CategoryController {
   async findCategoriesForOwner(
     @UserId() userId: string,
     @PaginationParams() { page, size, limit, offset }: Pagination,
-    @SortingParams(['name', 'createdAt', 'updatedAt']) sort?: Sorting,
-    @FilteringParams(['name', 'status']) filter?: Filtering,
+    @SortingParams(['name', 'createdAt', 'updatedAt']) sort?: Sorting[],
+    @FilteringParams(['name', 'status']) filter?: Filtering[],
   ): Promise<ListResponse<Category>> {
     const [categories, totalItems] = await this.categoryService.findCategoriesForOwner(
       userId,
@@ -420,7 +420,7 @@ export class CategoryController {
     @Param('id') id: string,
     @PaginationParams() { page, size, limit, offset }: Pagination,
     @SortingParams(['name', 'sellPrice', 'rentalPrice', 'ratingAverage', 'createdAt', 'updatedAt'])
-    sort?: Sorting,
+    sort?: Sorting[],
     @FilteringParams([
       'name',
       'sellPrice',
@@ -429,7 +429,7 @@ export class CategoryController {
       'isSellable',
       'isRentable',
     ])
-    filter?: Filtering,
+    filter?: Filtering[],
   ): Promise<ListResponse<ListDressDto>> {
     const [dresses, totalItems] = await this.categoryService.findDressesForCustomer(
       id,
@@ -513,8 +513,8 @@ export class CategoryController {
   async findServicesForCustomer(
     @Param('id') id: string,
     @PaginationParams() { page, size, limit, offset }: Pagination,
-    @SortingParams(['name', 'ratingAverage', 'createdAt', 'updatedAt']) sort?: Sorting,
-    @FilteringParams(['name', 'ratingAverage']) filter?: Filtering,
+    @SortingParams(['name', 'ratingAverage', 'createdAt', 'updatedAt']) sort?: Sorting[],
+    @FilteringParams(['name', 'ratingAverage']) filter?: Filtering[],
   ): Promise<ListResponse<ListServiceDto>> {
     const [services, totalItems] = await this.categoryService.findServicesForCustomer(
       id,
@@ -598,8 +598,8 @@ export class CategoryController {
   async findBlogsForCustomer(
     @Param('id') id: string,
     @PaginationParams() { page, size, limit, offset }: Pagination,
-    @SortingParams(['title', 'createdAt', 'updatedAt']) sort?: Sorting,
-    @FilteringParams(['title']) filter?: Filtering,
+    @SortingParams(['title', 'createdAt', 'updatedAt']) sort?: Sorting[],
+    @FilteringParams(['title']) filter?: Filtering[],
   ): Promise<ListResponse<ListBlogOfCategoryDto>> {
     const [blogs, totalItems] = await this.categoryService.findBlogsForCustomer(
       id,
@@ -683,9 +683,9 @@ export class CategoryController {
   async getAccessoriesForCustomer(
     @Param('id') id: string,
     @PaginationParams() { page, size, limit, offset }: Pagination,
-    @SortingParams(['name', 'sellPrice', 'rentalPrice', 'createdAt', 'updatedAt']) sort?: Sorting,
+    @SortingParams(['name', 'sellPrice', 'rentalPrice', 'createdAt', 'updatedAt']) sort?: Sorting[],
     @FilteringParams(['name', 'sellPrice', 'rentalPrice', 'isSellable', 'isRentable'])
-    filter?: Filtering,
+    filter?: Filtering[],
   ): Promise<ListResponse<ListAccessoryDto>> {
     const [accessories, totalItems] = await this.categoryService.getAccessoriesForCustomer(
       id,

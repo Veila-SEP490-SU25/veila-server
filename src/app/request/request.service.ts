@@ -47,8 +47,8 @@ export class RequestService {
     userId: string,
     take: number,
     skip: number,
-    sort?: Sorting,
-    filter?: Filtering,
+    sort?: Sorting[],
+    filter?: Filtering[],
   ): Promise<[Request[], number]> {
     const dynamicFilter = getWhere(filter);
     const where = {
@@ -99,8 +99,8 @@ export class RequestService {
   async getRequestsForShop(
     take: number,
     skip: number,
-    sort?: Sorting,
-    filter?: Filtering,
+    sort?: Sorting[],
+    filter?: Filtering[],
   ): Promise<[Request[], number]> {
     const dynamicFilter = getWhere(filter);
     const where = {
@@ -211,8 +211,8 @@ export class RequestService {
     requestId: string,
     take: number,
     skip: number,
-    sort?: Sorting,
-    filter?: Filtering,
+    sort?: Sorting[],
+    filter?: Filtering[],
   ): Promise<[UpdateRequest[], number]> {
     const dynamicFilter = getWhere(filter);
     const where = {

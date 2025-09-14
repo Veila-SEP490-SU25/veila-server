@@ -55,8 +55,8 @@ export class WalletService {
   async getWalletsForAdmin(
     take: number,
     skip: number,
-    sort?: Sorting,
-    filter?: Filtering,
+    sort?: Sorting[],
+    filter?: Filtering[],
   ): Promise<[WalletDto[], number]> {
     const dynamicFilter = getWhere(filter);
     const where = {

@@ -130,8 +130,8 @@ export class OrderService {
     orderId: string,
     take: number,
     skip: number,
-    sort?: Sorting,
-    filter?: Filtering,
+    sort?: Sorting[],
+    filter?: Filtering[],
   ): Promise<[Milestone[], number]> {
     return await this.milestoneService.getOrderMilestones(orderId, take, skip, sort, filter);
   }
@@ -140,8 +140,8 @@ export class OrderService {
     orderId: string,
     take: number,
     skip: number,
-    sort?: Sorting,
-    filter?: Filtering,
+    sort?: Sorting[],
+    filter?: Filtering[],
   ): Promise<[Transaction[], number]> {
     return await this.transactionService.getTransactionsByOrderId(
       orderId,
@@ -242,8 +242,8 @@ export class OrderService {
     currentRole: UserRole,
     take: number,
     skip: number,
-    sort?: Sorting,
-    filter?: Filtering,
+    sort?: Sorting[],
+    filter?: Filtering[],
   ): Promise<[OrderDto[], number]> {
     if (currentRole === UserRole.CUSTOMER) {
       const dynamicFilter = getWhere(filter);
@@ -559,8 +559,8 @@ export class OrderService {
     shopId: string,
     take: number,
     skip: number,
-    sort?: Sorting,
-    filter?: Filtering,
+    sort?: Sorting[],
+    filter?: Filtering[],
   ): Promise<[OrderDto[], number]> {
     const dynamicFilter = getWhere(filter);
     const where = {
@@ -665,8 +665,8 @@ export class OrderService {
     orderId: string,
     take: number,
     skip: number,
-    sort?: Sorting,
-    filter?: Filtering,
+    sort?: Sorting[],
+    filter?: Filtering[],
   ): Promise<[Complaint[], number]> {
     return await this.complaintService.getOwnerComplaints(
       userId,

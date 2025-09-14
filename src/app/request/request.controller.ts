@@ -143,8 +143,8 @@ export class RequestController {
   async getRequestsForCustomer(
     @UserId() userId: string,
     @PaginationParams() { page, size, limit, offset }: Pagination,
-    @SortingParams(['title', 'createdAt', 'status', 'updatedAt']) sort?: Sorting,
-    @FilteringParams(['title', 'status']) filter?: Filtering,
+    @SortingParams(['title', 'createdAt', 'status', 'updatedAt']) sort?: Sorting[],
+    @FilteringParams(['title', 'status']) filter?: Filtering[],
   ): Promise<ListResponse<Request>> {
     const [requests, totalItems] = await this.requestService.getRequestsForCustomer(
       userId,
@@ -374,8 +374,8 @@ export class RequestController {
   async getUpdateRequests(
     @Param('id') id: string,
     @PaginationParams() { page, size, limit, offset }: Pagination,
-    @SortingParams(['title', 'createdAt', 'status', 'updatedAt']) sort?: Sorting,
-    @FilteringParams(['title', 'status']) filter?: Filtering,
+    @SortingParams(['title', 'createdAt', 'status', 'updatedAt']) sort?: Sorting[],
+    @FilteringParams(['title', 'status']) filter?: Filtering[],
   ): Promise<ListResponse<UpdateRequest>> {
     const [updateRequests, totalItems] = await this.requestService.getUpdateRequests(
       id,
@@ -570,8 +570,8 @@ export class RequestController {
   })
   async getRequestsForShop(
     @PaginationParams() { page, size, limit, offset }: Pagination,
-    @SortingParams(['title', 'createdAt', 'status']) sort?: Sorting,
-    @FilteringParams(['title', 'status']) filter?: Filtering,
+    @SortingParams(['title', 'createdAt', 'status']) sort?: Sorting[],
+    @FilteringParams(['title', 'status']) filter?: Filtering[],
   ): Promise<ListResponse<Request>> {
     const [requests, totalItems] = await this.requestService.getRequestsForShop(
       limit,

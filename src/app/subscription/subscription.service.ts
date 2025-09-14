@@ -47,8 +47,8 @@ export class SubscriptionService {
     currentRole: UserRole,
     take: number,
     skip: number,
-    sort?: Sorting,
-    filter?: Filtering,
+    sort?: Sorting[],
+    filter?: Filtering[],
   ): Promise<[Subscription[], number]> {
     if (
       currentRole === UserRole.ADMIN ||

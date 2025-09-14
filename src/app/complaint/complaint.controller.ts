@@ -108,8 +108,8 @@ export class ComplaintController {
   })
   async getComplaintsForStaff(
     @PaginationParams() { page, size, limit, offset }: Pagination,
-    @SortingParams(['createdAt', 'status', 'updatedAt']) sort?: Sorting,
-    @FilteringParams(['status']) filter?: Filtering,
+    @SortingParams(['createdAt', 'status', 'updatedAt']) sort?: Sorting[],
+    @FilteringParams(['status']) filter?: Filtering[],
   ): Promise<ListResponse<Complaint>> {
     const [complaints, totalItems] = await this.complaintService.getComplaintsForStaff(
       limit,
@@ -190,8 +190,8 @@ export class ComplaintController {
   })
   async getComplaintReasons(
     @PaginationParams() { page, size, limit, offset }: Pagination,
-    @SortingParams(['createdAt', 'updatedAt', 'code']) sort?: Sorting,
-    @FilteringParams(['code']) filter?: Filtering,
+    @SortingParams(['createdAt', 'updatedAt', 'code']) sort?: Sorting[],
+    @FilteringParams(['code']) filter?: Filtering[],
   ): Promise<ListResponse<ComplaintReason>> {
     const [reasons, totalItems] = await this.complaintService.getComplaintReasons(
       limit,

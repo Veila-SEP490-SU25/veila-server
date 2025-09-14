@@ -121,9 +121,9 @@ export class WalletController {
       'createdAt',
       'updatedAt',
     ])
-    sort?: Sorting,
+    sort?: Sorting[],
     @FilteringParams(['user_id', 'available_balance', 'locked_balance', 'bin', 'bank_number'])
-    filter?: Filtering,
+    filter?: Filtering[],
   ): Promise<ListResponse<WalletDto>> {
     const [wallets, totalItems] = await this.walletService.getWalletsForAdmin(
       limit,

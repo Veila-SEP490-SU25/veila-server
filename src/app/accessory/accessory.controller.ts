@@ -101,9 +101,9 @@ export class AccessoryController {
   async getAccessoriesForOwner(
     @UserId() userId: string,
     @PaginationParams() { page, size, limit, offset }: Pagination,
-    @SortingParams(['name', 'sellPrice', 'rentalPrice', 'createdAt', 'updatedAt']) sort?: Sorting,
+    @SortingParams(['name', 'sellPrice', 'rentalPrice', 'createdAt', 'updatedAt']) sort?: Sorting[],
     @FilteringParams(['name', 'sellPrice', 'rentalPrice', 'isSellable', 'isRentable', 'status'])
-    filter?: Filtering,
+    filter?: Filtering[],
   ): Promise<ListResponse<Accessory>> {
     const [accessories, totalItems] = await this.accessoryService.getAccessoriesForOwner(
       userId,
