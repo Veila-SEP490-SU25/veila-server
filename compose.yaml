@@ -15,6 +15,8 @@ services:
       NODE_ENV: production
     ports:
       - 1205:1205
+    volumes:
+      - /var/lib/veila/uploads:/usr/src/app/uploads
 
 # The commented out section below is an example of how to define a PostgreSQL
 # database that your application can use. `depends_on` tells Docker Compose to

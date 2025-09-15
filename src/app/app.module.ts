@@ -29,6 +29,7 @@ import { OrderModule } from '@/app/order/order.module';
 import { OrderAccessoriesDetailsModule } from './order-accessories-details/order-accessories-details.module';
 import { OrderDressDetailsModule } from './order-dress-details';
 import { ScheduleModule } from '@nestjs/schedule';
+import { ServeStaticModule } from '@nestjs/serve-static';
 import { ComplaintModule } from '@/app/complaint';
 import { TaskModule } from './task';
 import { MilestoneModule } from './milestone';
@@ -37,6 +38,8 @@ import { TransactionModule } from './transaction';
 import { RequestModule } from '@/app/request';
 import { AppSettingModule } from '@/app/appsetting';
 import { VonageModule } from '@/app/voyage';
+import { UploadModule } from '@/app/upload';
+import { join } from 'path';
 
 @Module({
   imports: [
@@ -61,6 +64,26 @@ import { VonageModule } from '@/app/voyage';
       }),
       inject: [ConfigService],
     }),
+    ServeStaticModule.forRootAsync({
+      imports: [ConfigModule],
+      inject: [ConfigService],
+      useFactory: (configService: ConfigService) => {
+        const uploadPath = configService.get<string>('UPLOAD_PATH');
+        if (!uploadPath) {
+          throw new Error('Thiếu biến môi trường: UPLOAD_PATH');
+        }
+        return [
+          {
+            rootPath: join(process.cwd(), uploadPath),
+            serveRoot: '/files',
+            serveStaticOptions: {
+              index: false,
+            },
+          },
+        ];
+      },
+    }),
+    UploadModule,
     MailModule,
     UserModule,
     TokenModule,
