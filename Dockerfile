@@ -32,14 +32,16 @@ RUN npm run build
 # Final stage: minimal runtime
 FROM base AS final
 RUN mkdir -p /usr/src/app/uploads && chown -R node:node /usr/src/app/uploads
+
+
+# Install only production dependencies
+RUN npm install --omit=dev --force
+
 USER node
 
 # Copy package files and built app
 COPY package.json ./
 COPY --from=build /usr/src/app/dist ./dist
-
-# Install only production dependencies
-RUN npm install --omit=dev --force
 
 EXPOSE ${PORT}
 CMD ["sh", "-c", "npm run ${START_COMMAND}"]
