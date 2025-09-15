@@ -47,7 +47,7 @@ RUN npm run build
 # ------------------------------------------------------------------------------
 # Final stage with minimal runtime dependencies
 FROM base AS final
-
+RUN mkdir -p /usr/src/app/uploads && chown -R node:node /usr/src/app/uploads
 # Switch to non-root user
 USER node
 
@@ -56,7 +56,6 @@ COPY package.json ./
 COPY --from=deps /usr/src/app/node_modules ./node_modules
 COPY --from=build /usr/src/app/dist ./dist
 
-RUN mkdir -p /usr/src/app/uploads && chown -R node:node /usr/src/app/uploads
 # Expose application port
 EXPOSE ${PORT}
 
