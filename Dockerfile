@@ -33,14 +33,14 @@ RUN npm run build
 FROM base AS final
 RUN mkdir -p /usr/src/app/uploads && chown -R node:node /usr/src/app/uploads
 
-
+COPY package.json ./
 # Install only production dependencies
 RUN npm install --omit=dev --force
 
 USER node
 
 # Copy package files and built app
-COPY package.json ./
+
 COPY --from=build /usr/src/app/dist ./dist
 
 EXPOSE ${PORT}
