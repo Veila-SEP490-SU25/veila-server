@@ -16,9 +16,7 @@ FROM base AS build
 
 # Copy package files
 COPY package.json ./
-
-# Debug: Show npm and node versions
-RUN node --version && npm --version
+COPY package-lock.json ./
 
 # Install all dependencies (including dev)
 RUN npm install --force
