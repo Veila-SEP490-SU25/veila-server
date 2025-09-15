@@ -472,7 +472,7 @@ export class OrderService {
       },
       relations: {
         orderServiceDetail: true,
-      }
+      },
     });
     if (!existingOrder) throw new NotFoundException('Không tìm thấy đơn hàng này');
 
@@ -794,9 +794,10 @@ export class OrderService {
       throw new MethodNotAllowedException(
         'Đơn hàng, chưa được xử lý, đang và đã thực hiện, hoặc đã bị hủy',
       );
+    const customerWallet = await this.walletService.getWalletForUser(userId);
     if (order.type === OrderType.SELL) {
       //Luồng mua cần thanh toán 100%, sau đó lock lại ở ví của shop
-      if (!this.checkWalletBalanceIsEnough(userId, Number(order.amount)))
+      if (customerWallet.availableBalance < Number(order.amount))
         throw new BadRequestException('Không đủ số dư trong ví, vui lòng nạp tiền');
 
       //Kiểm tra mã OTP
@@ -840,12 +841,7 @@ export class OrderService {
       //Luồng thuê thanh toán như luồng mua, sau đó chuyển số tiền thuê qua cho shop dạng lock, số còn lại lock
       if (!order.deposit)
         throw new InternalServerErrorException('Đơn hàng chưa tính được tiền đặt cọc');
-      if (
-        !(await this.checkWalletBalanceIsEnough(
-          userId,
-          Number(order.amount) + Number(order.deposit),
-        ))
-      )
+      if (Number(order.amount) + Number(order.deposit) > customerWallet.availableBalance)
         throw new BadRequestException('Không đủ số dư trong ví, vui lòng nạp tiền');
 
       //Kiểm tra mã OTP
@@ -892,7 +888,6 @@ export class OrderService {
         userId,
         order.id,
       );
-      const customerWallet = await this.walletService.getWalletForUser(userId);
       const amountPaid = transactions.reduce((total, transaction) => total + transaction.amount, 0);
       if (amountPaid === order.amount)
         throw new MethodNotAllowedException('Đơn hàng đã được thanh toán đủ');
@@ -1002,11 +997,6 @@ export class OrderService {
   private async updateOrderCustomStatusAfterCheckout(orderId: string): Promise<void> {
     await this.orderRepository.update(orderId, { status: OrderStatus.IN_PROCESS });
     await this.milestoneService.updateMilestoneStatusForOrderCustomAfterCheckout(orderId);
-  }
-
-  private async checkWalletBalanceIsEnough(userId: string, amount: number): Promise<boolean> {
-    const wallet = await this.walletService.getWalletByUserId(userId);
-    return Number(wallet.availableBalance) >= amount;
   }
 
   async getOrderByIdV2(id: string): Promise<Order> {

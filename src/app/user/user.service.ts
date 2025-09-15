@@ -77,7 +77,9 @@ export class UserService {
     if (existingUsername) throw new BadRequestException('Không thể tạo user vì trùng lặp username');
 
     user.password = await this.passwordService.hashPassword(user.password);
-    const contract = await this.contractRepository.findOneBy({ contractType: ContractType.CUSTOMER });
+    const contract = await this.contractRepository.findOneBy({
+      contractType: ContractType.CUSTOMER,
+    });
     const newUser = { ...user, contract } as User;
     return await this.userRepository.save(newUser);
   }
