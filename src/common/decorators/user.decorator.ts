@@ -14,6 +14,6 @@ export const CurrentUser = createParamDecorator((_, ctx: ExecutionContext) => {
 });
 
 export const CurrentRole = createParamDecorator((_, ctx: ExecutionContext) => {
-  const request: Request = ctx.switchToHttp().getRequest();
+  const request = ctx.switchToHttp().getRequest();
   return request.currentRole;
 });
