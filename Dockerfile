@@ -34,6 +34,7 @@ FROM base AS final
 RUN mkdir -p /usr/src/app/uploads && chown -R node:node /usr/src/app/uploads
 
 COPY package.json ./
+COPY package-lock.json ./
 # Install only production dependencies
 RUN npm install --omit=dev --force
 
