@@ -54,7 +54,7 @@
     "@types/ejs": "3.1.5",
     "@types/mjml": "4.7.4",
     "@types/pug": "2.0.10",
-    "@vonage/server-sdk": "3.24.1",
+    "@vonage/server-sdk": "^3.24.1",
     "bcrypt": "5.1.1",
     "cache-manager": "6.4.3",
     "cache-manager-ioredis": "2.1.0",
