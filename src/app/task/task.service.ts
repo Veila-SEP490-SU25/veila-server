@@ -133,6 +133,19 @@ export class TaskService {
     await this.taskRepository.save(existingTask);
   }
 
+  async updateTaskComplete(id: string): Promise<void> {
+    const existingTask = await this.taskRepository.findOneBy({
+      id,
+    });
+    if (!existingTask)
+      throw new NotFoundException('Không tìm thấy chi tiết công việc trong mốc công việc');
+
+    existingTask.status = TaskStatus.COMPLETED;
+    existingTask.finishedAt = new Date();
+
+    await this.taskRepository.save(existingTask);
+  }
+
   async getTasks(milestoneId: string): Promise<TaskDto[]> {
     const tasks = await this.taskRepository.find({
       where: { milestone: { id: milestoneId } },

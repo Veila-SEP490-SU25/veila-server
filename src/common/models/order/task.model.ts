@@ -101,4 +101,19 @@ export class Task extends Base {
     example: '2025-07-01T17:00:00.000Z',
   })
   dueDate: Date;
+
+  @Column({
+    name: 'finished_at',
+    type: 'datetime',
+    nullable: true,
+    comment: 'Thời gian hoàn thành công việc',
+  })
+  @ApiProperty({
+    type: 'string',
+    format: 'date-time',
+    nullable: true,
+    description: 'Thời gian hoàn thành công việc (ISO 8601)',
+    example: '2025-06-30T15:30:00.000Z',
+  })
+  finishedAt: Date | null;
 }

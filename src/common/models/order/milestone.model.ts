@@ -104,6 +104,21 @@ export class Milestone extends Base {
   })
   dueDate: Date;
 
+  @Column({
+    name: 'finished_at',
+    type: 'datetime',
+    nullable: true,
+    comment: 'Thời gian hoàn thành công việc',
+  })
+  @ApiProperty({
+    type: 'string',
+    format: 'date-time',
+    nullable: true,
+    description: 'Thời gian hoàn thành công việc (ISO 8601)',
+    example: '2025-06-30T15:30:00.000Z',
+  })
+  finishedAt: Date | null;
+
   @OneToMany(() => Task, (task) => task.milestone)
   tasks: Task[];
 }

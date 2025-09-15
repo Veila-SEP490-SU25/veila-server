@@ -209,7 +209,7 @@ export class MilestoneService {
       throw new ConflictException('Đơn hàng chưa được bắt đầu/đã hoàn thành/bị hủy');
 
     // Chuyển task hiện tại thành COMPLETED
-    await this.taskService.updateTaskStatus(existingTask.id, TaskStatus.COMPLETED);
+    await this.taskService.updateTaskComplete(existingTask.id);
 
     // Lấy tất cả task trong milestone hiện tại (sort theo index)
     const allTasksInMilestone = await this.taskService.getTasksByMilestoneIdV2(id);
@@ -226,7 +226,7 @@ export class MilestoneService {
 
     // Nếu không có task tiếp theo -> milestone hiện tại hoàn thành
     const currentMilestone = await this.getMilestoneByIdV2(id);
-    await this.updateMilestoneStatusV2(currentMilestone.id, MilestoneStatus.COMPLETED);
+    await this.updateMilestoneComplete(currentMilestone.id);
 
     // Tìm milestone tiếp theo trong order (sort theo thứ tự)
     const milestonesInOrder = await this.getMilestonesByOrderId(currentMilestone.order.id);
@@ -267,11 +267,21 @@ export class MilestoneService {
 
   private async updateMilestoneStatusV2(id: string, status: MilestoneStatus): Promise<Milestone> {
     const existingMilestone = await this.milestoneRepository.findOneBy({ id });
-    if (!existingMilestone) throw new NotFoundException('Không tim thấy mốc công việc');
+    if (!existingMilestone) throw new NotFoundException('Không tìm thấy mốc công việc');
 
     existingMilestone.status = status;
 
-    return await this.milestoneRepository.save(plainToInstance(Milestone, existingMilestone));
+    return await this.milestoneRepository.save(existingMilestone);
+  }
+
+  async updateMilestoneComplete(id: string): Promise<Milestone> {
+    const existingMilestone = await this.milestoneRepository.findOneBy({ id });
+    if (!existingMilestone) throw new NotFoundException('Không tìm thấy mốc công việc');
+
+    existingMilestone.status = MilestoneStatus.COMPLETED;
+    existingMilestone.finishedAt = new Date();
+
+    return await this.milestoneRepository.save(existingMilestone);
   }
 
   async getMilestonesByOrderId(orderId: string): Promise<Milestone[]> {
@@ -438,6 +448,7 @@ export class MilestoneService {
 
   async completeComplaintMilestone(orderId: string, milestone: Milestone): Promise<void> {
     milestone.status = MilestoneStatus.COMPLETED;
+    milestone.finishedAt = new Date();
     await this.milestoneRepository.save(milestone);
     await this.orderService.updateOrderStatusV2(orderId, OrderStatus.COMPLETED);
   }
