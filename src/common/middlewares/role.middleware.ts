@@ -1,5 +1,6 @@
 import { RedisService } from '@/app/redis';
-import { TokenService } from '@/app/token';
+import { TokenPayload, TokenService } from '@/app/token';
+import { UserRole } from '@/common/models';
 import { Injectable, NestMiddleware, UnauthorizedException } from '@nestjs/common';
 import { NextFunction, Request, Response } from 'express';
 
@@ -10,7 +11,11 @@ export class RoleMiddleware implements NestMiddleware {
     private readonly redisService: RedisService,
   ) {}
 
-  async use(req: Request, res: Response, next: NextFunction) {
+  async use(
+    req: Request & { tokenPayload?: TokenPayload; currentRole?: UserRole },
+    res: Response,
+    next: NextFunction,
+  ) {
     if (req.headers.authorization) {
       const token = req.headers.authorization.split(' ')[1];
       if (!token) throw new UnauthorizedException('Không tìm thấy token hợp lệ.');
