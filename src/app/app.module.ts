@@ -17,7 +17,7 @@ import { UserModule } from '@/app/user';
 import { PayosModule } from '@/app/payos/payos.module';
 import { RolesGuard } from '@/common/guards';
 import { LoggingMiddleware, RoleMiddleware } from '@/common/middlewares';
-import { MiddlewareConsumer, Module } from '@nestjs/common';
+import { Logger, MiddlewareConsumer, Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { APP_GUARD } from '@nestjs/core';
 import { TypeOrmModule } from '@nestjs/typeorm';
@@ -72,6 +72,10 @@ import { join } from 'path';
         if (!uploadPath) {
           throw new Error('Thiếu biến môi trường: UPLOAD_PATH');
         }
+        Logger.debug(
+          `Server is serving static files from: ${join(process.cwd(), uploadPath)}`,
+          'ServeStaticModule',
+        );
         return [
           {
             rootPath: join(process.cwd(), uploadPath),
