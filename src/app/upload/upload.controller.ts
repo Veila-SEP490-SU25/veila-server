@@ -48,6 +48,7 @@ export class UploadController {
   })
   async uploadFile(@UploadedFile() file: Express.Multer.File): Promise<ItemResponse<string>> {
     if (!file) throw new BadRequestException('Không tìm thấy tệp để tải lên');
+    console.log(file);
     const fileUrl = this.uploadService.getFileUrl(file.filename);
     return {
       item: fileUrl,
