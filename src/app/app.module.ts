@@ -68,13 +68,13 @@ import { join } from 'path';
       imports: [ConfigModule],
       inject: [ConfigService],
       useFactory: (configService: ConfigService) => {
-        const uploadPath = configService.get<string>('UPLOAD_PATH');
-        if (!uploadPath) {
-          throw new Error('Thiếu biến môi trường: UPLOAD_PATH');
+        const staticPath = configService.get<string>('SERVE_STATIC_PATH');
+        if (!staticPath) {
+          throw new Error('Thiếu biến môi trường: SERVE_STATIC_PATH');
         }
         return [
           {
-            rootPath: join(process.cwd(), uploadPath),
+            rootPath: join(process.cwd(), staticPath),
             serveRoot: '/files',
             serveStaticOptions: {
               index: false,

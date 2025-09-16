@@ -50,14 +50,6 @@ export class UploadController {
   })
   async uploadFile(@UploadedFile() file: Express.Multer.File): Promise<ItemResponse<string>> {
     if (!file) throw new BadRequestException('Không tìm thấy tệp để tải lên');
-    Logger.debug(
-      `Server is serving static files from: ${join(process.cwd(), '/usr/src/app/uploads')}`,
-      'ServeStaticModule',
-    );
-    Logger.debug(
-      `Uploaded file: ${file.originalname}, stored as: ${file.filename}, stored in: ${file.path}`,
-      'UploadController',
-    );
     const fileUrl = this.uploadService.getFileUrl(file.filename);
     return {
       item: fileUrl,
