@@ -4,7 +4,6 @@ import {
   BadRequestException,
   Controller,
   HttpStatus,
-  Logger,
   Post,
   UploadedFile,
   UseInterceptors,
@@ -18,7 +17,6 @@ import {
   ApiResponse,
   ApiTags,
 } from '@nestjs/swagger';
-import { join } from 'path';
 
 @Controller('upload')
 @ApiTags('Upload Controller')
