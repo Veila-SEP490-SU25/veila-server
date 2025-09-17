@@ -16,8 +16,8 @@ import { OrderService } from '../order';
 import { ShopService } from '../shop';
 import { TaskDto, TaskService } from '../task';
 import { Cron, CronExpression } from '@nestjs/schedule';
-import { SingleService } from '../single';
 import { MilestoneTemplateType } from '@/common/models/single/milestone-template.model';
+import { AppSettingService } from '@/app/appsetting';
 
 @Injectable()
 export class MilestoneService {
@@ -30,7 +30,8 @@ export class MilestoneService {
     private readonly shopService: ShopService,
     @Inject(forwardRef(() => TaskService))
     private readonly taskService: TaskService,
-    private readonly singleService: SingleService,
+    @Inject(AppSettingService)
+    private readonly appSettingService: AppSettingService,
   ) {}
 
   async createMilestone(orderId: string, orderType: OrderType): Promise<void> {
@@ -38,7 +39,7 @@ export class MilestoneService {
     if (orderType === OrderType.SELL) templatesType = MilestoneTemplateType.SELL;
     else if (orderType === OrderType.RENT) templatesType = MilestoneTemplateType.RENT;
     else if (orderType === OrderType.CUSTOM) templatesType = MilestoneTemplateType.CUSTOM;
-    const templates = await this.singleService.getMilestoneTemplatesByType(templatesType);
+    const templates = await this.appSettingService.getMilestoneTemplatesByType(templatesType);
 
     if (!templates.length) {
       throw new Error(`No milestone templates found for type: ${orderType}`);
@@ -49,7 +50,7 @@ export class MilestoneService {
     //Tạo milestone mặc định theo templates
     const milestoneEntities = templates.map((template) => {
       const dueDate = new Date(startDate);
-      dueDate.setDate(dueDate.getDate() + template.timeGap);
+      dueDate.setDate(dueDate.getDate() + template.timeGap * (template.index - 1));
 
       return this.milestoneRepository.create({
         order: { id: orderId },
@@ -91,6 +92,21 @@ export class MilestoneService {
 
     if (existingMilestone.status !== MilestoneStatus.PENDING)
       throw new BadRequestException('Mốc công việc đã bắt đầu/đã hoàn thành/bị hủy');
+
+    const timeGap = existingMilestone.dueDate.getTime() - body.dueDate.getTime();
+    const milestones = await this.milestoneRepository.find({
+      where: {
+        order: { id: existingMilestone.order.id },
+      },
+      order: { index: 'ASC' },
+    });
+    const milestonesEffected = milestones.filter((m) => m.index > existingMilestone.index);
+    if (milestonesEffected.length !== 0) {
+      milestonesEffected.forEach((m) => {
+        m.dueDate = new Date(m.dueDate.getTime() + timeGap);
+      });
+      await this.milestoneRepository.save(milestonesEffected);
+    }
 
     existingMilestone.dueDate = body.dueDate;
 
@@ -318,19 +334,6 @@ export class MilestoneService {
       relations: ['order'],
     });
     return milestones;
-  }
-
-  async getLastMilestoneByOrderId(orderId: string): Promise<Milestone | null> {
-    const milestone = await this.milestoneRepository.findOne({
-      where: {
-        order: { id: orderId },
-      },
-      relations: ['order'],
-      order: {
-        index: 'DESC',
-      },
-    });
-    return milestone;
   }
 
   async updateMilestoneStatusForOrderCustomAfterCheckout(orderId: string): Promise<void> {

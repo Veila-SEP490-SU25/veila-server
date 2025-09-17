@@ -21,4 +21,22 @@ export class AppSetting extends Base {
   })
   @ApiProperty({ example: 15 })
   delayPenalty: number;
+
+  @Column({
+    name: 'days_to_complaint',
+    type: 'int',
+    nullable: false,
+    default: 3,
+  })
+  @ApiProperty({ example: 3 })
+  daysToComplaint: number;
+
+  @Column({
+    name: 'days_to_review_update_request',
+    type: 'int',
+    nullable: false,
+    default: 2,
+  })
+  @ApiProperty({ example: 2 })
+  daysToReviewUpdateRequest: number;
 }

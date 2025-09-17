@@ -12,7 +12,6 @@ import {
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Not, Repository } from 'typeorm';
-import { MilestoneService } from '../milestone';
 import { ComplaintReason } from '@/common/models/single';
 import { UserService } from '@/app/user';
 import { ShopService } from '@/app/shop';
@@ -26,8 +25,6 @@ export class ComplaintService {
     private readonly complaintReasonRepository: Repository<ComplaintReason>,
     @Inject(forwardRef(() => OrderService))
     private readonly orderService: OrderService,
-    @Inject(forwardRef(() => MilestoneService))
-    private readonly milestoneService: MilestoneService,
     @Inject(UserService)
     private readonly userService: UserService,
     @Inject(ShopService)
@@ -92,14 +89,13 @@ export class ComplaintService {
     const order = await this.orderService.getOwnerOrderById(userId, orderId);
     if (!order) throw new NotFoundException('Không tìm thấy đơn hàng này');
     if (order.status === OrderStatus.COMPLETED)
-      throw new MethodNotAllowedException('Không thể tạo khiếu nại cho đơn hàng chưa hoàn thành');
-    const complaintMilestone = await this.milestoneService.getLastMilestoneByOrderId(order.id);
-    if (complaintMilestone?.status !== MilestoneStatus.IN_PROGRESS)
+      throw new MethodNotAllowedException('Không thể tạo khiếu nại cho đơn hàng đã hoàn thành');
+    const milestones = order.milestones.sort((a, b) => a.index - b.index) || [];
+    const complaintMilestone = milestones[milestones.length - 1];
+    if (complaintMilestone.status !== MilestoneStatus.IN_PROGRESS)
       throw new MethodNotAllowedException(
         'Không thể tạo khiếu nại cho đơn hàng chưa vào giai đoạn khiếu nại',
       );
-    if (Date.now() - order.updatedAt.getTime() > 3 * 24 * 60 * 60 * 1000)
-      throw new MethodNotAllowedException('Không thể tạo khiếu nại cho đơn hàng đã quá 3 ngày');
 
     if (await this.isExistsInProgressComplaint(userId, orderId))
       throw new MethodNotAllowedException('Bạn đã có khiếu nại đang xử lý cho đơn hàng này');

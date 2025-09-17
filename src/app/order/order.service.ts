@@ -694,11 +694,17 @@ export class OrderService {
         id: orderId,
         customer: { id: userId },
       },
+      relations: {
+        milestones: true,
+      },
     });
     const shopOrder = await this.orderRepository.findOne({
       where: {
         id: orderId,
         shop: { user: { id: userId } },
+      },
+      relations: {
+        milestones: true,
       },
     });
     return customerOrder || shopOrder;
@@ -986,9 +992,19 @@ export class OrderService {
         const milestone = milestones[milestones.length - 1];
         if (milestone.status === MilestoneStatus.IN_PROGRESS) {
           const now = new Date();
-          const threeDaysAgo = new Date(now.setDate(now.getDate() - 3));
-          if (milestone && milestone.updatedAt < threeDaysAgo)
+          const daysToComplaint = new Date(
+            now.setDate(now.getDate() - (await this.appSettingService.getDaysToComplaint())),
+          );
+          if (milestone && milestone.updatedAt < daysToComplaint) {
             await this.milestoneService.completeComplaintMilestone(order.id, milestone);
+            if (order.type === OrderType.SELL) {
+              await this.walletService.unlockBalanceForSell(order);
+            } else if (order.type === OrderType.RENT) {
+              await this.walletService.unlockBalanceForRent(order);
+            } else if (order.type === OrderType.CUSTOM) {
+              await this.walletService.unlockBalanceForCustom(order);
+            }
+          }
         }
       }),
     );

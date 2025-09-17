@@ -13,7 +13,7 @@ import {
 import { plainToInstance } from 'class-transformer';
 import { Filtering, getOrder, getWhere, Sorting } from '@/common/decorators';
 import { DepositViaPayOSDto, WalletService } from '../wallet';
-import { Cron, CronExpression } from '@nestjs/schedule';
+import { Cron } from '@nestjs/schedule';
 import { MailService } from '../mail';
 import { UserService } from '../user';
 
@@ -504,7 +504,7 @@ export class TransactionService {
     return await this.transactionRepository.save(transaction);
   }
 
-  @Cron(CronExpression.EVERY_DAY_AT_MIDNIGHT, { timeZone: 'Asia/Ho_Chi_Minh' })
+  @Cron('*/15 * * * *', { timeZone: 'Asia/Ho_Chi_Minh' })
   async expiredDepositTransaction(): Promise<void> {
     //tìm tất cả các giao dịch nạp tiền vẫn còn đang pending sau 15p
     const transactions = await this.transactionRepository.find({

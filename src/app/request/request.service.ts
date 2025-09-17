@@ -1,3 +1,4 @@
+import { AppSettingService } from '@/app/appsetting';
 import { OrderService } from '@/app/order';
 import { CUpdateRequestDto, CURequestDto, ReviewUpdateRequestDto } from '@/app/request/request.dto';
 import { Filtering, getOrder, getWhere, Sorting } from '@/common/decorators';
@@ -30,6 +31,8 @@ export class RequestService {
     private readonly updateRequestRepository: Repository<UpdateRequest>,
     @Inject(forwardRef(() => OrderService))
     private readonly orderService: OrderService,
+    @Inject(AppSettingService)
+    private readonly appSettingService: AppSettingService,
   ) {}
 
   async createRequestForCustomer(userId: string, body: CURequestDto): Promise<Request> {
@@ -303,7 +306,9 @@ export class RequestService {
       where: { status: UpdateRequestStatus.PENDING },
     });
     const now = new Date();
-    const threeDaysAgo = new Date(now.getDate() - 2);
+    const threeDaysAgo = new Date(
+      now.getDate() - (await this.appSettingService.getDaysToReviewUpdateRequest()),
+    );
     await updateRequests.map(async (updateRequest) => {
       if (updateRequest.createdAt < threeDaysAgo) {
         await this.updateRequestRepository.update(updateRequest.id, {

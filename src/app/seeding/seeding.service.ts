@@ -10,7 +10,6 @@ import { PasswordService } from '@/app/password';
 import { RequestService } from '@/app/request';
 import { ServiceService } from '@/app/service';
 import { ShopService } from '@/app/shop';
-import { SingleService } from '@/app/single';
 import { SubscriptionService } from '@/app/subscription';
 import { TaskService } from '@/app/task';
 import { TransactionService } from '@/app/transaction';
@@ -112,7 +111,6 @@ export class SeedingService implements OnModuleInit {
     private readonly transactionService: TransactionService,
     private readonly feedbackService: FeedbackService,
     private readonly appSettingService: AppSettingService,
-    private readonly singleService: SingleService,
   ) {
     // Khởi tạo faker với locale tiếng Việt
     this.customFaker = new Faker({
@@ -234,48 +232,48 @@ export class SeedingService implements OnModuleInit {
   }
 
   private async seedComplaintReasons() {
-    const reasons = await this.singleService.getComplaintReasons();
+    const reasons = await this.appSettingService.getComplaintReasonsForSeeding();
     if (reasons.length > 0) this.logger.log(`Complaint reasons already exist. Skipping seeding.`);
     else {
       try {
         await Promise.all([
-          await this.singleService.createComplaintReason({
+          await this.appSettingService.createComplaintReasonForSeeding({
             code: 'REASON_1',
             reason: 'Hàng không đúng mô tả',
             reputationPenalty: 10,
             type: ComplaintReasonType.CUSTOMER,
           } as ComplaintReason),
-          await this.singleService.createComplaintReason({
+          await this.appSettingService.createComplaintReasonForSeeding({
             code: 'REASON_2',
             reason: 'Hàng bị lỗi',
             reputationPenalty: 10,
             type: ComplaintReasonType.CUSTOMER,
           } as ComplaintReason),
-          await this.singleService.createComplaintReason({
+          await this.appSettingService.createComplaintReasonForSeeding({
             code: 'REASON_3',
             reason: 'Hàng không đúng kích thước',
             reputationPenalty: 10,
             type: ComplaintReasonType.CUSTOMER,
           } as ComplaintReason),
-          await this.singleService.createComplaintReason({
+          await this.appSettingService.createComplaintReasonForSeeding({
             code: 'REASON_4',
             reason: 'Hàng bị hư hỏng trong quá trình vận chuyển',
             reputationPenalty: 10,
             type: ComplaintReasonType.CUSTOMER,
           } as ComplaintReason),
-          await this.singleService.createComplaintReason({
+          await this.appSettingService.createComplaintReasonForSeeding({
             code: 'REASON_5',
             reason: 'Trễ deadline',
             reputationPenalty: 10,
             type: ComplaintReasonType.CUSTOMER,
           } as ComplaintReason),
-          await this.singleService.createComplaintReason({
+          await this.appSettingService.createComplaintReasonForSeeding({
             code: 'REASON_6',
             reason: 'Hàng bị hư',
             reputationPenalty: 10,
             type: ComplaintReasonType.SHOP,
           } as ComplaintReason),
-          await this.singleService.createComplaintReason({
+          await this.appSettingService.createComplaintReasonForSeeding({
             code: 'REASON_7',
             reason: 'Trả hàng không đúng hạn',
             reputationPenalty: 10,
@@ -290,7 +288,7 @@ export class SeedingService implements OnModuleInit {
   }
 
   private async seedMilestoneTemplates() {
-    const milestones = await this.singleService.getMilestoneTemplates();
+    const milestones = await this.appSettingService.getMilestoneTemplatesForSeeding();
     if (milestones.length > 0)
       this.logger.log(`Milestone templates already exist. Skipping seeding.`);
     else {
@@ -460,7 +458,7 @@ export class SeedingService implements OnModuleInit {
       timeGap,
       type,
     } as MilestoneTemplate;
-    await this.singleService.createMilestoneTemplate(milestoneTemplate);
+    await this.appSettingService.createMilestoneTemplateForSeeding(milestoneTemplate);
   }
 
   private async seedAppSetting() {
@@ -471,6 +469,8 @@ export class SeedingService implements OnModuleInit {
       await this.appSettingService.createAppSetting({
         cancelPenalty: 5,
         delayPenalty: 15,
+        daysToComplaint: 3,
+        daysToReviewUpdateRequest: 2,
       } as AppSetting);
     }
   }
