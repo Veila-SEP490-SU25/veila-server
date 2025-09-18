@@ -1436,7 +1436,7 @@ export class SeedingService implements OnModuleInit {
       category,
       title: this.customFaker.lorem.sentence(),
       content: this.customFaker.lorem.paragraphs(20),
-      images: this.customFaker.image.url({ width: 800, height: 600 }),
+      images: 'https://i.pinimg.com/736x/04/f3/61/04f3615e9c80b133091a3fb3b43e8736.jpg',
       isVerified: true,
       status: BlogStatus.PUBLISHED,
     } as Blog;
