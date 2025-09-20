@@ -37,6 +37,7 @@ jobs:
             -e START_COMMAND=deploy:development \
             -v /var/lib/veila/uploads:/usr/src/app/uploads \
             -p 1205:3000 \
+            -p 1027:3001 \
             veila-server:latest
 
   deploy-production:
@@ -60,6 +61,7 @@ jobs:
             -e START_COMMAND=deploy:production \
             -v /var/lib/veila/uploads:/usr/src/app/uploads \
             -p 1206:3000 \
+            -p 1028:3001 \
             veila-server:latest
 
   cleanup:
