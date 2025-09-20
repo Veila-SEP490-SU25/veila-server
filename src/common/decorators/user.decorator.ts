@@ -16,3 +16,9 @@ export const CurrentRole = createParamDecorator((_, ctx: ExecutionContext) => {
   const request = ctx.switchToHttp().getRequest();
   return request.currentRole;
 });
+
+export const UserWsId = createParamDecorator((_, ctx: ExecutionContext) => {
+  const request = ctx.switchToWs().getClient();
+  const tokenPayload: TokenPayload = request.tokenPayload;
+  return tokenPayload ? tokenPayload.id : null;
+});

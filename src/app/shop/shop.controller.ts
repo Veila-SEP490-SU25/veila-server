@@ -44,10 +44,10 @@ import {
   ShopContactDto,
   UpdateShopDto,
 } from '@/app/shop/shop.dto';
-import { ListDressDto } from '@/app/dress';
-import { ListServiceDto } from '@/app/service';
-import { ListCategoryDto } from '@/app/category';
-import { ListAccessoryDto } from '@/app/accessory';
+import { ListDressDto } from '@/app/dress/dress.dto';
+import { ListServiceDto } from '@/app/service/service.dto';
+import { ListCategoryDto } from '@/app/category/category.dto';
+import { ListAccessoryDto } from '@/app/accessory/accessory.dto';
 import { plainToInstance } from 'class-transformer';
 
 @Controller('shops')

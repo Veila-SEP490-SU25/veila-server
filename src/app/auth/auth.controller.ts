@@ -24,7 +24,7 @@ import {
 } from '@nestjs/swagger';
 import { RefreshTokenDto } from '@/app/auth/auth.dto';
 import { User } from '@/common/models';
-import { UpdateProfile } from '@/app/user';
+import { UpdateProfile } from '@/app/user/user.dto';
 import { Public } from '@/common/decorators/public.decorator';
 
 @Controller('auth')

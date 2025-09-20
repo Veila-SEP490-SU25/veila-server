@@ -16,7 +16,7 @@ import { MailModule } from '../mail';
 @Module({
   imports: [
     TypeOrmModule.forFeature([Wallet]),
-    UserModule,
+    forwardRef(() => UserModule),
     forwardRef(() => TransactionModule),
     PayosModule,
     ShopModule,

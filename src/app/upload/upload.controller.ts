@@ -14,8 +14,9 @@ import {
   ApiConsumes,
   ApiExtraModels,
   ApiOperation,
-  ApiResponse,
+  ApiOkResponse,
   ApiTags,
+  getSchemaPath,
 } from '@nestjs/swagger';
 
 @Controller('upload')
@@ -41,10 +42,18 @@ export class UploadController {
       required: ['file'],
     },
   })
-  @ApiResponse({
-    status: 200,
+  @ApiOkResponse({
     description: 'Tải lên thành công',
-    type: ItemResponse<string>,
+    schema: {
+      allOf: [
+        { $ref: getSchemaPath(ItemResponse) },
+        {
+          properties: {
+            item: { type: 'string' },
+          },
+        },
+      ],
+    },
   })
   async uploadFile(@UploadedFile() file: Express.Multer.File): Promise<ItemResponse<string>> {
     if (!file) throw new BadRequestException('Không tìm thấy tệp để tải lên');

@@ -4,10 +4,10 @@ import { ContractModule } from '@/app/contract';
 import { MailModule } from '@/app/mail';
 import { UserModule } from '@/app/user';
 import { WalletModule } from '@/app/wallet';
-import { Module } from '@nestjs/common';
+import { forwardRef, Module } from '@nestjs/common';
 
 @Module({
-  imports: [MailModule, UserModule, ContractModule, WalletModule],
+  imports: [MailModule, forwardRef(() => UserModule), ContractModule, WalletModule],
   controllers: [AuthController],
   providers: [AuthService],
   exports: [AuthService],

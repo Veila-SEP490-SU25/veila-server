@@ -12,7 +12,7 @@ import { ShopModule } from '@/app/shop';
   imports: [
     TypeOrmModule.forFeature([Complaint, ComplaintReason]),
     forwardRef(() => OrderModule),
-    UserModule,
+    forwardRef(() => UserModule),
     ShopModule,
   ],
   controllers: [ComplaintController],

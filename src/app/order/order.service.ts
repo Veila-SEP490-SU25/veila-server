@@ -65,6 +65,7 @@ export class OrderService {
     private readonly orderServiceDetailRepository: Repository<OrderServiceDetail>,
     @InjectRepository(UpdateOrderServiceDetail)
     private readonly updateOrderServiceDetailRepository: Repository<UpdateOrderServiceDetail>,
+    @Inject(forwardRef(() => UserService))
     private readonly userService: UserService,
     @Inject(ShopService)
     private readonly shopService: ShopService,
@@ -87,7 +88,7 @@ export class OrderService {
     private readonly passwordService: PasswordService,
     @Inject(TransactionService)
     private readonly transactionService: TransactionService,
-    @Inject(AccessoryService)
+    @Inject(forwardRef(() => AccessoryService))
     private readonly accessoryService: AccessoryService,
     @Inject(AppSettingService)
     private readonly appSettingService: AppSettingService,

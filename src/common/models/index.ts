@@ -6,3 +6,4 @@ export * from '@/common/models/product';
 export * from '@/common/models/feedback';
 export * from '@/common/models/order';
 export * from '@/common/models/notification';
+export * from '@/common/models/chat';

@@ -1,5 +1,5 @@
-import { RedisService } from '@/app/redis';
-import { TokenService } from '@/app/token';
+import { RedisService } from '@/app/redis/redis.service';
+import { TokenService } from '@/app/token/token.service';
 import { CanActivate, ExecutionContext, Injectable, UnauthorizedException } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { IS_PUBLIC_KEY } from '../decorators/public.decorator';

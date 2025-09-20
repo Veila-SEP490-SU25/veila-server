@@ -16,6 +16,8 @@ import { WalletService } from '@/app/wallet';
 import { ContractType, User, UserRole, UserStatus } from '@/common/models';
 import {
   ForbiddenException,
+  forwardRef,
+  Inject,
   Injectable,
   NotFoundException,
   UnauthorizedException,
@@ -26,6 +28,7 @@ import { v4 as uuidv4 } from 'uuid';
 export class AuthService {
   constructor(
     private readonly redisService: RedisService,
+    @Inject(forwardRef(() => UserService))
     private readonly userService: UserService,
     private readonly tokenService: TokenService,
     private readonly mailService: MailService,

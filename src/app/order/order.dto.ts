@@ -10,8 +10,8 @@ import {
   IsString,
   ValidateNested,
 } from 'class-validator';
-import { CUOrderAccessoriesDetailDto } from '@/app/order-accessories-details';
-import { CUOrderDressDetailDto } from '@/app/order-dress-details';
+import { CUOrderAccessoriesDetailDto } from '@/app/order-accessories-details/order-accessories-details.dto';
+import { CUOrderDressDetailDto } from '@/app/order-dress-details/order-dress-details.dto';
 
 export class OtpPaymentDto {
   @Expose()

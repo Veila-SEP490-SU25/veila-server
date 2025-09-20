@@ -1,4 +1,4 @@
-import { ProductUserDto } from '@/app/user';
+import { ProductUserDto } from '@/app/user/user.dto';
 import { CategoryType } from '@/common/models';
 import { ApiProperty } from '@nestjs/swagger';
 import { Expose, Type } from 'class-transformer';

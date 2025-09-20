@@ -34,6 +34,7 @@ import {
 import {
   BadRequestException,
   ForbiddenException,
+  forwardRef,
   Inject,
   Injectable,
   NotFoundException,
@@ -59,7 +60,7 @@ export class ShopService {
     @Inject(MembershipService)
     private readonly membershipService: MembershipService,
     private readonly contractService: ContractService,
-    @Inject(UserService)
+    @Inject(forwardRef(() => UserService))
     private readonly userService: UserService,
   ) {}
 

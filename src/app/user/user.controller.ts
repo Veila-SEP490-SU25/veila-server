@@ -11,7 +11,7 @@ import {
   SortingParams,
   UserId,
 } from '@/common/decorators';
-import { AuthGuard } from '@/common/guards';
+import { AuthGuard } from '@/common/guards/auth.guard';
 import { User, UserRole } from '@/common/models';
 import {
   Body,

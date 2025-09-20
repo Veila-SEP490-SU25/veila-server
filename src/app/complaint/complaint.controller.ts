@@ -271,7 +271,7 @@ export class ComplaintController {
         { $ref: getSchemaPath(ItemResponse) },
         {
           properties: {
-            item: { $ref: getSchemaPath(ComplaintReason) },
+            item: { example: null },
           },
         },
       ],
@@ -308,7 +308,7 @@ export class ComplaintController {
         { $ref: getSchemaPath(ItemResponse) },
         {
           properties: {
-            item: { $ref: getSchemaPath(ComplaintReason) },
+            item: { example: null },
           },
         },
       ],

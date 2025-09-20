@@ -11,7 +11,12 @@ import {
   Put,
 } from '@nestjs/common';
 import { CategoryService } from '@/app/category/category.service';
-import { CUCategoryDto, ItemCategoryDto, ListBlogOfCategoryDto } from '@/app/category/category.dto';
+import {
+  CUCategoryDto,
+  ItemCategoryDto,
+  ListBlogOfCategoryDto,
+  ProductCategoryDto,
+} from '@/app/category/category.dto';
 import {
   ApiBearerAuth,
   ApiExtraModels,
@@ -34,10 +39,11 @@ import {
   SortingParams,
   UserId,
 } from '@/common/decorators';
-import { ListDressDto } from '@/app/dress';
-import { ListServiceDto } from '@/app/service';
-import { ListAccessoryDto } from '@/app/accessory';
+import { ListDressDto } from '@/app/dress/dress.dto';
+import { ListServiceDto } from '@/app/service/service.dto';
+import { ListAccessoryDto } from '@/app/accessory/accessory.dto';
 import { plainToInstance } from 'class-transformer';
+import { ProductUserDto, UserShopDto } from '@/app/user/user.dto';
 
 @Controller('categories')
 @ApiTags('Category Controller')
@@ -51,6 +57,9 @@ import { plainToInstance } from 'class-transformer';
   ListServiceDto,
   ListBlogOfCategoryDto,
   ListAccessoryDto,
+  ProductUserDto,
+  UserShopDto,
+  ProductCategoryDto,
 )
 export class CategoryController {
   constructor(private readonly categoryService: CategoryService) {}

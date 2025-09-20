@@ -11,7 +11,13 @@ import {
   OrderStatus,
   OrderType,
 } from '@/common/models';
-import { Inject, Injectable, MethodNotAllowedException, NotFoundException } from '@nestjs/common';
+import {
+  forwardRef,
+  Inject,
+  Injectable,
+  MethodNotAllowedException,
+  NotFoundException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 
@@ -30,7 +36,7 @@ export class FeedbackService {
     private readonly orderServiceDetailRepository: Repository<OrderServiceDetail>,
     @Inject(DressService)
     private readonly dressService: DressService,
-    @Inject(AccessoryService)
+    @Inject(forwardRef(() => AccessoryService))
     private readonly accessoryService: AccessoryService,
     @Inject(ServiceService)
     private readonly serviceService: ServiceService,

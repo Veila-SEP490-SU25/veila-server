@@ -1,6 +1,6 @@
 import { Filtering, getOrder, getWhere, Sorting } from '@/common/decorators';
 import { Category, Dress, DressStatus, ShopStatus } from '@/common/models';
-import { Inject, Injectable, NotFoundException } from '@nestjs/common';
+import { forwardRef, Inject, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { In, Repository } from 'typeorm';
 import { CUDressDto, ItemDressDto } from '@/app/dress/dress.dto';
@@ -12,7 +12,7 @@ export class DressService {
   constructor(
     @InjectRepository(Dress) private readonly dressRepository: Repository<Dress>,
     @InjectRepository(Category) private readonly categoryRepository: Repository<Category>,
-    @Inject(UserService)
+    @Inject(forwardRef(() => UserService))
     private readonly userService: UserService,
   ) {}
 

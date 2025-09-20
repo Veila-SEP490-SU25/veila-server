@@ -25,7 +25,7 @@ export class ComplaintService {
     private readonly complaintReasonRepository: Repository<ComplaintReason>,
     @Inject(forwardRef(() => OrderService))
     private readonly orderService: OrderService,
-    @Inject(UserService)
+    @Inject(forwardRef(() => UserService))
     private readonly userService: UserService,
     @Inject(ShopService)
     private readonly shopService: ShopService,

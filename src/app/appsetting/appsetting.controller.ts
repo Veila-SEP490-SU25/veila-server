@@ -42,7 +42,7 @@ import { CUComplaintReason } from '@/app/complaint';
 @UseGuards(AuthGuard)
 @ApiTags('App Settings Controller')
 @ApiBearerAuth()
-@ApiExtraModels(ItemResponse, AppSetting, ListResponse, MilestoneTemplate, Number, ComplaintReason)
+@ApiExtraModels(ItemResponse, ListResponse, AppSetting, MilestoneTemplate, Number, ComplaintReason)
 @Roles(UserRole.STAFF, UserRole.ADMIN, UserRole.SUPER_ADMIN)
 export class AppSettingController {
   constructor(private readonly appSettingService: AppSettingService) {}
@@ -516,7 +516,7 @@ export class AppSettingController {
         { $ref: getSchemaPath(ItemResponse) },
         {
           properties: {
-            item: { $ref: getSchemaPath(ComplaintReason) },
+            item: { example: null },
           },
         },
       ],
@@ -553,7 +553,7 @@ export class AppSettingController {
         { $ref: getSchemaPath(ItemResponse) },
         {
           properties: {
-            item: { $ref: getSchemaPath(ComplaintReason) },
+            item: { example: null },
           },
         },
       ],

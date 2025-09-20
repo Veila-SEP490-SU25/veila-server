@@ -49,7 +49,7 @@ import { WithdrawTransactionDto, TransactionService } from '../transaction';
 @Controller('wallets')
 @ApiTags('Wallet Controller')
 @ApiBearerAuth()
-@ApiExtraModels(ItemResponse, ListResponse, WalletDto, Wallet, DepositViaPayOSResponse)
+@ApiExtraModels(ItemResponse, ListResponse, WalletDto, Wallet, DepositViaPayOSResponse, String)
 export class WalletController {
   constructor(
     private readonly walletService: WalletService,

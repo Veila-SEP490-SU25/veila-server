@@ -36,7 +36,8 @@ import {
 } from '@/common/decorators';
 import { CUMilestoneDtoV2, MilestoneDto } from './milestone.dto';
 import { Milestone, MilestoneStatus, Task, UserRole } from '@/common/models';
-import { CUTaskDto, TaskDto, TaskService } from '@/app/task';
+import { CUTaskDto, TaskDto } from '@/app/task/task.dto';
+import { TaskService } from '@/app/task/task.service';
 
 @Controller('milestones')
 @ApiTags('Milestone Controller')

@@ -1,6 +1,6 @@
-import { ItemAccessoryDto } from '@/app/accessory';
-import { ItemDressDto } from '@/app/dress';
-import { ItemServiceDto } from '@/app/service';
+import { ItemAccessoryDto } from '@/app/accessory/accessory.dto';
+import { ItemDressDto } from '@/app/dress/dress.dto';
+import { ItemServiceDto } from '@/app/service/service.dto';
 import { ApiProperty } from '@nestjs/swagger';
 import { Expose, Type } from 'class-transformer';
 import { IsNumber, IsOptional, IsString } from 'class-validator';

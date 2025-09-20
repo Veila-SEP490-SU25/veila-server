@@ -70,7 +70,7 @@ import {
   MilestoneTemplateType,
 } from '@/common/models/single/milestone-template.model';
 import { Faker, faker, vi } from '@faker-js/faker';
-import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
+import { forwardRef, Inject, Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 
 @Injectable()
@@ -94,8 +94,10 @@ export class SeedingService implements OnModuleInit {
 
   constructor(
     private readonly configService: ConfigService,
+    @Inject(forwardRef(() => UserService))
     private readonly userService: UserService,
     private readonly passwordService: PasswordService,
+    @Inject(forwardRef(() => AccessoryService))
     private readonly accessoryService: AccessoryService,
     private readonly blogService: BlogService,
     private readonly categoryService: CategoryService,

@@ -9,7 +9,7 @@ import {
   Subscription,
   User,
 } from '@/common/models';
-import { Module } from '@nestjs/common';
+import { forwardRef, Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ShopController } from '@/app/shop/shop.controller';
 import { ShopService } from '@/app/shop/shop.service';
@@ -32,7 +32,7 @@ import { UserModule } from '@/app/user';
     ]),
     MembershipModule,
     ContractModule,
-    UserModule,
+    forwardRef(() => UserModule),
   ],
   controllers: [ShopController],
   providers: [ShopService],

@@ -40,6 +40,7 @@ import { AppSettingModule } from '@/app/appsetting';
 import { VonageModule } from '@/app/voyage';
 import { UploadModule } from '@/app/upload';
 import { join } from 'path';
+import { ChatModule } from '@/app/chat';
 
 @Module({
   imports: [
@@ -116,6 +117,7 @@ import { join } from 'path';
     MembershipModule,
     AppSettingModule,
     VonageModule,
+    ChatModule,
   ],
   controllers: [AppController],
   providers: [

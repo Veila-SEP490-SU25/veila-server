@@ -16,13 +16,13 @@ import { TaskModule } from '@/app/task';
 import { TransactionModule } from '@/app/transaction';
 import { UserModule } from '@/app/user';
 import { WalletModule } from '@/app/wallet';
-import { Module } from '@nestjs/common';
+import { forwardRef, Module } from '@nestjs/common';
 
 @Module({
   imports: [
-    UserModule,
+    forwardRef(() => UserModule),
     PasswordModule,
-    AccessoryModule,
+    forwardRef(() => AccessoryModule),
     BlogModule,
     CategoryModule,
     DressModule,

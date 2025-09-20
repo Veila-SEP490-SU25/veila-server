@@ -1,5 +1,5 @@
 import { Accessory, OrderAccessoryDetail } from '@/common/models';
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { forwardRef, Inject, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm/repository/Repository';
 import {
@@ -15,6 +15,7 @@ export class OrderAccessoriesDetailsService {
   constructor(
     @InjectRepository(OrderAccessoryDetail)
     private readonly orderAccessoryDetailRepository: Repository<OrderAccessoryDetail>,
+    @Inject(forwardRef(() => AccessoryService))
     private readonly accessoryService: AccessoryService,
   ) {}
 

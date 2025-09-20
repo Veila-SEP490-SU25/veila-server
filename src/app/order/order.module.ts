@@ -29,7 +29,7 @@ import { ConfirmNoComplaint } from '@/common/models/single';
       UpdateOrderServiceDetail,
       ConfirmNoComplaint,
     ]),
-    UserModule,
+    forwardRef(() => UserModule),
     ShopModule,
     OrderAccessoriesDetailsModule,
     OrderDressDetailsModule,
