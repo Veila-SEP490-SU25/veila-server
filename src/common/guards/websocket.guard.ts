@@ -1,6 +1,5 @@
 import { RedisService, TokenService } from '@/app';
 import { CanActivate, ExecutionContext, Injectable } from '@nestjs/common';
-import { WsException } from '@nestjs/websockets';
 
 @Injectable()
 export class WsJwtGuard implements CanActivate {
@@ -13,17 +12,32 @@ export class WsJwtGuard implements CanActivate {
     const request = context.switchToWs().getClient();
     const token = request.handshake.headers.authorization;
     if (!token) {
-      throw new WsException('Không tìm thấy token hợp lệ.');
+        request.emit('exception', {
+          statusCode: 401,
+          message: 'Không tìm thấy token hợp lệ.',
+        });
+        request.disconnect();
+        return false;
     }
     const isBlacklist: boolean = JSON.parse(
       (await this.redisService.get(`token:blacklist:${token}`)) || 'false',
     );
     if (isBlacklist) {
-      throw new WsException('Token đã bị vô hiệu hoá.');
+      request.emit('exception', {
+        statusCode: 401,
+        message: 'Token đã bị vô hiệu hoá.',
+      });
+      request.disconnect();
+      return false;
     }
     const tokenPayload = await this.tokenService.validateTokenForWs(token);
     if (!tokenPayload) {
-      throw new WsException('Token không hợp lệ hoặc đã hết hạn.');
+      request.emit('exception', {
+        statusCode: 401,
+        message: 'Token không hợp lệ hoặc đã hết hạn.',
+      });
+      request.disconnect();
+      return false;
     }
     request.token = token;
     request.tokenPayload = tokenPayload;
