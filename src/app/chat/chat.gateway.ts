@@ -129,6 +129,8 @@ export class ChatGateway implements OnGatewayConnection {
   @SubscribeMessage('getMessage')
   async handleGetMessage(@UserWsId() userId: string, @MessageBody() body: GetMessageRequest) {
     const messages = await this.chatService.getMessages(userId, body);
-    this.server.to(body.conversationId).emit('message', messages);
+    messages.forEach((msg) => {
+      this.server.to(body.conversationId).emit('message', msg);
+    });
   }
 }
