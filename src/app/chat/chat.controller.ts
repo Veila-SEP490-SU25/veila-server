@@ -1,4 +1,4 @@
-import { CreateConversationDto, GetConversationsDto } from '@/app/chat/chat.dto';
+import { CreateConversationDto, GetConversationDto } from '@/app/chat/chat.dto';
 import { ChatService } from '@/app/chat/chat.service';
 import { ItemResponse, ListResponse } from '@/common/base';
 import {
@@ -28,7 +28,7 @@ import {
 @UseGuards(AuthGuard)
 @ApiBearerAuth()
 @ApiTags('Chat Controller')
-@ApiExtraModels(ItemResponse, ListResponse, Conversation, GetConversationsDto)
+@ApiExtraModels(ItemResponse, ListResponse, Conversation, GetConversationDto)
 export class ChatController {
   constructor(private readonly chatService: ChatService) {}
 
@@ -93,7 +93,7 @@ export class ChatController {
           properties: {
             items: {
               type: 'array',
-              items: { $ref: getSchemaPath(GetConversationsDto) },
+              items: { $ref: getSchemaPath(GetConversationDto) },
             },
           },
         },
@@ -105,7 +105,7 @@ export class ChatController {
     @PaginationParams() { page, size, limit, offset }: Pagination,
     @SortingParams([]) sort?: Sorting[],
     @FilteringParams([]) filter?: Filtering[],
-  ): Promise<ListResponse<GetConversationsDto>> {
+  ): Promise<ListResponse<GetConversationDto>> {
     const [conversations, totalItems] = await this.chatService.getConversations(
       userId,
       limit,

@@ -1,7 +1,7 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsOptional, IsString, IsUUID } from 'class-validator';
+import { IsDate, IsNumber, IsOptional, IsString, IsUUID } from 'class-validator';
 
-export class GetMessagesDto {
+export class GetMessageDto {
   @ApiProperty({ example: 'chat-room-id' })
   @IsString()
   chatRoomId: string;
@@ -27,9 +27,13 @@ export class GetMessagesDto {
   @IsOptional()
   @IsString()
   imageUrl?: string;
+
+  @ApiProperty({ example: '2024-01-01T00:00:00Z' })
+  @IsDate()
+  createdAt: Date;
 }
 
-export class GetConversationsDto {
+export class GetConversationDto {
   @ApiProperty({ example: 'conversation-id' })
   @IsString()
   conversationId: string;
@@ -47,8 +51,12 @@ export class GetConversationsDto {
   @IsOptional()
   receiverAvatar: string | null;
 
-  @ApiProperty({ type: () => GetMessagesDto })
-  lastMessage: GetMessagesDto;
+  @ApiProperty({ type: () => GetMessageDto })
+  lastMessage: GetMessageDto;
+
+  @ApiProperty({ example: 5 })
+  @IsNumber()
+  unReadCount: number;
 }
 
 export class CreateMessageDto {
@@ -77,4 +85,16 @@ export class CreateConversationDto {
   @IsString()
   @IsUUID('4', { message: 'user2Id must be a valid UUID v4' })
   user2Id: string;
+}
+
+export class GetMessageRequest {
+  @ApiProperty({ example: 'user-id' })
+  @IsString()
+  @IsUUID('4', { message: 'userId must be a valid UUID v4' })
+  userId: string;
+
+  @ApiProperty({ example: 'conversation-id' })
+  @IsString()
+  @IsUUID('4', { message: 'conversationId must be a valid UUID v4' })
+  conversationId: string;
 }

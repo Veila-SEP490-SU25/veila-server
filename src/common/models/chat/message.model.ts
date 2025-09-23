@@ -41,4 +41,8 @@ export class Message extends Base {
   @Column({ type: 'text', nullable: true, name: 'images' })
   @ApiProperty({ example: 'https://example.com/image.png' })
   images: string | null;
+
+  @Column({ type: 'boolean', name: 'is_readed', default: false })
+  @ApiProperty({ example: false })
+  isReaded: boolean;
 }

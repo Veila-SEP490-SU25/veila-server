@@ -12,12 +12,12 @@ export class WsJwtGuard implements CanActivate {
     const request = context.switchToWs().getClient();
     const token = request.handshake.headers.authorization;
     if (!token) {
-        request.emit('exception', {
-          statusCode: 401,
-          message: 'Không tìm thấy token hợp lệ.',
-        });
-        request.disconnect();
-        return false;
+      request.emit('exception', {
+        statusCode: 401,
+        message: 'Không tìm thấy token hợp lệ.',
+      });
+      request.disconnect();
+      return false;
     }
     const isBlacklist: boolean = JSON.parse(
       (await this.redisService.get(`token:blacklist:${token}`)) || 'false',
