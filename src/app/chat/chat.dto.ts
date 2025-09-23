@@ -88,11 +88,6 @@ export class CreateConversationDto {
 }
 
 export class GetMessageRequest {
-  @ApiProperty({ example: 'user-id' })
-  @IsString()
-  @IsUUID('4', { message: 'userId must be a valid UUID v4' })
-  userId: string;
-
   @ApiProperty({ example: 'conversation-id' })
   @IsString()
   @IsUUID('4', { message: 'conversationId must be a valid UUID v4' })

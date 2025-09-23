@@ -19,7 +19,7 @@ export class ChatService {
     private readonly conversationRepository: Repository<Conversation>,
     @InjectRepository(Message)
     private readonly messageRepository: Repository<Message>,
-  ) {}
+  ) { }
 
   async createConversationIfNotExists(body: CreateConversationDto): Promise<Conversation> {
     const userIds = [body.user1Id, body.user2Id].sort((a, b) => a.localeCompare(b));
@@ -138,7 +138,7 @@ export class ChatService {
     return [dtos, total];
   }
 
-  async getMessages({ userId, conversationId }: GetMessageRequest): Promise<GetMessageDto[]> {
+  async getMessages(userId: string, { conversationId }: GetMessageRequest): Promise<GetMessageDto[]> {
     const conversation = await this.conversationRepository.findOne({
       where: { id: conversationId },
       relations: {
@@ -180,8 +180,8 @@ export class ChatService {
     const lastMessageEntity =
       conversation.messages.length > 0
         ? conversation.messages.reduce((prev, current) =>
-            prev.createdAt > current.createdAt ? prev : current,
-          )
+          prev.createdAt > current.createdAt ? prev : current,
+        )
         : null;
     const lastMessage: GetMessageDto | null = lastMessageEntity
       ? await this.mapToGetMessageDto(conversation.id, lastMessageEntity)

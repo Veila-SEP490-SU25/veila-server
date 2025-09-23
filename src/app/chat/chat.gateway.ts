@@ -40,7 +40,7 @@ export class ChatGateway implements OnGatewayConnection {
     private readonly chatService: ChatService,
     private readonly tokenService: TokenService,
     private readonly redisService: RedisService,
-  ) {}
+  ) { }
 
   @WebSocketServer()
   private server: Server;
@@ -127,8 +127,8 @@ export class ChatGateway implements OnGatewayConnection {
   }
 
   @SubscribeMessage('getMessage')
-  async handleGetMessage(@MessageBody() body: GetMessageRequest) {
-    const messages = await this.chatService.getMessages(body);
+  async handleGetMessage(@UserWsId() userId: string, @MessageBody() body: GetMessageRequest) {
+    const messages = await this.chatService.getMessages(userId, body);
     this.server.to(body.conversationId).emit('message', messages);
   }
 }
