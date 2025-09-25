@@ -10,7 +10,7 @@ export class WsJwtGuard implements CanActivate {
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const request = context.switchToWs().getClient();
-    const token = request.handshake.headers.authorization;
+    const token = request.handshake.auth?.token;
     if (!token) {
       request.emit('exception', {
         statusCode: 401,

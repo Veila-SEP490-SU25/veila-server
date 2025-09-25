@@ -48,7 +48,7 @@ export class ChatGateway implements OnGatewayConnection {
 
   async handleConnection(client: Socket) {
     try {
-      const authorization = client.handshake.headers.authorization as string | undefined;
+      const authorization = client.handshake.auth?.token as string | undefined;
       if (!authorization) {
         client.emit('exception', {
           statusCode: 401,
