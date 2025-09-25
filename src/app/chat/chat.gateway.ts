@@ -7,6 +7,7 @@ import { WsJwtGuard } from '@/common/guards';
 import { UseGuards } from '@nestjs/common';
 import {
   MessageBody,
+  ConnectedSocket,
   OnGatewayConnection,
   SubscribeMessage,
   WebSocketGateway,
@@ -127,10 +128,15 @@ export class ChatGateway implements OnGatewayConnection {
   }
 
   @SubscribeMessage('getMessage')
-  async handleGetMessage(@UserWsId() userId: string, @MessageBody() body: GetMessageRequest) {
+  async handleGetMessage(
+    @UserWsId() userId: string,
+    @MessageBody() body: GetMessageRequest,
+    @ConnectedSocket() client: Socket,
+  ) {
     const messages = await this.chatService.getMessages(userId, body);
     messages.forEach((msg) => {
-      this.server.to(body.conversationId).emit('message', msg);
+      // Only return to the requesting client, do not broadcast to the room
+      client.emit('message', msg);
     });
   }
 }
