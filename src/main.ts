@@ -5,6 +5,7 @@ import { CachingInterceptor, HttpStatusCodeInterceptor } from '@/common/intercep
 import { HttpExceptionFilter, WsExceptionFilter } from '@/common/filters';
 import { ClassSerializerInterceptor, Logger, ValidationPipe } from '@nestjs/common';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
+import * as bodyParser from 'body-parser';
 // Swagger include helpers (for debugging problematic controllers)
 // import { AuthModule } from '@/app/auth/auth.module';
 // import { UserModule } from '@/app/user/user.module';
@@ -66,6 +67,7 @@ async function bootstrap() {
     ],
     exposedHeaders: ['Content-Length', 'Content-Range', 'Content-Type'],
     maxAge: 86400,
+
   });
 
   // Global Interceptors, Filters, Pipes, and Prefix
@@ -80,6 +82,8 @@ async function bootstrap() {
   app.useGlobalInterceptors(new ClassSerializerInterceptor(app.get(Reflector)));
   app.useGlobalInterceptors(new CachingInterceptor(app.get(RedisService)));
   app.setGlobalPrefix('api');
+  app.use(bodyParser.json({ limit: '50mb' }));
+  app.use(bodyParser.urlencoded({ limit: '50mb', extended: true }));
 
   const node_env = process.env.NODE_ENV;
 
