@@ -110,6 +110,26 @@ export class ChatService {
     return this.mapToGetConversationDto(conversation, currentId);
   }
 
+  async get2SideUserConversation(
+    conversationId: string,
+    currentId: string,
+  ): Promise<GetConversationDto[]> {
+    const conversation = await this.conversationRepository.findOne({
+      where: { id: conversationId },
+      order: {
+        createdAt: 'DESC',
+      },
+      relations: {
+        messages: { sender: { shop: true } },
+        user1: { shop: true },
+        user2: { shop: true },
+      },
+    });
+    if (!conversation)
+      throw new WsException({ statusCode: 404, message: 'Không tìm thấy cuộc trò chuyện.' });
+    return [await this.mapToGetConversationDto(conversation, currentId), await this.mapToOtherGetConversationDto(conversation, currentId)];
+  }
+
   async getConversations(
     userId: string,
     take: number,
@@ -177,6 +197,37 @@ export class ChatService {
     userId: string,
   ): Promise<GetConversationDto> {
     const otherUser = conversation.user1.id === userId ? conversation.user2 : conversation.user1;
+    const lastMessageEntity =
+      conversation.messages.length > 0
+        ? conversation.messages.reduce((prev, current) =>
+          prev.createdAt > current.createdAt ? prev : current,
+        )
+        : null;
+    const lastMessage: GetMessageDto | null = lastMessageEntity
+      ? await this.mapToGetMessageDto(conversation.id, lastMessageEntity)
+      : null;
+    const unReadCount = conversation.messages.filter((msg) => !msg.isReaded).length;
+    return {
+      conversationId: conversation.id,
+      receiverId: otherUser.id,
+      receiverName:
+        otherUser.role === UserRole.CUSTOMER
+          ? otherUser.username
+          : otherUser.shop?.name || otherUser.username,
+      receiverAvatar:
+        otherUser.role === UserRole.CUSTOMER
+          ? otherUser.avatarUrl
+          : otherUser.shop?.logoUrl || null,
+      lastMessage,
+      unReadCount,
+    } as GetConversationDto;
+  }
+
+  async mapToOtherGetConversationDto(
+    conversation: Conversation,
+    userId: string,
+  ): Promise<GetConversationDto> {
+    const otherUser = conversation.user1.id === userId ? conversation.user1 : conversation.user2;
     const lastMessageEntity =
       conversation.messages.length > 0
         ? conversation.messages.reduce((prev, current) =>

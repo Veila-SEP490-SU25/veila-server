@@ -40,7 +40,7 @@ export class ChatGateway implements OnGatewayConnection {
     private readonly chatService: ChatService,
     private readonly tokenService: TokenService,
     private readonly redisService: RedisService,
-  ) { }
+  ) {}
 
   @WebSocketServer()
   private server: Server;
@@ -120,10 +120,10 @@ export class ChatGateway implements OnGatewayConnection {
     this.server.to(`user:${user1Id}`).socketsJoin(newConversation.id);
     this.server.to(`user:${user2Id}`).socketsJoin(newConversation.id);
 
-    const conversation = await this.chatService.getUserConversation(newConversation.id, userId);
+    const conversations = await this.chatService.get2SideUserConversation(newConversation.id, userId);
 
-    this.server.to(newConversation.id).emit('conversation', conversation);
-    this.server.to(newConversation.id).emit('conversation', conversation);
+    this.server.to(newConversation.id).emit('conversation', conversations[0]);
+    this.server.to(newConversation.id).emit('conversation', conversations[1]);
   }
 
   @SubscribeMessage('getMessage')
