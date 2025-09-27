@@ -263,7 +263,10 @@ export class OrderService {
         order,
         take,
         skip,
-        relations: ['customer', 'shop'],
+        relations: {
+          customer: true,
+          shop: { user: true },
+        },
       });
 
       return [plainToInstance(OrderDto, orders), count];
@@ -301,7 +304,10 @@ export class OrderService {
         order,
         take,
         skip,
-        relations: ['customer', 'shop'],
+        relations: {
+          customer: true,
+          shop: { user: true },
+        },
       });
 
       return [plainToInstance(OrderDto, orders), count];
@@ -311,7 +317,10 @@ export class OrderService {
   async getOrderById(id: string): Promise<OrderDto> {
     const order = await this.orderRepository.findOne({
       where: { id },
-      relations: ['customer', 'shop'],
+      relations: {
+          customer: true,
+          shop: { user: true },
+        },
     });
     if (!order) throw new NotFoundException('Không tìm thấy đơn hàng nào phù hợp');
     return plainToInstance(OrderDto, order);
