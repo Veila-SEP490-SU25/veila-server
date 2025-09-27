@@ -281,7 +281,10 @@ export class OrderService {
         order,
         take,
         skip,
-        relations: ['customer', 'shop'],
+        relations: {
+          customer: true,
+          shop: { user: true },
+        },
       });
 
       return [plainToInstance(OrderDto, orders), count];
