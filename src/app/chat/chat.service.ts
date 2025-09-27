@@ -206,7 +206,7 @@ export class ChatService {
     const lastMessage: GetMessageDto | null = lastMessageEntity
       ? await this.mapToGetMessageDto(conversation.id, lastMessageEntity)
       : null;
-    const unReadCount = conversation.messages.filter((msg) => !msg.isReaded).length;
+    const unReadCount = conversation.messages.filter((msg) => !msg.isReaded && msg.sender.id !== userId).length;
     return {
       conversationId: conversation.id,
       receiverId: otherUser.id,
@@ -237,7 +237,7 @@ export class ChatService {
     const lastMessage: GetMessageDto | null = lastMessageEntity
       ? await this.mapToGetMessageDto(conversation.id, lastMessageEntity)
       : null;
-    const unReadCount = conversation.messages.filter((msg) => !msg.isReaded).length;
+    const unReadCount = conversation.messages.filter((msg) => !msg.isReaded && msg.sender.id !== userId).length;
     return {
       conversationId: conversation.id,
       receiverId: otherUser.id,
