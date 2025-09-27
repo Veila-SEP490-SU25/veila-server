@@ -62,7 +62,7 @@ export class ShopService {
     private readonly contractService: ContractService,
     @Inject(forwardRef(() => UserService))
     private readonly userService: UserService,
-  ) {}
+  ) { }
 
   async updateShopProfile(userId: string, body: UpdateShopDto): Promise<void> {
     const existingShop = await this.getShopForOwner(userId);
@@ -121,7 +121,7 @@ export class ShopService {
         status: ShopStatus.ACTIVE,
         isVerified: true,
       };
-      const existingShop = await this.shopRepository.findOneBy(where);
+      const existingShop = await this.shopRepository.findOne({ where, relations: { user: true } });
       if (!existingShop) throw new NotFoundException('Không tìm thấy cửa hàng phù hợp');
       if (!userId) return plainToInstance(ItemShopDto, existingShop);
       else {

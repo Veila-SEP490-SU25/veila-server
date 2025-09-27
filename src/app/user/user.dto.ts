@@ -210,6 +210,10 @@ export class UserContactDto {
 
 export class ProductUserDto {
   @Expose()
+  @ApiProperty({ description: 'ID người dùng', example: 'user-uuid-123' })
+  id: string;
+
+  @Expose()
   @Type(() => UserShopDto)
   shop: UserShopDto;
 }

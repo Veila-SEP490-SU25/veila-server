@@ -13,6 +13,19 @@ import {
 import { CUOrderAccessoriesDetailDto } from '@/app/order-accessories-details/order-accessories-details.dto';
 import { CUOrderDressDetailDto } from '@/app/order-dress-details/order-dress-details.dto';
 
+export class UserIdDto {
+  @Expose()
+  @ApiProperty({ description: 'ID của người dùng', example: 'uuid-user-1' })
+  id: string;
+}
+
+export class ShopUserIdDto {
+  @Expose()
+  @ApiProperty({ description: 'ID của cửa hàng', example: 'uuid-shop-1' })
+  @Type(() => UserIdDto)
+  user: UserIdDto;
+}
+
 export class OtpPaymentDto {
   @Expose()
   @ApiProperty({
@@ -152,6 +165,11 @@ export class OrderDto {
   id: string;
 
   @Expose()
+  @ApiProperty({ description: 'ID của khách hàng', example: 'uuid-user-1' })
+  @Type(() => UserIdDto)
+  customer: UserIdDto;
+
+  @Expose()
   @ApiProperty({
     description: 'Tên của khách hàng',
     example: 'customer-123',
@@ -161,6 +179,11 @@ export class OrderDto {
   @IsString()
   @Transform(({ obj: order }) => order.customer.username)
   customerName: string;
+
+  @Expose()
+  @ApiProperty({ description: 'ID của cửa hàng', example: 'uuid-shop-1' })
+  @Type(() => ShopUserIdDto)
+  shop: ShopUserIdDto;
 
   @Expose()
   @ApiProperty({
