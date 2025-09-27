@@ -138,5 +138,8 @@ export class ChatGateway implements OnGatewayConnection {
       // Only return to the requesting client, do not broadcast to the room
       client.emit('message', msg);
     });
+
+    const conversation = await this.chatService.getUserConversation(body.conversationId, userId);
+    client.emit('conversation', conversation);
   }
 }
