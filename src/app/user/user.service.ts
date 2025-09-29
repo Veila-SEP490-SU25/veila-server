@@ -22,7 +22,7 @@ export class UserService {
     @InjectRepository(Contract) private readonly contractRepository: Repository<Contract>,
     private readonly passwordService: PasswordService,
     private readonly redisService: RedisService,
-  ) {}
+  ) { }
 
   async updateUsername(userId: string, body: UsernameDto): Promise<void> {
     const user = await this.getUserById(userId);
@@ -257,20 +257,26 @@ export class UserService {
     const user = await this.getUserById(userId);
     if (!user) throw new NotFoundException('Không tìm thấy người dùng');
 
+    const phone = body.phone.trim();
+    let formatedPhone;
+
+    //chuyển từ 0xxxxxxxxx -> +84xxxxxxxxx
+    if (phone.startsWith('0')) {
+      formatedPhone = '+84' + phone.slice(1);
+    }
+    if (phone.startsWith('84')) {
+      formatedPhone = '+' + phone;
+    }
+
+    const existingPhone = await this.userRepository.findOneBy({ phone: formatedPhone, id: Not(userId) });
+    if (existingPhone) throw new ConflictException('Số điện thoại này đã được sử dụng');
+
     const hashedOtp = await this.redisService.get(`${userId}:phone-otp`);
     if (!hashedOtp) throw new NotFoundException('OTP đã hết hạn hoặc không tồn tại');
     if (!(await this.passwordService.comparePassword(body.otp, hashedOtp)))
       throw new BadRequestException('Mã OTP không chính xác');
 
-    const phone = body.phone.trim();
-
-    //chuyển từ 0xxxxxxxxx -> +84xxxxxxxxx
-    if (phone.startsWith('0')) {
-      user.phone = '+84' + phone.slice(1);
-    }
-    if (phone.startsWith('84')) {
-      user.phone = '+' + phone;
-    }
+    user.phone = formatedPhone;
     user.isIdentified = true;
 
     await this.userRepository.save(user);
