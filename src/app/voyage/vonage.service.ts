@@ -26,7 +26,7 @@ export class VonageService {
     try {
       const response = await this.vonage.sms.send({
         to: _to,
-        from: '84966316803', // must be a real number, not a made-up string
+        from: '84966548257', // must be a real number, not a made-up string
         text: otp,
       });
 
