@@ -25,7 +25,7 @@ import {
 import { RefreshTokenDto } from '@/app/auth/auth.dto';
 import { User } from '@/common/models';
 import { UpdateProfile } from '@/app/user/user.dto';
-import { Public } from '@/common/decorators/public.decorator';
+// import { Public } from '@/common/decorators/public.decorator';
 
 @Controller('auth')
 @ApiTags('Auth Controller')
@@ -323,7 +323,7 @@ export class AuthController {
     };
   }
 
-  @Public()
+  // @Public()
   @Post('google/login')
   @ApiOperation({
     summary: 'Đăng nhập với tài khoản google',
