@@ -50,7 +50,7 @@ export class MilestoneService {
     //Tạo milestone mặc định theo templates
     const milestoneEntities = templates.map((template) => {
       const dueDate = new Date(startDate);
-      dueDate.setDate(dueDate.getDate() + template.timeGap * (template.index - 1));
+      dueDate.setDate(dueDate.getDate() + template.timeGap);
 
       return this.milestoneRepository.create({
         order: { id: orderId },
