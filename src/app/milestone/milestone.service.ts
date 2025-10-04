@@ -35,10 +35,14 @@ export class MilestoneService {
   ) {}
 
   async createMilestone(orderId: string, orderType: OrderType): Promise<void> {
-    let templatesType;
+    let templatesType: MilestoneTemplateType | undefined;
     if (orderType === OrderType.SELL) templatesType = MilestoneTemplateType.SELL;
     else if (orderType === OrderType.RENT) templatesType = MilestoneTemplateType.RENT;
     else if (orderType === OrderType.CUSTOM) templatesType = MilestoneTemplateType.CUSTOM;
+
+    if (!templatesType) {
+      throw new BadRequestException('Loại đơn hàng không hợp lệ để tạo milestone');
+    }
     const templates = await this.appSettingService.getMilestoneTemplatesByType(templatesType);
 
     if (!templates.length) {
@@ -50,7 +54,7 @@ export class MilestoneService {
     //Tạo milestone mặc định theo templates
     const milestoneEntities = templates.map((template) => {
       const dueDate = new Date(startDate);
-      dueDate.setDate(dueDate.getDate() + template.timeGap);
+      dueDate.setDate(dueDate.getDate() + Number(template.timeGap));
 
       return this.milestoneRepository.create({
         order: { id: orderId },
@@ -66,10 +70,11 @@ export class MilestoneService {
 
     //Tạo task số 1 mặc định cho mỗi milestone
     await Promise.all(
-      savedMilestones.map((milestone, i) => {
-        if (i == savedMilestones.length - 1) return; // bỏ qua milestone cuối cùng
-        this.taskService.createDefaultTask(milestone);
-      }),
+      savedMilestones
+        // Bỏ qua milestone cuối cùng (theo logic hiện tại)
+        .filter((_, i) => i !== savedMilestones.length - 1)
+        // Đảm bảo trả về Promise để Promise.all đợi đúng
+        .map((milestone) => this.taskService.createDefaultTask(milestone)),
     );
   }
 
