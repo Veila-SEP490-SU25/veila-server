@@ -23,10 +23,10 @@ jobs:
     strategy:
       matrix:
         include:
-          - name: demo
+          - name: dev-be
             env_file: .env.development
             env_secret: ENV_DEVELOPMENT
-          - name: production
+          - name: prod-be
             env_file: .env.production
             env_secret: ENV_PRODUCTION
 
