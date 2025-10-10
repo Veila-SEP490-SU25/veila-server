@@ -52,7 +52,7 @@ jobs:
             docker run -d --name $APP_NAME \
               --env-file $ENV_FILE \
               -e PORT=3000 \
-              -e START_COMMAND=deploy:${{ matrix.name }} \
+              -e START_COMMAND=start:${{ matrix.name }} \
               -v /var/lib/veila/uploads:/usr/src/app/uploads \
               -p 1200:3000 \
               -p 1201:3001 \
@@ -72,7 +72,7 @@ jobs:
           docker run -d --name $NEW_NAME \
             --env-file $ENV_FILE \
             -e PORT=$TMP_PORT \
-            -e START_COMMAND=deploy:${{ matrix.name }} \
+            -e START_COMMAND=start:${{ matrix.name }} \
             -v /var/lib/veila/uploads:/usr/src/app/uploads \
             -p $TMP_PORT:3000 \
             -p $((TMP_PORT + 1)):3001 \
