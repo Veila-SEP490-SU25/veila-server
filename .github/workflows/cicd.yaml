@@ -16,60 +16,106 @@ jobs:
       - name: Build Docker image
         run: docker build -t veila-server:latest .
 
-  deploy-demo:
-    name: Deploy for Front-end Development
+  deploy:
+    name: Deploy Environments (Dynamic Rolling)
     needs: build
     runs-on: [veila]
+    strategy:
+      matrix:
+        include:
+          - name: demo
+            env_file: .env.development
+            env_secret: ENV_DEVELOPMENT
+          - name: production
+            env_file: .env.production
+            env_secret: ENV_PRODUCTION
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Create .env.development file
-        run: echo "${{ secrets.ENV_DEVELOPMENT }}" > .env.development
+      - name: Create environment file
+        run: echo "${{ secrets[matrix.env_secret] }}" > ${{ matrix.env_file }}
 
-      - name: Run demo container from prebuilt image
+      - name: Rolling deploy ${{ matrix.name }}
         run: |
-          docker stop veila-dev-be || true
-          docker rm veila-dev-be || true
-          docker run -d --name veila-dev-be \
-            --env-file .env.development \
-            -e PORT=1205 \
-            -e START_COMMAND=deploy:development \
+          APP_NAME=veila-${{ matrix.name }}-be
+          NEW_NAME=${APP_NAME}-new
+          ENV_FILE=${{ matrix.env_file }}
+          IMAGE=veila-server:latest
+
+          echo "🔍 Checking if $APP_NAME is running..."
+          if docker ps --format '{{.Names}}' | grep -q "$APP_NAME"; then
+            echo "Found existing container: $APP_NAME"
+          else
+            echo "No existing container found. First deployment."
+            docker run -d --name $APP_NAME \
+              --env-file $ENV_FILE \
+              -e PORT=3000 \
+              -e START_COMMAND=deploy:${{ matrix.name }} \
+              -v /var/lib/veila/uploads:/usr/src/app/uploads \
+              -p 1200:3000 \
+              -p 1201:3001 \
+              $IMAGE
+            exit 0
+          fi
+
+          echo "📋 Extracting current container config..."
+          CURRENT_PORT=$(docker inspect --format '{{ (index (index .NetworkSettings.Ports "3000/tcp") 0).HostPort }}' $APP_NAME)
+          CURRENT_WS_PORT=$(docker inspect --format '{{ (index (index .NetworkSettings.Ports "3001/tcp") 0).HostPort }}' $APP_NAME)
+          TMP_PORT=$((CURRENT_PORT + 100))
+
+          echo "ℹ️  Current ports: HTTP=$CURRENT_PORT | WS=$CURRENT_WS_PORT"
+          echo "🆕  Temporary port: $TMP_PORT"
+
+          echo "🚀 Starting new container on temporary port..."
+          docker run -d --name $NEW_NAME \
+            --env-file $ENV_FILE \
+            -e PORT=$TMP_PORT \
+            -e START_COMMAND=deploy:${{ matrix.name }} \
             -v /var/lib/veila/uploads:/usr/src/app/uploads \
-            -p 1205:3000 \
-            -p 1201:3001 \
-            veila-server:latest
+            -p $TMP_PORT:3000 \
+            -p $((TMP_PORT + 1)):3001 \
+            $IMAGE
 
-  deploy-production:
-    name: Deploy for Production
-    needs: build
-    runs-on: [veila]
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+          echo "⏳ Waiting for new container to become healthy..."
+          for i in {1..25}; do
+            if curl -fs http://localhost:$TMP_PORT/health >/dev/null; then
+              echo "✅ New container is healthy!"
+              break
+            fi
+            echo "Waiting ($i/25)..."
+            sleep 3
+          done
 
-      - name: Create .env.production file
-        run: echo "${{ secrets.ENV_PRODUCTION }}" > .env.production
+          echo "🧹 Stopping old container..."
+          docker stop $APP_NAME || true
+          docker rm $APP_NAME || true
 
-      - name: Run production container from prebuilt image
-        run: |
-          docker stop veila-prod-be || true
-          docker rm veila-prod-be || true
-          docker run -d --name veila-prod-be \
-            --env-file .env.production \
-            -e PORT=1206 \
-            -e START_COMMAND=deploy:production \
+          echo "🔄 Promoting new container..."
+          docker rename $NEW_NAME $APP_NAME
+
+          echo "⚡ Restarting on production ports..."
+          docker stop $APP_NAME || true
+          docker rm $APP_NAME || true
+
+          docker run -d --name $APP_NAME \
+            --env-file $ENV_FILE \
+            -e PORT=$CURRENT_PORT \
+            -e START_COMMAND=deploy:${{ matrix.name }} \
             -v /var/lib/veila/uploads:/usr/src/app/uploads \
-            -p 1206:3000 \
-            -p 1202:3001 \
-            veila-server:latest
+            -p $CURRENT_PORT:3000 \
+            -p $CURRENT_WS_PORT:3001 \
+            $IMAGE
+
+          echo "✅ Rolling update for '${{ matrix.name }}' completed successfully!"
 
   cleanup:
     name: Cleanup
     runs-on: [veila]
-    needs: [build, deploy-demo, deploy-production]
+    needs: [deploy]
     steps:
-      - name: Cleanup unused images
+      - name: Cleanup unused Docker data
         run: |
           docker image prune -f
           docker system prune -f
